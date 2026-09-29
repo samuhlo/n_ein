@@ -27,12 +27,32 @@ fi
 
 export PI_CODING_AGENT_DIR="$agent_dir"
 export PI_CODING_AGENT_SESSION_DIR="$agent_dir/sessions"
+handoff_signal="$(mktemp "${TMPDIR:-/tmp}/n-ein-handoff.XXXXXX")"
+trap 'rm -f "$handoff_signal"' EXIT
+export N_EIN_HANDOFF_SIGNAL="$handoff_signal"
 
 # BLINDAJE -> Solo los recursos explícitos del paquete entran desde fuera del proyecto.
-exec "$pi_bin" \
+if "$pi_bin" \
   --no-extensions --no-skills --no-prompt-templates --no-themes \
   -e "$repo_dir/pi-package" \
   --append-system-prompt "$repo_dir/pi-package/persona.md" \
   --use-theme ein \
   --model openai-codex/gpt-6-sol --thinking high \
-  "$@"
+  "$@"; then
+  pi_exit=0
+else
+  pi_exit=$?
+fi
+
+if [[ -s "$handoff_signal" ]]; then
+  IFS= read -r destination < "$handoff_signal"
+  summary_path="$(sed -n '2p' "$handoff_signal")"
+  if [[ "$destination" != "claude" || ! -f "$summary_path" ]]; then
+    printf '[ERR] :: HANDOFF_BAD :: target: %s\n' "$destination" >&2
+    exit 69
+  fi
+  "$repo_dir/bin/n-ein-claude-dev" --handoff "$summary_path"
+  exit $?
+fi
+
+exit "$pi_exit"

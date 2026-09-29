@@ -1,0 +1,43 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+repo_dir="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd -P)"
+claude_dir="${N_EIN_CLAUDE_DIR:-$HOME/.n_ein/dev/claude}"
+claude_bin="${N_EIN_CLAUDE_BIN:-claude}"
+
+case "$claude_dir" in
+  "$HOME/.claude"|"$HOME/.claude-ein")
+    printf '[ERR] :: HOME_INVALID :: path: %s\n' "$claude_dir" >&2
+    exit 64
+    ;;
+esac
+if ! command -v "$claude_bin" >/dev/null 2>&1; then
+  printf '[ERR] :: CLAUDE_MISS :: binary: %s\n' "$claude_bin" >&2
+  exit 69
+fi
+
+mkdir -p "$claude_dir"
+skills_link="$claude_dir/skills"
+if [[ ! -e "$skills_link" && ! -L "$skills_link" ]]; then
+  ln -s "$repo_dir/pi-package/skills" "$skills_link"
+elif [[ ! -L "$skills_link" || "$(readlink "$skills_link")" != "$repo_dir/pi-package/skills" ]]; then
+  printf '[ERR] :: SKILLS_PATH :: path: %s\n' "$skills_link" >&2
+  exit 69
+fi
+
+export CLAUDE_CONFIG_DIR="$claude_dir"
+unset PI_CODING_AGENT_DIR PI_CODING_AGENT_SESSION_DIR N_EIN_HANDOFF_SIGNAL
+persona="$(< "$repo_dir/pi-package/persona.md")"
+
+if [[ "${1:-}" == "--handoff" ]]; then
+  if [[ $# -lt 2 || ! -f "$2" ]]; then
+    printf '[ERR] :: HANDOFF_BAD :: summary: missing\n' >&2
+    exit 64
+  fi
+  summary="$(< "$2")"
+  shift 2
+  prompt=$'Continúa desde este relevo de n_ein. Primero contrasta el estado real del repositorio y el documento de trabajo.\n\n'"$summary"
+  exec "$claude_bin" --append-system-prompt "$persona" "$prompt" "$@"
+fi
+
+exec "$claude_bin" --append-system-prompt "$persona" "$@"

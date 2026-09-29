@@ -1,0 +1,39 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+repo_dir="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd -P)"
+test_dir="$(mktemp -d)"
+trap 'rm -rf "$test_dir"' EXIT
+
+cat > "$test_dir/pi" <<'FAKE_PI'
+#!/usr/bin/env bash
+if [[ "${1:-}" == "--version" ]]; then printf '0.87.1\n'; exit 0; fi
+printf 'claude\n%s\n' "$N_EIN_TEST_SUMMARY" > "$N_EIN_HANDOFF_SIGNAL"
+printf 'pi finished\n' > "$N_EIN_TEST_DONE"
+FAKE_PI
+cat > "$test_dir/claude" <<'FAKE_CLAUDE'
+#!/usr/bin/env bash
+test -f "$N_EIN_TEST_DONE" || exit 1
+printf '%s\n' "$CLAUDE_CONFIG_DIR" "${PI_CODING_AGENT_DIR:-unset}" > "$N_EIN_TEST_ENV"
+printf '%s\n' "$@" > "$N_EIN_TEST_ARGS"
+FAKE_CLAUDE
+chmod +x "$test_dir/pi" "$test_dir/claude"
+
+printf '# Relevo\n\nObjetivo: terminar el arreglo.\n' > "$test_dir/summary.md"
+export N_EIN_PI_BIN="$test_dir/pi"
+export N_EIN_CLAUDE_BIN="$test_dir/claude"
+export N_EIN_AGENT_DIR="$test_dir/pi-home"
+export N_EIN_CLAUDE_DIR="$test_dir/claude-home"
+export N_EIN_TEST_SUMMARY="$test_dir/summary.md"
+export N_EIN_TEST_DONE="$test_dir/pi-done"
+export N_EIN_TEST_ENV="$test_dir/claude-env"
+export N_EIN_TEST_ARGS="$test_dir/claude-args"
+
+"$repo_dir/bin/n-ein-dev"
+test "$(sed -n '1p' "$N_EIN_TEST_ENV")" = "$N_EIN_CLAUDE_DIR"
+test "$(sed -n '2p' "$N_EIN_TEST_ENV")" = "unset"
+test "$(readlink "$N_EIN_CLAUDE_DIR/skills")" = "$repo_dir/pi-package/skills"
+rg -q 'Objetivo: terminar el arreglo' "$N_EIN_TEST_ARGS"
+rg -q 'Eres Ein' "$N_EIN_TEST_ARGS"
+
+printf 'handoff launcher: OK\n'
