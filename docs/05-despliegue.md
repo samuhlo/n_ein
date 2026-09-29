@@ -1,6 +1,6 @@
 # Repositorio, desarrollo y despliegue
 
-Objetivo solicitado: repositorio limpio, pruebas mejores y canales comprensibles. El repositorio Git local, el [instalador y los canales locales](../README.md#instalación-local-de-prueba), y los checks ya existen. El mecanismo de publicación sigue pendiente. Las secciones siguientes conservan los criterios originales de diseño; consulta el README y la evidencia para distinguirlos de lo ya implementado.
+Objetivo solicitado: repositorio limpio, pruebas mejores y canales comprensibles. El [repositorio público](https://github.com/samuhlo/n_ein), el [instalador y los canales locales](../README.md#instalación-local-de-prueba), y los checks ya existen. La distribución de releases sigue pendiente. Las secciones siguientes conservan los criterios originales de diseño; consulta el README y la evidencia para distinguirlos de lo ya implementado.
 
 ## Repositorio nuevo
 
@@ -10,7 +10,7 @@ Mantener código, pruebas y herramientas de desarrollo separados cuando aparezca
 
 Conservar este handoff como documentación de origen. Al comenzar desarrollo, el README del producto describe comportamiento realmente disponible; no presenta todo el plan como implementado. Changelog por cambios relevantes. Una pequeña lista de decisiones duraderas basta; no un ADR por detalle reversible.
 
-La carpeta nueva no estaba inicializada en Git cuando se creó el paquete, pero ahora tiene historial local. No se ha elegido remoto ni licencia propia. Los ejecutables locales se llaman `n-ein` y `n-ein-install`; eso no supone disponibilidad en registros.
+La carpeta nueva no estaba inicializada en Git cuando se creó el paquete; ahora `main` se sigue desde `samuhlo/n_ein` público. No se ha elegido licencia propia. Los ejecutables locales se llaman `n-ein` y `n-ein-install`; eso no supone disponibilidad en registros.
 
 ## Canales propuestos
 
@@ -50,4 +50,4 @@ Si una dependencia cambia un payload, corregir un único borde y comprobarlo con
 
 ## Fuera de alcance inicial
 
-Marketplace, instalador multiplataforma sofisticado, telemetría remota, autoactualizaciones silenciosas y hosting de modelos. Primero una versión útil y reversible. Publicar repositorio, paquetes o releases queda sujeto a la instrucción de entrega que Samu dé en la sesión de implementación.
+Marketplace, instalador multiplataforma sofisticado, telemetría remota, autoactualizaciones silenciosas y hosting de modelos. Primero una versión útil y reversible. Samu autorizó publicar este repositorio en GitHub; publicar paquetes o releases requiere decidir antes su canal y contenido.

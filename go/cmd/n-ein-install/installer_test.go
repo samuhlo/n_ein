@@ -170,6 +170,24 @@ func TestProtectedTargets(t *testing.T) {
 	}
 }
 
+func TestProtectedTargetsWithSymlinkedHome(t *testing.T) {
+	root := t.TempDir()
+	home := filepath.Join(root, "real-home")
+	if err := os.Mkdir(home, 0o755); err != nil {
+		t.Fatal(err)
+	}
+	alias := filepath.Join(root, "home-link")
+	if err := os.Symlink(home, alias); err != nil {
+		t.Fatal(err)
+	}
+	t.Setenv("HOME", alias)
+	for _, target := range []string{home, filepath.Join(home, ".pi-ein", "agent"), filepath.Join(home, ".n_ein", "installations")} {
+		if err := protectTarget(target); err == nil {
+			t.Fatalf("aceptó destino protegido con HOME enlazado: %s", target)
+		}
+	}
+}
+
 func TestArtifactPromotionAndTamperDetection(t *testing.T) {
 	source, self, _, _ := sourceFixture(t)
 	root := filepath.Dir(source)

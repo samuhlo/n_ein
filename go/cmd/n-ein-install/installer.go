@@ -79,6 +79,11 @@ func protectTarget(target string) error {
 	if err != nil {
 		return err
 	}
+	// BLINDAJE -> Comparar rutas canónicas impide saltarse la protección con HOME enlazado.
+	home, err = resolvedPath(home)
+	if err != nil {
+		return err
+	}
 	actual, err := resolvedPath(target)
 	if err != nil {
 		return err

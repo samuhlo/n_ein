@@ -1,0 +1,8 @@
+{
+  "name": "n_ein",
+  "private": true,
+  "type": "module",
+  "dependencies": {
+    "typebox": "1.3.27"
+  }
+}

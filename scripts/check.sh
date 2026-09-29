@@ -14,6 +14,7 @@ if [[ ! -x "$go_bin" ]]; then
   printf '[ERR] :: CHECK_DEPS :: required: Go 1.27.1\n' >&2
   exit 69
 fi
+bun install --frozen-lockfile
 export GOMODCACHE="$HOME/.n_ein/dev/go-cache/mod"
 export GOCACHE="$HOME/.n_ein/dev/go-cache/build"
 export GOPATH="$HOME/.n_ein/dev/go-cache/path"
