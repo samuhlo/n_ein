@@ -66,6 +66,12 @@ func run(args []string) error {
 	if selected.launch == "" {
 		return nil
 	}
+	if selected.launch == "doctor" {
+		cmd := exec.Command(filepath.Join(packageRoot, "bin", "n-ein-install"), "doctor", "--target", packageRoot)
+		cmd.Dir = absProject
+		cmd.Stdin, cmd.Stdout, cmd.Stderr = os.Stdin, os.Stdout, os.Stderr
+		return cmd.Run()
+	}
 	runtimeName := selected.launch
 	launchArgs := []string{}
 	if strings.HasPrefix(runtimeName, "resume-") {

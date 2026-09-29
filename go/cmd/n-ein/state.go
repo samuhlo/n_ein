@@ -331,6 +331,20 @@ func loadState(root, project string) appState {
 	if len(sessionRows) == 0 {
 		sessionRows = []row{{"recientes", "sin sesiones", "sesiones", ""}}
 	}
+	doctor := row{"doctor", "sin instalación", "n-ein-install", ""}
+	if _, err := os.Stat(filepath.Join(root, "install.json")); err == nil {
+		if _, err := os.Stat(filepath.Join(root, "bin", "n-ein-install")); err == nil {
+			doctor = row{"doctor", "enter para comprobar", "n-ein-install", "doctor"}
+		}
+	}
+	piAction, piLabel := "pi", "abrir agente principal"
+	if piVersion == "desconocido" {
+		piAction, piLabel = "", "no disponible"
+	}
+	claudeAction, claudeLabel := "claude", "abrir relevo aislado"
+	if claudeVersion == "desconocido" {
+		claudeAction, claudeLabel = "", "no disponible"
+	}
 	return appState{colors: brand.Colors, views: []panel{
 		{0, "ESTADO", []row{
 			{"proyecto", project, "cwd", ""}, {"rama", branch, "Git", ""}, {"cambios", gitState, "Git", ""},
@@ -345,11 +359,11 @@ func loadState(root, project string) appState {
 		{2, "SESIONES", sessionRows},
 		{3, "SISTEMA", []row{
 			{"paquete", installVersion, "install.json", ""}, {"Pi", piVersion, "pi --version", ""},
-			{"Claude", claudeVersion, "claude --version", ""}, {"actualizaciones", "desconocido", "sin remoto", ""},
+			{"Claude", claudeVersion, "claude --version", ""}, doctor, {"actualizaciones", "desconocido", "sin remoto", ""},
 		}},
 		{4, "RUNTIME", []row{
-			{"Pi", "abrir agente principal", "bin/n-ein-dev", "pi"},
-			{"Claude", "abrir relevo aislado", "bin/n-ein-claude-dev", "claude"},
+			{"Pi", piLabel, "bin/n-ein-dev", piAction},
+			{"Claude", claudeLabel, "bin/n-ein-claude-dev", claudeAction},
 		}},
 	}}
 }
