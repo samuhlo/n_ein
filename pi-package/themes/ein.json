@@ -1,0 +1,81 @@
+{
+	"$schema": "https://raw.githubusercontent.com/earendil-works/pi/main/packages/coding-agent/src/modes/interactive/theme/theme-schema.json",
+	"name": "ein",
+	"vars": {
+		"carbon": "#0B0B0B",
+		"concrete": "#FAF3F0",
+		"structure": "#737373",
+		"yellow": "#FFCA40",
+		"yellowDim": "#D9B15C",
+		"green": "#A3B86C",
+		"red": "#D96C5F",
+		"dimGray": "#5A5A5A",
+		"secondaryText": "#9A9A9A",
+		"darkGray": "#3A3A3A",
+		"selectedBg": "#1F1A0F"
+	},
+	"colors": {
+		"accent": "yellow",
+		"border": "structure",
+		"borderAccent": "yellow",
+		"borderMuted": "darkGray",
+		"success": "green",
+		"error": "red",
+		"warning": "yellow",
+		"muted": "secondaryText",
+		"dim": "secondaryText",
+		"text": "concrete",
+		"thinkingText": "structure",
+
+		"selectedBg": "selectedBg",
+		"userMessageBg": "",
+		"userMessageText": "concrete",
+		"customMessageBg": "",
+		"customMessageText": "concrete",
+		"customMessageLabel": "yellow",
+		"toolPendingBg": "",
+		"toolSuccessBg": "",
+		"toolErrorBg": "",
+		"toolTitle": "concrete",
+		"toolOutput": "secondaryText",
+
+		"mdHeading": "yellow",
+		"mdLink": "yellowDim",
+		"mdLinkUrl": "dimGray",
+		"mdCode": "yellow",
+		"mdCodeBlock": "concrete",
+		"mdCodeBlockBorder": "darkGray",
+		"mdQuote": "structure",
+		"mdQuoteBorder": "yellow",
+		"mdHr": "structure",
+		"mdListBullet": "yellow",
+
+		"toolDiffAdded": "green",
+		"toolDiffRemoved": "red",
+		"toolDiffContext": "structure",
+
+		"syntaxComment": "#6E6860",
+		"syntaxKeyword": "#FFCA40",
+		"syntaxFunction": "#FAF3F0",
+		"syntaxVariable": "#D9CFC9",
+		"syntaxString": "#A3B86C",
+		"syntaxNumber": "#D9B15C",
+		"syntaxType": "#C9B98F",
+		"syntaxOperator": "#B8B0AA",
+		"syntaxPunctuation": "#8E8788",
+
+		"thinkingOff": "darkGray",
+		"thinkingMinimal": "dimGray",
+		"thinkingLow": "structure",
+		"thinkingMedium": "#A38F58",
+		"thinkingHigh": "yellowDim",
+		"thinkingXhigh": "yellow",
+
+		"bashMode": "green"
+	},
+	"export": {
+		"pageBg": "#0B0B0B",
+		"cardBg": "#161616",
+		"infoBg": "#2D2612"
+	}
+}

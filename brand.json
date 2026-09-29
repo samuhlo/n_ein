@@ -1,0 +1,11 @@
+{
+  "agentName": "Ein",
+  "commandPrefix": "n-ein",
+  "author": "samuhlo",
+  "colors": {
+    "carbon": "#0B0B0B",
+    "concrete": "#FAF3F0",
+    "structure": "#737373",
+    "yellow": "#FFCA40"
+  }
+}

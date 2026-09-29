@@ -1,0 +1,9 @@
+{
+  "name": "n-ein-pi",
+  "version": "0.1.0-dev",
+  "private": true,
+  "pi": {
+    "skills": ["./skills"],
+    "themes": ["./themes/ein.json"]
+  }
+}
