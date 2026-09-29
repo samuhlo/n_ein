@@ -3,7 +3,12 @@
   "version": "0.1.0-dev",
   "private": true,
   "pi": {
+    "extensions": ["./extensions/worker.ts"],
     "skills": ["./skills"],
     "themes": ["./themes/ein.json"]
+  },
+  "peerDependencies": {
+    "@earendil-works/pi-coding-agent": "*",
+    "typebox": "*"
   }
 }
