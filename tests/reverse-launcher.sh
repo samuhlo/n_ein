@@ -20,6 +20,8 @@ FAKE_PI
 chmod +x "$test_dir/claude" "$test_dir/pi"
 
 git -C "$test_dir" init -b main >/dev/null
+git -C "$test_dir" config user.name 'n_ein test'
+git -C "$test_dir" config user.email 'test@n-ein.invalid'
 printf '# Trabajo\n\n## Objetivo\nRevisar el puerto 0.\n' > "$test_dir/WORK.md"
 git -C "$test_dir" add WORK.md
 git -C "$test_dir" commit -m 'test: base' >/dev/null

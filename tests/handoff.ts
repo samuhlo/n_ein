@@ -20,6 +20,8 @@ registerHandoff({ registerCommand(_name: string, value: any) { command = value; 
 
 const git = (...args: string[]) => execFileSync("git", args, { cwd: dir, stdio: "ignore" });
 git("init", "-b", "main");
+git("config", "user.name", "n_ein test");
+git("config", "user.email", "test@n-ein.invalid");
 writeFileSync(join(dir, "code.ts"), "export const value = 1\n");
 writeFileSync(join(dir, "WORK.md"), "# Encargo\n\n## Objetivo\nCorregir código.\n\n## Decisiones\nConservar la interfaz actual.\n\n## Tareas\n- [x] Editar\n- [ ] Comprobar\n\n## Evidencia\n`bun test` pasó antes de la última edición.\n");
 git("add", "code.ts", "WORK.md");
