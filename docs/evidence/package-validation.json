@@ -1,0 +1,21 @@
+{
+  "date": "2026-09-28",
+  "source_files_verified": 174,
+  "evidence_archives": [
+    {
+      "file": "docs/archive/ein-workspace/.pi/ein/evidence/simple-pilot-2026-09-08.tar.gz",
+      "matches_reported_sha256": true
+    },
+    {
+      "file": "docs/archive/ein-workspace/.pi/ein/evidence/pi-lens-2026-09-09.tar.gz",
+      "matches_reported_sha256": true
+    },
+    {
+      "file": "docs/archive/ein-workspace/.pi/ein/evidence/engram-2026-09-11.tar.gz",
+      "matches_reported_sha256": true
+    }
+  ],
+  "operative_markdown_links": "valid",
+  "errors": [],
+  "scope": "Integrity/link checks only. No models, runtime or historical experiments rerun."
+}

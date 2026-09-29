@@ -1,0 +1,275 @@
+# Diseño propuesto
+
+## Recorrido ordinario
+
+Comprender el resultado solicitado → leer lo necesario → actuar directamente o delegar un encargo → comprobar → explicar resultado y pendiente. Estos son comportamientos, no fases que generen cada una un archivo o agente.
+
+La elección entre directo, delegado e investigación separada corresponde al agente actual. No hay un modelo router adicional. Los límites de autorización, herramientas y entrega los aplica el runtime donde sea posible; no dependen solo de una frase.
+
+## Intent: definir juntos el encargo
+
+Capacidad central desde la primera versión, basada en [grill-me](sources/matt-skills/skills/productivity/grill-me/SKILL.md), [grilling](sources/matt-skills/skills/productivity/grilling/SKILL.md) y el [intent-channel de Ein](archive/ein-workspace/runtime/skills/local/intent-channel/SKILL.md). Su propósito es entender y concretar qué merece construirse antes de gastar en una solución equivocada. Se implementa inicialmente como skill/instrucción invocable del runtime, sin un motor de entrevistas nuevo. El nombre exacto del comando puede adaptarse al host; el usuario lo reconoce como `intent`.
+
+### Cuándo se utiliza
+
+| Situación | Comportamiento |
+|---|---|
+| Petición clara y pequeña | Trabajar con el alcance autorizado, sin activar entrevista. |
+| Una duda material concreta | Preguntar esa duda y continuar cuando se resuelva. |
+| Idea abierta o decisión importante | Proponer `intent`, explicando qué incertidumbre ayudaría a resolver; esperar aceptación. |
+| Samu pide `intent` o una sesión equivalente | Entrar en la conversación de definición, aunque el agente crea entender ya el encargo. |
+
+No activarlo por una palabra clave, número de archivos o fase. Tampoco convertirlo en preflight obligatorio. La capacidad está siempre disponible; no se ejecuta en todas las peticiones.
+
+### Cómo se conversa
+
+Modelar las decisiones y sus dependencias. En cada ronda, formular solo preguntas que puedan contestarse con lo ya conocido; usar preguntas numeradas, recomendaciones y opciones concretas que Samu pueda aceptar, matizar o rechazar. Mantener rondas breves, respondibles juntas, y esperar las respuestas antes de resolver sus decisiones dependientes. Si no hay ninguna idea de partida, comenzar con una pregunta llana, no un formulario.
+
+Los hechos los averigua el agente: reutiliza conversación y evidencia del proyecto, consulta directamente lo pequeño y delega investigación cuando compense. Una investigación pendiente solo demora las preguntas que dependen de ella. No obligar a usar Scout ni preguntar a Samu lo que el código ya contesta. Distinguir hechos verificados, propuestas y supuestos abiertos.
+
+Las decisiones de producto, alcance y compromisos relevantes corresponden a Samu. El agente puede resolver detalles técnicos reversibles dentro de las convenciones y del encargo, explicándolos cuando ayuden a juzgar la propuesta. Conservar decisiones ya tomadas; reabrirlas solo ante un cambio o evidencia material, indicando el motivo.
+
+### Cuándo se cierra y qué queda
+
+La conversación está lista para cerrar cuando el siguiente trabajo tiene objetivo, alcance, decisiones relevantes y criterios de aceptación suficientes. No necesita agotar todas las decisiones futuras: dejar explícitas las incertidumbres aplazadas, separadas de lo fuera de alcance. Si una incógnita impide actuar correctamente en el siguiente tramo, resolverla antes de implementarlo.
+
+Presentar una síntesis del acuerdo y confirmar una vez la comprensión compartida. Si el usuario ya ha confirmado esa síntesis, no preguntar otra vez por formalidad. **Confirmar el acuerdo no equivale a autorizar código**: una sesión pedida solo para pensar termina sin implementación; una autorización previa de implementación sigue vigente dentro de su alcance y no necesita renovarse por haber aclarado el encargo. Cambios materiales de alcance sí requieren resolver esa decisión.
+
+Cuando el trabajo necesite seguimiento o Samu pida conservar el acuerdo, guardarlo al cierre en el documento de trabajo existente o en su único documento nuevo: objetivo, decisiones y motivos, hechos con referencias, límites, criterios observables y pendiente. No generar un `intent.md` separado, árbol OpenSpec o segunda lista de tareas. Para un acuerdo pequeño puede bastar la conversación. Abandonar la entrevista antes de confirmar no crea ni altera artefactos del proyecto, salvo petición explícita de guardar el borrador.
+
+Ese acuerdo sirve al agente que implementa, sea el principal o un trabajador económico, y al siguiente agente si hay relevo. Se transmite el contexto pertinente sin repetir la entrevista ni expandirlo hasta convertirlo en una implementación línea por línea.
+
+## Delegación rentable
+
+Comparar coste incremental desde el contexto actual. Delegar añade preparación, contexto del hijo, ejecución, comprobación, integración y rescates. Leer un segundo archivo o escribir el test de un arreglo no obliga a delegar.
+
+Favorecer el barato cuando hay un resultado de tamaño útil, contexto localizable y comprobación clara. No prepararle una implementación línea por línea para justificar su existencia. Puede diagnosticar, probar hipótesis, editar y hacer mejoras locales necesarias. No amplía el objetivo ni publica por iniciativa propia.
+
+El modelo capaz conserva la visión del encargo y resuelve decisiones difíciles. También puede implementar. Aumentar razonamiento o capacidad es una herramienta válida; evitar tanto el escalado automático por cualquier error como mantener al barato en un bucle improductivo.
+
+## Encargo mínimo
+
+Incluir:
+
+- Resultado esperado y alcance autorizado.
+- Contexto o referencias suficientes, sin volcar todos los archivos.
+- Criterios observables y comprobaciones pertinentes.
+- Fallos conocidos de la base: identificar el caso o síntoma concreto, el comando que lo reproduce y la revisión/entorno donde se observó. No eximir un comando completo: si la suite fallaba por X y ahora falla también por Y, Y se investiga. El trabajador reporta el fallo previo sin ampliar el alcance para arreglarlo. Si impide comprobar el comportamiento afectado, la verificación sigue incompleta. Idea adaptada de `## Known environmental failures` de Gentle Shell.
+- Restricciones especiales solo cuando cambien el trabajo.
+
+Cwd, identidad de ejecución y configuración efectiva deben proceder del runtime. Si el alcance no está claro, investigar o resolver esa decisión; no pedir al humano que invente listas técnicas de rutas cuando el agente puede derivarlas.
+
+El retorno contiene resultado completo/parcial, cambios, comprobaciones observadas, discrepancias y pendiente. Su forma puede ser estructurada para el transporte, pero un defecto menor de prosa no invalida automáticamente el trabajo ni obliga a relanzarlo.
+
+Antes de aceptar el resultado, el padre contrasta el encargo, el diff y la evidencia disponible. Si el runtime registró una comprobación pertinente sobre el código actual, no se repite solo para demostrar que ocurrió. Repetir o ampliar checks cuando falte evidencia fiable, haya cambiado el código o exista una laguna de cobertura. Añadir revisión semántica independiente según las consecuencias de un error y la incertidumbre del cambio. El precio o esfuerzo del modelo no activa por sí solo otro verificador; su fiabilidad observada informa la decisión.
+
+## Trabajadores
+
+Tres capacidades iniciales: exploración de solo lectura, trabajo con escritura autorizada y revisión. Un mismo mecanismo las ejecuta con herramientas y contexto apropiados. Ninguna es un paso obligatorio de todo encargo.
+
+Un escritor por árbol compartido como configuración inicial. Si se necesita paralelismo de escritura, aislamiento explícito en worktrees y comprobación de la integración. No confundir que cada rama pase tests con que la combinación sea correcta.
+
+El runner debe cancelar, distinguir proceso vivo de salida final, gestionar herramientas largas y devolver resultados por eventos cuando lo soporte. No implementar polling del modelo para dibujar progreso. Su fallo no debe perder el diff.
+
+Una revisión de solo lectura es un posible primer ensayo del transporte porque evita escrituras. Eso no demuestra que revisar sea fácil o barato: puede exigir requisitos, consumidores y contexto fuera del diff. La idea de menor presión de contexto en `retro` de Matt se trata como hipótesis. Evaluar al revisor por defectos detectados, omisiones y falsos positivos; evaluar ahorro de implementación con un encargo de escritura acotado. No promover una ruta por la apariencia convincente de su informe.
+
+Pi no trae subagentes en su núcleo. Candidatos concretos para el runner y contrato que deben superar: ver [pendientes](08-pendientes.md#runner-de-trabajadores).
+
+Los presupuestos efectivos incluyen todos los intentos del encargo. No prometer un límite de tokens o turnos que la versión del runner ignore. Un agotamiento deja estado parcial y devuelve control; no desencadena un finalizer que declare éxito.
+
+## Skills
+
+Inicio con `intent` para definir encargos, diseño, diagnóstico, TDD proporcional, revisión y escritura de instrucciones. `intent` sigue la activación explícita o propuesta aceptada descrita arriba. Instalar y activar son decisiones diferentes: solo el contenido relevante entra en contexto. Respetar la semántica de invocación del runtime real.
+
+A ese conjunto se incorporan las prácticas propias de Ein `comment-style` y `logging-style` cuando se escribe o revisa código/logs. Llegan tanto al agente principal que implemente como al trabajador delegado. Su alcance y adaptación se definen en [Comentarios de código y logs](#comentarios-de-código-y-logs).
+
+La biblioteca de Matt es fuente de adaptación. Reutilizar su enfoque de interfaces pequeñas, tests de comportamiento, cortes verticales, glosario y decisiones duraderas. Modificar requisitos incompatibles con la experiencia deseada: entrevistas por defecto, aprobación de cada punto de test, dos revisores en todos los cambios o commit automático.
+
+Adaptación concreta observada: `code-review` exige configuración del gestor de incidencias y remite a `setup-matt-pocock-skills` si falta; `tdd` y `diagnosing-bugs` piden consultar `CONTEXT.md` solo si existe. No inventar una dependencia de setup para estas dos. En `tdd`, «confirma los seams con el usuario» pasa a «el agente declara dónde prueba y sigue», preguntando solo cuando la elección implica una decisión material de alcance o comportamiento.
+
+Piezas adicionales de Matt: `pr` (entrega con evidencia antes/después, reversibilidad y alcance del impacto), `retro` (errores mecánicos como candidatos a comprobaciones deterministas, evitando acumular reglas de prompt) y `claude-handoff`, en `sources/matt-skills/skills/in-progress/`. La skill `handoff` está en `skills/productivity/`. Son referencias para adaptar; ninguna activa commits, nuevas reglas o un mecanismo de continuidad por sí sola.
+
+Un único catálogo de skills en formato Agent Skills (`SKILL.md`). Compartir formato no garantiza idéntica búsqueda, precedencia o invocación. El adaptador de cada runtime determina y prueba dónde desplegar el catálogo y qué otras fuentes se cargan. No instalarlo en `~/.agents/skills` global, porque también lo leen agentes normales y rompería el aislamiento buscado.
+
+Evitar que una skill adaptada y la original se descubran a la vez bajo el mismo nombre. Conservar procedencia y revisión. Actualizar la copia upstream deliberadamente, no cambiar el comportamiento instalado a espaldas del usuario.
+
+## Estado y continuidad
+
+Pequeño: conversación, Git y resultados de herramientas.
+
+Prolongado: un documento con objetivo, decisiones, alcance, criterios, checklist, evidencia y siguiente paso. Reutilizar convención del proyecto cuando exista; no añadir varios tableros equivalentes. Debe poder leerse sin arrancar n_ein.
+
+Al retomar, comprobar repo/cwd/revisión y contrastar documento con diff y comprobaciones actuales. Conservar lo terminado; reabrir solo lo invalidado.
+
+Glosario y ADR describen conocimiento duradero. El documento de trabajo conserva avance. Engram queda opcional y fuera del primer recorrido.
+
+### Continuidad entre agentes
+
+Requisito central: Pi↔Claude como primer relevo probado, y facilitar Codex u OpenCode sin construir otro supervisor por anticipación. La documentación consultada el 29 de septiembre de 2026 ofrece estos puntos de integración; no demuestra por sí sola aislamiento ni paridad funcional:
+
+| Necesidad | Pi | Claude Code | Codex | OpenCode |
+|---|---|---|---|---|
+| Configuración del entorno | `PI_CODING_AGENT_DIR` | `CLAUDE_CONFIG_DIR` | `CODEX_HOME` | `OPENCODE_CONFIG_DIR` añade configuración; no basta para aislar todo el entorno |
+| Instrucciones | `AGENTS.md` | `CLAUDE.md` que importa `AGENTS.md` | `AGENTS.md` | `AGENTS.md` |
+| Skills `SKILL.md` | sí | sí | sí | sí |
+| Arranque con prompt inicial | sí | sí | sí | sí |
+
+OpenCode combina fuentes globales, de proyecto y adicionales; `OPENCODE_CONFIG_DIR` no sustituye las anteriores ([documentación oficial](https://opencode.ai/docs/config/#custom-directory)). Cada integración debe comprobar por separado configuración, instrucciones/skills, sesiones y credenciales: qué se aísla, qué se hereda deliberadamente y qué permanece sin verificar. No presentar una variable de entorno como prueba de aislamiento completo.
+
+Tres piezas:
+
+1. **Estado portable en archivos.** Documento de trabajo, Git y un **resumen de relevo** en markdown que se genera al cambiar de agente: objetivo, hecho, siguiente paso, decisiones abiertas, comprobaciones con su vigencia (vigente, obsoleta, no ejecutada, desconocida) y rutas cambiadas. Referencia el documento y el diff en vez de copiarlos, como la skill `handoff` de Matt.
+2. **Un adaptador pequeño por runtime.** Declarar binario, configuración, ubicación de instrucciones/skills, prompt inicial y, si se necesita, acceso a sesiones. Usar una entrada en `runtimes.toml` (nombre provisional) cuando baste y código mínimo cuando el runtime lo exija. No anticipar una capa universal. Cada integración pasa pruebas reales de arranque, aislamiento y relevo.
+3. **El launcher hace el relevo.** `/handoff <runtime>` prepara el cambio; antes de habilitar escrituras en destino, el origen y sus hijos han terminado o han detenido sus escrituras. Entonces se finaliza el resumen con el diff y los resultados realmente disponibles. La vista Runtime arranca el destino con ese resumen como primer mensaje. Si no se puede confirmar la detención, se informa y el destino permanece sin escritura hasta resolverla. El destino contrasta el resumen con el estado actual y marca como obsoleta la evidencia de código que haya cambiado. Este protocolo no requiere un supervisor permanente nuevo.
+
+No se comparte el historial de conversación, ni se promete paridad de herramientas o de interfaz entre runtimes (lección de la [matriz de runtimes de Ein](archive/ein-workspace/docs-site/src/content/docs/03-runtimes/runtime-matrix.md)).
+
+Ein resolvía el relevo con un checkpoint JSON, un supervisor en PTY, un socket con token y hooks de Claude. Su formato de checkpoint ([límites y avisos](archive/ein-workspace/ein-pi/agent/lib/continuity-checkpoint.ts)) es buena referencia para el resumen; el supervisor es justo lo que se evita. El cambio en caliente dentro de la misma terminal queda como mejora posterior si se echa de menos.
+
+## Evidencia
+
+Un resultado de proceso debe registrar comando real, cwd, salida o referencia, exit code y código comprobado. La identidad de código no puede reducirse a HEAD cuando hay cambios sin commit o archivos nuevos. Reutilizar lo que ya ofrece Pi/CI antes de construir un servicio nuevo.
+
+Separar:
+
+1. Comando ejecutado y resultado observado.
+2. Alcance funcional que ese comando cubre.
+3. Juicio de revisión sobre requisitos y calidad.
+4. Autorización de entrega.
+
+Un recibo de informe demuestra integridad/frescura de ese informe, no toda su veracidad. El éxito de tipos tampoco demuestra comportamiento. Los resultados incompletos se expresan como tales.
+
+TDD aporta cuando existe un comportamiento reproducible y una prueba significativa. No se obliga al mismo ritual para copy, estilo visual o cambios sin un RED útil. Sí se exige la comprobación apropiada. La elección vigente se conserva al delegar y reanudar.
+
+La entrega final y el retorno de un trabajador pueden seguir la forma de la skill `pr` de Matt: resumen visual mínimo, evidencia antes/después, si el cambio es reversible y qué más puede afectar.
+
+Para medir uso se aprovechan los registros de los mensajes del asistente y sus hijos. `usage.cost` puede ser una estimación calculada por Pi a partir de tokens y tarifas del catálogo; no es necesariamente un importe informado o facturado por el proveedor. Etiquetar por separado **estimado**, **facturado** y **desconocido**, conservando tarifa y procedencia cuando existan. En suscripciones puede haber estimación de uso sin coste marginal atribuible. No interpretar un cero, una tarifa ausente o un campo faltante como gratuidad; tampoco sumar dos veces uso del hijo ya agregado por otro registro.
+
+## Interfaz
+
+Dos superficies, con la [gramática visual de Ein](#voz-y-estilo):
+
+- **Dentro de la sesión** (extensiones de Pi, mínimas): actividad de trabajadores sobre el editor y TODO debajo. Detalles de hijos bajo demanda: tarea, modelo/esfuerzo efectivo, tiempo, coste conocido y motivo de espera.
+- **Fuera de la sesión**: el launcher.
+
+La atribución de ediciones observadas puede inspirarse en Gentle Shell; el diff Git completo sigue siendo necesario para entregar. Las modificaciones vía shell o externas no desaparecen porque el visor de eventos no las capture.
+
+Los datos desconocidos se muestran como desconocidos, distintos de vacíos. Fallar al renderizar, medir coste o guardar una tarjeta no cambia por sí solo el permiso para trabajar.
+
+### TODO
+
+Conserva el aspecto del de Ein: debajo del editor, la fila actual con `▸`, sin fondo propio. Cambia su fuente: proyecta el checklist del documento de trabajo activo en lugar del `tasks.md` de OpenSpec.
+
+Es una **vista, no una fuente de verdad**: marcar o añadir una tarea escribe en el documento. Sin documento de trabajo no hay TODO; el trabajo pequeño no crea uno para llenar el widget. Si hay varios documentos activos, un comando de foco elige cuál se muestra, como `/ein:focus`. El launcher muestra el mismo checklist en su vista Estado, y Claude, Codex u OpenCode lo leen como casillas markdown sin nada especial.
+
+## Voz y estilo
+
+### Voz
+
+Se conservan las reglas de Ein ([Output en AGENTS.md](archive/ein-workspace/runtime/AGENTS.md), «Identity & voice» y «Samu Output Format» del [orquestador de main](archive/ein-main/runtime/assets/orchestrator.md)):
+
+- Empezar por el objetivo y el efecto en lenguaje cotidiano; después, el mecanismo real paso a paso, definiendo cada término técnico en su primer uso y con un ejemplo pequeño si la idea es abstracta.
+- El peso de la respuesta acompaña al peso del cambio. Lo trivial se despacha en una línea.
+- El formato completo `// 000 RESUMEN` … `// 006 SIGUIENTE PASO` es para cambios complejos; cuando se usa, `// 002 CÓMO FUNCIONA` es el núcleo. Anti-patrón: informar de «endpoint añadido» sin explicar el mecanismo.
+- Español por defecto, directo, sin emojis ni relleno; idioma de artefactos configurable.
+
+Nuevo: **no enseñar lo que Samu ya domina.** El archivo de persona incluye una lista corta y editable de temas conocidos (Git, PRs, ramas, commits, Bun…). Para esas rutinas basta el resultado y su identificador o enlace. La regla de main «explica la jerga en su primer uso, aunque la haya usado el usuario» se matiza: salvo los términos de esa lista. Enseñar se reserva para mecanismos nuevos o que no son evidentes.
+
+La voz vive en un único archivo que llega a todos los runtimes a través de `AGENTS.md`.
+
+### Estilo
+
+El contrato visual es [STYLE.md de Ein](archive/ein-workspace/runtime/docs/STYLE.md), trasladado tal cual:
+
+- Paleta de cuatro colores con fuente única en `brand.json` (Carbon, Concrete, Structure, Yellow) y escala de grises de cuerpo.
+- Un solo acento por pantalla; la jerarquía la hacen el aire y el apagado, no los recuadros.
+- `// NNN  TÍTULO`, `▏`, `▸`, `·`, `✓`; minúsculas en el texto corrido; `NO_COLOR` y salida sin TTY monocromas.
+- Markdown publicado con `## // NNN.`; commits en Conventional Commits sin atribución a IA.
+
+El contrato pide diseño plano, una sola aparición animada y nada de animaciones en bucle. Si se quieren más «virguerías» en la TUI, se revisa el contrato explícitamente; si no, van en maquetación adaptable, transiciones y el televisor de la marca.
+
+### Comentarios de código y logs
+
+Son un requisito de legibilidad y de identidad solicitado por Samu. Se conservan las fuentes originales [comment-style](archive/ein-workspace/runtime/skills/local/comment-style/SKILL.md) y [logging-style](archive/ein-workspace/runtime/skills/local/logging-style/SKILL.md). La primera no incluye Go y la segunda se centra en JS/TS: se adaptan sus convenciones, sin presentar los originales como si ya cubrieran todos los lenguajes.
+
+**Comentarios para orientarse y comprender.** En archivos no triviales, una cabecera breve explica la responsabilidad y las secciones ayudan a localizar el flujo. En funciones o pasos complejos, explicar qué papel cumplen, las decisiones, reglas de negocio y trampas que no se deducen fácilmente. Conservar la firma visual de Samu:
+
+```ts
+// =============================================================================
+// [FLOW] REANUDAR TRABAJO
+// Recupera el pendiente y contrasta las comprobaciones con los archivos actuales.
+// =============================================================================
+
+// BLINDAJE -> Una edición posterior invalida la comprobación anterior.
+```
+
+Etiquetas como `[CORE]`, `[FLOW]`, `[DATA]`, `[AUTH]` o `[UI]` cuando ayuden a navegar. Notas cortas con motivo en mayúsculas y `->` para causa/efecto; como máximo un acento de ese vocabulario por bloque lógico. Sin emojis ni relleno. Nombres claros y explicaciones útiles: no comentar cada línea obvia, ni añadir una cabecera a un archivo trivial solo para decorarlo. El objetivo es que Samu entienda qué hace cada parte relevante y por qué está así.
+
+Aplicar a código propio nuevo y bloques tocados; conservar el idioma coherente del archivo y las convenciones explícitas del proyecto. No reescribir archivos ajenos al encargo para imponer la marca, ni tocar vendor/generados por estilo. En Go, mantener comentarios de documentación y directivas en su forma válida; las cabeceras y etiquetas acompañan esa documentación, no la sustituyen. La adaptación no altera anotaciones con significado para compiladores o herramientas.
+
+**Logs para seguir lo que ocurre.** Un evento por registro, con contexto útil y la gramática original:
+
+```text
+[TAG] SEP ACCION :: clave: valor | clave: valor
+
+[DATA] >> COPY_START :: week_id: wk_42
+[DATA] ++ COPIED :: activities: 12 | duration_ms: 34
+[ERR] :: COPY_FAIL :: reason: invalid_date | attempt: 1
+```
+
+Tag de hasta 6 caracteres y acción de hasta 12, ambos en mayúsculas. `::` evento general, `>>` inicio, `++` éxito y `->` salida hacia otro sistema. Alinear columnas cuando resulte sencillo. Registrar decisiones, fallos, operaciones relevantes o lentas; evitar lecturas triviales y ruido por iteración. Los errores aportan contexto diagnóstico sin secretos ni datos personales; usar identificadores seguros cuando proceda.
+
+Integrar con el logger que ya tenga el proyecto y sus niveles. Mantener campos estructurados si los consume una herramienta, con esta presentación para lectura humana. Separar los logs técnicos de la voz de la interfaz y del resumen al usuario. No imprimirlos en el stdout reservado a JSON/RPC ni mezclarlos con el renderizado de la TUI: usar el canal del logger, fichero o stderr que corresponda al entorno. Los logs se añaden cuando hay eventos útiles, no para llenar una cuota.
+
+**Adopción sin otra ceremonia.** Adaptar las dos skills una vez y referenciarlas desde el catálogo compartido. La revisión comprueba claridad y alcance del diff; los tests de comentarios no comparan frases exactas. Para logs, comprobar lo mecánico cuando exista un emisor: nivel/formato, campos, redacción de datos y separación de canales. Una corrección de estilo se hace en el mismo cambio, sin nuevas fases ni rondas de aprobación.
+
+## Launcher e instalador
+
+Se conservan como producto. Se portan sus **comportamientos** (como casos de aceptación) y se reescribe el código en Go.
+
+**Launcher.** Aplicación de terminal con las cinco vistas de Ein ([CLI de Ein](archive/ein-workspace/docs-site/src/content/docs/04-reference/cli.md)), alimentadas por lo nuevo:
+
+| Vista | En Ein | En n_ein |
+|---|---|---|
+| Estado | proyecto, fase OpenSpec, verificación, git | proyecto, documento de trabajo y su checklist, git, última comprobación y si sigue vigente |
+| Configuración | modo, TDD, Hypa, CodeGraph, persona | modelo de sesión, modelo barato, persona e idioma, opcionales |
+| Sesiones | recientes con la última petición | recientes de todos los runtimes declarados |
+| Sistema | actualizaciones y diagnóstico | igual |
+| Runtime | elegir Pi o Claude y lanzar | elegir cualquier runtime declarado; lanzar o relevar con resumen |
+
+Se mantienen atajos (`tab`, `j/k`, `g/G`, `f` o `/`, `enter`, `q`), `--once`, `--project` y `--no-intro`; sin terminal interactiva pinta una vez y sale. Cada fila declara su fuente.
+
+**Instalador.** Binario separado del launcher, que sirve de vía de reparación cuando el launcher está roto. Verbos `install`, `update`, `doctor`, `restore`, `uninstall`. Se conservan estos comportamientos:
+
+- backup antes de tocar un árbol existente;
+- `--dry-run` enseña el plan sin mutar nada;
+- el canal elegido solo se guarda tras un update correcto;
+- `uninstall` conserva auth, secrets y sesiones;
+- nunca toca las instalaciones normales de Pi, Claude, Codex u OpenCode.
+
+Cambio respecto a Ein: los paquetes del runtime aislado se instalan con **versión fijada**, no con `@latest`.
+
+### Frontera entre lenguajes
+
+```text
+Go  (fuera del agente)   launcher + instalador
+TS  (dentro de Pi)       extensiones mínimas: TODO, /handoff, tema de sesión
+archivos neutros         brand.json · documento de trabajo · resumen de relevo · runtimes.toml · configuración
+```
+
+Los dos lados solo se comunican por archivos. Así Go y TS pintan los mismos colores desde `brand.json` y el launcher lee los mismos documentos que el agente.
+
+Por qué Go, con datos medidos el 29 de septiembre de 2026:
+
+- El binario de Ein (Bun compilado + OpenTUI) ocupa 73 MB (`ein`) y 95 MB (`ein-install`), unos 120 MB en Linux; el de gentle-ai (Go + Bubble Tea), 16 MB.
+- En arranque en caliente la diferencia es de décimas (0,05–0,18 s frente a ~0,00–0,04 s). La mejora que se percibe viene sobre todo del diseño y de lo maduro que es el ecosistema, no de la velocidad.
+- Bubble Tea, Lip Gloss, Bubbles, Huh y Harmonica son maduros y muy documentados; OpenTUI va por la 0.5 y su API todavía cambia.
+- Un solo binario pequeño, compilación cruzada trivial y distribución sencilla encajan con un instalador transaccional.
+
+Coste asumido: dos lenguajes. Samu trabaja a diario en TS/Vue; cuando aparezca algo propio de Go, la voz docente lo explica la primera vez.
+
+## Reutilización técnica
+
+Estudiar `model-config`, descubrimiento de skills, identidad Git y evaluación de Ein. Portar solo las dependencias necesarias. En Gentle Shell, usar los contratos y tests como referencia antes de trasladar `agents-runner` entero: está conectado a más subsistemas. Mapa de piezas de Ein que se conservan: [investigación](07-investigacion.md#ein-piezas-que-se-conservan).
+
+El runner se elige con la primera prueba real, entre candidatos concretos y con un contrato común ([pendientes](08-pendientes.md#runner-de-trabajadores)). No desarrollar dos runners productivos por anticipación.

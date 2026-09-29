@@ -1,0 +1,77 @@
+bun test v1.3.14 (0d9b296a)
+
+tests/tdd.test.ts:
+(pass) readTddMode / writeTddMode > default 'off' sin fichero (bloque B: TDD off por defecto) [1.67ms]
+(pass) readTddMode / writeTddMode > round-trip de cada modo [2.05ms]
+(pass) readTddMode / writeTddMode > escribe en .pi/ein/tdd.json [0.50ms]
+(pass) readTddMode / writeTddMode > valor inválido o JSON roto → default 'off' [0.94ms]
+
+tests/ein-continuity-extension.test.ts:
+(pass) ein continuity extension > recording failure lets local edits continue without fabricating a result; external effects still stop [3.89ms]
+(pass) ein continuity extension > missing native identity does not turn a local edit into a continuity denial [0.09ms]
+(pass) ein continuity extension > registers one command and each lifecycle hook exactly once [0.10ms]
+(pass) ein continuity extension > an explicit continue command reconciles first and grants only when still full [0.18ms]
+(pass) ein continuity extension > a normal delegation reconciles a full journal and retries admission once [0.40ms]
+(pass) ein continuity extension > a genuinely full journal gives the human one clear manual action [0.18ms]
+(pass) ein continuity extension > the model can reconcile native results but cannot grant an extra slot through the tool [0.47ms]
+(pass) ein continuity extension > sets an objective from the last real human request without accepting a model-supplied request id [0.85ms]
+(pass) ein continuity extension > shows the CAS revision without a human request or writing project state [20.08ms]
+(pass) ein continuity extension > handles usage, status, refresh, and clear with closed output [0.11ms]
+(pass) ein continuity extension > accepts only exact raw command arguments and suppresses UI output when unavailable [0.10ms]
+(pass) ein continuity extension > reports lifecycle command pressure with one closed busy code [0.06ms]
+(pass) ein continuity extension > ignores extension input and captures interactive/rpc input [0.05ms]
+(pass) ein continuity extension > unreadable or unbound mutation results remain uncertain instead of asserting success [0.32ms]
+(pass) ein continuity extension > saves settled boundaries and emits the context threshold notice once [1.01ms]
+(pass) ein continuity extension > to pi waits, suppresses old shutdown, and sends only through the fresh replacement context [0.30ms]
+(pass) ein continuity extension > to pi restores lifecycle state and reports an honestly cancelled replacement [0.07ms]
+(pass) ein continuity extension > contains kickoff send failure in the fresh context and never reports through stale state [0.14ms]
+(pass) ein continuity extension > restores and reports only when newSession throws before replacement [0.10ms]
+(pass) ein continuity extension > to claude prepares persistence but never spawns, shuts down, or exposes the brief [0.06ms]
+(pass) ein continuity extension > orders compaction and shutdown through lifecycle boundaries without duplicate background work [0.29ms]
+(pass) ein continuity extension > is included by the existing recursive template packaging and Pi directory discovery contract [0.91ms]
+
+tests/delegation-admission.test.ts:
+(pass) delegation admission > admits a direct single and preserves decoded task bytes [92.92ms]
+(pass) delegation admission > admits an awaited sequence and emits one canonical script [1.03ms]
+(pass) delegation admission > admits a static keyed fan-out without changing its independence [0.50ms]
+(pass) delegation admission > admits literal status as management without execution items [0.14ms]
+(pass) delegation admission > preserves public output and acceptance option forms in direct and workflow calls [1.65ms]
+(pass) delegation admission > rejects variables, interpolation, calls, spreads, computed and duplicate keys [0.95ms]
+(pass) delegation admission > rejects a mixed literal/dynamic fan-out as one unit [0.10ms]
+(pass) delegation admission > does not accept decoys, comments, regex, loops, conditions, aliases, or host access [2.14ms]
+(pass) delegation admission > rejects legacy arrays with a precise reissue code [0.04ms]
+(pass) delegation admission > rejects ambiguous mixtures, unknown fields and invalid keys; retains Ein-only turnBudget metadata [0.58ms]
+(pass) delegation admission > validates the runner tool budget contract before launch [0.27ms]
+(pass) delegation admission > enforces byte and call bounds [1.33ms]
+
+tests/sdd-verification-receipt.test.ts:
+(pass) createVerificationService > an optional unconfirmed agreement does not block passing verification [5.16ms]
+(pass) createVerificationService > a report symlink cannot overwrite another project file [2.36ms]
+(pass) createVerificationService > begin/finish publica un recibo actual sin autorreferencia [2.61ms]
+(pass) createVerificationService > edición, borrado y recibo antiguo quedan stale; sin cambios sigue current [2.42ms]
+(pass) createVerificationService > cambio durante verify, token obsoleto y outcome unknown no publican éxito [2.30ms]
+(pass) createVerificationService > alterar report exige finalizar de nuevo y un recibo malformado nunca es current [1.99ms]
+(pass) createVerificationService > un fallo entre report y recibo nunca produce current [1.69ms]
+(pass) createVerificationService > normaliza intent_key con el acuerdo vigente sin aceptar una clave vieja [1.98ms]
+(pass) createVerificationService > solo liga acuerdos confirmados y detecta si cambian durante verify [2.74ms]
+
+tests/apply-tdd-contract.test.ts:
+(pass) resolved apply TDD precedence > persisted strict/off wins over every structured or prose hint [3.27ms]
+(pass) resolved apply TDD precedence > ad-hoc structured hint beats legacy prose and project setting, including auto [0.81ms]
+(pass) resolved apply TDD precedence > legacy text remains ad-hoc compatibility only [1.53ms]
+(pass) resolved apply TDD precedence > an identified change never falls back to another active/global stance [1.08ms]
+(pass) resolved apply TDD precedence > multiple changes in one task are rejected [0.03ms]
+(pass) fail-closed configuration > absent global setting is off; invalid JSON/mode is invalid [0.66ms]
+(pass) fail-closed configuration > auto accepts only a root boolean and resolves true/false/absent [1.08ms]
+(pass) fail-closed configuration > strict auto without test command needs a decision without downgrading [0.40ms]
+(pass) fail-closed configuration > duplicates, aliases, scalars and unsupported key forms are invalid [1.87ms]
+(pass) fail-closed configuration > indented, commented and multiline strict_tdd text is not a root declaration [0.64ms]
+(pass) fail-closed configuration > persisted auto/ask is invalid rather than an auto fallback [2.35ms]
+(pass) transport, freshness and budget capability > gateway replaces supplied contracts with one generated line [0.80ms]
+(pass) transport, freshness and budget capability > change and auto fingerprints block changed evidence but survive rereads [1.43ms]
+(pass) transport, freshness and budget capability > strict skips only the automatic cap; explicit restrictions remain visible and unsupported caps are honest [0.28ms]
+
+ 61 pass
+ 0 fail
+ 276 expect() calls
+Ran 61 tests across 5 files. [250.00ms]

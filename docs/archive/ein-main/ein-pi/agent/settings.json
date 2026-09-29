@@ -1,0 +1,46 @@
+{
+  "theme": "ein",
+  "quietStartup": true,
+  "hideThinkingBlock": true,
+  "enableInstallTelemetry": false,
+  "enableSkillCommands": true,
+  "compaction": {
+    "enabled": true,
+    "reserveTokens": 16384,
+    "keepRecentTokens": 24000
+  },
+  "retry": {
+    "enabled": true,
+    "maxRetries": 1,
+    "baseDelayMs": 2000,
+    "provider": {
+      "maxRetryDelayMs": 60000,
+      "maxRetries": 0
+    }
+  },
+  "extensions": [
+    "/Users/samu/.pi/agent/extensions"
+  ],
+  "prompts": [
+    "/Users/samu/.pi/agent/prompts"
+  ],
+  "skills": [
+    "/Users/samu/.pi/agent/skills/local",
+    "/Users/samu/.pi/agent/skills/downloaded"
+  ],
+  "lastChangelogVersion": "0.78.1",
+  "npmCommand": [
+    "bun"
+  ],
+  "packages": [
+    "npm:pi-subagents@latest",
+    "npm:pi-mcp-adapter@latest",
+    "npm:context-mode@latest",
+    "npm:@juicesharp/rpiv-ask-user-question@latest",
+    "npm:@juicesharp/rpiv-i18n@latest"
+  ],
+  "subagents": {
+    "disableBuiltins": true
+  },
+  "httpIdleTimeoutMs": 120000
+}

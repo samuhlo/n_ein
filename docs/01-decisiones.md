@@ -1,0 +1,84 @@
+# Visión y decisiones
+
+## Producto
+
+n_ein ayuda a Samu a terminar cambios correctos, revisables y explicados con poco esfuerzo de supervisión. Es una herramienta personal que puede compartirse, no una plataforma genérica para todos los equipos.
+
+La fuerza debe estar en elegir el trabajo adecuado, dar contexto suficiente, ejecutar y comprobar. La complejidad solo se incorpora cuando evita un fallo o mejora un resultado observado.
+
+## Acordado explícitamente
+
+| Decisión | Consecuencia |
+|---|---|
+| Crear proyecto independiente `n_ein` | El plan anterior de refactorizar Ein in situ deja de gobernar la ejecución. |
+| Conservar Ein como legado | Preservar historia, evaluaciones y fuentes; no resetear su árbol ni migrarlo masivamente. |
+| Integrar lo mejor de Matt, Gentle Shell y Ein | Selección y adaptación; no suma de todas sus obligaciones. |
+| Priorizar coste económico sin microdelegación absurda | Contar preparación, revisión, integración y rescates; permitir ejecución directa. |
+| Empezar con baratos alojados | La primera versión útil no depende del servidor local. |
+| Qwen3.8-27B en 24 GB como objetivo posterior | Ensayar cuantización y contexto; no prometer el resultado del paper con otra precisión. |
+| Mejorar pruebas, limpieza y despliegue | Verificar comportamiento completo y artefactos instalados; aislamiento de canales. |
+
+### Añadido el 29 de septiembre de 2026
+
+Samu pidió explícitamente conservar de Ein lo que ve y usa a diario, con la complejidad interna nueva. n_ein es **el mismo Ein por fuera y más simple por dentro**, no un Ein recortado.
+
+| Decisión | Consecuencia |
+|---|---|
+| Conservar el launcher con todas sus funciones | Vistas de estado, configuración, sesiones, sistema y runtime, alimentadas por el documento de trabajo, Git y la configuración nueva en lugar de SDD/OpenSpec. Ver [diseño](02-diseno.md#launcher-e-instalador). |
+| Conservar el instalador | install, update con canales, doctor, restore y uninstall que conserva auth, secrets y sesiones; backup antes de tocar y `--dry-run` sin mutar. |
+| Launcher e instalador en **Go**; extensiones de Pi en **TypeScript** | Go vive fuera del agente; lo que corre dentro de Pi sigue en TS. Los dos lados solo se comunican por archivos neutros. Ver [frontera](02-diseno.md#frontera-entre-lenguajes). |
+| Conservar la identidad visual | Títulos `// NNN`, paleta de cuatro colores, un acento por pantalla y gramática de terminal de Ein ([STYLE.md](archive/ein-workspace/runtime/docs/STYLE.md)). |
+| Conservar la voz docente y el tono humano | Fácil de entender y que enseñe algo cuando aporte; **las rutinas que Samu ya domina no se explican** (crear una PR, un commit, una rama). |
+| Conservar el estilo personal de comentarios y logs | Recuperar `comment-style` y `logging-style`: código fácil de recorrer y entender, decisiones explicadas y eventos de consola reconocibles. Aplicarlo en n_ein y en el código que produzca para los proyectos de Samu; adaptar a Go y a las convenciones del proyecto. Ver [contrato](02-diseno.md#comentarios-de-código-y-logs). |
+| `intent` como capacidad central desde la primera versión | Adaptar `grill-me`/`grilling` y el canal de intención de Ein para definir encargos y decisiones abiertas. Activación explícita o propuesta aceptada; rondas con recomendaciones; hechos investigados por el agente. El acuerdo alimenta el documento de trabajo cuando haga falta, sin OpenSpec ni expediente paralelo. Ver [contrato](02-diseno.md#intent-definir-juntos-el-encargo). |
+| Conservar el TODO, adaptado | Vista del checklist del documento de trabajo, no otra fuente de verdad. |
+| Continuidad entre agentes como requisito central | Pi↔Claude como primer relevo probado. Facilitar Codex u OpenCode mediante adaptadores pequeños: configuración cuando baste y código mínimo cuando haga falta, con pruebas de aislamiento y continuidad. No crear otro supervisor por anticipación. |
+
+La facilidad de añadir agentes es el objetivo acordado. Que cada integración pueda resolverse solo con una entrada declarativa era una hipótesis de diseño; la revisión posterior la deja pendiente de demostrar con cada runtime. Un relevo requiere que las escrituras del origen y sus hijos hayan terminado o se hayan detenido antes de habilitarlas en destino.
+
+## Recomendaciones de diseño, revisables
+
+- Pi como runtime inicial; n_ein como capa pequeña: un paquete Pi (skills, extensiones mínimas, prompts, tema) más un launcher que fija el hogar aislado. Pi ya ofrece el aislamiento (`PI_CODING_AGENT_DIR`) y la carga de paquetes (`pi install`, `pi -e`).
+- Versión de Pi fijada y comprobada. Pi cambia su API de extensiones con frecuencia; se prefieren skills y configuración a código de extensión.
+- Formatos portables desde el primer día: `AGENTS.md`, skills en formato Agent Skills (`SKILL.md`), documento de trabajo en markdown y resumen de relevo en markdown. No se construyen adaptadores para Codex u OpenCode hasta que se usen.
+- Un documento de trabajo para esfuerzo prolongado; ninguno obligatorio para correcciones pequeñas.
+- Skills bajo demanda, un registro y una fuente por regla.
+- Capacidades genéricas de explorar, trabajar y revisar; no siete agentes permanentes de fase.
+- Preferir capacidades nativas, un único runner y límites realmente soportados.
+- Resultados de herramientas como evidencia; revisión semántica separada.
+- Continuidad con Git, objetivo, decisiones, comprobaciones y pendiente.
+- Desarrollo aislado, preview y estable; versiones probadas en lugar de resolución cambiante de latest.
+- Reutilizar el soporte nativo de modelos de Pi antes de crear integración propia.
+
+No convertir estos puntos en otra gramática que el modelo tenga que satisfacer para editar. Una necesidad real puede cambiar su implementación.
+
+## Alternativas descartadas en esta conversación
+
+1. Mantener Ein y construir n_ein como dos productos con evolución paralela.
+2. Copiar entero Gentle Shell y colocar otro arnés alrededor.
+3. Instalar todas las skills de Matt y heredar sin revisión sus confirmaciones, publicaciones o commits.
+4. Prohibir al capaz implementar y atribuir toda dificultad del barato a un plan insuficiente.
+5. Cambiar únicamente el nombre SDD por ODD conservando las mismas fases.
+6. Promocionar un modelo por precio/token o un benchmark externo sin coste total y resultados propios.
+
+## Conocimiento que debe sobrevivir
+
+De Ein se conservan también, como producto y no solo como aprendizaje: launcher, instalador, estilo, voz, TODO y continuidad entre runtimes. Se conservan sus **comportamientos**; su código se porta o se reescribe según lo acoplado que esté a SDD/OpenSpec.
+
+Los informes previos contienen defectos y experimentos valiosos. Reutilizar un caso de fallo y su criterio observable suele aportar más que portar su solución entera. Specs de producto y ADR todavía pertinentes se conservan como referencias, sin hacer que el runtime dependa de documentos obsoletos.
+
+Las pruebas del nuevo producto no tienen que perpetuar nombres de agentes, encabezados o artefactos retirados. Sí deben mantener las propiedades útiles: aislamiento, autorización, continuidad, evidencia fresca y límites del trabajo.
+
+## Cambios respecto al manifiesto de Ein
+
+| Principio anterior | Dirección propuesta |
+|---|---|
+| El caro decide; el barato ejecuta | Elegir capacidad y coordinación por resultado y coste total. |
+| El padre nunca programa | Puede programar cuando es la ruta más eficaz. |
+| El ejecutor no debe necesitar pensar | Autonomía proporcional, con escalado ante límites medidos. |
+| El router decide la siguiente fase | El agente elige el siguiente paso técnico dentro del alcance; herramientas calculan hechos. |
+| Todo fallo se cierra por defecto | Lo desconocido no se declara correcto; el fallo de registro no prohíbe trabajo nuevo por sí mismo. |
+
+## Jerarquía de este paquete
+
+Mensaje actual del usuario → decisiones explícitas → diseño y plan propuestos → investigación → fuentes históricas. El manifiesto archivado de Ein no tiene autoridad sobre n_ein. Si cambia una decisión, actualizar su dueño y referenciarla desde otros documentos; no acumular excepciones contradictorias.

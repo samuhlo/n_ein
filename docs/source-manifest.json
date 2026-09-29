@@ -1,0 +1,1623 @@
+{
+  "captured": "2026-09-28",
+  "purpose": "Fuentes históricas de solo referencia, no instalación ni instrucciones activas",
+  "files": [
+    {
+      "path": "archive/ein-main/LICENSE",
+      "source": "https://github.com/samuhlo/ein-agent",
+      "source_path": "LICENSE",
+      "revision": "f220788c1da2f77afac21cb37af154621aa05cce",
+      "sha256": "10900c6966b7b51358434a68e9bfa1b3d59be2155fa2c21e3411eb61454f9d00",
+      "bytes": 1064
+    },
+    {
+      "path": "archive/ein-main/MANIFIESTO.md",
+      "source": "https://github.com/samuhlo/ein-agent",
+      "source_path": "MANIFIESTO.md",
+      "revision": "f220788c1da2f77afac21cb37af154621aa05cce",
+      "sha256": "449830769ef80ac3b347cc096d0a2c23ea6df95f178843dec690c9ef31bb1455",
+      "bytes": 11075
+    },
+    {
+      "path": "archive/ein-main/README.md",
+      "source": "https://github.com/samuhlo/ein-agent",
+      "source_path": "README.md",
+      "revision": "f220788c1da2f77afac21cb37af154621aa05cce",
+      "sha256": "f909a22ea1f8de3ed087e1973b727fdba6cd9f20b9ccadfe8a95d656552a9979",
+      "bytes": 8559
+    },
+    {
+      "path": "archive/ein-main/ein-pi/agent/extensions/ein-continuity.ts",
+      "source": "https://github.com/samuhlo/ein-agent",
+      "source_path": "ein-pi/agent/extensions/ein-continuity.ts",
+      "revision": "f220788c1da2f77afac21cb37af154621aa05cce",
+      "sha256": "2715a2d111582bd1d11b2efcc01444051bcc30735e366ba4c4c55f7e451e5518",
+      "bytes": 15253
+    },
+    {
+      "path": "archive/ein-main/ein-pi/agent/extensions/ein-skill-registry.ts",
+      "source": "https://github.com/samuhlo/ein-agent",
+      "source_path": "ein-pi/agent/extensions/ein-skill-registry.ts",
+      "revision": "f220788c1da2f77afac21cb37af154621aa05cce",
+      "sha256": "522406e8e4be08186b7f3bafe8c287cc6701895c20989eb34958ad1a05ef5017",
+      "bytes": 24529
+    },
+    {
+      "path": "archive/ein-main/ein-pi/agent/extensions/internal/ein-agent-prompt-hook.ts",
+      "source": "https://github.com/samuhlo/ein-agent",
+      "source_path": "ein-pi/agent/extensions/internal/ein-agent-prompt-hook.ts",
+      "revision": "f220788c1da2f77afac21cb37af154621aa05cce",
+      "sha256": "64e494fd1aca60f3b41cd97b6d2d047cc3ae9196ee9af984dbef142684cc9dd8",
+      "bytes": 13341
+    },
+    {
+      "path": "archive/ein-main/ein-pi/agent/extensions/internal/ein-tool-call-gate.ts",
+      "source": "https://github.com/samuhlo/ein-agent",
+      "source_path": "ein-pi/agent/extensions/internal/ein-tool-call-gate.ts",
+      "revision": "f220788c1da2f77afac21cb37af154621aa05cce",
+      "sha256": "e129b513450af9f45a6300ef4448742752a0f3f72a894e7604a98d93ad918e4e",
+      "bytes": 13957
+    },
+    {
+      "path": "archive/ein-main/ein-pi/agent/extensions/internal/ein-verify-receipt-child.ts",
+      "source": "https://github.com/samuhlo/ein-agent",
+      "source_path": "ein-pi/agent/extensions/internal/ein-verify-receipt-child.ts",
+      "revision": "f220788c1da2f77afac21cb37af154621aa05cce",
+      "sha256": "6eeef77c086bf0d6ffa40eed9fd7f92c09d728081ea6b50d27bdb68207b192c5",
+      "bytes": 2543
+    },
+    {
+      "path": "archive/ein-main/ein-pi/agent/lib/apply-tdd-contract.ts",
+      "source": "https://github.com/samuhlo/ein-agent",
+      "source_path": "ein-pi/agent/lib/apply-tdd-contract.ts",
+      "revision": "f220788c1da2f77afac21cb37af154621aa05cce",
+      "sha256": "c48bf28bcc78f7b038bb141b6c8fbe26cec0dec43cd9f8ece8e7841b8f5df9f3",
+      "bytes": 15469
+    },
+    {
+      "path": "archive/ein-main/ein-pi/agent/lib/continuity-operation-adapter.ts",
+      "source": "https://github.com/samuhlo/ein-agent",
+      "source_path": "ein-pi/agent/lib/continuity-operation-adapter.ts",
+      "revision": "f220788c1da2f77afac21cb37af154621aa05cce",
+      "sha256": "729707492b85b1548a2d146baecbe5fc7d6d0ba9797e802106841ea7c9a97e39",
+      "bytes": 5957
+    },
+    {
+      "path": "archive/ein-main/ein-pi/agent/lib/continuity-operations.ts",
+      "source": "https://github.com/samuhlo/ein-agent",
+      "source_path": "ein-pi/agent/lib/continuity-operations.ts",
+      "revision": "f220788c1da2f77afac21cb37af154621aa05cce",
+      "sha256": "a5eac63a5909479d4591b23a0b12dbcfd156ad582df184255c330c1772ae4de7",
+      "bytes": 8511
+    },
+    {
+      "path": "archive/ein-main/ein-pi/agent/lib/delegation-admission.ts",
+      "source": "https://github.com/samuhlo/ein-agent",
+      "source_path": "ein-pi/agent/lib/delegation-admission.ts",
+      "revision": "f220788c1da2f77afac21cb37af154621aa05cce",
+      "sha256": "27bb8a48d7f23aa3022ab31c567fe1511756b91a460766d7cca0cf6b0678c42f",
+      "bytes": 21787
+    },
+    {
+      "path": "archive/ein-main/ein-pi/agent/lib/model-config.ts",
+      "source": "https://github.com/samuhlo/ein-agent",
+      "source_path": "ein-pi/agent/lib/model-config.ts",
+      "revision": "f220788c1da2f77afac21cb37af154621aa05cce",
+      "sha256": "1275c3519a450250fc902c3cfa02b121ec8c7e13a4bdc2a65b503e501d667435",
+      "bytes": 29934
+    },
+    {
+      "path": "archive/ein-main/ein-pi/agent/lib/tdd.ts",
+      "source": "https://github.com/samuhlo/ein-agent",
+      "source_path": "ein-pi/agent/lib/tdd.ts",
+      "revision": "f220788c1da2f77afac21cb37af154621aa05cce",
+      "sha256": "c587da36213ffa9154cba14f0f8a2fb85387b335c057306505be4f0ffa83496e",
+      "bytes": 4560
+    },
+    {
+      "path": "archive/ein-main/ein-pi/agent/settings.json",
+      "source": "https://github.com/samuhlo/ein-agent",
+      "source_path": "ein-pi/agent/settings.json",
+      "revision": "f220788c1da2f77afac21cb37af154621aa05cce",
+      "sha256": "3a1fc6f7273fab0135eabde6da453c903a4319f1c45341b9551a79a77d127faa",
+      "bytes": 988
+    },
+    {
+      "path": "archive/ein-main/package.json",
+      "source": "https://github.com/samuhlo/ein-agent",
+      "source_path": "package.json",
+      "revision": "f220788c1da2f77afac21cb37af154621aa05cce",
+      "sha256": "a91f4bb2ac7505544e6d34e16aa6fbd766403ee9e6d14c2797336097bf234a62",
+      "bytes": 817
+    },
+    {
+      "path": "archive/ein-main/runtime/AGENTS.md",
+      "source": "https://github.com/samuhlo/ein-agent",
+      "source_path": "runtime/AGENTS.md",
+      "revision": "f220788c1da2f77afac21cb37af154621aa05cce",
+      "sha256": "30d022f1a88ab2a576d9d3425076a61c13818040df0924f5a23f1955f88b4644",
+      "bytes": 7011
+    },
+    {
+      "path": "archive/ein-main/runtime/agents/sdd-apply.md",
+      "source": "https://github.com/samuhlo/ein-agent",
+      "source_path": "runtime/agents/sdd-apply.md",
+      "revision": "f220788c1da2f77afac21cb37af154621aa05cce",
+      "sha256": "2f4a4c9182f4c8d3003f1ced4b92b3e890511d0ca2400a7bb29b50865c052447",
+      "bytes": 12879
+    },
+    {
+      "path": "archive/ein-main/runtime/agents/sdd-verify.md",
+      "source": "https://github.com/samuhlo/ein-agent",
+      "source_path": "runtime/agents/sdd-verify.md",
+      "revision": "f220788c1da2f77afac21cb37af154621aa05cce",
+      "sha256": "684798edeea0528b8fe731253ede43801d67389f6926232e869c6cdd71e11872",
+      "bytes": 9596
+    },
+    {
+      "path": "archive/ein-main/runtime/assets/orchestrator.md",
+      "source": "https://github.com/samuhlo/ein-agent",
+      "source_path": "runtime/assets/orchestrator.md",
+      "revision": "f220788c1da2f77afac21cb37af154621aa05cce",
+      "sha256": "6907f1522d6d263fab5943e305c1d4ba73ef09550109df3e0aac9de7a5274d8d",
+      "bytes": 43011
+    },
+    {
+      "path": "archive/ein-main/shared/sdd/sdd-routing-core.ts",
+      "source": "https://github.com/samuhlo/ein-agent",
+      "source_path": "shared/sdd/sdd-routing-core.ts",
+      "revision": "f220788c1da2f77afac21cb37af154621aa05cce",
+      "sha256": "46d7960e69ddf5ed5efa602c6eefcb30cd3dd75bff2283d6c07db9e49625858b",
+      "bytes": 35320
+    },
+    {
+      "path": "archive/ein-main/shared/sdd/sdd-verification-receipt.ts",
+      "source": "https://github.com/samuhlo/ein-agent",
+      "source_path": "shared/sdd/sdd-verification-receipt.ts",
+      "revision": "f220788c1da2f77afac21cb37af154621aa05cce",
+      "sha256": "e9a0c68ab1b3e3e9bbd951fad40c72e7f8ef53b81bcda46264bc0b41ef700b6a",
+      "bytes": 11566
+    },
+    {
+      "path": "archive/ein-workspace/.pi/ein/evidence/engram-2026-09-11.tar.gz",
+      "source": "ein local: HEAD a5f96323 + cambios previos; no equivale a main",
+      "source_path": ".pi/ein/evidence/engram-2026-09-11.tar.gz",
+      "revision": null,
+      "sha256": "f0491db0326c79e82131c72c98f3e21428d580a2b0b6b069adc22f1784a3453c",
+      "bytes": 5847246
+    },
+    {
+      "path": "archive/ein-workspace/.pi/ein/evidence/pi-lens-2026-09-09.tar.gz",
+      "source": "ein local: HEAD a5f96323 + cambios previos; no equivale a main",
+      "source_path": ".pi/ein/evidence/pi-lens-2026-09-09.tar.gz",
+      "revision": null,
+      "sha256": "835561437a30836758534453297c70e77e1e0255b973c7a3b0e7d39c6e17dbdc",
+      "bytes": 19262424
+    },
+    {
+      "path": "archive/ein-workspace/.pi/ein/evidence/simple-pilot-2026-09-08.tar.gz",
+      "source": "ein local: HEAD a5f96323 + cambios previos; no equivale a main",
+      "source_path": ".pi/ein/evidence/simple-pilot-2026-09-08.tar.gz",
+      "revision": null,
+      "sha256": "4c38b8b82944bcdc4f1aa56c15e7522f8d649b828ff0de4d116c2a02e3e36c17",
+      "bytes": 612733
+    },
+    {
+      "path": "archive/ein-workspace/MANIFIESTO.md",
+      "source": "ein local: HEAD a5f96323 + cambios previos; no equivale a main",
+      "source_path": "MANIFIESTO.md",
+      "revision": null,
+      "sha256": "e77c500acd39cddaf482b00113d1fe66336536bc97ff1cc1ff80f87f907bd370",
+      "bytes": 12031
+    },
+    {
+      "path": "archive/ein-workspace/README.md",
+      "source": "ein local: HEAD a5f96323 + cambios previos; no equivale a main",
+      "source_path": "README.md",
+      "revision": null,
+      "sha256": "6ff839682cb70e1bf4d3c0a0d0ea624e3f5ba79725fe7bf75a5c64116e6bb748",
+      "bytes": 6906
+    },
+    {
+      "path": "archive/ein-workspace/docs-site/src/content/docs/03-runtimes/runtime-matrix.md",
+      "source": "ein local: HEAD a5f96323 + cambios previos; no equivale a main",
+      "source_path": "docs-site/src/content/docs/03-runtimes/runtime-matrix.md",
+      "revision": null,
+      "sha256": "37146048ae2ed84e3a0c14f009c9ca63f2d325afb51408ff210762fc5192377a",
+      "bytes": 3615
+    },
+    {
+      "path": "archive/ein-workspace/docs-site/src/content/docs/04-reference/cli.md",
+      "source": "ein local: HEAD a5f96323 + cambios previos; no equivale a main",
+      "source_path": "docs-site/src/content/docs/04-reference/cli.md",
+      "revision": null,
+      "sha256": "477cfbe3f65518df4770e81adb80a7da3df8483e0bf1c3bc785513bfb47d5acc",
+      "bytes": 6680
+    },
+    {
+      "path": "archive/ein-workspace/docs/adr/0005-make-cheap-apply-verifiable.md",
+      "source": "ein local: HEAD a5f96323 + cambios previos; no equivale a main",
+      "source_path": "docs/adr/0005-make-cheap-apply-verifiable.md",
+      "revision": null,
+      "sha256": "fe96d4eeb051ef511abfbb92d54162658f35bd2deb254aa227f958f46d1bc6c5",
+      "bytes": 10852
+    },
+    {
+      "path": "archive/ein-workspace/docs/audits/2026-09-28-rumbo-ein-vs-gentle-ai.md",
+      "source": "ein local: HEAD a5f96323 + cambios previos; no equivale a main",
+      "source_path": "docs/audits/2026-09-28-rumbo-ein-vs-gentle-ai.md",
+      "revision": null,
+      "sha256": "c0e648652ef4246a01e8976579b78bed4b14e69c34d280acd13ed615fabb1cb1",
+      "bytes": 23973
+    },
+    {
+      "path": "archive/ein-workspace/docs/plans/2026-09-23-recuperacion-arneses.md",
+      "source": "ein local: HEAD a5f96323 + cambios previos; no equivale a main",
+      "source_path": "docs/plans/2026-09-23-recuperacion-arneses.md",
+      "revision": null,
+      "sha256": "0d186f4c545db357fd6e8228c746e80c1abc422653bbb7382774f70317b49cf2",
+      "bytes": 20302
+    },
+    {
+      "path": "archive/ein-workspace/docs/plans/2026-09-28-ein-skills-shell-modelos.md",
+      "source": "ein local: HEAD a5f96323 + cambios previos; no equivale a main",
+      "source_path": "docs/plans/2026-09-28-ein-skills-shell-modelos.md",
+      "revision": null,
+      "sha256": "29c096111bd693f1c149b492e3ed4402a69fe80dd8987284cbc277c12bdf6b35",
+      "bytes": 31212
+    },
+    {
+      "path": "archive/ein-workspace/docs/roadmap.md",
+      "source": "ein local: HEAD a5f96323 + cambios previos; no equivale a main",
+      "source_path": "docs/roadmap.md",
+      "revision": null,
+      "sha256": "fffce3efa758b51a1d0e04cc964cc41cc3f03c843d5598b0f143e6f7ac2365d0",
+      "bytes": 3189
+    },
+    {
+      "path": "archive/ein-workspace/ein-cc/launchers/ein-cc.fish",
+      "source": "ein local: HEAD a5f96323 + cambios previos; no equivale a main",
+      "source_path": "ein-cc/launchers/ein-cc.fish",
+      "revision": null,
+      "sha256": "b8a25e9a62200c799e57d07f543765c0d46a1ca81941f5265daaa223272dcfe9",
+      "bytes": 1801
+    },
+    {
+      "path": "archive/ein-workspace/ein-pi/agent/brand.json",
+      "source": "ein local: HEAD a5f96323 + cambios previos; no equivale a main",
+      "source_path": "ein-pi/agent/brand.json",
+      "revision": null,
+      "sha256": "d46a589e94f70e4c3bccff9dfec036aa089cd9a008e187ef9b9da08cfacdeef9",
+      "bytes": 197
+    },
+    {
+      "path": "archive/ein-workspace/ein-pi/agent/lib/continuity-checkpoint.ts",
+      "source": "ein local: HEAD a5f96323 + cambios previos; no equivale a main",
+      "source_path": "ein-pi/agent/lib/continuity-checkpoint.ts",
+      "revision": null,
+      "sha256": "c09ccf96c8fa55ee85076624015c3248f6ef1bb6f114e335db01b6e3ba13515e",
+      "bytes": 16491
+    },
+    {
+      "path": "archive/ein-workspace/ein-pi/agent/lib/theme.ts",
+      "source": "ein local: HEAD a5f96323 + cambios previos; no equivale a main",
+      "source_path": "ein-pi/agent/lib/theme.ts",
+      "revision": null,
+      "sha256": "127dd966731f06ded0444de86b3e5262f2d7908d4427ad459c5f3acfcd3d7b92",
+      "bytes": 5694
+    },
+    {
+      "path": "archive/ein-workspace/ein-pi/agent/themes/ein.json",
+      "source": "ein local: HEAD a5f96323 + cambios previos; no equivale a main",
+      "source_path": "ein-pi/agent/themes/ein.json",
+      "revision": null,
+      "sha256": "a832de9c60856ccb01d8feb56414073f9c9970729b15642321321ad9f366910d",
+      "bytes": 1967
+    },
+    {
+      "path": "archive/ein-workspace/ein-pi/launchers/ein-pi.fish",
+      "source": "ein local: HEAD a5f96323 + cambios previos; no equivale a main",
+      "source_path": "ein-pi/launchers/ein-pi.fish",
+      "revision": null,
+      "sha256": "1444fc948e2bb68ac2de4fac73db290b6d6d3135955f3be782a6a96b91e93676",
+      "bytes": 1500
+    },
+    {
+      "path": "archive/ein-workspace/evals/apply-corpus.json",
+      "source": "ein local: HEAD a5f96323 + cambios previos; no equivale a main",
+      "source_path": "evals/apply-corpus.json",
+      "revision": null,
+      "sha256": "cee58a463a1c1dd328131e2ff1887b23032c1341ce9582df5cb9fc2e3e2b0ab7",
+      "bytes": 71343
+    },
+    {
+      "path": "archive/ein-workspace/evals/build-corpus.ts",
+      "source": "ein local: HEAD a5f96323 + cambios previos; no equivale a main",
+      "source_path": "evals/build-corpus.ts",
+      "revision": null,
+      "sha256": "de9b589fb25c25e108675853bf6f045a73ab7971b79fcb14b05e7b2536a87b82",
+      "bytes": 3983
+    },
+    {
+      "path": "archive/ein-workspace/evals/cheap-apply-accounting-baseline.json",
+      "source": "ein local: HEAD a5f96323 + cambios previos; no equivale a main",
+      "source_path": "evals/cheap-apply-accounting-baseline.json",
+      "revision": null,
+      "sha256": "f21d9e5e55a3a21b7ece678957b8281687e01959f6b7b365a3afc3614fb5954a",
+      "bytes": 1778
+    },
+    {
+      "path": "archive/ein-workspace/evals/engram-decision-2026-09-11.md",
+      "source": "ein local: HEAD a5f96323 + cambios previos; no equivale a main",
+      "source_path": "evals/engram-decision-2026-09-11.md",
+      "revision": null,
+      "sha256": "c055f3c96695174394b4e069f0f6b7d52d4565e42d08e2c41d4354656b58f192",
+      "bytes": 15422
+    },
+    {
+      "path": "archive/ein-workspace/evals/engram-mcp-probe-2026-09-11.json",
+      "source": "ein local: HEAD a5f96323 + cambios previos; no equivale a main",
+      "source_path": "evals/engram-mcp-probe-2026-09-11.json",
+      "revision": null,
+      "sha256": "b215ac3a04fdda17cee2e2aa0b9bd2ebd61ab2a122cdc95f97731c828b455de0",
+      "bytes": 6627
+    },
+    {
+      "path": "archive/ein-workspace/evals/engram-mcp-probe-2026-09-11.py",
+      "source": "ein local: HEAD a5f96323 + cambios previos; no equivale a main",
+      "source_path": "evals/engram-mcp-probe-2026-09-11.py",
+      "revision": null,
+      "sha256": "9019ee870341cb5e6b140f86b6bef0eb1adb392987ac9920d4dbc958761838e0",
+      "bytes": 2373
+    },
+    {
+      "path": "archive/ein-workspace/evals/engram-probe-2026-09-11.json",
+      "source": "ein local: HEAD a5f96323 + cambios previos; no equivale a main",
+      "source_path": "evals/engram-probe-2026-09-11.json",
+      "revision": null,
+      "sha256": "79e029ea98849247632220910c305fb3e6b367688f31c0b3b0c52ad37da02cc8",
+      "bytes": 6265
+    },
+    {
+      "path": "archive/ein-workspace/evals/engram-probe-2026-09-11.ts",
+      "source": "ein local: HEAD a5f96323 + cambios previos; no equivale a main",
+      "source_path": "evals/engram-probe-2026-09-11.ts",
+      "revision": null,
+      "sha256": "b58794c808e718b90a66e7d613457ddc51015b9219a120a7333590b6476e3cdc",
+      "bytes": 3699
+    },
+    {
+      "path": "archive/ein-workspace/evals/engram-probe-network-2026-09-11.json",
+      "source": "ein local: HEAD a5f96323 + cambios previos; no equivale a main",
+      "source_path": "evals/engram-probe-network-2026-09-11.json",
+      "revision": null,
+      "sha256": "144163b879c9463230982288c0328ed5d1c26da517c02c44661de500d6173a8a",
+      "bytes": 8064
+    },
+    {
+      "path": "archive/ein-workspace/evals/engram-results-2026-09-11.json",
+      "source": "ein local: HEAD a5f96323 + cambios previos; no equivale a main",
+      "source_path": "evals/engram-results-2026-09-11.json",
+      "revision": null,
+      "sha256": "7c3489aa6051a3ae167e5b04463a8058e35eafa383369af014ab94e2f871a751",
+      "bytes": 10853
+    },
+    {
+      "path": "archive/ein-workspace/evals/pi-lens-2026-09-09.md",
+      "source": "ein local: HEAD a5f96323 + cambios previos; no equivale a main",
+      "source_path": "evals/pi-lens-2026-09-09.md",
+      "revision": null,
+      "sha256": "605e824681bedb74ddc740150c45cd65aa45db00eee94d41ec3f67987a3662fb",
+      "bytes": 14187
+    },
+    {
+      "path": "archive/ein-workspace/evals/simple-pilot-2026-09-08.md",
+      "source": "ein local: HEAD a5f96323 + cambios previos; no equivale a main",
+      "source_path": "evals/simple-pilot-2026-09-08.md",
+      "revision": null,
+      "sha256": "34e9d73f6077de671e789c5dc0a92a964d6c1513931717599a911c3d944307e4",
+      "bytes": 7335
+    },
+    {
+      "path": "archive/ein-workspace/installer/README.md",
+      "source": "ein local: HEAD a5f96323 + cambios previos; no equivale a main",
+      "source_path": "installer/README.md",
+      "revision": null,
+      "sha256": "11583e1dc06bc8eaf88342e6a07b0b711a4dd6d9f8698b99b36ee8d692142a39",
+      "bytes": 7115
+    },
+    {
+      "path": "archive/ein-workspace/runtime/AGENTS.md",
+      "source": "ein local: HEAD a5f96323 + cambios previos; no equivale a main",
+      "source_path": "runtime/AGENTS.md",
+      "revision": null,
+      "sha256": "d5cc8fb2540a58281e2b9c8f37b575361d1bdf17884265338621e2150ca777fc",
+      "bytes": 6661
+    },
+    {
+      "path": "archive/ein-workspace/runtime/docs/STYLE.md",
+      "source": "ein local: HEAD a5f96323 + cambios previos; no equivale a main",
+      "source_path": "runtime/docs/STYLE.md",
+      "revision": null,
+      "sha256": "c16ef09a5a314883009aff1261752167cac75d71618726f59a38fa7c172c7044",
+      "bytes": 8538
+    },
+    {
+      "path": "archive/ein-workspace/runtime/skills/local/comment-style/SKILL.md",
+      "source": "ein local: HEAD a5f96323 + cambios previos; fuente propia archivada sin adaptar",
+      "source_path": "runtime/skills/local/comment-style/SKILL.md",
+      "revision": null,
+      "sha256": "531743ebddcb7cc95bde20f1f4d2593a40d36e4aa2bf8539db1c8c749f0442c8",
+      "bytes": 7582
+    },
+    {
+      "path": "archive/ein-workspace/runtime/skills/local/intent-channel/SKILL.md",
+      "source": "ein local: HEAD a5f96323 + cambios previos; protocolo intent histórico sin adaptar",
+      "source_path": "runtime/skills/local/intent-channel/SKILL.md",
+      "revision": null,
+      "sha256": "9832031bda3b1f8969572476735a6a957ca4aa5aacf33bd71cdd1d57d36b204f",
+      "bytes": 5967
+    },
+    {
+      "path": "archive/ein-workspace/runtime/skills/local/logging-style/SKILL.md",
+      "source": "ein local: HEAD a5f96323 + cambios previos; fuente propia archivada sin adaptar",
+      "source_path": "runtime/skills/local/logging-style/SKILL.md",
+      "revision": null,
+      "sha256": "fb8ebf56020ed003b21f86038c32a1e6f975ba944e37da52ae9519fd1cf735cd",
+      "bytes": 4895
+    },
+    {
+      "path": "archive/ein-workspace/shared/contracts/ein-tv.ts",
+      "source": "ein local: HEAD a5f96323 + cambios previos; no equivale a main",
+      "source_path": "shared/contracts/ein-tv.ts",
+      "revision": null,
+      "sha256": "a86c34b1c492b6893f48b54244f0427c9423284fd4420725707d648808642eb8",
+      "bytes": 11638
+    },
+    {
+      "path": "evidence/ein-audit-focused-20260928.log",
+      "source": "Log de esta conversación: 61 pruebas focales sobre snapshot de main",
+      "source_path": "ein-audit-focused-20260928.log",
+      "revision": null,
+      "sha256": "adf8e1b1dd8ec46c8413eb3f12d619877e5b7900f373d653a40e7b1b2773cfe1",
+      "bytes": 7139
+    },
+    {
+      "path": "sources/gentle-ai/LICENSE",
+      "source": "https://github.com/Gentleman-Programming/gentle-ai",
+      "source_path": "LICENSE",
+      "revision": "e2cb2bf25193f9ac953978906596cf06cc16b733",
+      "sha256": "2806e215dd306b614fe3211e24186652c7d56c1a57340537fc8f2f6822bc74f5",
+      "bytes": 1078
+    },
+    {
+      "path": "sources/gentle-ai/README.md",
+      "source": "https://github.com/Gentleman-Programming/gentle-ai",
+      "source_path": "README.md",
+      "revision": "e2cb2bf25193f9ac953978906596cf06cc16b733",
+      "sha256": "07d05b2125cfb06fb95638e64740b3074092706a8ccc1d5a213357237f39078e",
+      "bytes": 18007
+    },
+    {
+      "path": "sources/gentle-ai/TRADEMARKS.md",
+      "source": "https://github.com/Gentleman-Programming/gentle-ai",
+      "source_path": "TRADEMARKS.md",
+      "revision": "e2cb2bf25193f9ac953978906596cf06cc16b733",
+      "sha256": "7d06fa48057dbbc0eef054df5a40b3590a8ba07ea817e6d50b71cbf2ac3d1b4e",
+      "bytes": 4094
+    },
+    {
+      "path": "sources/gentle-ai/docs/intended-usage.md",
+      "source": "https://github.com/Gentleman-Programming/gentle-ai",
+      "source_path": "docs/intended-usage.md",
+      "revision": "e2cb2bf25193f9ac953978906596cf06cc16b733",
+      "sha256": "3e5c93f7e1e2cbf1d652e95e7d4f194badf67f528fedb9cd62dd4a879b4a0baf",
+      "bytes": 3553
+    },
+    {
+      "path": "sources/gentle-ai/docs/review-integration.md",
+      "source": "https://github.com/Gentleman-Programming/gentle-ai",
+      "source_path": "docs/review-integration.md",
+      "revision": "e2cb2bf25193f9ac953978906596cf06cc16b733",
+      "sha256": "0f0a4f468d83e881034c9eba24638fac45a38ae4b1720a626b5e49be9cb07caa",
+      "bytes": 23551
+    },
+    {
+      "path": "sources/gentle-ai/docs/trigger-rules.md",
+      "source": "https://github.com/Gentleman-Programming/gentle-ai",
+      "source_path": "docs/trigger-rules.md",
+      "revision": "e2cb2bf25193f9ac953978906596cf06cc16b733",
+      "sha256": "93f7c2e7819690daf337982dc3e861ca9d25d9cf5c62c0954cbee762b10dc03d",
+      "bytes": 11950
+    },
+    {
+      "path": "sources/gentle-ai/internal/assets/skills/_shared/odd-orchestrator-sections.md",
+      "source": "https://github.com/Gentleman-Programming/gentle-ai",
+      "source_path": "internal/assets/skills/_shared/odd-orchestrator-sections.md",
+      "revision": "e2cb2bf25193f9ac953978906596cf06cc16b733",
+      "sha256": "2581e4e98be9e61cc4b8dd2f97c6d335474ea0ae151adc14de2f1c54c89f1464",
+      "bytes": 19434
+    },
+    {
+      "path": "sources/gentle-ai/internal/components/agentguidance/routing.go",
+      "source": "https://github.com/Gentleman-Programming/gentle-ai",
+      "source_path": "internal/components/agentguidance/routing.go",
+      "revision": "e2cb2bf25193f9ac953978906596cf06cc16b733",
+      "sha256": "5bfb0472675b0fb108fe3b4e53ca7028ba5a3ff851fcc72f193ef8695a72bf13",
+      "bytes": 22487
+    },
+    {
+      "path": "sources/gentle-ai/internal/components/agentguidance/strict_tdd.go",
+      "source": "https://github.com/Gentleman-Programming/gentle-ai",
+      "source_path": "internal/components/agentguidance/strict_tdd.go",
+      "revision": "e2cb2bf25193f9ac953978906596cf06cc16b733",
+      "sha256": "657c8f9855ef442205def514c372b4e6450e7398838cd6859aeaac6126c5b5b8",
+      "bytes": 4280
+    },
+    {
+      "path": "sources/gentle-ai/odd/tasks/odd-spend-proportionality.md",
+      "source": "https://github.com/Gentleman-Programming/gentle-ai",
+      "source_path": "odd/tasks/odd-spend-proportionality.md",
+      "revision": "e2cb2bf25193f9ac953978906596cf06cc16b733",
+      "sha256": "04f070683854e8be8dd4af704c6b1a6e1f8c06c815aeb8cb4e368c0e5a676bee",
+      "bytes": 7171
+    },
+    {
+      "path": "sources/gentle-ai/odd/tasks/remove-sdd-odd-only-main.md",
+      "source": "https://github.com/Gentleman-Programming/gentle-ai",
+      "source_path": "odd/tasks/remove-sdd-odd-only-main.md",
+      "revision": "e2cb2bf25193f9ac953978906596cf06cc16b733",
+      "sha256": "e24bec39e1ed913443c36f62154f2d5072668036a00fc6b2d9b4fbb4fb856a6d",
+      "bytes": 28881
+    },
+    {
+      "path": "sources/gentle-shell/LICENSE",
+      "source": "https://github.com/Gentleman-Programming/gentle-shell",
+      "source_path": "LICENSE",
+      "revision": "12de3e98cac73d2ef85478a93497ccaacf5426a3",
+      "sha256": "0457f5bcec3b3b211605dfb5d1a49042fd638f3686a410fe099c24a25af13c48",
+      "bytes": 1069
+    },
+    {
+      "path": "sources/gentle-shell/README.md",
+      "source": "https://github.com/Gentleman-Programming/gentle-shell",
+      "source_path": "README.md",
+      "revision": "12de3e98cac73d2ef85478a93497ccaacf5426a3",
+      "sha256": "6c95a68fcdfb8f56399c917d97ab01340c22e6cd1632fa6c062d678a56cc1d7a",
+      "bytes": 23366
+    },
+    {
+      "path": "sources/gentle-shell/TRADEMARKS.md",
+      "source": "https://github.com/Gentleman-Programming/gentle-shell",
+      "source_path": "TRADEMARKS.md",
+      "revision": "12de3e98cac73d2ef85478a93497ccaacf5426a3",
+      "sha256": "00884fb70b58779747e34f49c536f02f2e66d6dae3b3f625903cf0495c8e7de7",
+      "bytes": 2744
+    },
+    {
+      "path": "sources/gentle-shell/assets/agents/gentle-ai-explore.md",
+      "source": "https://github.com/Gentleman-Programming/gentle-shell",
+      "source_path": "assets/agents/gentle-ai-explore.md",
+      "revision": "12de3e98cac73d2ef85478a93497ccaacf5426a3",
+      "sha256": "3a341b47f73ea4af0dfd9dc9bb41da9a2fa58ae9b403274c985726b017778b66",
+      "bytes": 1344
+    },
+    {
+      "path": "sources/gentle-shell/assets/agents/gentle-ai-verify.md",
+      "source": "https://github.com/Gentleman-Programming/gentle-shell",
+      "source_path": "assets/agents/gentle-ai-verify.md",
+      "revision": "12de3e98cac73d2ef85478a93497ccaacf5426a3",
+      "sha256": "2c708be391bb36a9fe07e4b14e084466bfeb7864c15cd76b15f49f3f0ae393e1",
+      "bytes": 1614
+    },
+    {
+      "path": "sources/gentle-shell/assets/agents/gentle-ai-worker.md",
+      "source": "https://github.com/Gentleman-Programming/gentle-shell",
+      "source_path": "assets/agents/gentle-ai-worker.md",
+      "revision": "12de3e98cac73d2ef85478a93497ccaacf5426a3",
+      "sha256": "a960d740da49f5675b44138f439fa3aa70878603dab44bd7b465ecf5ee0a110d",
+      "bytes": 10969
+    },
+    {
+      "path": "sources/gentle-shell/assets/orchestrator-delegation.md",
+      "source": "https://github.com/Gentleman-Programming/gentle-shell",
+      "source_path": "assets/orchestrator-delegation.md",
+      "revision": "12de3e98cac73d2ef85478a93497ccaacf5426a3",
+      "sha256": "25bf0147aee45b4d48607024d8bdb48d5c198380e5198f5067874738e9e49cba",
+      "bytes": 45958
+    },
+    {
+      "path": "sources/gentle-shell/assets/orchestrator-memory.md",
+      "source": "https://github.com/Gentleman-Programming/gentle-shell",
+      "source_path": "assets/orchestrator-memory.md",
+      "revision": "12de3e98cac73d2ef85478a93497ccaacf5426a3",
+      "sha256": "baaf3895008a02f16d6ca3a4a96ea5a4128db9f65e801769b0688ce3520e72c7",
+      "bytes": 4552
+    },
+    {
+      "path": "sources/gentle-shell/assets/orchestrator-skills.md",
+      "source": "https://github.com/Gentleman-Programming/gentle-shell",
+      "source_path": "assets/orchestrator-skills.md",
+      "revision": "12de3e98cac73d2ef85478a93497ccaacf5426a3",
+      "sha256": "77ac4c0c25340cf58bf21de6df97d36555cc91630534f050b5e373ab9411ffd4",
+      "bytes": 3237
+    },
+    {
+      "path": "sources/gentle-shell/assets/orchestrator.md",
+      "source": "https://github.com/Gentleman-Programming/gentle-shell",
+      "source_path": "assets/orchestrator.md",
+      "revision": "12de3e98cac73d2ef85478a93497ccaacf5426a3",
+      "sha256": "4584f3fbced98220b73a360a79c9c891b49b0c6e272a1bacbf44111a2ffa07f5",
+      "bytes": 6895
+    },
+    {
+      "path": "sources/gentle-shell/docs/delegated-verification.md",
+      "source": "https://github.com/Gentleman-Programming/gentle-shell",
+      "source_path": "docs/delegated-verification.md",
+      "revision": "12de3e98cac73d2ef85478a93497ccaacf5426a3",
+      "sha256": "4d69814a064177b700abd8f688269f16f0a8694f29e56dd34441633a14e43dae",
+      "bytes": 4176
+    },
+    {
+      "path": "sources/gentle-shell/docs/gentle-agents-activity.md",
+      "source": "https://github.com/Gentleman-Programming/gentle-shell",
+      "source_path": "docs/gentle-agents-activity.md",
+      "revision": "12de3e98cac73d2ef85478a93497ccaacf5426a3",
+      "sha256": "84e11467c4458b64a1995960d91a5f2d82a100cdd7932f281f7d9b79ffa26e9b",
+      "bytes": 5763
+    },
+    {
+      "path": "sources/gentle-shell/docs/gentle-shell.md",
+      "source": "https://github.com/Gentleman-Programming/gentle-shell",
+      "source_path": "docs/gentle-shell.md",
+      "revision": "12de3e98cac73d2ef85478a93497ccaacf5426a3",
+      "sha256": "64a9b65835c73b8380637fb6a7f2baeeb7d6784d2f1e9917b064de3571342226",
+      "bytes": 37227
+    },
+    {
+      "path": "sources/gentle-shell/docs/readme-reference.md",
+      "source": "https://github.com/Gentleman-Programming/gentle-shell",
+      "source_path": "docs/readme-reference.md",
+      "revision": "12de3e98cac73d2ef85478a93497ccaacf5426a3",
+      "sha256": "2c1fe126e294a056d9e5ef68722bd8ff4cafd9e602782c4947f19279bfb3d94d",
+      "bytes": 123369
+    },
+    {
+      "path": "sources/gentle-shell/docs/review-integration.md",
+      "source": "https://github.com/Gentleman-Programming/gentle-shell",
+      "source_path": "docs/review-integration.md",
+      "revision": "12de3e98cac73d2ef85478a93497ccaacf5426a3",
+      "sha256": "9b60fa2775129c468f7eb3510905014553cee5f3cbcb78a608f08baf8bbd7336",
+      "bytes": 6535
+    },
+    {
+      "path": "sources/gentle-shell/extensions/gentle-agents.ts",
+      "source": "https://github.com/Gentleman-Programming/gentle-shell",
+      "source_path": "extensions/gentle-agents.ts",
+      "revision": "12de3e98cac73d2ef85478a93497ccaacf5426a3",
+      "sha256": "ae4519a785297cce343c9e9d00e6070430c61343b9a502c032e8699176133388",
+      "bytes": 81559
+    },
+    {
+      "path": "sources/gentle-shell/extensions/skill-registry.ts",
+      "source": "https://github.com/Gentleman-Programming/gentle-shell",
+      "source_path": "extensions/skill-registry.ts",
+      "revision": "12de3e98cac73d2ef85478a93497ccaacf5426a3",
+      "sha256": "7a35cacbeded9876e1619907c15de7365e3adbbd66b4681e91767ae5dcbc53e8",
+      "bytes": 19265
+    },
+    {
+      "path": "sources/gentle-shell/lib/agents-config.ts",
+      "source": "https://github.com/Gentleman-Programming/gentle-shell",
+      "source_path": "lib/agents-config.ts",
+      "revision": "12de3e98cac73d2ef85478a93497ccaacf5426a3",
+      "sha256": "b9ecc81dd6c81950c43267176194c6f579288f934d8364da4e760b9089521975",
+      "bytes": 13456
+    },
+    {
+      "path": "sources/gentle-shell/lib/agents-protocol.ts",
+      "source": "https://github.com/Gentleman-Programming/gentle-shell",
+      "source_path": "lib/agents-protocol.ts",
+      "revision": "12de3e98cac73d2ef85478a93497ccaacf5426a3",
+      "sha256": "1ea31b7baa19c1a871fed80c4622106cd0f93b449b74b0ef265e9d90340f7c6c",
+      "bytes": 21079
+    },
+    {
+      "path": "sources/gentle-shell/lib/agents-rpc-publisher.ts",
+      "source": "https://github.com/Gentleman-Programming/gentle-shell",
+      "source_path": "lib/agents-rpc-publisher.ts",
+      "revision": "12de3e98cac73d2ef85478a93497ccaacf5426a3",
+      "sha256": "0e32d7d91c77a94553e9ddc2a4834135d81c442729b2fe64a9696e9e7fb9d192",
+      "bytes": 11623
+    },
+    {
+      "path": "sources/gentle-shell/lib/agents-runner.ts",
+      "source": "https://github.com/Gentleman-Programming/gentle-shell",
+      "source_path": "lib/agents-runner.ts",
+      "revision": "12de3e98cac73d2ef85478a93497ccaacf5426a3",
+      "sha256": "2a434160b729bdc5abe52132b234a1c651d5d3030ebe524495303bb0ff94b4ba",
+      "bytes": 41389
+    },
+    {
+      "path": "sources/gentle-shell/lib/model-routing-authority.ts",
+      "source": "https://github.com/Gentleman-Programming/gentle-shell",
+      "source_path": "lib/model-routing-authority.ts",
+      "revision": "12de3e98cac73d2ef85478a93497ccaacf5426a3",
+      "sha256": "831db959b54c8a660da3adfba2a57ad7cc869abc2254ce9e981ff29f15435faf",
+      "bytes": 4062
+    },
+    {
+      "path": "sources/gentle-shell/lib/session-changes.ts",
+      "source": "https://github.com/Gentleman-Programming/gentle-shell",
+      "source_path": "lib/session-changes.ts",
+      "revision": "12de3e98cac73d2ef85478a93497ccaacf5426a3",
+      "sha256": "ec64bc54484b4a597ffa16aba5aed950cd9eb1ecf0a1caf0c1405dbbb721d4d9",
+      "bytes": 8112
+    },
+    {
+      "path": "sources/gentle-shell/package.json",
+      "source": "https://github.com/Gentleman-Programming/gentle-shell",
+      "source_path": "package.json",
+      "revision": "12de3e98cac73d2ef85478a93497ccaacf5426a3",
+      "sha256": "3a933bdb788af27e95f75475758ff446e2d2a30d87c6072e1c42593696879c77",
+      "bytes": 2634
+    },
+    {
+      "path": "sources/gvs5h/LICENSE",
+      "source": "https://github.com/slee-persis/GVS5H",
+      "source_path": "LICENSE",
+      "revision": "707e21296bfa032250f10bdde4afaff7ec998f71",
+      "sha256": "9523e4c9fcef0c4185e4b0479476c74c2fae021f79ccdc1e5ce8f9069de68bf5",
+      "bytes": 1076
+    },
+    {
+      "path": "sources/gvs5h/LICENSE-CC-BY-4.0",
+      "source": "https://github.com/slee-persis/GVS5H",
+      "source_path": "LICENSE-CC-BY-4.0",
+      "revision": "707e21296bfa032250f10bdde4afaff7ec998f71",
+      "sha256": "9ba9550ad48438d0836ddab3da480b3b69ffa0aac7b7878b5a0039e7ab429411",
+      "bytes": 18657
+    },
+    {
+      "path": "sources/gvs5h/NOTICE.md",
+      "source": "https://github.com/slee-persis/GVS5H",
+      "source_path": "NOTICE.md",
+      "revision": "707e21296bfa032250f10bdde4afaff7ec998f71",
+      "sha256": "7352f5ee362c2f75c912a2653b63460eab184bc87b71bbba5b79d2b85c31e55a",
+      "bytes": 2484
+    },
+    {
+      "path": "sources/gvs5h/README.md",
+      "source": "https://github.com/slee-persis/GVS5H",
+      "source_path": "README.md",
+      "revision": "707e21296bfa032250f10bdde4afaff7ec998f71",
+      "sha256": "94803e657f7cb8f84ad78bd41c586a62565bbc315fcb0585ef99113c8d3802b5",
+      "bytes": 3365
+    },
+    {
+      "path": "sources/gvs5h/codebase/v2-current/escalation/multiagent.py",
+      "source": "https://github.com/slee-persis/GVS5H",
+      "source_path": "codebase/v2-current/escalation/multiagent.py",
+      "revision": "707e21296bfa032250f10bdde4afaff7ec998f71",
+      "sha256": "ff0e55dda484ee04627a88ecae9ba1d9cf3e7d41cb0e8110fdf635b5557a9a12",
+      "bytes": 22526
+    },
+    {
+      "path": "sources/gvs5h/codebase/v2-current/escalation/orchestrator.py",
+      "source": "https://github.com/slee-persis/GVS5H",
+      "source_path": "codebase/v2-current/escalation/orchestrator.py",
+      "revision": "707e21296bfa032250f10bdde4afaff7ec998f71",
+      "sha256": "6faa359099568b07df69011b4f4b736e5cb6ef55d06f9ed9d484ea65fa8f26be",
+      "bytes": 24973
+    },
+    {
+      "path": "sources/gvs5h/codebase/v2-current/escalation/run_bench.py",
+      "source": "https://github.com/slee-persis/GVS5H",
+      "source_path": "codebase/v2-current/escalation/run_bench.py",
+      "revision": "707e21296bfa032250f10bdde4afaff7ec998f71",
+      "sha256": "014cf4d6cd29e92c76036cf1ac90f9a4ddff8d0be5bd3757ba4f771f7fce5817",
+      "bytes": 23604
+    },
+    {
+      "path": "sources/gvs5h/paper/fig-cost-tables.tex",
+      "source": "https://github.com/slee-persis/GVS5H",
+      "source_path": "paper/fig-cost-tables.tex",
+      "revision": "707e21296bfa032250f10bdde4afaff7ec998f71",
+      "sha256": "8213fbea1cb776b7ae9c036937241e7459b435071f37f121cc2d6b3b31f4797b",
+      "bytes": 3106
+    },
+    {
+      "path": "sources/gvs5h/paper/paper_latest.pdf",
+      "source": "https://github.com/slee-persis/GVS5H",
+      "source_path": "paper/paper_latest.pdf",
+      "revision": "707e21296bfa032250f10bdde4afaff7ec998f71",
+      "sha256": "6b80679828fe02bf6cc392a54b5ae08b35e8083ac8996720a52205d53132aed1",
+      "bytes": 490673
+    },
+    {
+      "path": "sources/gvs5h/paper/paper_latest.tex",
+      "source": "https://github.com/slee-persis/GVS5H",
+      "source_path": "paper/paper_latest.tex",
+      "revision": "707e21296bfa032250f10bdde4afaff7ec998f71",
+      "sha256": "ad7c0a9e5e7db314fa470d9c5ef39339c0dc8cd65902bdd61e3b304bdb2a232a",
+      "bytes": 46624
+    },
+    {
+      "path": "sources/gvs5h/paper/tab-4new-5pass.tex",
+      "source": "https://github.com/slee-persis/GVS5H",
+      "source_path": "paper/tab-4new-5pass.tex",
+      "revision": "707e21296bfa032250f10bdde4afaff7ec998f71",
+      "sha256": "55e32948a8cd6008a1150feb0bb250c182573af986fa2b8e554a965f1143195e",
+      "bytes": 1912
+    },
+    {
+      "path": "sources/gvs5h/paper/tab-caps.tex",
+      "source": "https://github.com/slee-persis/GVS5H",
+      "source_path": "paper/tab-caps.tex",
+      "revision": "707e21296bfa032250f10bdde4afaff7ec998f71",
+      "sha256": "cea1384a66ce102dc7762effbe78c520a22e8aae3678993b3501a4f9a4c3fe25",
+      "bytes": 1776
+    },
+    {
+      "path": "sources/gvs5h/paper/tab-qwen-caps.tex",
+      "source": "https://github.com/slee-persis/GVS5H",
+      "source_path": "paper/tab-qwen-caps.tex",
+      "revision": "707e21296bfa032250f10bdde4afaff7ec998f71",
+      "sha256": "74ef23a3b769da4020067468602d358f869e5392be811e00514eaa7c3d590f8f",
+      "bytes": 773
+    },
+    {
+      "path": "sources/matt-skills/CONTEXT.md",
+      "source": "https://github.com/mattpocock/skills",
+      "source_path": "CONTEXT.md",
+      "revision": "c55ee46073ed923f86ce59a5eb3b6d895095d1b7",
+      "sha256": "4b5291aae26ee0cca5ee31c20b4652d3988a063b2348ed48a751ce9c660a5614",
+      "bytes": 1768
+    },
+    {
+      "path": "sources/matt-skills/LICENSE",
+      "source": "https://github.com/mattpocock/skills",
+      "source_path": "LICENSE",
+      "revision": "c55ee46073ed923f86ce59a5eb3b6d895095d1b7",
+      "sha256": "0e7ac423bf2c6e223b7c5b156f8cf72da49d748e56a1641402c31f22ad07dbb5",
+      "bytes": 1068
+    },
+    {
+      "path": "sources/matt-skills/README.md",
+      "source": "https://github.com/mattpocock/skills",
+      "source_path": "README.md",
+      "revision": "c55ee46073ed923f86ce59a5eb3b6d895095d1b7",
+      "sha256": "4079d981bc2ac0a52aaf2c76d1c1476f4297937a8ff3a2e2322b6b730dc2d4f6",
+      "bytes": 15587
+    },
+    {
+      "path": "sources/matt-skills/skills/engineering/README.md",
+      "source": "https://github.com/mattpocock/skills",
+      "source_path": "skills/engineering/README.md",
+      "revision": "c55ee46073ed923f86ce59a5eb3b6d895095d1b7",
+      "sha256": "713826c94f7858c28067238ce6c7021783e4da0dc0beef58a2af72cf75268fda",
+      "bytes": 3840
+    },
+    {
+      "path": "sources/matt-skills/skills/engineering/ask-matt/PHASE-BOUNDARIES.md",
+      "source": "https://github.com/mattpocock/skills",
+      "source_path": "skills/engineering/ask-matt/PHASE-BOUNDARIES.md",
+      "revision": "c55ee46073ed923f86ce59a5eb3b6d895095d1b7",
+      "sha256": "a8aa20158609ef39e2b308b6ba0660c91066838d07a867202e63a7744a88a3ed",
+      "bytes": 4249
+    },
+    {
+      "path": "sources/matt-skills/skills/engineering/ask-matt/SKILL.md",
+      "source": "https://github.com/mattpocock/skills",
+      "source_path": "skills/engineering/ask-matt/SKILL.md",
+      "revision": "c55ee46073ed923f86ce59a5eb3b6d895095d1b7",
+      "sha256": "b25d86fb36b1d294eeead5d7db529f86135f9671f2afcd607579a63bb2213769",
+      "bytes": 11417
+    },
+    {
+      "path": "sources/matt-skills/skills/engineering/ask-matt/agents/openai.yaml",
+      "source": "https://github.com/mattpocock/skills",
+      "source_path": "skills/engineering/ask-matt/agents/openai.yaml",
+      "revision": "c55ee46073ed923f86ce59a5eb3b6d895095d1b7",
+      "sha256": "bdffbc5a0a99ed1b6ef3253d251d755fd18162b9845972e380007f844b09b05c",
+      "bytes": 137
+    },
+    {
+      "path": "sources/matt-skills/skills/engineering/code-review/SKILL.md",
+      "source": "https://github.com/mattpocock/skills",
+      "source_path": "skills/engineering/code-review/SKILL.md",
+      "revision": "c55ee46073ed923f86ce59a5eb3b6d895095d1b7",
+      "sha256": "47f4e52c21694def9c7c11cbfbf891ca35eac7a93e395797515be3c8a409ae50",
+      "bytes": 6589
+    },
+    {
+      "path": "sources/matt-skills/skills/engineering/code-review/agents/openai.yaml",
+      "source": "https://github.com/mattpocock/skills",
+      "source_path": "skills/engineering/code-review/agents/openai.yaml",
+      "revision": "c55ee46073ed923f86ce59a5eb3b6d895095d1b7",
+      "sha256": "8229ca854e11dc8e6aef2131ee03f31fb1561cf905fab9ccc325180cf3331352",
+      "bytes": 100
+    },
+    {
+      "path": "sources/matt-skills/skills/engineering/codebase-design/DEEPENING.md",
+      "source": "https://github.com/mattpocock/skills",
+      "source_path": "skills/engineering/codebase-design/DEEPENING.md",
+      "revision": "c55ee46073ed923f86ce59a5eb3b6d895095d1b7",
+      "sha256": "f3dd099ce99289bd213914d8ee3e2429b78309c3957ca4583f7659551b1d53c1",
+      "bytes": 2553
+    },
+    {
+      "path": "sources/matt-skills/skills/engineering/codebase-design/DESIGN-IT-TWICE.md",
+      "source": "https://github.com/mattpocock/skills",
+      "source_path": "skills/engineering/codebase-design/DESIGN-IT-TWICE.md",
+      "revision": "c55ee46073ed923f86ce59a5eb3b6d895095d1b7",
+      "sha256": "8e740bf98446dbd4dfdc132ac4346d9a7eedaf93de6a495889171cf7f99f16bd",
+      "bytes": 2664
+    },
+    {
+      "path": "sources/matt-skills/skills/engineering/codebase-design/SKILL.md",
+      "source": "https://github.com/mattpocock/skills",
+      "source_path": "skills/engineering/codebase-design/SKILL.md",
+      "revision": "c55ee46073ed923f86ce59a5eb3b6d895095d1b7",
+      "sha256": "2c20617f87ec8af6a434859f381b2f061a69b530444e74eb39e78bb016a6d1e2",
+      "bytes": 6446
+    },
+    {
+      "path": "sources/matt-skills/skills/engineering/codebase-design/agents/openai.yaml",
+      "source": "https://github.com/mattpocock/skills",
+      "source_path": "skills/engineering/codebase-design/agents/openai.yaml",
+      "revision": "c55ee46073ed923f86ce59a5eb3b6d895095d1b7",
+      "sha256": "edebc9e4fcfe102114012575eaa9600b9b5fd08c311664f389c36e7bc717740f",
+      "bytes": 102
+    },
+    {
+      "path": "sources/matt-skills/skills/engineering/diagnosing-bugs/SKILL.md",
+      "source": "https://github.com/mattpocock/skills",
+      "source_path": "skills/engineering/diagnosing-bugs/SKILL.md",
+      "revision": "c55ee46073ed923f86ce59a5eb3b6d895095d1b7",
+      "sha256": "77f3cf31bc99b2f49af943222526531fcc9fc41d047626d3640e875e85af3e84",
+      "bytes": 8529
+    },
+    {
+      "path": "sources/matt-skills/skills/engineering/diagnosing-bugs/agents/openai.yaml",
+      "source": "https://github.com/mattpocock/skills",
+      "source_path": "skills/engineering/diagnosing-bugs/agents/openai.yaml",
+      "revision": "c55ee46073ed923f86ce59a5eb3b6d895095d1b7",
+      "sha256": "3e430dbe4334a87597488c060cb3dc3786bb00c9182877d6f5ec41f62490e90b",
+      "bytes": 103
+    },
+    {
+      "path": "sources/matt-skills/skills/engineering/diagnosing-bugs/scripts/hitl-loop.template.sh",
+      "source": "https://github.com/mattpocock/skills",
+      "source_path": "skills/engineering/diagnosing-bugs/scripts/hitl-loop.template.sh",
+      "revision": "c55ee46073ed923f86ce59a5eb3b6d895095d1b7",
+      "sha256": "35103539fc36873eea36074769ad454f9379d6fc8b2dc0e26ce987fd3bfe5503",
+      "bytes": 1316
+    },
+    {
+      "path": "sources/matt-skills/skills/engineering/domain-modeling/ADR-FORMAT.md",
+      "source": "https://github.com/mattpocock/skills",
+      "source_path": "skills/engineering/domain-modeling/ADR-FORMAT.md",
+      "revision": "c55ee46073ed923f86ce59a5eb3b6d895095d1b7",
+      "sha256": "944c92aa790e8fbdc9199640b170979abb8a34ba8d0fe18c2a01a63bce140ca0",
+      "bytes": 2733
+    },
+    {
+      "path": "sources/matt-skills/skills/engineering/domain-modeling/CONTEXT-FORMAT.md",
+      "source": "https://github.com/mattpocock/skills",
+      "source_path": "skills/engineering/domain-modeling/CONTEXT-FORMAT.md",
+      "revision": "c55ee46073ed923f86ce59a5eb3b6d895095d1b7",
+      "sha256": "17ab16ce783e4d2801ee52fd9acdf550cbf44de65ae76797a93943bbedf22a13",
+      "bytes": 2290
+    },
+    {
+      "path": "sources/matt-skills/skills/engineering/domain-modeling/SKILL.md",
+      "source": "https://github.com/mattpocock/skills",
+      "source_path": "skills/engineering/domain-modeling/SKILL.md",
+      "revision": "c55ee46073ed923f86ce59a5eb3b6d895095d1b7",
+      "sha256": "327a2b50620e2fd70abc6893cd6965e76b20f8d0adb0dc2c8d5eb3845efb643e",
+      "bytes": 3331
+    },
+    {
+      "path": "sources/matt-skills/skills/engineering/domain-modeling/agents/openai.yaml",
+      "source": "https://github.com/mattpocock/skills",
+      "source_path": "skills/engineering/domain-modeling/agents/openai.yaml",
+      "revision": "c55ee46073ed923f86ce59a5eb3b6d895095d1b7",
+      "sha256": "f6bf2aa996c6e6f53fdd0708e18a0d16a56aed8322cca59fedbe3c0d2c75f06b",
+      "bytes": 101
+    },
+    {
+      "path": "sources/matt-skills/skills/engineering/grill-with-docs/SKILL.md",
+      "source": "https://github.com/mattpocock/skills",
+      "source_path": "skills/engineering/grill-with-docs/SKILL.md",
+      "revision": "c55ee46073ed923f86ce59a5eb3b6d895095d1b7",
+      "sha256": "7de372c13488f1ee96cc11cd8907b56b6809cc93eef776eeddd37de6b6cbe3fe",
+      "bytes": 247
+    },
+    {
+      "path": "sources/matt-skills/skills/engineering/grill-with-docs/agents/openai.yaml",
+      "source": "https://github.com/mattpocock/skills",
+      "source_path": "skills/engineering/grill-with-docs/agents/openai.yaml",
+      "revision": "c55ee46073ed923f86ce59a5eb3b6d895095d1b7",
+      "sha256": "94cd0ab161fb468a836349f5ed482ba58ce8e709a05c57ce533d739dbd35cca9",
+      "bytes": 145
+    },
+    {
+      "path": "sources/matt-skills/skills/engineering/implement/SKILL.md",
+      "source": "https://github.com/mattpocock/skills",
+      "source_path": "skills/engineering/implement/SKILL.md",
+      "revision": "c55ee46073ed923f86ce59a5eb3b6d895095d1b7",
+      "sha256": "6d3fd9e83b8f36e5213854779db49b256a457a7ebb4a503e53fa7dcff696adc3",
+      "bytes": 433
+    },
+    {
+      "path": "sources/matt-skills/skills/engineering/implement/agents/openai.yaml",
+      "source": "https://github.com/mattpocock/skills",
+      "source_path": "skills/engineering/implement/agents/openai.yaml",
+      "revision": "c55ee46073ed923f86ce59a5eb3b6d895095d1b7",
+      "sha256": "8970a8596ade0c28ab427f41a4ea242d6bdf6186c59ebf55e1238dbecaab79dc",
+      "bytes": 139
+    },
+    {
+      "path": "sources/matt-skills/skills/engineering/improve-codebase-architecture/HTML-REPORT.md",
+      "source": "https://github.com/mattpocock/skills",
+      "source_path": "skills/engineering/improve-codebase-architecture/HTML-REPORT.md",
+      "revision": "c55ee46073ed923f86ce59a5eb3b6d895095d1b7",
+      "sha256": "581e8bb5a521e46bbda8ca7e19b15948bed882187108092ebb90c62513b77528",
+      "bytes": 6641
+    },
+    {
+      "path": "sources/matt-skills/skills/engineering/improve-codebase-architecture/SKILL.md",
+      "source": "https://github.com/mattpocock/skills",
+      "source_path": "skills/engineering/improve-codebase-architecture/SKILL.md",
+      "revision": "c55ee46073ed923f86ce59a5eb3b6d895095d1b7",
+      "sha256": "d1ac25511a936ff4250a48dbcefda363837d6bb9321b3cba73df99fa37270a75",
+      "bytes": 5993
+    },
+    {
+      "path": "sources/matt-skills/skills/engineering/improve-codebase-architecture/agents/openai.yaml",
+      "source": "https://github.com/mattpocock/skills",
+      "source_path": "skills/engineering/improve-codebase-architecture/agents/openai.yaml",
+      "revision": "c55ee46073ed923f86ce59a5eb3b6d895095d1b7",
+      "sha256": "c8cb20f68ebf0edb4e497bc11ae5fcaa196004e661cd189015b04f4109ced7f1",
+      "bytes": 166
+    },
+    {
+      "path": "sources/matt-skills/skills/engineering/prototype/LOGIC.md",
+      "source": "https://github.com/mattpocock/skills",
+      "source_path": "skills/engineering/prototype/LOGIC.md",
+      "revision": "c55ee46073ed923f86ce59a5eb3b6d895095d1b7",
+      "sha256": "f61c7d249e786a79ef289018901c348271e1798dd0b0bc5607b5c6f4d4a01ab9",
+      "bytes": 6036
+    },
+    {
+      "path": "sources/matt-skills/skills/engineering/prototype/SKILL.md",
+      "source": "https://github.com/mattpocock/skills",
+      "source_path": "skills/engineering/prototype/SKILL.md",
+      "revision": "c55ee46073ed923f86ce59a5eb3b6d895095d1b7",
+      "sha256": "714de632d116bb73f65cdb5a882db15b9369a6713b9a47c0fad827848f0bfbe3",
+      "bytes": 2931
+    },
+    {
+      "path": "sources/matt-skills/skills/engineering/prototype/UI.md",
+      "source": "https://github.com/mattpocock/skills",
+      "source_path": "skills/engineering/prototype/UI.md",
+      "revision": "c55ee46073ed923f86ce59a5eb3b6d895095d1b7",
+      "sha256": "723211e878acbc7b6ff09755263f3295cde724ba902ff0064da41eed51d45ad3",
+      "bytes": 6913
+    },
+    {
+      "path": "sources/matt-skills/skills/engineering/prototype/agents/openai.yaml",
+      "source": "https://github.com/mattpocock/skills",
+      "source_path": "skills/engineering/prototype/agents/openai.yaml",
+      "revision": "c55ee46073ed923f86ce59a5eb3b6d895095d1b7",
+      "sha256": "5af65e43ab41a350436697b81e27b7f848d36782043b73c322bb2c9fa9cc55dc",
+      "bytes": 100
+    },
+    {
+      "path": "sources/matt-skills/skills/engineering/research/SKILL.md",
+      "source": "https://github.com/mattpocock/skills",
+      "source_path": "skills/engineering/research/SKILL.md",
+      "revision": "c55ee46073ed923f86ce59a5eb3b6d895095d1b7",
+      "sha256": "985569f15739c713d6784887c3d186d4ef9ac85bec5ad9c068d25bf0739928e4",
+      "bytes": 794
+    },
+    {
+      "path": "sources/matt-skills/skills/engineering/research/agents/openai.yaml",
+      "source": "https://github.com/mattpocock/skills",
+      "source_path": "skills/engineering/research/agents/openai.yaml",
+      "revision": "c55ee46073ed923f86ce59a5eb3b6d895095d1b7",
+      "sha256": "9b4c470d63221c1f68f22df70b83e2f12401b317babe0d1b7b5f24a974474d0d",
+      "bytes": 94
+    },
+    {
+      "path": "sources/matt-skills/skills/engineering/resolving-merge-conflicts/SKILL.md",
+      "source": "https://github.com/mattpocock/skills",
+      "source_path": "skills/engineering/resolving-merge-conflicts/SKILL.md",
+      "revision": "c55ee46073ed923f86ce59a5eb3b6d895095d1b7",
+      "sha256": "9d8114f8ef0b31f535a265fc05c364bd8cf2e2895a830040e06c22acb11f54b0",
+      "bytes": 918
+    },
+    {
+      "path": "sources/matt-skills/skills/engineering/resolving-merge-conflicts/agents/openai.yaml",
+      "source": "https://github.com/mattpocock/skills",
+      "source_path": "skills/engineering/resolving-merge-conflicts/agents/openai.yaml",
+      "revision": "c55ee46073ed923f86ce59a5eb3b6d895095d1b7",
+      "sha256": "a1f4f96838f2ed6282eb28abbbf99029cb8fadce552baf53da90a025b8bffddf",
+      "bytes": 113
+    },
+    {
+      "path": "sources/matt-skills/skills/engineering/setup-matt-pocock-skills/SKILL.md",
+      "source": "https://github.com/mattpocock/skills",
+      "source_path": "skills/engineering/setup-matt-pocock-skills/SKILL.md",
+      "revision": "c55ee46073ed923f86ce59a5eb3b6d895095d1b7",
+      "sha256": "2bcd89e97777cdb705914424e39c97d5db524c8eb4eafac8120778a07774f0ec",
+      "bytes": 6841
+    },
+    {
+      "path": "sources/matt-skills/skills/engineering/setup-matt-pocock-skills/agents/openai.yaml",
+      "source": "https://github.com/mattpocock/skills",
+      "source_path": "skills/engineering/setup-matt-pocock-skills/agents/openai.yaml",
+      "revision": "c55ee46073ed923f86ce59a5eb3b6d895095d1b7",
+      "sha256": "9527de0110541c45712319025155aeab8dc7d77c6ed6e5e83271bab1851ab939",
+      "bytes": 152
+    },
+    {
+      "path": "sources/matt-skills/skills/engineering/setup-matt-pocock-skills/domain.md",
+      "source": "https://github.com/mattpocock/skills",
+      "source_path": "skills/engineering/setup-matt-pocock-skills/domain.md",
+      "revision": "c55ee46073ed923f86ce59a5eb3b6d895095d1b7",
+      "sha256": "edc6d6131fdffc4b7135704f5262124fc43355c95f61b7399dc5a4db643e28ca",
+      "bytes": 2033
+    },
+    {
+      "path": "sources/matt-skills/skills/engineering/setup-matt-pocock-skills/issue-tracker-github.md",
+      "source": "https://github.com/mattpocock/skills",
+      "source_path": "skills/engineering/setup-matt-pocock-skills/issue-tracker-github.md",
+      "revision": "c55ee46073ed923f86ce59a5eb3b6d895095d1b7",
+      "sha256": "afd6852a80185217bd28aa5cbe456bef1e85be25be7bd1fba382d5b8ee428325",
+      "bytes": 3731
+    },
+    {
+      "path": "sources/matt-skills/skills/engineering/setup-matt-pocock-skills/issue-tracker-gitlab.md",
+      "source": "https://github.com/mattpocock/skills",
+      "source_path": "skills/engineering/setup-matt-pocock-skills/issue-tracker-gitlab.md",
+      "revision": "c55ee46073ed923f86ce59a5eb3b6d895095d1b7",
+      "sha256": "ea175f73d193b3f55819c0ed9bbccf6ee0e70ad8f928e3d7607596c53380acd6",
+      "bytes": 3809
+    },
+    {
+      "path": "sources/matt-skills/skills/engineering/setup-matt-pocock-skills/issue-tracker-local.md",
+      "source": "https://github.com/mattpocock/skills",
+      "source_path": "skills/engineering/setup-matt-pocock-skills/issue-tracker-local.md",
+      "revision": "c55ee46073ed923f86ce59a5eb3b6d895095d1b7",
+      "sha256": "7dcda20a2eb4bdc89b95d1143423c0691309921cadae3132e6424f371030506e",
+      "bytes": 1810
+    },
+    {
+      "path": "sources/matt-skills/skills/engineering/setup-matt-pocock-skills/triage-labels.md",
+      "source": "https://github.com/mattpocock/skills",
+      "source_path": "skills/engineering/setup-matt-pocock-skills/triage-labels.md",
+      "revision": "c55ee46073ed923f86ce59a5eb3b6d895095d1b7",
+      "sha256": "4f53c9b40ce2651e3611aa090eaedbd6dbc9b71ef8c5f7e65eac0d8263190d0d",
+      "bytes": 1045
+    },
+    {
+      "path": "sources/matt-skills/skills/engineering/tdd/SKILL.md",
+      "source": "https://github.com/mattpocock/skills",
+      "source_path": "skills/engineering/tdd/SKILL.md",
+      "revision": "c55ee46073ed923f86ce59a5eb3b6d895095d1b7",
+      "sha256": "cb01f66bebfaa25fa1f88e6b7e769cd9fd9f35b1120b8563749820738814c927",
+      "bytes": 3549
+    },
+    {
+      "path": "sources/matt-skills/skills/engineering/tdd/agents/openai.yaml",
+      "source": "https://github.com/mattpocock/skills",
+      "source_path": "skills/engineering/tdd/agents/openai.yaml",
+      "revision": "c55ee46073ed923f86ce59a5eb3b6d895095d1b7",
+      "sha256": "ea6f01cf1b8c06a4b0f5b649d74b1b8ce8685e72af1b38d70d877693e092af0b",
+      "bytes": 87
+    },
+    {
+      "path": "sources/matt-skills/skills/engineering/tdd/mocking.md",
+      "source": "https://github.com/mattpocock/skills",
+      "source_path": "skills/engineering/tdd/mocking.md",
+      "revision": "c55ee46073ed923f86ce59a5eb3b6d895095d1b7",
+      "sha256": "3ceb807fdf4a47d6a93d4d9a891e5ba6d362a6247bd08adc451feebfc17361ef",
+      "bytes": 1481
+    },
+    {
+      "path": "sources/matt-skills/skills/engineering/tdd/tests.md",
+      "source": "https://github.com/mattpocock/skills",
+      "source_path": "skills/engineering/tdd/tests.md",
+      "revision": "c55ee46073ed923f86ce59a5eb3b6d895095d1b7",
+      "sha256": "859f9e592c188fda4fc7277dd180e4ce9c7a2e13f6efe1f6f29eccc9d28c106a",
+      "bytes": 2214
+    },
+    {
+      "path": "sources/matt-skills/skills/engineering/to-spec/SKILL.md",
+      "source": "https://github.com/mattpocock/skills",
+      "source_path": "skills/engineering/to-spec/SKILL.md",
+      "revision": "c55ee46073ed923f86ce59a5eb3b6d895095d1b7",
+      "sha256": "43ad9cf318e5e7d3d1fa360253a37021796dc87a0c2e595ad262661a10f85088",
+      "bytes": 3043
+    },
+    {
+      "path": "sources/matt-skills/skills/engineering/to-spec/agents/openai.yaml",
+      "source": "https://github.com/mattpocock/skills",
+      "source_path": "skills/engineering/to-spec/agents/openai.yaml",
+      "revision": "c55ee46073ed923f86ce59a5eb3b6d895095d1b7",
+      "sha256": "1c5b4d1e3d8e52287ef19cc2742fdbbfae1914ac75d33af3e4c8174f08cc55bb",
+      "bytes": 135
+    },
+    {
+      "path": "sources/matt-skills/skills/engineering/to-tickets/SKILL.md",
+      "source": "https://github.com/mattpocock/skills",
+      "source_path": "skills/engineering/to-tickets/SKILL.md",
+      "revision": "c55ee46073ed923f86ce59a5eb3b6d895095d1b7",
+      "sha256": "5c9fba69845c2519b9b35b9af42ae5142c21f8ca15ac2123dc2722002c8058ae",
+      "bytes": 5671
+    },
+    {
+      "path": "sources/matt-skills/skills/engineering/to-tickets/agents/openai.yaml",
+      "source": "https://github.com/mattpocock/skills",
+      "source_path": "skills/engineering/to-tickets/agents/openai.yaml",
+      "revision": "c55ee46073ed923f86ce59a5eb3b6d895095d1b7",
+      "sha256": "21bc6215fffcd7614e9f772bb1760e87cc5fc7dcc707e7d282bc9414267a6090",
+      "bytes": 146
+    },
+    {
+      "path": "sources/matt-skills/skills/engineering/triage/AGENT-BRIEF.md",
+      "source": "https://github.com/mattpocock/skills",
+      "source_path": "skills/engineering/triage/AGENT-BRIEF.md",
+      "revision": "c55ee46073ed923f86ce59a5eb3b6d895095d1b7",
+      "sha256": "7f5f87fed3033df1b06e083c480f3e847b1fbb0647746b8a4c6a50f9f26ef44f",
+      "bytes": 7942
+    },
+    {
+      "path": "sources/matt-skills/skills/engineering/triage/OUT-OF-SCOPE.md",
+      "source": "https://github.com/mattpocock/skills",
+      "source_path": "skills/engineering/triage/OUT-OF-SCOPE.md",
+      "revision": "c55ee46073ed923f86ce59a5eb3b6d895095d1b7",
+      "sha256": "1fbf9b432130c6380aa65813b55553cfda150309b27c595e183f8e335b8a190d",
+      "bytes": 4667
+    },
+    {
+      "path": "sources/matt-skills/skills/engineering/triage/SKILL.md",
+      "source": "https://github.com/mattpocock/skills",
+      "source_path": "skills/engineering/triage/SKILL.md",
+      "revision": "c55ee46073ed923f86ce59a5eb3b6d895095d1b7",
+      "sha256": "623a2ed692bdc77d2090e2a3dea3b627dd722ad3bbaca0be83aada75292c8fc4",
+      "bytes": 6557
+    },
+    {
+      "path": "sources/matt-skills/skills/engineering/triage/agents/openai.yaml",
+      "source": "https://github.com/mattpocock/skills",
+      "source_path": "skills/engineering/triage/agents/openai.yaml",
+      "revision": "c55ee46073ed923f86ce59a5eb3b6d895095d1b7",
+      "sha256": "2e683717720cf456d165d0bb1a68bb600d0b6a8ccb61841c172e50d26f95351c",
+      "bytes": 135
+    },
+    {
+      "path": "sources/matt-skills/skills/engineering/wayfinder/SKILL.md",
+      "source": "https://github.com/mattpocock/skills",
+      "source_path": "skills/engineering/wayfinder/SKILL.md",
+      "revision": "c55ee46073ed923f86ce59a5eb3b6d895095d1b7",
+      "sha256": "fee6e1d0c50f0e736b4ef8a599060c959afae904c9a97d82c97f049fcc3aa0f1",
+      "bytes": 11908
+    },
+    {
+      "path": "sources/matt-skills/skills/engineering/wayfinder/agents/openai.yaml",
+      "source": "https://github.com/mattpocock/skills",
+      "source_path": "skills/engineering/wayfinder/agents/openai.yaml",
+      "revision": "c55ee46073ed923f86ce59a5eb3b6d895095d1b7",
+      "sha256": "88bc81a11a6d52ac67aeaa76b8b619e387020d47c5133a4dd4927fd15c4ad073",
+      "bytes": 144
+    },
+    {
+      "path": "sources/matt-skills/skills/engineering/wizard/SKILL.md",
+      "source": "https://github.com/mattpocock/skills",
+      "source_path": "skills/engineering/wizard/SKILL.md",
+      "revision": "c55ee46073ed923f86ce59a5eb3b6d895095d1b7",
+      "sha256": "bdf31d48211ea559878f95a4f344aeabf8d85897488ba564382bab0b000daac1",
+      "bytes": 4123
+    },
+    {
+      "path": "sources/matt-skills/skills/engineering/wizard/agents/openai.yaml",
+      "source": "https://github.com/mattpocock/skills",
+      "source_path": "skills/engineering/wizard/agents/openai.yaml",
+      "revision": "c55ee46073ed923f86ce59a5eb3b6d895095d1b7",
+      "sha256": "98f44d682d58e262f160dc59a8befc365e0aa65820dd0261864af26aa8e59d83",
+      "bytes": 96
+    },
+    {
+      "path": "sources/matt-skills/skills/engineering/wizard/template.sh",
+      "source": "https://github.com/mattpocock/skills",
+      "source_path": "skills/engineering/wizard/template.sh",
+      "revision": "c55ee46073ed923f86ce59a5eb3b6d895095d1b7",
+      "sha256": "33cbe9dfb1d0e9185b60248a52aabed14bc64785a00cac695e302e739dd6c153",
+      "bytes": 8567
+    },
+    {
+      "path": "sources/matt-skills/skills/in-progress/claude-handoff/SKILL.md",
+      "source": "github.com/mattpocock/skills",
+      "source_path": "skills/in-progress/claude-handoff/SKILL.md",
+      "revision": "c55ee46073ed923f86ce59a5eb3b6d895095d1b7",
+      "sha256": "6738e8b7c7899ea0038fb7a5c859ca1b90c7b1eb40123dcdbe94c51b5b119f12",
+      "bytes": 1301
+    },
+    {
+      "path": "sources/matt-skills/skills/in-progress/pr/SKILL.md",
+      "source": "github.com/mattpocock/skills",
+      "source_path": "skills/in-progress/pr/SKILL.md",
+      "revision": "c55ee46073ed923f86ce59a5eb3b6d895095d1b7",
+      "sha256": "e91dc57fa0ee1d8d2fd35562425c943d377f0acdfba6245858a619990fcff0e8",
+      "bytes": 4171
+    },
+    {
+      "path": "sources/matt-skills/skills/in-progress/retro/SKILL.md",
+      "source": "github.com/mattpocock/skills",
+      "source_path": "skills/in-progress/retro/SKILL.md",
+      "revision": "c55ee46073ed923f86ce59a5eb3b6d895095d1b7",
+      "sha256": "33fbc28568e3146f20fd908b12998bc0ab30aa4f4c87288199a40793efa94696",
+      "bytes": 4369
+    },
+    {
+      "path": "sources/matt-skills/skills/productivity/README.md",
+      "source": "https://github.com/mattpocock/skills",
+      "source_path": "skills/productivity/README.md",
+      "revision": "c55ee46073ed923f86ce59a5eb3b6d895095d1b7",
+      "sha256": "bef3901088b409f00cb1ce6e94f4cf3f4e4865969d8b19330f375cd535b10e37",
+      "bytes": 1480
+    },
+    {
+      "path": "sources/matt-skills/skills/productivity/grill-me/SKILL.md",
+      "source": "https://github.com/mattpocock/skills",
+      "source_path": "skills/productivity/grill-me/SKILL.md",
+      "revision": "c55ee46073ed923f86ce59a5eb3b6d895095d1b7",
+      "sha256": "caaf8b8de1684f96e26b28f3c29189db5c89cce4b73e1c93d86164f66ef88637",
+      "bytes": 157
+    },
+    {
+      "path": "sources/matt-skills/skills/productivity/grill-me/agents/openai.yaml",
+      "source": "https://github.com/mattpocock/skills",
+      "source_path": "skills/productivity/grill-me/agents/openai.yaml",
+      "revision": "c55ee46073ed923f86ce59a5eb3b6d895095d1b7",
+      "sha256": "c061e39c3e0f9d865fb1b97556d485704af2a8a58f4b8221a8917a5c2074a32b",
+      "bytes": 137
+    },
+    {
+      "path": "sources/matt-skills/skills/productivity/grilling/SKILL.md",
+      "source": "https://github.com/mattpocock/skills",
+      "source_path": "skills/productivity/grilling/SKILL.md",
+      "revision": "c55ee46073ed923f86ce59a5eb3b6d895095d1b7",
+      "sha256": "10ff989e7498b23b5acb49d5048f11dcd906757d2f79c5cdf8a00001381296f2",
+      "bytes": 1987
+    },
+    {
+      "path": "sources/matt-skills/skills/productivity/grilling/agents/openai.yaml",
+      "source": "https://github.com/mattpocock/skills",
+      "source_path": "skills/productivity/grilling/agents/openai.yaml",
+      "revision": "c55ee46073ed923f86ce59a5eb3b6d895095d1b7",
+      "sha256": "1411d7df7d99b7e621a1ff8283c8133cc2464be63d064e52d8ce169c6800ee9b",
+      "bytes": 113
+    },
+    {
+      "path": "sources/matt-skills/skills/productivity/handoff/SKILL.md",
+      "source": "https://github.com/mattpocock/skills",
+      "source_path": "skills/productivity/handoff/SKILL.md",
+      "revision": "c55ee46073ed923f86ce59a5eb3b6d895095d1b7",
+      "sha256": "7c62de979fdc7ac32fb5ddb2146156c917f80ee070d30fadc9d40343c4b6ed25",
+      "bytes": 894
+    },
+    {
+      "path": "sources/matt-skills/skills/productivity/handoff/agents/openai.yaml",
+      "source": "https://github.com/mattpocock/skills",
+      "source_path": "skills/productivity/handoff/agents/openai.yaml",
+      "revision": "c55ee46073ed923f86ce59a5eb3b6d895095d1b7",
+      "sha256": "5c479fd562c691851690e8b18c8501045bef0943c10743d636b2fae26add1d28",
+      "bytes": 141
+    },
+    {
+      "path": "sources/matt-skills/skills/productivity/teach/GLOSSARY-FORMAT.md",
+      "source": "https://github.com/mattpocock/skills",
+      "source_path": "skills/productivity/teach/GLOSSARY-FORMAT.md",
+      "revision": "c55ee46073ed923f86ce59a5eb3b6d895095d1b7",
+      "sha256": "9b99859ec28437668130d8f2ce5a342938970f8a1ed4fd38c3eab4f4b5fff210",
+      "bytes": 2122
+    },
+    {
+      "path": "sources/matt-skills/skills/productivity/teach/LEARNING-RECORD-FORMAT.md",
+      "source": "https://github.com/mattpocock/skills",
+      "source_path": "skills/productivity/teach/LEARNING-RECORD-FORMAT.md",
+      "revision": "c55ee46073ed923f86ce59a5eb3b6d895095d1b7",
+      "sha256": "701fa34b6748aa89e6c960ffb815257f481a7d77fb2900f9028f7edf3fdd6052",
+      "bytes": 2747
+    },
+    {
+      "path": "sources/matt-skills/skills/productivity/teach/MISSION-FORMAT.md",
+      "source": "https://github.com/mattpocock/skills",
+      "source_path": "skills/productivity/teach/MISSION-FORMAT.md",
+      "revision": "c55ee46073ed923f86ce59a5eb3b6d895095d1b7",
+      "sha256": "8cacbb3c0644d3ae0ea4965564797099401a6930a23f7cf462918576587f2418",
+      "bytes": 1540
+    },
+    {
+      "path": "sources/matt-skills/skills/productivity/teach/RESOURCES-FORMAT.md",
+      "source": "https://github.com/mattpocock/skills",
+      "source_path": "skills/productivity/teach/RESOURCES-FORMAT.md",
+      "revision": "c55ee46073ed923f86ce59a5eb3b6d895095d1b7",
+      "sha256": "e9cacf34026e11a8d1c8f9de88abe5bcbf654f4ebdb25cae8c0de0d5f48f44ec",
+      "bytes": 1924
+    },
+    {
+      "path": "sources/matt-skills/skills/productivity/teach/SKILL.md",
+      "source": "https://github.com/mattpocock/skills",
+      "source_path": "skills/productivity/teach/SKILL.md",
+      "revision": "c55ee46073ed923f86ce59a5eb3b6d895095d1b7",
+      "sha256": "a32df9dcdfc0c4fdc1c98e1ed3940c5f56b84c1aa90ff60346f32b8b53915b43",
+      "bytes": 9506
+    },
+    {
+      "path": "sources/matt-skills/skills/productivity/teach/agents/openai.yaml",
+      "source": "https://github.com/mattpocock/skills",
+      "source_path": "skills/productivity/teach/agents/openai.yaml",
+      "revision": "c55ee46073ed923f86ce59a5eb3b6d895095d1b7",
+      "sha256": "5856f3ae8aec742f1499c640aecdd5f1d6af5fa210a7c6ec794de8263a6f733f",
+      "bytes": 139
+    },
+    {
+      "path": "sources/matt-skills/skills/productivity/to-questionnaire/SKILL.md",
+      "source": "https://github.com/mattpocock/skills",
+      "source_path": "skills/productivity/to-questionnaire/SKILL.md",
+      "revision": "c55ee46073ed923f86ce59a5eb3b6d895095d1b7",
+      "sha256": "b5eb929842ee0e93d867c5e906d183d350f2f2d149eaeaa86967d94d8eda1d3b",
+      "bytes": 2904
+    },
+    {
+      "path": "sources/matt-skills/skills/productivity/to-questionnaire/agents/openai.yaml",
+      "source": "https://github.com/mattpocock/skills",
+      "source_path": "skills/productivity/to-questionnaire/agents/openai.yaml",
+      "revision": "c55ee46073ed923f86ce59a5eb3b6d895095d1b7",
+      "sha256": "9e8a06c38c8842eea8d4922cb9d1ead8e3ace647bab259b943c994a1b4742bc2",
+      "bytes": 166
+    },
+    {
+      "path": "sources/matt-skills/skills/productivity/wait-what/SKILL.md",
+      "source": "https://github.com/mattpocock/skills",
+      "source_path": "skills/productivity/wait-what/SKILL.md",
+      "revision": "c55ee46073ed923f86ce59a5eb3b6d895095d1b7",
+      "sha256": "e3f44e3ccbc0e7b62f20ba70b295fc9c9f4aa3f96c77168faee1c71bacbf4215",
+      "bytes": 394
+    },
+    {
+      "path": "sources/matt-skills/skills/productivity/wait-what/agents/openai.yaml",
+      "source": "https://github.com/mattpocock/skills",
+      "source_path": "skills/productivity/wait-what/agents/openai.yaml",
+      "revision": "c55ee46073ed923f86ce59a5eb3b6d895095d1b7",
+      "sha256": "b41faadf741d51e4ea184148b2d1854d93f947aaf754c7844f70a00f04194999",
+      "bytes": 158
+    },
+    {
+      "path": "sources/matt-skills/skills/productivity/writing-for-agents/SKILL-MECHANICS.md",
+      "source": "https://github.com/mattpocock/skills",
+      "source_path": "skills/productivity/writing-for-agents/SKILL-MECHANICS.md",
+      "revision": "c55ee46073ed923f86ce59a5eb3b6d895095d1b7",
+      "sha256": "c768e6307c7c10728c401c213f2c4ba71c542127eeb7ad2956aabd15a0fa0059",
+      "bytes": 2629
+    },
+    {
+      "path": "sources/matt-skills/skills/productivity/writing-for-agents/SKILL.md",
+      "source": "https://github.com/mattpocock/skills",
+      "source_path": "skills/productivity/writing-for-agents/SKILL.md",
+      "revision": "c55ee46073ed923f86ce59a5eb3b6d895095d1b7",
+      "sha256": "551adca942227b44192edba88acd4e8db911f0121ce58ad16944ccf6a896a74a",
+      "bytes": 10886
+    },
+    {
+      "path": "sources/matt-skills/skills/productivity/writing-for-agents/agents/openai.yaml",
+      "source": "https://github.com/mattpocock/skills",
+      "source_path": "skills/productivity/writing-for-agents/agents/openai.yaml",
+      "revision": "c55ee46073ed923f86ce59a5eb3b6d895095d1b7",
+      "sha256": "eacb24b2a618cfb81dacb0416f4fdd75ddf3a8060f8ddb99aae1b1e301907e4b",
+      "bytes": 102
+    },
+    {
+      "path": "sources/pi-installed/docs/configuration.md",
+      "source": "pi instalado: @earendil-works/pi-coding-agent 0.87.1 (global bun)",
+      "source_path": "docs/configuration.md",
+      "revision": "0.87.1",
+      "sha256": "4c1773dc39d57f703e6e6dcebe34b443b93bedf204c490f81375d4d743fa131e",
+      "bytes": 3108
+    },
+    {
+      "path": "sources/pi-installed/docs/extensions.md",
+      "source": "pi instalado: @earendil-works/pi-coding-agent 0.87.1 (global bun)",
+      "source_path": "docs/extensions.md",
+      "revision": "0.87.1",
+      "sha256": "9f2a2b79e831961167e934f8130ff85ee945b44675eb70e57492bc7fdd033126",
+      "bytes": 12280
+    },
+    {
+      "path": "sources/pi-installed/docs/models.md",
+      "source": "Documentación del paquete Pi disponible en el workspace; no necesariamente versión instalada en hogares",
+      "source_path": "docs/models.md",
+      "revision": null,
+      "sha256": "bf322aa290929fb167c56ef024ce33db5752b9422fcb22a8a7cd8b8d6adae759",
+      "bytes": 25555
+    },
+    {
+      "path": "sources/pi-installed/docs/packages.md",
+      "source": "pi instalado: @earendil-works/pi-coding-agent 0.87.1 (global bun)",
+      "source_path": "docs/packages.md",
+      "revision": "0.87.1",
+      "sha256": "b7239770f10cd3d36a96e00bffb5ab0dc662b97648e6d734aeed96c9941c5a7e",
+      "bytes": 5552
+    },
+    {
+      "path": "sources/pi-installed/docs/providers.md",
+      "source": "Documentación del paquete Pi disponible en el workspace; no necesariamente versión instalada en hogares",
+      "source_path": "docs/providers.md",
+      "revision": null,
+      "sha256": "3644ff28ca832b5575595e26120b07c2843a32ca0cee4c66e541b490c2ff3a38",
+      "bytes": 14399
+    },
+    {
+      "path": "sources/pi-installed/docs/session-format.md",
+      "source": "pi instalado: @earendil-works/pi-coding-agent 0.87.1 (global bun)",
+      "source_path": "docs/session-format.md",
+      "revision": "0.87.1",
+      "sha256": "22be6491a049299cdd56c625eaf3d20589870792d52a168cca7a92603461f9d6",
+      "bytes": 15299
+    },
+    {
+      "path": "sources/pi-installed/docs/skills.md",
+      "source": "pi instalado: @earendil-works/pi-coding-agent 0.87.1 (global bun)",
+      "source_path": "docs/skills.md",
+      "revision": "0.87.1",
+      "sha256": "5b9805525b194474ef1fe5455a0917ef15ed7f710aa9bec2eee11879556469e5",
+      "bytes": 4793
+    },
+    {
+      "path": "sources/pi-installed/examples/extensions/handoff.ts",
+      "source": "pi instalado: @earendil-works/pi-coding-agent 0.87.1 (global bun)",
+      "source_path": "examples/extensions/handoff.ts",
+      "revision": "0.87.1",
+      "sha256": "ea07b6f680357b677d0f43f0016961ee8cb1331d37ae113e9466a3acffb2e381",
+      "bytes": 5973
+    },
+    {
+      "path": "sources/pi-installed/examples/extensions/subagent/README.md",
+      "source": "pi instalado: @earendil-works/pi-coding-agent 0.87.1 (global bun)",
+      "source_path": "examples/extensions/subagent/README.md",
+      "revision": "0.87.1",
+      "sha256": "6a888330bf974657751e09f5d375a9039872d59d6606fc217c5105c7eca51b1a",
+      "bytes": 6298
+    },
+    {
+      "path": "sources/pi-installed/examples/extensions/subagent/agents.ts",
+      "source": "pi instalado: @earendil-works/pi-coding-agent 0.87.1 (global bun)",
+      "source_path": "examples/extensions/subagent/agents.ts",
+      "revision": "0.87.1",
+      "sha256": "cc85ecd33b89aa575bea3d2a9a9da7654a6305da4de02e5041aa5342a1de29b4",
+      "bytes": 4562
+    },
+    {
+      "path": "sources/pi-installed/examples/extensions/subagent/agents/worker.md",
+      "source": "pi instalado: @earendil-works/pi-coding-agent 0.87.1 (global bun)",
+      "source_path": "examples/extensions/subagent/agents/worker.md",
+      "revision": "0.87.1",
+      "sha256": "ca2b2298fcbd8bfafcfe61977dc8075001a64b9c4d8c289c3b5eaa896efe6238",
+      "bytes": 664
+    },
+    {
+      "path": "sources/pi-installed/examples/extensions/subagent/index.ts",
+      "source": "pi instalado: @earendil-works/pi-coding-agent 0.87.1 (global bun)",
+      "source_path": "examples/extensions/subagent/index.ts",
+      "revision": "0.87.1",
+      "sha256": "4facaa61c9c781748dd000eb5d2ec0a75289986d1a6e11ce13971ca5653dc252",
+      "bytes": 35714
+    }
+  ],
+  "updated": "2026-09-29"
+}

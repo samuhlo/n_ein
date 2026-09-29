@@ -1,0 +1,25 @@
+{
+  "name": "ein-agent",
+  "private": true,
+  "type": "module",
+  "description": "Harness de coding-agent sobre Pi con Claude Code como relevo opcional.",
+  "dependencies": {
+    "@opentui/core": "0.5.1",
+    "@opentui/solid": "0.5.1",
+    "solid-js": "1.9.12"
+  },
+  "scripts": {
+    "dev:install": "bun run tooling/dev-install.ts",
+    "setup": "bun install && bun run sync:pi && cd installer && bun install",
+    "sync:pi": "bun update --latest --no-save --force @earendil-works/pi-coding-agent @earendil-works/pi-tui",
+    "test": "bun test",
+    "clean:workspace": "bun run tooling/clean-workspace.ts",
+    "typecheck": "tsc --noEmit"
+  },
+  "devDependencies": {
+    "@earendil-works/pi-coding-agent": "latest",
+    "@earendil-works/pi-tui": "latest",
+    "@types/bun": "latest",
+    "typescript": "5.9.3"
+  }
+}

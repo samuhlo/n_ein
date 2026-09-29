@@ -1,0 +1,261 @@
+{
+  "version": "engram 1.20.0",
+  "store": "/var/folders/57/45vy61qn2kqb5n80txw0b1tm0000gn/T/ein-engram-probe-0meiSq",
+  "saves": [
+    {
+      "operation": "save",
+      "status": "saved",
+      "reason": "acknowledged"
+    },
+    {
+      "operation": "save",
+      "status": "saved",
+      "reason": "acknowledged"
+    },
+    {
+      "operation": "save",
+      "status": "saved",
+      "reason": "acknowledged"
+    },
+    {
+      "operation": "save",
+      "status": "saved",
+      "reason": "acknowledged"
+    },
+    {
+      "operation": "save",
+      "status": "saved",
+      "reason": "acknowledged"
+    },
+    {
+      "operation": "save",
+      "status": "saved",
+      "reason": "acknowledged"
+    }
+  ],
+  "empty": {
+    "operation": "search",
+    "status": "retrieved",
+    "reason": "ok",
+    "entries": [
+      "No memories found for: \"zzznomatchzzz\""
+    ]
+  },
+  "genericRaw": "No memories found for: \"SDD session context\"\n",
+  "generic": {
+    "receipt": {
+      "operation": "search",
+      "status": "retrieved",
+      "reason": "ok",
+      "projectHash": "9b323219863972548c37",
+      "durationMs": 167,
+      "timestamp": "2026-09-11T14:05:02.668Z",
+      "lifecycleKey": "session",
+      "count": 1,
+      "bytes": 44
+    },
+    "entries": [
+      {
+        "content": "No memories found for: \"SDD session context\"",
+        "freshness": "unverified"
+      }
+    ]
+  },
+  "targetedRawHits": 6,
+  "targetedAdvisoryHits": 0,
+  "rows": [
+    {
+      "title": "Compactación",
+      "keyword": "compactacion",
+      "rawContainsLesson": true,
+      "advisoryContainsLesson": false,
+      "prepared": {
+        "receipt": {
+          "operation": "search",
+          "status": "retrieved",
+          "reason": "ok",
+          "projectHash": "9b323219863972548c37",
+          "durationMs": 155,
+          "timestamp": "2026-09-11T14:05:02.990Z",
+          "lifecycleKey": "compactacion",
+          "count": 2,
+          "bytes": 52
+        },
+        "entries": [
+          {
+            "content": "Found 1 memories:",
+            "freshness": "unverified"
+          },
+          {
+            "content": "[1] #1 (learning) — Compactación",
+            "freshness": "unverified"
+          }
+        ]
+      },
+      "elapsedMs": 322,
+      "raw": "Found 1 memories:\n\n[1] #1 (learning) — Compactación\n    compactacion: El checkpoint canónico vive en disco. Releer archivos y Git antes de continuar.\n    2026-09-11 16:05:00 | project: ein-memory-eval | scope: project\n\n"
+    },
+    {
+      "title": "Barato",
+      "keyword": "barato",
+      "rawContainsLesson": true,
+      "advisoryContainsLesson": false,
+      "prepared": {
+        "receipt": {
+          "operation": "search",
+          "status": "retrieved",
+          "reason": "ok",
+          "projectHash": "9b323219863972548c37",
+          "durationMs": 151,
+          "timestamp": "2026-09-11T14:05:03.289Z",
+          "lifecycleKey": "barato",
+          "count": 2,
+          "bytes": 45
+        },
+        "entries": [
+          {
+            "content": "Found 1 memories:",
+            "freshness": "unverified"
+          },
+          {
+            "content": "[1] #2 (learning) — Barato",
+            "freshness": "unverified"
+          }
+        ]
+      },
+      "elapsedMs": 299,
+      "raw": "Found 1 memories:\n\n[1] #2 (learning) — Barato\n    barato: Usar razonamiento bajo sobre un plan cerrado y verificable; corregir el plan si exige interpretación.\n    2026-09-11 16:05:00 | project: ein-memory-eval | scope: project\n\n"
+    },
+    {
+      "title": "Verificación",
+      "keyword": "verificacion",
+      "rawContainsLesson": true,
+      "advisoryContainsLesson": false,
+      "prepared": {
+        "receipt": {
+          "operation": "search",
+          "status": "retrieved",
+          "reason": "ok",
+          "projectHash": "9b323219863972548c37",
+          "durationMs": 152,
+          "timestamp": "2026-09-11T14:05:03.608Z",
+          "lifecycleKey": "verificacion",
+          "count": 2,
+          "bytes": 52
+        },
+        "entries": [
+          {
+            "content": "Found 1 memories:",
+            "freshness": "unverified"
+          },
+          {
+            "content": "[1] #3 (learning) — Verificación",
+            "freshness": "unverified"
+          }
+        ]
+      },
+      "elapsedMs": 319,
+      "raw": "Found 1 memories:\n\n[1] #3 (learning) — Verificación\n    verificacion: La evidencia debe corresponder al árbol actual y a comandos ejecutados en esta sesión.\n    2026-09-11 16:05:00 | project: ein-memory-eval | scope: project\n\n"
+    },
+    {
+      "title": "Cuaderno",
+      "keyword": "cuaderno",
+      "rawContainsLesson": true,
+      "advisoryContainsLesson": false,
+      "prepared": {
+        "receipt": {
+          "operation": "search",
+          "status": "retrieved",
+          "reason": "ok",
+          "projectHash": "9b323219863972548c37",
+          "durationMs": 144,
+          "timestamp": "2026-09-11T14:05:03.914Z",
+          "lifecycleKey": "cuaderno",
+          "count": 2,
+          "bytes": 47
+        },
+        "entries": [
+          {
+            "content": "Found 1 memories:",
+            "freshness": "unverified"
+          },
+          {
+            "content": "[1] #4 (learning) — Cuaderno",
+            "freshness": "unverified"
+          }
+        ]
+      },
+      "elapsedMs": 306,
+      "raw": "Found 1 memories:\n\n[1] #4 (learning) — Cuaderno\n    cuaderno: Pi y Claude comparten el mismo almacén aislado y el mismo nombre de proyecto.\n    2026-09-11 16:05:00 | project: ein-memory-eval | scope: project\n\n"
+    },
+    {
+      "title": "Burocracia",
+      "keyword": "burocracia",
+      "rawContainsLesson": true,
+      "advisoryContainsLesson": false,
+      "prepared": {
+        "receipt": {
+          "operation": "search",
+          "status": "retrieved",
+          "reason": "ok",
+          "projectHash": "9b323219863972548c37",
+          "durationMs": 164,
+          "timestamp": "2026-09-11T14:05:04.225Z",
+          "lifecycleKey": "burocracia",
+          "count": 2,
+          "bytes": 49
+        },
+        "entries": [
+          {
+            "content": "Found 1 memories:",
+            "freshness": "unverified"
+          },
+          {
+            "content": "[1] #5 (learning) — Burocracia",
+            "freshness": "unverified"
+          }
+        ]
+      },
+      "elapsedMs": 311,
+      "raw": "Found 1 memories:\n\n[1] #5 (learning) — Burocracia\n    burocracia: Un fallo de memoria no bloquea una tarea; OpenSpec conserva el estado canónico.\n    2026-09-11 16:05:02 | project: ein-memory-eval | scope: project\n\n"
+    },
+    {
+      "title": "Exploración",
+      "keyword": "exploracion",
+      "rawContainsLesson": true,
+      "advisoryContainsLesson": false,
+      "prepared": {
+        "receipt": {
+          "operation": "search",
+          "status": "retrieved",
+          "reason": "ok",
+          "projectHash": "9b323219863972548c37",
+          "durationMs": 153,
+          "timestamp": "2026-09-11T14:05:04.532Z",
+          "lifecycleKey": "exploracion",
+          "count": 2,
+          "bytes": 51
+        },
+        "entries": [
+          {
+            "content": "Found 1 memories:",
+            "freshness": "unverified"
+          },
+          {
+            "content": "[1] #6 (learning) — Exploración",
+            "freshness": "unverified"
+          }
+        ]
+      },
+      "elapsedMs": 306,
+      "raw": "Found 1 memories:\n\n[1] #6 (learning) — Exploración\n    exploracion: Acotar la investigación y entregar al padre rutas y hechos con procedencia.\n    2026-09-11 16:05:02 | project: ein-memory-eval | scope: project\n\n"
+    }
+  ],
+  "repeated": {
+    "operation": "save",
+    "status": "saved",
+    "reason": "acknowledged"
+  },
+  "updated": "Found 1 memories:\n\n[1] #4 (learning) — Cuaderno revisado\n    cuaderno: NUEVA regla comprobada del almacén compartido.\n    2026-09-11 16:05:00 | project: ein-memory-eval | scope: project\n\n",
+  "isolation": "No memories found for: \"cuaderno\"\n"
+}

@@ -1,0 +1,53 @@
+# Repositorio, desarrollo y despliegue
+
+Objetivo solicitado: repositorio limpio, pruebas mejores y canales comprensibles. El mecanismo exacto de publicación sigue pendiente; estas son recomendaciones para implementar con el producto.
+
+## Repositorio nuevo
+
+El repositorio tendrá dos lenguajes con una frontera clara ([diseño](02-diseno.md#frontera-entre-lenguajes)): TypeScript/Bun para el paquete Pi y Go para launcher e instalador. Los contratos compartidos (`brand.json`, formatos del documento de trabajo y del resumen de relevo, `runtimes.toml`) viven como archivos neutros, no como código duplicado.
+
+Mantener código, pruebas y herramientas de desarrollo separados cuando aparezcan; no crear directorios vacíos para una arquitectura imaginada. Las fuentes de `docs/sources/` son material de investigación, no dependencias productivas. No publicar los archives en el paquete runtime.
+
+Conservar este handoff como documentación de origen. Al comenzar desarrollo, el README del producto describe comportamiento realmente disponible; no presenta todo el plan como implementado. Changelog por cambios relevantes. Una pequeña lista de decisiones duraderas basta; no un ADR por detalle reversible.
+
+La carpeta nueva no estaba inicializada en Git cuando se creó el paquete. No se ha elegido remoto, licencia propia ni nombre de paquete/CLI. El nombre de proyecto decidido es `n_ein`; no supone disponibilidad en registros ni que el ejecutable tenga que llamarse igual.
+
+## Canales propuestos
+
+| Canal | Origen | Uso | Condición de entrada |
+|---|---|---|---|
+| Desarrollo | Checkout explícito | Probar el siguiente corte | Home/configuración propios; versión y origen visibles. |
+| Preview | Artefacto candidato inmutable | Uso supervisado | Checks del cambio, paquete instalable y smoke del recorrido esencial. |
+| Estable | Promoción del artefacto ya probado | Uso habitual | Evidencia de preview y recuperación comprobada. |
+
+El canal `alpha` de Ein corresponde a preview. Como en Ein, el canal elegido se guarda solo tras un update correcto.
+
+Promover el mismo artefacto/bytes, no reconstruir silenciosamente otro con dependencias distintas. Registrar identificador de release, commit, versiones runtime/dependencias y hash. No hace falta una plataforma de releases propia.
+
+## Instalación aislada
+
+Pi vanilla, Ein legado, desarrollo n_ein y estable n_ein deben tener identidades claras. Proponer hogares separados; confirmar y comprobar resolución de rutas antes de escribir. No copiar credenciales en paquetes ni migrar sign-ins automáticamente por conveniencia.
+
+La primera instalación es local y acotada: un lanzador de shell que exporta `PI_CODING_AGENT_DIR` hacia el hogar de n_ein y carga el paquete local. Ein ya usa lanzadores con configuración propia para Pi y Claude ([ejemplo Pi archivado](archive/ein-workspace/ein-pi/launchers/ein-pi.fish)). En otras integraciones, comprobar las ubicaciones y la precedencia reales: `CLAUDE_CONFIG_DIR`, `CODEX_HOME` y `OPENCODE_CONFIG_DIR` no son contratos intercambiables. En particular, `OPENCODE_CONFIG_DIR` añade configuración a fuentes globales/de proyecto; no basta para afirmar aislamiento completo ([documentación oficial](https://opencode.ai/docs/config/#custom-directory)). Probar también instrucciones/skills, sesiones y credenciales antes de declarar una integración aislada.
+
+El instalador definitivo es un binario Go separado del launcher, con los verbos y comportamientos de `ein-install` ([diseño](02-diseno.md#launcher-e-instalador)). De Ein se portan los comportamientos como casos de aceptación; el código se reescribe, porque el de Ein está atado a su plantilla empaquetada y a migraciones SDD. Distribución por script o brew: pendiente.
+
+Update se prepara antes de reemplazar la versión activa, comprueba el resultado y conserva una recuperación entendible. Dry-run no debe mutar. Un fallo deja identificable qué versión y datos quedaron. Desinstalación separa código gestionado, configuración propia y datos del usuario.
+
+## CI proporcional
+
+Al principio: chequeo de tipos si aplica, pruebas relevantes y smoke determinista del paquete. Añadir jobs según superficies reales. No declarar soporte Windows/Linux/macOS sin ejercitar la ruta de cada plataforma.
+
+Las evaluaciones pagadas van separadas, con modelo/endpoint/configuración y presupuesto explícitos. Un test de proveedor simulado es válido para transporte y errores, pero no se etiqueta como evaluación de capacidad real.
+
+Los tests del artefacto se ejecutan desde una instalación limpia o aislada, sin enlaces que oculten archivos no empaquetados. Comprobar arranque, carga de skills, delegación si existe, rutas y continuidad. Mantener el entorno independiente de las instalaciones personales del desarrollador.
+
+## Versiones y evolución
+
+Fijar una combinación conocida de Pi, runner y extensiones. Actualizarla en preview con compatibilidad observada. Evitar `latest` como promesa implícita de soporte perpetuo: Ein instala hoy los paquetes de su hogar Pi con `@latest`, y eso no se hereda. Pi pasó de 0.84 a 0.87 en un mes con cambios incompatibles en su API de extensiones.
+
+Si una dependencia cambia un payload, corregir un único borde y comprobarlo con el paquete real. No añadir parsers o adaptadores generales para versiones hipotéticas. La configuración efectiva se puede inspeccionar sin leer archivos internos a mano.
+
+## Fuera de alcance inicial
+
+Marketplace, instalador multiplataforma sofisticado, telemetría remota, autoactualizaciones silenciosas y hosting de modelos. Primero una versión útil y reversible. Publicar repositorio, paquetes o releases queda sujeto a la instrucción de entrega que Samu dé en la sesión de implementación.

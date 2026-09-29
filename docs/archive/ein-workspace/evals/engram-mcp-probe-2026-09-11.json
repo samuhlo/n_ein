@@ -1,0 +1,110 @@
+{
+  "server": {
+    "jsonrpc": "2.0",
+    "id": 1,
+    "result": {
+      "protocolVersion": "2024-11-05",
+      "capabilities": {
+        "tools": {
+          "listChanged": true
+        }
+      },
+      "serverInfo": {
+        "name": "engram",
+        "version": "0.1.0"
+      },
+      "instructions": "Engram provides persistent memory that survives across sessions and compactions.\n\nCORE TOOLS (always available — use without ToolSearch):\n  mem_save — save decisions, bugs, discoveries, conventions PROACTIVELY (do not wait to be asked)\n  mem_search — find past work, decisions, or context from previous sessions\n  mem_context — get recent session history (call at session start or after compaction)\n  mem_session_summary — save end-of-session summary (MANDATORY before saying \"done\")\n  mem_get_observation — get full untruncated content of a search result by ID\n  mem_save_prompt — save user prompt for context\n  mem_current_project — detect current project from cwd (recommended first call)\n\nDEFERRED TOOLS (use ToolSearch when needed):\n  mem_update, mem_review, mem_pin, mem_unpin, mem_suggest_topic_key, mem_session_start, mem_session_end,\n  mem_stats, mem_delete, mem_timeline, mem_capture_passive, mem_merge_projects\n\nPROACTIVE SAVE RULE: Call mem_save immediately after ANY decision, bug fix, discovery, or convention — not just when asked.\n\n## CONFLICT SURFACING — when mem_save returns candidates\n\nAfter every mem_save call, check the response envelope for judgment_required.\n\nIF judgment_required IS TRUE:\n  Iterate candidates[] and call mem_judge once per candidate using the\n  judgment_id from that candidate entry. Do NOT use the top-level judgment_id\n  for multiple candidates — each candidate has its own.\n\n  HEURISTIC — when to ask the user vs. resolve autonomously:\n\n  ASK the user (conversationally, as part of your next reply) when:\n    - confidence is below 0.7, OR\n    - the relation you would choose is supersedes or conflicts_with AND the\n      observation type is architecture, policy, or decision\n\n  RESOLVE silently (call mem_judge without asking) when:\n    - confidence >= 0.7 AND the relation is not supersedes/conflicts_with, OR\n    - the relation is related, compatible, scoped, or not_conflict\n\n  HOW TO ASK (conversationally — never via blocking CLI or dashboard prompt):\n    Raise it naturally in your next reply to the user. Example phrasing:\n    \"I noticed memory #abc123 might conflict with what we just saved.\n     Want me to mark the new one as superseding it, or are they about\n     different scopes? I can also mark them as compatible if both still apply.\"\n\n  AFTER RESOLUTION (both paths):\n    Call mem_judge with the chosen relation, a reason, and if the user gave\n    explicit direction, include their words as the evidence field. This persists\n    the verdict and closes the pending conflict row."
+    }
+  },
+  "search_schema": {
+    "annotations": {
+      "title": "Search Memory",
+      "readOnlyHint": true,
+      "destructiveHint": false,
+      "idempotentHint": true,
+      "openWorldHint": false
+    },
+    "description": "Search your persistent memory across all sessions. Use this to find past decisions, bugs fixed, patterns used, files changed, or any context from previous coding sessions.",
+    "inputSchema": {
+      "properties": {
+        "all_projects": {
+          "description": "Search across every project instead of the current one. When true, the project argument is ignored and results may come from any project. Useful for recalling decisions logged elsewhere when you don't know the project key.",
+          "type": "boolean"
+        },
+        "limit": {
+          "description": "Max results (default: 10, max: 20)",
+          "type": "number"
+        },
+        "match_mode": {
+          "description": "Token matching: \"all\" (default — every token must match, FTS5 AND) or \"any\" (any token matches — broader recall for multi-token queries). Any other value returns an error.",
+          "type": "string"
+        },
+        "project": {
+          "description": "Filter by project name. Ignored when all_projects=true.",
+          "type": "string"
+        },
+        "query": {
+          "description": "Search query — natural language or keywords",
+          "type": "string"
+        },
+        "scope": {
+          "description": "Filter by scope: project (default) or personal",
+          "type": "string"
+        },
+        "type": {
+          "description": "Filter by type: tool_use, file_change, command, file_read, search, manual, decision, architecture, bugfix, pattern",
+          "type": "string"
+        }
+      },
+      "required": [
+        "query"
+      ],
+      "type": "object"
+    },
+    "name": "mem_search"
+  },
+  "results": [
+    {
+      "query": "zzznomatchzzz",
+      "response": {
+        "jsonrpc": "2.0",
+        "id": 3,
+        "result": {
+          "content": [
+            {
+              "type": "text",
+              "text": "{\"project\":\"ein-memory-eval\",\"project_path\":\"\",\"project_source\":\"explicit_override\",\"result\":\"No memories found for: \\\"zzznomatchzzz\\\"\"}"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "query": "compactacion",
+      "response": {
+        "jsonrpc": "2.0",
+        "id": 4,
+        "result": {
+          "content": [
+            {
+              "type": "text",
+              "text": "{\"project\":\"ein-memory-eval\",\"project_path\":\"\",\"project_source\":\"explicit_override\",\"result\":\"Found 1 memories:\\n\\n[1] #1 (learning) — Compactación\\n    compactacion: El checkpoint canónico vive en disco. Releer archivos y Git antes de continuar.\\n    2026-09-11 16:05:00 | project: ein-memory-eval | scope: project\\n\\n\",\"results\":[{\"id\":1,\"pinned\":false,\"project\":\"ein-memory-eval\",\"scope\":\"project\",\"state\":\"active\",\"sync_id\":\"obs-4371bb0f26735595\",\"title\":\"Compactación\",\"type\":\"learning\"}]}"
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "full": {
+    "jsonrpc": "2.0",
+    "id": 5,
+    "result": {
+      "content": [
+        {
+          "type": "text",
+          "text": "{\"project\":\"ein-memory-eval\",\"project_path\":\"\",\"project_source\":\"process_override\",\"result\":\"#1 [learning] Compactación\\ncompactacion: El checkpoint canónico vive en disco. Releer archivos y Git antes de continuar.\\nSession: manual-save-ein-memory-eval\\nProject: ein-memory-eval\\nScope: project\\nTopic: learning/compactacion\\nDuplicates: 1\\nRevisions: 1\\nCreated: 2026-09-11 16:05:00\"}"
+        }
+      ]
+    }
+  }
+}

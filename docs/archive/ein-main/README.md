@@ -1,0 +1,160 @@
+<div align="center">
+  <img src="docs-site/public/assets/brand/ein-logo.png" alt="Ein · coding-agent harness" width="440">
+  <h1><code>./EIN.sh</code></h1>
+
+**Hacer que pensar bien permita ejecutar de forma más sencilla, barata y local, manteniendo las exigencias de calidad.**
+
+[Documentación](https://samuhlo.github.io/ein-agent/) ·
+[Releases y alphas](https://github.com/samuhlo/ein-agent/releases) ·
+[Changelog](CHANGELOG.md) ·
+[Issues](https://github.com/samuhlo/ein-agent/issues)
+
+`BETA`
+
+</div>
+
+---
+
+Ein convierte trabajo ambiguo en cambios **pequeños, verificados y explicados**. Los modelos capaces resuelven las decisiones; los ejecutores reciben encargos acotados. Un modelo barato alojado sirve hoy como ejecutor. La ejecución local es un objetivo futuro y opcional: no necesitas hardware propio para usar Ein.
+
+No es un agente ni un modelo: es la capa que rodea al agente para que el trabajo salga en piezas revisables, con el estado del cambio en disco y no en la conversación.
+
+> _note: aislamiento primero. `pi` y `claude` siguen siendo tus runtimes vanilla; Ein entra por superficies explícitas, no por contaminación silenciosa._
+
+## // 00_ QUICK_START
+
+```bash
+curl -fsSL https://raw.githubusercontent.com/samuhlo/ein-agent/main/installer/install.sh | bash
+ein
+```
+
+Este bootstrap selecciona el canal **estable**. Para probar una alpha, copia el comando con canal y tag de sus [notas de release](https://github.com/samuhlo/ein-agent/releases); `releases/latest` solo apunta a la estable.
+
+Ein instala siempre su núcleo Pi. El menú solo pregunta si quieres añadir **Claude Code** como relevo opcional. Sin menú: `ein install --runtime pi` o `ein install --runtime both`.
+
+Guía completa en [Getting Started](https://samuhlo.github.io/ein-agent/00-start/getting-started/).
+
+Para probar cambios del checkout sin publicar una alpha: `bun run dev:install`
+desde la raíz. Puedes previsualizar con `--dry-run` o solo compilar con
+`--build-only`. [Desarrollo local](installer/README.md#desarrollo).
+
+## // 01_ EL_PROBLEMA
+
+Pides "arregla el login". El agente toca ocho ficheros y devuelve 400 líneas con un resumen optimista. Revisarlo cuesta más que haberlo escrito. Y al cerrar la conversación, el razonamiento se va con ella.
+
+Ein ataca las dos cosas: parte el trabajo en fases con contrato, y deja el estado en `openspec/` para que otra sesión, otra máquina u otro runtime lo retomen.
+
+Para simplificar el proyecto, Ein retira su integración con Engram: la continuidad se recupera desde los archivos, OpenSpec y Git, con investigaciones acotadas de `ein-scout` cuando hacen falta. La actualización conserva las notas y el binario existentes; no migra datos a otro sistema. [Qué cambia al actualizar](installer/README.md#actualizar-desde-una-instalación-con-engram).
+
+## // 02_ RUNTIME_SURFACE
+
+| PAPEL | SUPERFICIE | HOGAR DE EIN | RUNTIME VANILLA |
+| :--- | :--- | :--- | :--- |
+| **Núcleo · Pi** | `ein-pi` | `~/.pi-ein/agent` | `pi` → `~/.pi/agent` |
+| **Complemento · Claude Code** | `ein-cc` | `~/.claude-ein` | `claude` → `~/.claude` |
+
+Comparten el núcleo, **no las capacidades**. Las diferencias, sin maquillar, en la [matriz de runtimes](https://samuhlo.github.io/ein-agent/03-runtimes/runtime-matrix/).
+
+## // 03_ SDD_ENGINE
+
+```text
+scope → map → design → tasks → apply → verify → close
+```
+
+Un cambio pequeño y bien definido puede ir directamente a `apply` y a una verificación independiente, sin crear un expediente SDD. Si faltan decisiones, se aclaran antes de editar. Una petición completa ya autorizada no necesita una confirmación ritual.
+
+En SDD, cada fase la ejecuta un subagente acotado y deja un artefacto en `openspec/changes/<cambio>/`. El parent decide, enruta y explica; no escribe el código.
+
+El padre carga el detalle del flujo cuando lo necesita y los hijos reciben contexto fresco con las skills pertinentes. `design` decide; `tasks` concreta grupos ejecutables; `apply` implementa; `verify` inspecciona código y ejecuta las comprobaciones por su cuenta. Los logs completos quedan referenciados, sin volcarlos en la conversación del padre.
+
+El estado de las fases y la validez estructural de los artefactos se calculan por herramienta. Eso ayuda a revisar el trabajo; no demuestra por sí solo que todas las decisiones o el código sean correctos.
+
+> _note: qué garantiza Ein y qué solo observa está escrito sin rebajas en [límites deterministas](https://samuhlo.github.io/ein-agent/01-concepts/deterministic-boundaries/)._
+
+## // 04_ BLUEPRINT
+
+```text
+ein-agent/
+├── runtime/        # agentes, skills propias, docs y prompts compartidos
+├── shared/         # contratos puros y puertos explícitos entre adaptadores
+├── vendor/skills/  # skills externas curadas; no son código propio
+├── ein-pi/         # adaptador Pi, launcher avanzado y migración
+├── ein-cc/         # adaptador Claude, launcher, sync y CLI SDD
+├── installer/      # ciclo de vida: ein-install, deploy, backups y releases
+├── tooling/        # mantenimiento del repositorio; no se distribuye
+└── docs-site/      # documentación pública (Astro + Starlight)
+```
+
+`runtime/` es el contenido propio y portable; `vendor/skills/` deja visible lo externo. `shared/contracts/` contiene lógica sin dependencia de adaptadores y `shared/ports/` concentra los pocos puentes que todavía tienen implementación Pi. Claude y el instalador consumen esas fronteras: no importan interiores de `ein-pi/agent/`. El instalador compone estas raíces para Pi y empaqueta las fuentes necesarias para Claude. El recorrido exacto de cada comando está en [Entry points](https://samuhlo.github.io/ein-agent/04-reference/entrypoints/).
+
+| LAYER | TECH |
+| :--- | :--- |
+| **Runtime** | Pi Coding Agent · Claude Code como complemento opcional |
+| **Core** | TypeScript + Bun |
+| **Workflow** | OpenSpec + SDD |
+| **Docs** | Astro + Starlight |
+| **Delivery** | GitHub Actions |
+
+## // 05_ COMMAND_DECK
+
+```bash
+ein                 # abre la aplicación: estado del proyecto y arrancar a trabajar
+ein-install update  # actualiza Ein y su template con backup
+ein doctor          # diagnostica el despliegue
+ein restore         # restaura desde un backup
+ein uninstall       # elimina Ein y conserva auth, secrets y sesiones
+```
+
+`ein` es la única puerta. Los verbos de ciclo de vida los ejecuta `ein-install`,
+que sigue en el `PATH` como arranque y escotilla de reparación: si lo que está
+roto es `ein`, la reparación no puede pasar por `ein`.
+
+```bash
+ein-install         # instala Ein y pregunta si añadir Claude Code
+ein-install doctor  # el mismo diagnóstico, sin depender de la aplicación
+ein-install update --channel alpha   # cambia a alpha y la deja como preferencia
+ein-install update --channel stable  # vuelve a estable y la deja como preferencia
+```
+
+Sin `--channel`, `update` reutiliza la preferencia guardada. Un `--dry-run`
+resuelve el canal indicado para enseñar el resultado, pero no cambia esa
+preferencia.
+
+Referencia completa en [CLI](https://samuhlo.github.io/ein-agent/04-reference/cli/).
+
+Acceso directo avanzado, sin pasar por la aplicación:
+
+```bash
+ein-pi             # Ein sobre Pi
+ein-cc             # Ein sobre Claude Code
+ein-cc-sdd status  # canal determinista SDD de Claude
+```
+
+## // 06_ DOCS
+
+| | |
+| :--- | :--- |
+| [Overview](https://samuhlo.github.io/ein-agent/00-start/overview/) | qué es y para quién |
+| [Getting Started](https://samuhlo.github.io/ein-agent/00-start/getting-started/) | instalar y comprobar |
+| [First Run](https://samuhlo.github.io/ein-agent/00-start/first-run/) | un cambio real de principio a fin |
+| [Workflow](https://samuhlo.github.io/ein-agent/02-workflow/workflow-overview/) | cuándo usar ad-hoc o SDD y cómo verificar |
+| [Runtimes](https://samuhlo.github.io/ein-agent/03-runtimes/runtime-overview/) | Pi, Claude Code y sus diferencias |
+| [Limitaciones](https://samuhlo.github.io/ein-agent/05-debug/known-limitations/) | qué está probado y qué no |
+
+## // 07_ ESTADO
+
+Beta. El registro mantenido de qué está probado, con qué evidencia y qué puede cambiar es [`docs/roadmap.md`](docs/roadmap.md). El rumbo que no se negocia vive en [`MANIFIESTO.md`](MANIFIESTO.md).
+
+Los cambios con impacto van al [CHANGELOG](CHANGELOG.md). Las releases se publican como tags `installer-v*` desde GitHub Actions.
+
+## // 08_ LICENCIA
+
+[MIT](LICENSE).
+
+<div align="center">
+
+<code>DESIGNED & CODED BY <a href="https://github.com/samuhlo">samuhlo</a></code>
+
+<small>Lugo, Galicia</small>
+
+</div>

@@ -1,0 +1,413 @@
+{
+  "primary": {
+    "conflicting": {
+      "n": 10,
+      "pass": 10,
+      "cost": 0.7132608,
+      "plannerCost": 0.67769,
+      "executorCost": 0.0355708,
+      "seconds": 553.6534051629715,
+      "tokens": 320803,
+      "turns": 69,
+      "paired": [
+        {
+          "case": "fechas",
+          "repeat": 1,
+          "costDeltaPct": 5.467923202929215,
+          "baseCost": 0.06912972,
+          "armCost": 0.07290968,
+          "bothPass": true
+        },
+        {
+          "case": "horario",
+          "repeat": 1,
+          "costDeltaPct": 6.626464034608448,
+          "baseCost": 0.07115952,
+          "armCost": 0.07587488,
+          "bothPass": true
+        },
+        {
+          "case": "progreso",
+          "repeat": 1,
+          "costDeltaPct": 6.455254380298192,
+          "baseCost": 0.07281696000000001,
+          "armCost": 0.07751748,
+          "bothPass": true
+        },
+        {
+          "case": "stun",
+          "repeat": 1,
+          "costDeltaPct": 16.181084213035145,
+          "baseCost": 0.05353708,
+          "armCost": 0.06219996,
+          "bothPass": true
+        },
+        {
+          "case": "ice-query",
+          "repeat": 1,
+          "costDeltaPct": 7.609709305238943,
+          "baseCost": 0.061465160000000005,
+          "armCost": 0.06614248,
+          "bothPass": true
+        },
+        {
+          "case": "fechas",
+          "repeat": 2,
+          "costDeltaPct": -2.0365606680879944,
+          "baseCost": 0.07193304,
+          "armCost": 0.07046808,
+          "bothPass": true
+        },
+        {
+          "case": "horario",
+          "repeat": 2,
+          "costDeltaPct": 11.817143500283954,
+          "baseCost": 0.06965812,
+          "armCost": 0.07788972000000001,
+          "bothPass": true
+        },
+        {
+          "case": "progreso",
+          "repeat": 2,
+          "costDeltaPct": 8.660420955341763,
+          "baseCost": 0.07140900000000001,
+          "armCost": 0.07759332000000001,
+          "bothPass": true
+        },
+        {
+          "case": "stun",
+          "repeat": 2,
+          "costDeltaPct": 11.694754455441059,
+          "baseCost": 0.05299812,
+          "armCost": 0.059196120000000005,
+          "bothPass": true
+        },
+        {
+          "case": "ice-query",
+          "repeat": 2,
+          "costDeltaPct": 19.705690091496898,
+          "baseCost": 0.06137476,
+          "armCost": 0.07346908,
+          "bothPass": true
+        }
+      ],
+      "medianCostDeltaPct": 8.135065130290354,
+      "aggregateCostDeltaPct": 8.814790617730338
+    },
+    "irrelevant": {
+      "n": 10,
+      "pass": 10,
+      "cost": 0.69391444,
+      "plannerCost": 0.65903,
+      "executorCost": 0.03488444,
+      "seconds": 556.1803848347627,
+      "tokens": 333986,
+      "turns": 71,
+      "paired": [
+        {
+          "case": "fechas",
+          "repeat": 1,
+          "costDeltaPct": 5.42765108841754,
+          "baseCost": 0.06912972,
+          "armCost": 0.07288184,
+          "bothPass": true
+        },
+        {
+          "case": "horario",
+          "repeat": 1,
+          "costDeltaPct": 5.913699249236104,
+          "baseCost": 0.07115952,
+          "armCost": 0.07536768000000002,
+          "bothPass": true
+        },
+        {
+          "case": "progreso",
+          "repeat": 1,
+          "costDeltaPct": -0.391941657547934,
+          "baseCost": 0.07281696000000001,
+          "armCost": 0.07253156,
+          "bothPass": true
+        },
+        {
+          "case": "stun",
+          "repeat": 1,
+          "costDeltaPct": 8.049449092105899,
+          "baseCost": 0.05353708,
+          "armCost": 0.05784652000000001,
+          "bothPass": true
+        },
+        {
+          "case": "ice-query",
+          "repeat": 1,
+          "costDeltaPct": 7.035270061934251,
+          "baseCost": 0.061465160000000005,
+          "armCost": 0.0657894,
+          "bothPass": true
+        },
+        {
+          "case": "fechas",
+          "repeat": 2,
+          "costDeltaPct": -0.44519180615750775,
+          "baseCost": 0.07193304,
+          "armCost": 0.0716128,
+          "bothPass": true
+        },
+        {
+          "case": "horario",
+          "repeat": 2,
+          "costDeltaPct": 11.892080923229042,
+          "baseCost": 0.06965812,
+          "armCost": 0.07794192,
+          "bothPass": true
+        },
+        {
+          "case": "progreso",
+          "repeat": 2,
+          "costDeltaPct": 5.4135473119634625,
+          "baseCost": 0.07140900000000001,
+          "armCost": 0.07527476000000001,
+          "bothPass": true
+        },
+        {
+          "case": "stun",
+          "repeat": 2,
+          "costDeltaPct": 12.36489143388484,
+          "baseCost": 0.05299812,
+          "armCost": 0.059551280000000005,
+          "bothPass": true
+        },
+        {
+          "case": "ice-query",
+          "repeat": 2,
+          "costDeltaPct": 6.096838504948954,
+          "baseCost": 0.06137476,
+          "armCost": 0.06511668000000001,
+          "bothPass": true
+        }
+      ],
+      "medianCostDeltaPct": 6.005268877092529,
+      "aggregateCostDeltaPct": 5.86331745025046
+    },
+    "none": {
+      "n": 10,
+      "pass": 10,
+      "cost": 0.6554814800000001,
+      "plannerCost": 0.6138100000000001,
+      "executorCost": 0.041671480000000004,
+      "seconds": 549.4257579173427,
+      "tokens": 338954,
+      "turns": 72,
+      "paired": []
+    },
+    "useful": {
+      "n": 10,
+      "pass": 10,
+      "cost": 0.7403413600000001,
+      "plannerCost": 0.7010000000000001,
+      "executorCost": 0.039341360000000006,
+      "seconds": 581.1613894114271,
+      "tokens": 324174,
+      "turns": 69,
+      "paired": [
+        {
+          "case": "fechas",
+          "repeat": 1,
+          "costDeltaPct": 9.05827479121859,
+          "baseCost": 0.06912972,
+          "armCost": 0.07539168,
+          "bothPass": true
+        },
+        {
+          "case": "horario",
+          "repeat": 1,
+          "costDeltaPct": 13.406779584797658,
+          "baseCost": 0.07115952,
+          "armCost": 0.08069972,
+          "bothPass": true
+        },
+        {
+          "case": "progreso",
+          "repeat": 1,
+          "costDeltaPct": 10.28617508888039,
+          "baseCost": 0.07281696000000001,
+          "armCost": 0.08030704000000001,
+          "bothPass": true
+        },
+        {
+          "case": "stun",
+          "repeat": 1,
+          "costDeltaPct": 14.731696237448899,
+          "baseCost": 0.05353708,
+          "armCost": 0.061424000000000006,
+          "bothPass": true
+        },
+        {
+          "case": "ice-query",
+          "repeat": 1,
+          "costDeltaPct": 6.906611810658259,
+          "baseCost": 0.061465160000000005,
+          "armCost": 0.06571032,
+          "bothPass": true
+        },
+        {
+          "case": "fechas",
+          "repeat": 2,
+          "costDeltaPct": 11.824941640169783,
+          "baseCost": 0.07193304,
+          "armCost": 0.08043908,
+          "bothPass": true
+        },
+        {
+          "case": "horario",
+          "repeat": 2,
+          "costDeltaPct": 20.9439473818702,
+          "baseCost": 0.06965812,
+          "armCost": 0.08424728000000001,
+          "bothPass": true
+        },
+        {
+          "case": "progreso",
+          "repeat": 2,
+          "costDeltaPct": 13.54327885840718,
+          "baseCost": 0.07140900000000001,
+          "armCost": 0.08108012,
+          "bothPass": true
+        },
+        {
+          "case": "stun",
+          "repeat": 2,
+          "costDeltaPct": 17.12317342577434,
+          "baseCost": 0.05299812,
+          "armCost": 0.06207308,
+          "bothPass": true
+        },
+        {
+          "case": "ice-query",
+          "repeat": 2,
+          "costDeltaPct": 12.373620687070709,
+          "baseCost": 0.06137476,
+          "armCost": 0.06896904,
+          "bothPass": true
+        }
+      ],
+      "medianCostDeltaPct": 12.890200135934183,
+      "aggregateCostDeltaPct": 12.946190333249374
+    }
+  },
+  "sensitivity": {
+    "none": {
+      "n": 5,
+      "pass": 5,
+      "cost": 0.32591832000000004,
+      "plannerCost": 0.30708,
+      "executorCost": 0.01883832,
+      "seconds": 267.8071029589046,
+      "tokens": 155866,
+      "turns": 34,
+      "paired": []
+    },
+    "useful": {
+      "n": 5,
+      "pass": 5,
+      "cost": 0.32705652,
+      "plannerCost": 0.30985,
+      "executorCost": 0.01720652,
+      "seconds": 260.510711459443,
+      "tokens": 157634,
+      "turns": 34,
+      "paired": [
+        {
+          "case": "fechas",
+          "repeat": 1,
+          "costDeltaPct": 0.7071676016766615,
+          "baseCost": 0.07038784000000001,
+          "armCost": 0.0708856,
+          "bothPass": true
+        },
+        {
+          "case": "horario",
+          "repeat": 1,
+          "costDeltaPct": 0.18823244014083418,
+          "baseCost": 0.07057232000000001,
+          "armCost": 0.07070516,
+          "bothPass": true
+        },
+        {
+          "case": "progreso",
+          "repeat": 1,
+          "costDeltaPct": 2.4991175188885606,
+          "baseCost": 0.06957656,
+          "armCost": 0.07131536000000001,
+          "bothPass": true
+        },
+        {
+          "case": "stun",
+          "repeat": 1,
+          "costDeltaPct": 6.7869683471289965,
+          "baseCost": 0.05225308000000001,
+          "armCost": 0.055799480000000005,
+          "bothPass": true
+        },
+        {
+          "case": "ice-query",
+          "repeat": 1,
+          "costDeltaPct": -7.568053234892891,
+          "baseCost": 0.06312852000000001,
+          "armCost": 0.05835092,
+          "bothPass": true
+        }
+      ],
+      "medianCostDeltaPct": 0.7071676016766615,
+      "aggregateCostDeltaPct": 0.34922860427115676
+    }
+  },
+  "recall": {
+    "retrieval": {
+      "none": {
+        "n": 2,
+        "cost": 1.044712,
+        "seconds": 192.34848474990577,
+        "tools": 46,
+        "tokens": 226320
+      },
+      "useful": {
+        "n": 2,
+        "cost": 0.815272,
+        "seconds": 185.76580604189076,
+        "tools": 41,
+        "tokens": 157172
+      },
+      "costDeltaPct": -21.962033555659367
+    },
+    "topics": {
+      "none": {
+        "n": 2,
+        "cost": 0.8364260000000001,
+        "seconds": 160.6651218328625,
+        "tools": 33,
+        "tokens": 178813
+      },
+      "useful": {
+        "n": 2,
+        "cost": 0.9453640000000001,
+        "seconds": 164.47034066682681,
+        "tools": 43,
+        "tokens": 180322
+      },
+      "costDeltaPct": 13.024224498042859
+    }
+  },
+  "captures": {
+    "capture-result.json": 0.050260000000000006,
+    "recall-capture-result.json": 0.01957
+  },
+  "recallAggregate": {
+    "baseCost": 1.8811380000000002,
+    "usefulCost": 1.760636,
+    "costDeltaPct": -6.405803295664647,
+    "withCaptureDeltaPct": -5.365475579144119
+  },
+  "totalReportedApiCost": 7.16757692,
+  "measuredModelCalls": 110,
+  "sensitivityWithCaptureDeltaPct": 15.770270293489475
+}
