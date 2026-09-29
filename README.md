@@ -1,6 +1,6 @@
 # n_ein
 
-n_ein es el nuevo entorno personal de programación de Samu. La versión de desarrollo arranca Pi 0.87.1 con hogar aislado, tema de Ein, voz docente, las skills `intent`, `comment-style` y `logging-style`, y un trabajador Luna high. El launcher y el instalador en Go y la continuidad Pi↔Claude pertenecen a entregas posteriores.
+n_ein es el nuevo entorno personal de programación de Samu. La versión de desarrollo arranca Pi 0.87.1 con hogar aislado, tema de Ein, voz docente, las skills `intent`, `comment-style` y `logging-style`, y un trabajador Luna high. El relevo Pi↔Claude y un instalador local en Go ya funcionan; el launcher con las cinco vistas de Ein sigue pendiente.
 
 ## Arrancar
 
@@ -31,3 +31,17 @@ Para un encargo prolongado, `WORK.md` en la raíz del proyecto conserva objetivo
 En Pi interactivo, `/handoff claude` espera a que termine el trabajo activo, guarda un resumen markdown con objetivo, decisiones, tareas y estado Git, cierra Pi y abre Claude con ese resumen como primer mensaje. Claude usa `~/.n_ein/dev/claude`, separado de la instalación habitual y de Ein legado; cada skill apunta al catálogo único de `pi-package/skills` mientras la caché propia queda en su hogar. El [ensayo de relevo](evals/results/2026-09-29-handoff.md) verificó el cierre, la continuación de solo lectura y la salida en la TUI real de Claude. Una instalación nueva de Claude pide completar su primer arranque.
 
 Para volver desde Claude, usa `/handoff-pi`. Esa skill conserva el resultado en `WORK.md`, prepara un resumen con Git y te indica cerrar Claude con `/exit`. El lanzador espera la salida de Claude antes de abrir Pi con el resumen. El [relevo inverso](evals/results/2026-09-29-handoff.md) pasó tanto con procesos simulados como en las TUI reales de Claude y Pi; Pi recuperó el pendiente sin reabrir decisiones ya fijadas.
+
+## Instalación local de prueba
+
+Con Go 1.27.1, construye el instalador separado y mira el plan antes de escribir:
+
+```sh
+mkdir -p dist
+(cd go && go build -o ../dist/n-ein-install ./cmd/n-ein-install)
+./dist/n-ein-install install --source . --channel preview --dry-run
+./dist/n-ein-install install --source . --channel preview
+./dist/n-ein-install doctor --channel preview
+```
+
+El código va a `~/.n_ein/installations/preview`; Pi y Claude guardan credenciales y sesiones en `~/.n_ein/preview/`, fuera del árbol gestionado. También existen `update --source`, `restore` y `uninstall`; este último conserva un backup del código y deja los datos de usuario en su hogar. `stable` usa rutas separadas. El [ensayo del instalador](evals/results/2026-09-29-installer.md) se hizo con un destino temporal; todavía no hay releases remotas ni promoción de un artefacto inmutable entre canales.

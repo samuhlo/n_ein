@@ -4,7 +4,10 @@ set -euo pipefail
 # [FLOW] ARRANQUE AISLADO
 # Pi conserva su configuración, autenticación y sesiones dentro de este hogar.
 repo_dir="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd -P)"
-agent_dir="${N_EIN_AGENT_DIR:-$HOME/.n_ein/dev/pi-agent}"
+channel="dev"
+if [[ -f "$repo_dir/.n-ein-channel" ]]; then IFS= read -r channel < "$repo_dir/.n-ein-channel"; fi
+case "$channel" in dev|preview|stable) ;; *) printf '[ERR] :: CHANNEL_BAD :: value: %s\n' "$channel" >&2; exit 64 ;; esac
+agent_dir="${N_EIN_AGENT_DIR:-$HOME/.n_ein/$channel/pi-agent}"
 pi_bin="${N_EIN_PI_BIN:-pi}"
 
 case "$agent_dir" in
