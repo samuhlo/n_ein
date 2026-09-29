@@ -178,7 +178,7 @@ export default function (pi: ExtensionAPI) {
         const action = complete ? "COMPLETE" : aborted ? "CANCELLED" : "PARTIAL";
         const header = `[WORK] :: ${action} :: modo: ${mode} | modelo: ${run.provider ?? "desconocido"}/${run.model ?? "desconocido"} | cwd: ${ctx.cwd} | exit: ${exitCode}`;
         const cost = run.usage.catalogEstimateUsd === null ? "desconocida" : `$${run.usage.catalogEstimateUsd.toFixed(4)} (estimación de catálogo, no importe facturado)`;
-        const result = [header, run.finalText || "Sin respuesta final.", stderr ? `Diagnóstico: ${stderr}` : "", `Uso: ${run.usage.input} entrada | ${run.usage.output} salida | estimación: ${cost}`, `Comandos observados: ${JSON.stringify(run.commands)}`].filter(Boolean).join("\n\n");
+        const result = [header, run.finalText || "Sin respuesta final.", run.error ? `Error del modelo: ${run.error}` : "", stderr ? `Diagnóstico: ${stderr}` : "", `Uso: ${run.usage.input} entrada | ${run.usage.output} salida | estimación: ${cost}`, `Comandos observados: ${JSON.stringify(run.commands)}`].filter(Boolean).join("\n\n");
         return { content: [{ type: "text", text: result }], details: { status, mode, cwd: ctx.cwd, exitCode, aborted, ...run, stderr } };
       } finally {
         if (killTimer) clearTimeout(killTimer);
