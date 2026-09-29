@@ -169,3 +169,58 @@ func TestProtectedTargets(t *testing.T) {
 		}
 	}
 }
+
+func TestArtifactPromotionAndTamperDetection(t *testing.T) {
+	source, self, _, _ := sourceFixture(t)
+	root := filepath.Dir(source)
+	artifact := filepath.Join(root, "candidate")
+	preview := filepath.Join(root, "installations", "preview")
+	stable := filepath.Join(root, "installations", "stable")
+	if _, err := call(t, self, "package", "--source", source, "--output", artifact, "--dry-run"); err != nil {
+		t.Fatal(err)
+	}
+	if _, err := os.Stat(artifact); !os.IsNotExist(err) {
+		t.Fatal("package --dry-run creó archivos")
+	}
+	if _, err := call(t, self, "package", "--source", source, "--output", artifact); err != nil {
+		t.Fatal(err)
+	}
+	if _, err := validateArtifact(artifact); err != nil {
+		t.Fatal(err)
+	}
+	if _, err := os.Stat(filepath.Join(artifact, "pi-package/skills/synced")); !os.IsNotExist(err) {
+		t.Fatal("el paquete incluyó la caché de Claude")
+	}
+	otherInstaller := writeFixture(t, root, "other-installer", "different binary", 0o755)
+	if _, err := call(t, otherInstaller, "install", "--source", artifact, "--target", preview, "--channel", "preview"); err != nil {
+		t.Fatal(err)
+	}
+	if _, err := call(t, otherInstaller, "install", "--source", artifact, "--target", stable, "--channel", "stable"); err != nil {
+		t.Fatal(err)
+	}
+	for _, target := range []string{preview, stable} {
+		if _, err := call(t, self, "doctor", "--target", target); err != nil {
+			t.Fatal(err)
+		}
+		actual, err := os.ReadFile(filepath.Join(target, "bin/n-ein-install"))
+		if err != nil || string(actual) != "installer" {
+			t.Fatalf("no se promovió el instalador del artefacto: %q %v", actual, err)
+		}
+	}
+	first, _ := os.ReadFile(filepath.Join(preview, "package-manifest.json"))
+	second, _ := os.ReadFile(filepath.Join(stable, "package-manifest.json"))
+	if !bytes.Equal(first, second) {
+		t.Fatal("preview y stable no recibieron los mismos bytes de paquete")
+	}
+
+	writeFixture(t, artifact, "pi-package/persona.md", "tampered", 0o644)
+	if _, err := call(t, self, "update", "--source", artifact, "--target", stable, "--channel", "preview"); err == nil {
+		t.Fatal("update aceptó un artefacto alterado")
+	}
+	if channel, _ := os.ReadFile(filepath.Join(stable, ".n-ein-channel")); string(channel) != "stable\n" {
+		t.Fatal("update fallido cambió el canal")
+	}
+	if _, err := call(t, self, "doctor", "--target", stable); err != nil {
+		t.Fatal(err)
+	}
+}

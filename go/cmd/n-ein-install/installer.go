@@ -9,6 +9,7 @@ import (
 	"io"
 	"io/fs"
 	"os"
+	"os/exec"
 	"path/filepath"
 	"sort"
 	"strings"
@@ -26,6 +27,13 @@ type fileRecord struct {
 type manifest struct {
 	Version string       `json:"version"`
 	Channel string       `json:"channel"`
+	Files   []fileRecord `json:"files"`
+}
+
+type artifactManifest struct {
+	Version string       `json:"version"`
+	Commit  string       `json:"commit"`
+	Digest  string       `json:"digest"`
 	Files   []fileRecord `json:"files"`
 }
 
@@ -122,7 +130,11 @@ func collect(source, self string) ([]sourceFile, error) {
 	if err := add(self, "bin/n-ein-install"); err != nil {
 		return nil, err
 	}
-	if err := add(filepath.Join(source, "dist", "n-ein"), "bin/n-ein"); err != nil {
+	launcher := filepath.Join(source, "dist", "n-ein")
+	if _, err := os.Stat(launcher); errors.Is(err, os.ErrNotExist) {
+		launcher = filepath.Join(source, "bin", "n-ein")
+	}
+	if err := add(launcher, "bin/n-ein"); err != nil {
 		return nil, err
 	}
 	for _, rel := range []string{"pi-package/extensions", "pi-package/themes"} {
@@ -208,14 +220,23 @@ func hashFile(path string) (string, error) {
 	return hex.EncodeToString(hash.Sum(nil)), nil
 }
 
-func writeManifest(stage, channel string, files []sourceFile) error {
+func fileRecords(stage string, files []sourceFile) ([]fileRecord, error) {
 	records := make([]fileRecord, 0, len(files)+1)
 	for _, file := range files {
 		hash, err := hashFile(filepath.Join(stage, file.rel))
 		if err != nil {
-			return err
+			return nil, err
 		}
 		records = append(records, fileRecord{Path: filepath.ToSlash(file.rel), SHA256: hash, Mode: uint32(file.mode.Perm())})
+	}
+	sort.Slice(records, func(i, j int) bool { return records[i].Path < records[j].Path })
+	return records, nil
+}
+
+func writeManifest(stage, channel string, files []sourceFile) error {
+	records, err := fileRecords(stage, files)
+	if err != nil {
+		return err
 	}
 	marker := filepath.Join(stage, ".n-ein-channel")
 	if err := os.WriteFile(marker, []byte(channel+"\n"), 0o644); err != nil {
@@ -232,6 +253,31 @@ func writeManifest(stage, channel string, files []sourceFile) error {
 		return err
 	}
 	return os.WriteFile(filepath.Join(stage, "install.json"), append(data, '\n'), 0o644)
+}
+
+func verifyFiles(root string, records []fileRecord) error {
+	for _, item := range records {
+		rel := filepath.FromSlash(item.Path)
+		if rel == "." || filepath.IsAbs(rel) || strings.HasPrefix(rel, "..") || filepath.Clean(rel) != rel {
+			return fmt.Errorf("ruta inválida en manifest: %s", item.Path)
+		}
+		path := filepath.Join(root, rel)
+		info, err := os.Lstat(path)
+		if err != nil {
+			return err
+		}
+		if !info.Mode().IsRegular() || uint32(info.Mode().Perm()) != item.Mode {
+			return fmt.Errorf("modo o tipo incorrecto: %s", rel)
+		}
+		hash, err := hashFile(path)
+		if err != nil {
+			return err
+		}
+		if hash != item.SHA256 {
+			return fmt.Errorf("hash incorrecto: %s", rel)
+		}
+	}
+	return nil
 }
 
 func validate(target string) (manifest, error) {
@@ -252,32 +298,100 @@ func validate(target string) (manifest, error) {
 	if len(meta.Files) == 0 {
 		return manifest{}, fmt.Errorf("manifest sin archivos")
 	}
-	for _, item := range meta.Files {
-		rel := filepath.FromSlash(item.Path)
-		if rel == "." || filepath.IsAbs(rel) || strings.HasPrefix(rel, "..") || filepath.Clean(rel) != rel {
-			return manifest{}, fmt.Errorf("ruta inválida en manifest: %s", item.Path)
-		}
-		path := filepath.Join(target, rel)
-		info, err := os.Lstat(path)
-		if err != nil {
-			return manifest{}, err
-		}
-		if !info.Mode().IsRegular() || uint32(info.Mode().Perm()) != item.Mode {
-			return manifest{}, fmt.Errorf("modo o tipo incorrecto: %s", rel)
-		}
-		hash, err := hashFile(path)
-		if err != nil {
-			return manifest{}, err
-		}
-		if hash != item.SHA256 {
-			return manifest{}, fmt.Errorf("hash incorrecto: %s", rel)
-		}
+	if err := verifyFiles(target, meta.Files); err != nil {
+		return manifest{}, err
 	}
 	marker, err := os.ReadFile(filepath.Join(target, ".n-ein-channel"))
 	if err != nil || strings.TrimSpace(string(marker)) != meta.Channel {
 		return manifest{}, fmt.Errorf("canal y marcador no coinciden")
 	}
 	return meta, nil
+}
+
+func recordsDigest(records []fileRecord) string {
+	hash := sha256.New()
+	for _, item := range records {
+		fmt.Fprintf(hash, "%s\x00%s\x00%d\n", item.Path, item.SHA256, item.Mode)
+	}
+	return hex.EncodeToString(hash.Sum(nil))
+}
+
+func writeArtifactManifest(stage, source string, files []sourceFile) error {
+	records, err := fileRecords(stage, files)
+	if err != nil {
+		return err
+	}
+	commit := "desconocido"
+	if output, err := exec.Command("git", "-C", source, "rev-parse", "HEAD").Output(); err == nil {
+		commit = strings.TrimSpace(string(output))
+		if status, err := exec.Command("git", "-C", source, "status", "--porcelain").Output(); err == nil && len(status) > 0 {
+			commit += "+dirty"
+		}
+	}
+	data, err := json.MarshalIndent(artifactManifest{Version: version, Commit: commit, Digest: recordsDigest(records), Files: records}, "", "  ")
+	if err != nil {
+		return err
+	}
+	return os.WriteFile(filepath.Join(stage, "package-manifest.json"), append(data, '\n'), 0o644)
+}
+
+func validateArtifact(source string) (artifactManifest, error) {
+	data, err := os.ReadFile(filepath.Join(source, "package-manifest.json"))
+	if err != nil {
+		return artifactManifest{}, err
+	}
+	var meta artifactManifest
+	if err := json.Unmarshal(data, &meta); err != nil {
+		return artifactManifest{}, err
+	}
+	if meta.Version == "" || len(meta.Files) == 0 || recordsDigest(meta.Files) != meta.Digest {
+		return artifactManifest{}, fmt.Errorf("manifest de paquete inválido")
+	}
+	if err := verifyFiles(source, meta.Files); err != nil {
+		return artifactManifest{}, err
+	}
+	return meta, nil
+}
+
+func packageArtifact(source, output, self string, dryRun bool, writer io.Writer) error {
+	if _, err := os.Lstat(output); err == nil {
+		return fmt.Errorf("ya existe el paquete: %s", output)
+	} else if !errors.Is(err, os.ErrNotExist) {
+		return err
+	}
+	files, err := collect(source, self)
+	if err != nil {
+		return err
+	}
+	if dryRun {
+		fmt.Fprintf(writer, "// 000 PLAN · package · %s · %d archivos\n", output, len(files))
+		return nil
+	}
+	if err := os.MkdirAll(filepath.Dir(output), 0o755); err != nil {
+		return err
+	}
+	stage, err := os.MkdirTemp(filepath.Dir(output), ".n-ein-package-")
+	if err != nil {
+		return err
+	}
+	defer os.RemoveAll(stage)
+	for _, file := range files {
+		if err := copyFile(file.from, filepath.Join(stage, file.rel), file.mode); err != nil {
+			return err
+		}
+	}
+	if err := writeArtifactManifest(stage, source, files); err != nil {
+		return err
+	}
+	meta, err := validateArtifact(stage)
+	if err != nil {
+		return err
+	}
+	if err := os.Rename(stage, output); err != nil {
+		return err
+	}
+	fmt.Fprintf(writer, "// 000 PAQUETE · %s · sha256: %s\n", output, meta.Digest)
+	return nil
 }
 
 func backupPath(target, prefix string) (string, error) {
@@ -289,9 +403,25 @@ func backupPath(target, prefix string) (string, error) {
 }
 
 func install(source, target, channel, self string, requireExisting, dryRun bool, output io.Writer) error {
+	artifactPath := filepath.Join(source, "package-manifest.json")
+	if _, err := os.Stat(artifactPath); err == nil {
+		if _, err := validateArtifact(source); err != nil {
+			return fmt.Errorf("paquete inválido: %w", err)
+		}
+		// BLINDAJE -> Preview y estable copian el mismo instalador del artefacto.
+		self = filepath.Join(source, "bin", "n-ein-install")
+	}
 	files, err := collect(source, self)
 	if err != nil {
 		return err
+	}
+	if _, err := os.Stat(artifactPath); err == nil {
+		info, err := os.Lstat(artifactPath)
+		if err != nil {
+			return err
+		}
+		files = append(files, sourceFile{from: artifactPath, rel: "package-manifest.json", mode: info.Mode().Perm()})
+		sort.Slice(files, func(i, j int) bool { return files[i].rel < files[j].rel })
 	}
 	_, statErr := os.Lstat(target)
 	exists := statErr == nil
@@ -321,6 +451,11 @@ func install(source, target, channel, self string, requireExisting, dryRun bool,
 	}
 	if err := writeManifest(stage, channel, files); err != nil {
 		return err
+	}
+	if _, err := os.Stat(artifactPath); err == nil {
+		if _, err := validateArtifact(stage); err != nil {
+			return fmt.Errorf("paquete cambió durante instalación: %w", err)
+		}
 	}
 	if _, err := validate(stage); err != nil {
 		return err

@@ -23,16 +23,17 @@ func main() {
 
 func run(args []string, output io.Writer, self string) error {
 	if len(args) == 0 {
-		return fmt.Errorf("uso: n-ein-install <install|update|doctor|restore|uninstall> [flags]")
+		return fmt.Errorf("uso: n-ein-install <package|install|update|doctor|restore|uninstall> [flags]")
 	}
 	verb := args[0]
-	if verb != "install" && verb != "update" && verb != "doctor" && verb != "restore" && verb != "uninstall" {
+	if verb != "package" && verb != "install" && verb != "update" && verb != "doctor" && verb != "restore" && verb != "uninstall" {
 		return fmt.Errorf("verbo desconocido: %s", verb)
 	}
 
 	flags := flag.NewFlagSet(verb, flag.ContinueOnError)
 	flags.SetOutput(io.Discard)
 	source := flags.String("source", ".", "directorio fuente de n_ein")
+	artifactPath := flags.String("output", "", "salida inmutable del paquete local")
 	target := flags.String("target", "", "directorio de código instalado")
 	channel := flags.String("channel", "preview", "preview o stable")
 	dryRun := flags.Bool("dry-run", false, "mostrar sin mutar")
@@ -44,6 +45,20 @@ func run(args []string, output io.Writer, self string) error {
 	}
 	if *channel != "preview" && *channel != "stable" {
 		return fmt.Errorf("canal inválido: %s", *channel)
+	}
+	if verb == "package" {
+		if *artifactPath == "" {
+			return fmt.Errorf("package requiere --output")
+		}
+		absSource, err := filepath.Abs(*source)
+		if err != nil {
+			return err
+		}
+		absOutput, err := filepath.Abs(*artifactPath)
+		if err != nil {
+			return err
+		}
+		return packageArtifact(absSource, absOutput, self, *dryRun, output)
 	}
 	if *target == "" {
 		home, err := os.UserHomeDir()
