@@ -1,6 +1,6 @@
 # Repositorio, desarrollo y despliegue
 
-Objetivo solicitado: repositorio limpio, pruebas mejores y canales comprensibles. El mecanismo exacto de publicación sigue pendiente; estas son recomendaciones para implementar con el producto.
+Objetivo solicitado: repositorio limpio, pruebas mejores y canales comprensibles. El repositorio Git local, el [instalador y los canales locales](../README.md#instalación-local-de-prueba), y los checks ya existen. El mecanismo de publicación sigue pendiente. Las secciones siguientes conservan los criterios originales de diseño; consulta el README y la evidencia para distinguirlos de lo ya implementado.
 
 ## Repositorio nuevo
 
@@ -10,7 +10,7 @@ Mantener código, pruebas y herramientas de desarrollo separados cuando aparezca
 
 Conservar este handoff como documentación de origen. Al comenzar desarrollo, el README del producto describe comportamiento realmente disponible; no presenta todo el plan como implementado. Changelog por cambios relevantes. Una pequeña lista de decisiones duraderas basta; no un ADR por detalle reversible.
 
-La carpeta nueva no estaba inicializada en Git cuando se creó el paquete. No se ha elegido remoto, licencia propia ni nombre de paquete/CLI. El nombre de proyecto decidido es `n_ein`; no supone disponibilidad en registros ni que el ejecutable tenga que llamarse igual.
+La carpeta nueva no estaba inicializada en Git cuando se creó el paquete, pero ahora tiene historial local. No se ha elegido remoto ni licencia propia. Los ejecutables locales se llaman `n-ein` y `n-ein-install`; eso no supone disponibilidad en registros.
 
 ## Canales propuestos
 
@@ -30,7 +30,7 @@ Pi vanilla, Ein legado, desarrollo n_ein y estable n_ein deben tener identidades
 
 La primera instalación es local y acotada: un lanzador de shell que exporta `PI_CODING_AGENT_DIR` hacia el hogar de n_ein y carga el paquete local. Ein ya usa lanzadores con configuración propia para Pi y Claude ([ejemplo Pi archivado](archive/ein-workspace/ein-pi/launchers/ein-pi.fish)). En otras integraciones, comprobar las ubicaciones y la precedencia reales: `CLAUDE_CONFIG_DIR`, `CODEX_HOME` y `OPENCODE_CONFIG_DIR` no son contratos intercambiables. En particular, `OPENCODE_CONFIG_DIR` añade configuración a fuentes globales/de proyecto; no basta para afirmar aislamiento completo ([documentación oficial](https://opencode.ai/docs/config/#custom-directory)). Probar también instrucciones/skills, sesiones y credenciales antes de declarar una integración aislada.
 
-El instalador definitivo es un binario Go separado del launcher, con los verbos y comportamientos de `ein-install` ([diseño](02-diseno.md#launcher-e-instalador)). De Ein se portan los comportamientos como casos de aceptación; el código se reescribe, porque el de Ein está atado a su plantilla empaquetada y a migraciones SDD. Distribución por script o brew: pendiente.
+El instalador es un binario Go separado del launcher, con `package`, `install`, `update`, `doctor`, `restore` y `uninstall` comprobados en destinos temporales ([evidencia](../evals/results/2026-09-29-installer.md)). Se reescribió a partir de los comportamientos útiles de Ein, sin portar sus migraciones SDD. Distribución por script o brew: pendiente.
 
 Update se prepara antes de reemplazar la versión activa, comprueba el resultado y conserva una recuperación entendible. Dry-run no debe mutar. Un fallo deja identificable qué versión y datos quedaron. Desinstalación separa código gestionado, configuración propia y datos del usuario.
 

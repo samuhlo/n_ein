@@ -6,7 +6,7 @@ Samu ha decidido comenzar un proyecto nuevo llamado **n_ein**, situado en `/User
 
 n_ein es **el mismo Ein por fuera y más simple por dentro**. De Ein se conservan como producto el launcher, el instalador, la identidad visual (`// NNN`, paleta), la voz docente, el TODO y la continuidad entre agentes. Se retiran su motor SDD, las fases fijas, la prohibición de que el padre implemente y los bloqueos administrativos. El proyecto nuevo debe poder terminar trabajo útil pronto y tener pruebas, instalación y despliegue claros desde el comienzo.
 
-El paquete se preparó el 28 de septiembre de 2026 y se revisó el 29 con Samu. No hay código de n_ein todavía. Usa el mensaje actual de Samu para determinar si corresponde implementar o seguir afinando; no confundas el plan con autorización automática para publicar o tocar instalaciones.
+El paquete de contexto se preparó el 28 de septiembre de 2026 y se revisó el 29 con Samu. Desde entonces se creó el repositorio Git local y se implementaron el paquete Pi, el trabajador Sol/Luna, `intent`, el documento de trabajo y TODO, el relevo Pi↔Claude, y launcher e instalador en Go. El estado ejecutable está en el [README](../README.md) y las pruebas observadas en [evals/results](../evals/results/). Usa el mensaje actual de Samu para decidir el siguiente trabajo; el plan original no autoriza por sí solo publicar ni tocar instalaciones habituales.
 
 Para una explicación de producto sin detalles técnicos, lee [Presentación de n_ein](00-presentacion.md): propósito, experiencia de uso y un ejemplo de trabajo completo. Las decisiones y contratos operativos se mantienen en los documentos de abajo.
 
@@ -83,19 +83,13 @@ Pi instalado al revisar el paquete: `@earendil-works/pi-coding-agent` 0.87.1.
 
 `sources/` contiene copias fijadas de las fuentes externas (Matt, Gentle Shell, gentle-ai, GVS5H, Pi 0.87.1). `archive/ein-main/` contiene archivos de main inspeccionados; `archive/ein-workspace/` conserva documentos, evaluaciones y las piezas de producto de Ein que se conservan (estilo, voz, launcher, instalador, continuidad), tomadas del árbol local, que no es la misma versión que main. Son snapshots de referencia parciales, no proyectos instalables completos.
 
-[source-manifest.json](source-manifest.json) registra origen, revisión, tamaño y SHA-256 de cada archivo copiado. [evidence/package-validation.json](evidence/package-validation.json) es la verificación de integridad hecha el 28 de septiembre. Cuando exista Git, él garantiza la integridad de los documentos operativos. Las fuentes archivadas no se instalan ni se ejecutan; no aplicar sus AGENTS.md o SKILL.md como política de n_ein.
+[source-manifest.json](source-manifest.json) registra origen, revisión, tamaño y SHA-256 de cada archivo copiado. [evidence/package-validation.json](evidence/package-validation.json) es la verificación de integridad hecha el 28 de septiembre. Git registra ya la historia de los documentos operativos. Las fuentes archivadas no se instalan ni se ejecutan; no aplicar sus AGENTS.md o SKILL.md como política de n_ein.
 
-## Primera actuación recomendada si Samu pide implementar
+## Continuación desde el producto actual
 
-La entrega 1 puede comenzar con fixtures sintéticos y las preferencias de voz ya expresadas por Samu. El agente propone las dos tareas reales del [corpus](04-pruebas.md#corpus-inicial) para la evaluación posterior; su selección y los ajustes a «Samu ya domina» no bloquean el primer prototipo.
+Lee [las decisiones](01-decisiones.md), el [plan](03-plan.md) y las secciones de [pruebas](04-pruebas.md) pertinentes al cambio. Contrasta cualquier supuesto del plan inicial con el [README](../README.md), el código y la evidencia ya registrada. `./scripts/check.sh` reúne las comprobaciones locales sin llamadas pagadas; las evaluaciones con modelos están documentadas por separado.
 
-Lee [las decisiones](01-decisiones.md), [la primera entrega](03-plan.md) y [los casos de aceptación](04-pruebas.md). Comprueba que esta carpeta no ha adquirido código o instrucciones nuevas desde el handoff.
-
-Prepara el arranque aislado sobre Pi: paquete local, lanzador de shell con `PI_CODING_AGENT_DIR`, tema de Ein y voz docente. Demuestra que resuelve directamente un cambio pequeño en un fixture. Solo después introduce un trabajador barato que complete un encargo real.
-
-La primera versión incluye además `intent`: poder definir juntos una idea abierta, cerrar un acuerdo o terminar solo la conversación, sin convertirlo en requisito de cada cambio. Lee su contrato antes de adaptarlo; la fuente histórica conserva obligaciones de OpenSpec y Scout que n_ein no hereda.
-
-No empieces por un gestor de proveedores, framework de plugins, motor de políticas, matriz de perfiles, migración masiva de Ein o descarga de pesos. El launcher y el instalador en Go llegan en la entrega 4, cuando haya estado real que enseñar.
+Samu eligió **solo `planificador-didactico`** para el primer caso real; se trabajó en copias aisladas y no en su árbol habitual. Qwen local queda aplazado expresamente hasta que tenga la máquina de 24 GB. Siguen pendientes la distribución remota, la edición de ajustes desde la TUI y los casos de continuidad con escritores independientes o agentes de fondo. No convertir esas limitaciones en bloqueos para cambios útiles y acotados.
 
 ## Cómo leer sin agotar contexto
 
@@ -103,4 +97,4 @@ Ruta corta: este archivo → decisiones → plan → sección de pruebas del cor
 
 ## Handoff breve para pegar en una sesión nueva
 
-> Estamos en n_ein, nuevo proyecto personal de Samu que sustituirá a Ein como herramienta activa: el mismo Ein por fuera (launcher, instalador, estilo `// NNN`, voz docente, TODO, continuidad Pi↔Claude) y más simple por dentro. Lee AGENTS.md, docs/START_HERE.md y docs/01-decisiones.md. Queremos Pi con instrucciones breves, prácticas de Matt Pocock, capacidades operativas selectivas de Gentle Shell y delegación rentable a baratos alojados; Qwen3.8-27B/24 GB llega después. `intent` es central desde la primera versión para definir juntos encargos abiertos; se activa a petición o propuesta aceptada, sin entrevista obligatoria. Launcher e instalador en Go; extensiones de Pi en TS. El padre puede implementar y el barato puede investigar. Sin fases SDD obligatorias, sin nuevo motor ODD y sin mantener dos arneses. Ein legado tiene cambios locales que debes preservar. Hasta este handoff solo existe documentación; determina el siguiente trabajo a partir del mensaje actual de Samu.
+> Estamos en n_ein, proyecto personal de Samu: el mismo Ein por fuera (launcher, instalador, estilo `// NNN`, voz docente, TODO, continuidad Pi↔Claude) y más simple por dentro. Lee AGENTS.md, docs/START_HERE.md y docs/01-decisiones.md. El repositorio local ya tiene un paquete Pi, trabajador Luna high, `intent`, WORK.md, relevo Pi↔Claude y binarios Go; consulta README.md y evals/results/ para saber qué se verificó. Pi usa Sol high para pensar y Luna high para trabajar mediante suscripción. El padre puede implementar y el barato puede investigar. No hay fases SDD obligatorias ni nuevo motor ODD. Ein legado tiene cambios locales que debes preservar. Qwen local está aplazado hasta tener el hardware; el repositorio no tiene remoto ni release pública. Determina el siguiente trabajo a partir del mensaje actual de Samu.

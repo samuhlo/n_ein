@@ -1,34 +1,26 @@
 # Decisiones pendientes y límites
 
-## Resolver al comenzar implementación
+## Estado y decisiones abiertas
 
-| Decisión | Propuesta inicial | Cuándo hace falta |
+| Área | Estado a 29 de septiembre de 2026 | Pendiente real |
 |---|---|---|
-| Forma de integración Pi | Casi resuelta: paquete Pi local + lanzador de shell con `PI_CODING_AGENT_DIR`. Queda la ruta del hogar. | Entrega 1. |
-| Versiones exactas | Partir de Pi 0.87.1 y fijar runner y paquetes; nada con `@latest` | Antes de probar el runtime. |
-| Runner de trabajadores | [Candidatos y contrato](#runner-de-trabajadores) | Entrega 2; no construir dos. |
-| Modelo económico alojado | Uno disponible y medible frente al capaz habitual | Primer experimento real. |
-| Tareas reales del corpus | El agente propone dos de `planificador-didactico` o `berro`, con base y aceptación; Samu puede elegir o ajustar ([corpus](04-pruebas.md#corpus-inicial)) | Antes de evaluarlas; no bloquea la entrega 1 con fixtures. |
-| Lugar del documento de trabajo | Convención existente del proyecto; si no hay, elegir una ubicación sencilla para el único documento. `intent` guarda ahí el acuerdo cuando necesita persistencia, sin archivo paralelo. | Primera necesidad de persistencia, incluida entrega 1; TODO y relevo automático en entrega 3. |
-| Formato del resumen de relevo | Markdown con los campos del [diseño](02-diseno.md#continuidad-entre-agentes); se inspira en el checkpoint de Ein | Entrega 3. |
-| Integración de runtimes | Configuración declarativa donde baste y código mínimo donde sea necesario; probar aislamiento y relevo sin escritores solapados | Entrega 3. |
-| Contenido de «Samu ya domina» | Empezar por ramas, commits y PR rutinarias, ya expresado por Samu; ampliar con el uso | Ajustable, sin confirmación previa obligatoria. |
-| Versión de Bubble Tea | Gentle usa v1.3; comprobar si v2 ya compensa | Entrega 4. |
-| Animación en la TUI | Mantener el contrato plano de STYLE.md o revisarlo para permitir más | Entrega 4. |
-| Distribución del instalador | Script como Ein, brew como Gentle, o ambos | Entrega 4. |
-| Remoto, licencia propia y distribución | Decidir con Samu cuando se vaya a publicar | No bloquea el prototipo local. |
-| Nombre del ejecutable/paquete | Derivado de n_ein tras comprobar colisiones (`n_ein`, `n_ein-install`…) | Packaging. |
-| GPU/servidor/cuanti local | 24 GB confirmado; modelo de tarjeta pendiente | Entrega 5. |
+| Pi y modelos alojados | Paquete aislado sobre Pi 0.87.1; Sol high y Luna high por suscripción. | Compatibilidad al actualizar Pi y medición de coste total en más tareas reales. |
+| Trabajador | Un mecanismo de proceso hijo Pi con cancelación y evidencias; [recorridos observados](../evals/results/2026-09-29-worker.md). | Coordinar procesos padre independientes en el mismo árbol si se necesita concurrencia. |
+| Corpus real | Samu escogió solo `planificador-didactico`; [regresión reproducida](../evals/results/2026-09-29-planificador.md) en copias aisladas. | Más casos representativos antes de generalizar ahorro o calidad. |
+| Documento y relevo | `WORK.md`, TODO y Pi↔Claude probados en TUI real. | Agentes de fondo y escritores padre independientes; Codex/OpenCode si se incorporan. |
+| Launcher e instalador | Go con Bubble Tea v2; paquete local, preview/estable, doctor, restore y cinco vistas. | Edición de ajustes desde la TUI, actualización remota y distribución pública. |
+| Remoto, licencia propia y distribución | Sin remoto ni release pública. | Decidir con Samu cuando toque publicar. |
+| Modelo local | Objetivo posterior Qwen3.8-27B en 24 GB. | **Aplazado por Samu hasta que tenga la máquina**; no preparar servidor ni descargar pesos ahora. |
 
 ### Runner de trabajadores
 
-Pi no trae subagentes en su núcleo. Candidatos, en orden de prueba:
+Pi no trae subagentes en su núcleo. Antes de implementar el trabajador se consideraron estos candidatos, en orden de prueba:
 
 1. [Ejemplo oficial de Pi](sources/pi-installed/examples/extensions/subagent/README.md): proceso aislado por tarea, modelo por agente, coste por tarea y cancelación. Hipótesis: le faltarán tiempo de espera para herramientas largas y persistencia de resultados.
 2. `pi-subagents`, usado por Ein; fijar y evaluar su versión efectiva. Gentle Shell archivado usa su runner propio Gentle Agents, no esta dependencia como opción preferida.
 3. Runner de Ein o de Gentle Shell, solo si los anteriores no superan el contrato.
 
-Contrato común:
+El trabajador actual usa un único proceso hijo Pi y cumple en los ensayos el contrato relevante:
 
 - se puede cancelar sin perder el diff;
 - devuelve el resultado parcial;
@@ -56,10 +48,10 @@ No hacer una entrevista larga sobre estas decisiones antes de construir algo út
 
 ## Lo que no está demostrado todavía
 
-No hay implementación, benchmark o release de n_ein. Tampoco se ha probado ningún candidato a runner, ni el relevo por resumen entre Pi y Claude, ni Codex u OpenCode con n_ein. No se ha observado Qwen3.8-27B en la tarjeta objetivo. No se ha demostrado que los nuevos prompts/skills superen al agente nativo ni que un nuevo runner sea necesario. No hay fechas o ahorro económico comprometidos.
+Hay implementación y evaluaciones registradas, pero **no release pública**. No se ha probado Codex u OpenCode con n_ein, ni Qwen3.8-27B en la tarjeta objetivo; el trabajo local está aplazado a petición de Samu. Los ensayos actuales no demuestran una mejora general sobre el agente nativo ni un porcentaje de ahorro estable. No hay fechas o ahorro económico comprometidos.
 
 Las propuestas de cinco entregas, 12 casos y ahorro orientativo del 20 % son instrumentos de decisión. Se pueden simplificar cuando la evidencia lo aconseje; no son otra burocracia obligatoria.
 
 ## Próxima decisión útil
 
-Cuando Samu pida empezar, construir el arranque aislado con fixtures y las preferencias de voz ya conocidas. Proponer las dos tareas reales para el ensayo posterior sin detener el prototipo por su selección. Lo demás se decide con ese resultado delante.
+Priorizar un recorrido de uso real y los huecos observables de la interfaz o distribución local. Elegir cualquier ampliación de la evaluación por la pregunta que responda, sin repetir trabajo ya registrado ni reabrir Qwen hasta disponer de la máquina.

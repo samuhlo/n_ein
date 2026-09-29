@@ -37,6 +37,8 @@ Samu pidió explícitamente conservar de Ein lo que ve y usa a diario, con la co
 
 La facilidad de añadir agentes es el objetivo acordado. Que cada integración pueda resolverse solo con una entrada declarativa era una hipótesis de diseño; la revisión posterior la deja pendiente de demostrar con cada runtime. Un relevo requiere que las escrituras del origen y sus hijos hayan terminado o se hayan detenido antes de habilitarlas en destino.
 
+Samu aplazó expresamente el ensayo de Qwen local hasta disponer de la máquina con 24 GB. La prioridad actual sigue en el producto con modelos alojados; no hay que descargar pesos ni preparar un servidor mientras tanto.
+
 ## Recomendaciones de diseño, revisables
 
 - Pi como runtime inicial; n_ein como capa pequeña: un paquete Pi (skills, extensiones mínimas, prompts, tema) más un launcher que fija el hogar aislado. Pi ya ofrece el aislamiento (`PI_CODING_AGENT_DIR`) y la carga de paquetes (`pi install`, `pi -e`).
