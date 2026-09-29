@@ -36,6 +36,7 @@ if "$pi_bin" \
   --no-extensions --no-skills --no-prompt-templates --no-themes \
   -e "$repo_dir/pi-package" \
   --append-system-prompt "$repo_dir/pi-package/persona.md" \
+  --append-system-prompt "$repo_dir/pi-package/pi-only.md" \
   --use-theme ein \
   --model openai-codex/gpt-6-sol --thinking high \
   "$@"; then

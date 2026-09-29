@@ -35,5 +35,9 @@ test "$(sed -n '2p' "$N_EIN_TEST_ENV")" = "unset"
 test "$(readlink "$N_EIN_CLAUDE_DIR/skills")" = "$repo_dir/pi-package/skills"
 rg -q 'Objetivo: terminar el arreglo' "$N_EIN_TEST_ARGS"
 rg -q 'Eres Ein' "$N_EIN_TEST_ARGS"
+if rg -q 'n_ein_worker' "$N_EIN_TEST_ARGS"; then
+  printf 'Claude no debe recibir instrucciones de herramientas exclusivas de Pi.\n' >&2
+  exit 1
+fi
 
 printf 'handoff launcher: OK\n'

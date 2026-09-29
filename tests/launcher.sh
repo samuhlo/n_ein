@@ -37,6 +37,8 @@ $test_dir/project
 $repo_dir/pi-package
 --append-system-prompt
 $repo_dir/pi-package/persona.md
+--append-system-prompt
+$repo_dir/pi-package/pi-only.md
 --use-theme
 ein
 --model
