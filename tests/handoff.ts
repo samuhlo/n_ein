@@ -58,6 +58,14 @@ try {
   assert.match(summary, /new\.ts/);
   assert.match(summary, /Vigencia: desconocida/);
   assert.ok(notices.some((message) => message.includes("Relevo listo")));
+
+  writeFileSync(join(dir, "WORK.md"), "# Acuerdo\n\n## Acuerdo confirmado\nCopiar apuntes por fecha.\n\n## Criterios observables\nNo mover originales.\n\n## Pendiente\nEsperar autorización de código.\n");
+  await command.handler("claude", ctx);
+  const [, fallbackFile] = readFileSync(signal, "utf8").trim().split("\n");
+  const fallback = readFileSync(fallbackFile, "utf8");
+  assert.match(fallback, /Copiar apuntes por fecha/);
+  assert.match(fallback, /No mover originales/);
+  assert.match(fallback, /Esperar autorización de código/);
   console.log("handoff: resumen, diff y cierre ordenado preparados");
 } finally {
   if (previousHome === undefined) delete process.env.PI_CODING_AGENT_DIR;

@@ -103,7 +103,11 @@ func workState(project string) (objective, tasks, current, evidence string) {
 		return "sin documento", "sin documento", "sin documento", "desconocida"
 	}
 	content := string(data)
-	objective = known(strings.Split(workSection(content, "Objetivo"), "\n")[0])
+	objectiveText := workSection(content, "Objetivo")
+	if objectiveText == "" {
+		objectiveText = workSection(content, "Acuerdo confirmado")
+	}
+	objective = known(strings.Split(objectiveText, "\n")[0])
 	taskSection := workSection(content, "Tareas")
 	if taskSection == "" {
 		taskSection = workSection(content, "Checklist")

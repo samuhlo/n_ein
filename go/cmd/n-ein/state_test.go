@@ -62,6 +62,11 @@ func TestFiveViewsUseObservedSources(t *testing.T) {
 	if state.views[0].rows[2].value != "1 rutas con cambios" {
 		t.Fatalf("Git sucio no detectado: %s", state.views[0].rows[2].value)
 	}
+	write(t, filepath.Join(project, "WORK.md"), "# Acuerdo\n\n## Acuerdo confirmado\nCopiar apuntes por fecha.\n\n## Criterios observables\nNo mover originales.\n")
+	state = loadState(root, project)
+	if state.views[0].rows[3].value != "Copiar apuntes por fecha." {
+		t.Fatal("un acuerdo anterior debe seguir siendo legible")
+	}
 
 	noDoc := t.TempDir()
 	other := loadState(root, noDoc)

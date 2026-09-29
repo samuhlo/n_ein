@@ -13,6 +13,6 @@ Busca tú los hechos disponibles en conversación, código y documentación. Dis
 
 Al cerrar, resume objetivo, límites, decisiones con motivos, criterios observables y pendientes. Pide confirmar una vez que el acuerdo se ha entendido. Si Samu solo pidió pensar, termina sin implementar. Si ya había autorización para implementar dentro del mismo alcance, continúa sin solicitarla otra vez.
 
-Guarda el acuerdo confirmado solo cuando necesite seguimiento o Samu lo pida: en el documento de trabajo existente o en un único documento nuevo. No crees un expediente `intent.md` ni otra lista paralela. Si Samu abandona antes de confirmar, no alteres artefactos salvo que pida guardar un borrador.
+Guarda el acuerdo confirmado solo cuando necesite seguimiento o Samu lo pida: en el documento de trabajo existente o en un único documento nuevo. Si no hay convención previa, usa `WORK.md` con `## Objetivo`, `## Decisiones`, `## Límites`, `## Criterios`, `## Tareas`, `## Evidencia` y `## Siguiente paso` según corresponda. Pon casillas `- [ ]` solo para tareas reales: el TODO de Pi las lee de `## Tareas`. Indica si todavía falta autorización para implementar. No crees un expediente `intent.md` ni otra lista paralela. Si Samu abandona antes de confirmar, no alteres artefactos salvo que pida guardar un borrador.
 
 El siguiente agente o trabajador recibe las decisiones y límites pertinentes para continuar sin repetir la entrevista.
