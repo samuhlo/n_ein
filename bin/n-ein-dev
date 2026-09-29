@@ -4,6 +4,15 @@ set -euo pipefail
 # [FLOW] ARRANQUE AISLADO
 # Pi conserva su configuración, autenticación y sesiones dentro de este hogar.
 repo_dir="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd -P)"
+if ! command -v bun >/dev/null 2>&1; then
+  printf '[ERR] :: BUN_MISSING :: required: runtime.json\n' >&2
+  exit 69
+fi
+runtime_values="$(bun -e 'const c=await Bun.file(process.argv[1]).json(); if(c.schema!==1||!/^\d+\.\d+\.\d+$/.test(c.pi?.version)||!/^[-a-z0-9]+\/[a-z0-9.-]+$/.test(c.pi?.model)||!/[a-z]+/.test(c.pi?.thinking)) process.exit(1); console.log([c.pi.version,c.pi.model,c.pi.thinking].join("\t"))' "$repo_dir/runtime.json")" || {
+  printf '[ERR] :: CONFIG_BAD :: file: runtime.json\n' >&2
+  exit 64
+}
+IFS=$'\t' read -r expected_pi_version main_model main_thinking <<< "$runtime_values"
 channel="dev"
 if [[ -f "$repo_dir/.n-ein-channel" ]]; then IFS= read -r channel < "$repo_dir/.n-ein-channel"; fi
 case "$channel" in dev|preview|stable) ;; *) printf '[ERR] :: CHANNEL_BAD :: value: %s\n' "$channel" >&2; exit 64 ;; esac
@@ -23,8 +32,8 @@ if ! command -v "$pi_bin" >/dev/null 2>&1; then
 fi
 
 pi_version="$("$pi_bin" --version)"
-if [[ "$pi_version" != "0.87.1" ]]; then
-  printf '[ERR] :: PI_VERSION :: expected: 0.87.1 | actual: %s\n' "$pi_version" >&2
+if [[ "$pi_version" != "$expected_pi_version" ]]; then
+  printf '[ERR] :: PI_VERSION :: expected: %s | actual: %s\n' "$expected_pi_version" "$pi_version" >&2
   exit 69
 fi
 
@@ -41,7 +50,7 @@ if "$pi_bin" \
   --append-system-prompt "$repo_dir/pi-package/persona.md" \
   --append-system-prompt "$repo_dir/pi-package/pi-only.md" \
   --use-theme ein \
-  --model openai-codex/gpt-6-sol --thinking high \
+  --model "$main_model" --thinking "$main_thinking" \
   "$@"; then
   pi_exit=0
 else

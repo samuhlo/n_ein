@@ -112,7 +112,7 @@ func collect(source, self string) ([]sourceFile, error) {
 		return nil
 	}
 	for _, rel := range []string{
-		"brand.json", "bin/n-ein-dev", "bin/n-ein-claude-dev", "bin/n-ein-prepare-pi",
+		"brand.json", "runtime.json", "bin/n-ein-dev", "bin/n-ein-claude-dev", "bin/n-ein-prepare-pi",
 		"pi-package/package.json", "pi-package/persona.md", "pi-package/pi-only.md",
 	} {
 		if err := add(filepath.Join(source, rel), rel); err != nil {
@@ -120,6 +120,9 @@ func collect(source, self string) ([]sourceFile, error) {
 		}
 	}
 	if err := add(self, "bin/n-ein-install"); err != nil {
+		return nil, err
+	}
+	if err := add(filepath.Join(source, "dist", "n-ein"), "bin/n-ein"); err != nil {
 		return nil, err
 	}
 	for _, rel := range []string{"pi-package/extensions", "pi-package/themes"} {

@@ -1,6 +1,6 @@
 # n_ein
 
-n_ein es el nuevo entorno personal de programación de Samu. La versión de desarrollo arranca Pi 0.87.1 con hogar aislado, tema de Ein, voz docente, las skills `intent`, `comment-style` y `logging-style`, y un trabajador Luna high. El relevo Pi↔Claude y un instalador local en Go ya funcionan; el launcher con las cinco vistas de Ein sigue pendiente.
+n_ein es el nuevo entorno personal de programación de Samu. La versión de desarrollo arranca Pi 0.87.1 con hogar aislado, tema de Ein, voz docente, las skills `intent`, `comment-style` y `logging-style`, y un trabajador Luna high. El relevo Pi↔Claude, un instalador local y el launcher de cinco vistas en Go ya tienen recorridos verificados.
 
 ## Arrancar
 
@@ -38,10 +38,14 @@ Con Go 1.27.1, construye el instalador separado y mira el plan antes de escribir
 
 ```sh
 mkdir -p dist
+(cd go && go build -o ../dist/n-ein ./cmd/n-ein)
 (cd go && go build -o ../dist/n-ein-install ./cmd/n-ein-install)
 ./dist/n-ein-install install --source . --channel preview --dry-run
 ./dist/n-ein-install install --source . --channel preview
 ./dist/n-ein-install doctor --channel preview
+./dist/n-ein --project . --once
 ```
 
 El código va a `~/.n_ein/installations/preview`; Pi y Claude guardan credenciales y sesiones en `~/.n_ein/preview/`, fuera del árbol gestionado. También existen `update --source`, `restore` y `uninstall`; este último conserva un backup del código y deja los datos de usuario en su hogar. `stable` usa rutas separadas. El [ensayo del instalador](evals/results/2026-09-29-installer.md) se hizo con un destino temporal; todavía no hay releases remotas ni promoción de un artefacto inmutable entre canales.
+
+`n-ein` abre Estado, Configuración, Sesiones, Sistema y Runtime. `tab` cambia de vista; `j/k`, `g/G`, `f` o `/`, `enter` y `q` conservan los atajos de Ein. `--once` o una salida sin TTY pintan una vez y salen con 0; `--view sesiones` permite inspeccionar otra vista en scripts. En la TUI, Runtime abre Pi o Claude y Sesiones reanuda una sesión del proyecto. La [prueba del launcher](evals/results/2026-09-29-launcher.md) incluye el binario instalado fuera del checkout. Configuración y Sistema muestran el estado disponible; la edición de ajustes y las actualizaciones remotas aún no están conectadas a esas vistas.

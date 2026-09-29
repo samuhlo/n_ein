@@ -27,10 +27,12 @@ func sourceFixture(t *testing.T) (source, self, target, data string) {
 	target = filepath.Join(root, "installations", "preview")
 	data = filepath.Join(root, "user-data")
 	self = writeFixture(t, root, "self-binary", "installer", 0o755)
+	writeFixture(t, source, "dist/n-ein", "launcher", 0o755)
 	for _, rel := range []string{"bin/n-ein-dev", "bin/n-ein-claude-dev", "bin/n-ein-prepare-pi"} {
 		writeFixture(t, source, rel, "#!/bin/sh\nexit 0\n", 0o755)
 	}
 	writeFixture(t, source, "brand.json", `{"colors":{"yellow":"#FFCA40"}}`, 0o644)
+	writeFixture(t, source, "runtime.json", `{"schema":1,"pi":{"version":"0.87.1","model":"openai-codex/gpt-6-sol","thinking":"high"},"worker":{"model":"openai-codex/gpt-6-luna","thinking":"high"}}`, 0o644)
 	writeFixture(t, source, "pi-package/package.json", `{"name":"n-ein-pi"}`, 0o644)
 	writeFixture(t, source, "pi-package/persona.md", "persona v1\n", 0o644)
 	writeFixture(t, source, "pi-package/pi-only.md", "Pi worker\n", 0o644)

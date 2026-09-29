@@ -1,0 +1,12 @@
+{
+  "schema": 1,
+  "pi": {
+    "version": "0.87.1",
+    "model": "openai-codex/gpt-6-sol",
+    "thinking": "high"
+  },
+  "worker": {
+    "model": "openai-codex/gpt-6-luna",
+    "thinking": "high"
+  }
+}

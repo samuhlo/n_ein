@@ -4,6 +4,7 @@
 // =============================================================================
 
 import { spawn } from "node:child_process";
+import { readFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 import { dirname, resolve } from "node:path";
 import type { ExtensionAPI } from "@earendil-works/pi-coding-agent";
@@ -21,10 +22,13 @@ type Run = {
   usage: { input: number; output: number; cacheRead: number; cacheWrite: number; catalogEstimateUsd: number | null };
 };
 
-const LUNA = "gpt-6-luna";
 const OUTPUT_LIMIT = 1200;
 const CHILD_GRACE_MS = 5000;
 const launcher = resolve(dirname(fileURLToPath(import.meta.url)), "../../bin/n-ein-dev");
+const runtime = JSON.parse(readFileSync(resolve(dirname(fileURLToPath(import.meta.url)), "../../runtime.json"), "utf8"));
+const [WORKER_PROVIDER, LUNA] = String(runtime.worker.model).split("/");
+const WORKER_THINKING = String(runtime.worker.thinking);
+if (runtime.schema !== 1 || !WORKER_PROVIDER || !LUNA || !WORKER_THINKING) throw new Error("runtime.json inválido para trabajador");
 
 function taskPrompt(mode: Mode, task: string, acceptance: string, knownFailures?: string): string {
   const boundary = mode === "work"
@@ -120,7 +124,7 @@ export default function (pi: ExtensionAPI) {
         usage: { input: 0, output: 0, cacheRead: 0, cacheWrite: 0, catalogEstimateUsd: null },
       };
       const commandsById = new Map<string, Command>();
-      const args = ["--mode", "json", "--print", "--no-session", "--model", `openai-codex/${LUNA}`, "--thinking", "high"];
+      const args = ["--mode", "json", "--print", "--no-session", "--model", `${WORKER_PROVIDER}/${LUNA}`, "--thinking", WORKER_THINKING];
       if (mode !== "work") args.push("--tools", "read,grep,find,ls");
       args.push(taskPrompt(mode, params.task, params.acceptance, params.knownFailures));
 
@@ -173,7 +177,7 @@ export default function (pi: ExtensionAPI) {
           else signal?.addEventListener("abort", stopChild, { once: true });
         });
 
-        const complete = !aborted && exitCode === 0 && run.provider === "openai-codex" && run.model === LUNA && run.stopReason === "stop" && Boolean(run.finalText.trim());
+        const complete = !aborted && exitCode === 0 && run.provider === WORKER_PROVIDER && run.model === LUNA && run.stopReason === "stop" && Boolean(run.finalText.trim());
         const status = complete ? "completo" : aborted ? "cancelado" : "parcial o fallido";
         const action = complete ? "COMPLETE" : aborted ? "CANCELLED" : "PARTIAL";
         const header = `[WORK] :: ${action} :: modo: ${mode} | modelo: ${run.provider ?? "desconocido"}/${run.model ?? "desconocido"} | cwd: ${ctx.cwd} | exit: ${exitCode}`;
