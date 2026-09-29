@@ -14,6 +14,9 @@ FAKE_PI
 cat > "$test_dir/claude" <<'FAKE_CLAUDE'
 #!/usr/bin/env bash
 test -f "$N_EIN_TEST_DONE" || exit 1
+test ! -L "$CLAUDE_CONFIG_DIR/skills" || exit 1
+mkdir -p "$CLAUDE_CONFIG_DIR/skills/synced"
+printf 'generated\n' > "$CLAUDE_CONFIG_DIR/skills/synced/sentinel"
 printf '%s\n' "$CLAUDE_CONFIG_DIR" "${PI_CODING_AGENT_DIR:-unset}" > "$N_EIN_TEST_ENV"
 printf '%s\n' "$@" > "$N_EIN_TEST_ARGS"
 FAKE_CLAUDE
@@ -28,11 +31,17 @@ export N_EIN_TEST_SUMMARY="$test_dir/summary.md"
 export N_EIN_TEST_DONE="$test_dir/pi-done"
 export N_EIN_TEST_ENV="$test_dir/claude-env"
 export N_EIN_TEST_ARGS="$test_dir/claude-args"
+mkdir -p "$N_EIN_CLAUDE_DIR"
+ln -s "$repo_dir/pi-package/skills" "$N_EIN_CLAUDE_DIR/skills"
 
+"$repo_dir/bin/n-ein-dev"
 "$repo_dir/bin/n-ein-dev"
 test "$(sed -n '1p' "$N_EIN_TEST_ENV")" = "$N_EIN_CLAUDE_DIR"
 test "$(sed -n '2p' "$N_EIN_TEST_ENV")" = "unset"
-test "$(readlink "$N_EIN_CLAUDE_DIR/skills")" = "$repo_dir/pi-package/skills"
+test -d "$N_EIN_CLAUDE_DIR/skills"
+test "$(readlink "$N_EIN_CLAUDE_DIR/skills/intent")" = "$repo_dir/pi-package/skills/intent"
+test -f "$N_EIN_CLAUDE_DIR/skills/synced/sentinel"
+test ! -f "$repo_dir/pi-package/skills/synced/sentinel"
 rg -q 'Objetivo: terminar el arreglo' "$N_EIN_TEST_ARGS"
 rg -q 'Eres Ein' "$N_EIN_TEST_ARGS"
 if rg -q 'n_ein_worker' "$N_EIN_TEST_ARGS"; then

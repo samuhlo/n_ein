@@ -17,13 +17,25 @@ if ! command -v "$claude_bin" >/dev/null 2>&1; then
 fi
 
 mkdir -p "$claude_dir"
-skills_link="$claude_dir/skills"
-if [[ ! -e "$skills_link" && ! -L "$skills_link" ]]; then
-  ln -s "$repo_dir/pi-package/skills" "$skills_link"
-elif [[ ! -L "$skills_link" || "$(readlink "$skills_link")" != "$repo_dir/pi-package/skills" ]]; then
-  printf '[ERR] :: SKILLS_PATH :: path: %s\n' "$skills_link" >&2
-  exit 69
+skills_dir="$claude_dir/skills"
+if [[ -L "$skills_dir" ]]; then
+  if [[ "$(readlink "$skills_dir")" != "$repo_dir/pi-package/skills" ]]; then
+    printf '[ERR] :: SKILLS_PATH :: path: %s\n' "$skills_dir" >&2
+    exit 69
+  fi
+  unlink "$skills_dir"
 fi
+mkdir -p "$skills_dir"
+for source_skill in "$repo_dir"/pi-package/skills/*; do
+  [[ -f "$source_skill/SKILL.md" ]] || continue
+  skill_link="$skills_dir/${source_skill##*/}"
+  if [[ ! -e "$skill_link" && ! -L "$skill_link" ]]; then
+    ln -s "$source_skill" "$skill_link"
+  elif [[ ! -L "$skill_link" || "$(readlink "$skill_link")" != "$source_skill" ]]; then
+    printf '[ERR] :: SKILLS_PATH :: path: %s\n' "$skill_link" >&2
+    exit 69
+  fi
+done
 
 export CLAUDE_CONFIG_DIR="$claude_dir"
 unset PI_CODING_AGENT_DIR PI_CODING_AGENT_SESSION_DIR N_EIN_HANDOFF_SIGNAL
