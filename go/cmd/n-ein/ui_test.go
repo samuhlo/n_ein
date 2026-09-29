@@ -1,6 +1,7 @@
 package main
 
 import (
+	"os"
 	"strings"
 	"testing"
 
@@ -61,5 +62,16 @@ func TestRenderMonochromeAndUnknown(t *testing.T) {
 	output := render(panel, 0, "", false, true, palette{Yellow: "#FFCA40", Concrete: "#FAF3F0"})
 	if strings.Contains(output, "\x1b[") || !strings.Contains(output, "desconocida") || !strings.Contains(output, "// 000") {
 		t.Fatal("NO_COLOR o datos desconocidos no respetados")
+	}
+}
+
+func TestNullDeviceIsNotATerminal(t *testing.T) {
+	null, err := os.Open(os.DevNull)
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer null.Close()
+	if isTerminal(null) {
+		t.Fatal("/dev/null no debe abrir la TUI")
 	}
 }
