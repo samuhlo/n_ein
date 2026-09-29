@@ -1,0 +1,45 @@
+diff --git a/tests/api/anexo4-import.test.ts b/tests/api/anexo4-import.test.ts
+index f9b2c73..50d0625 100644
+--- a/tests/api/anexo4-import.test.ts
++++ b/tests/api/anexo4-import.test.ts
+@@ -472,7 +472,20 @@ describe('ingesta del Anexo IV desde el BOE', () => {
+     expect(err).toMatchObject({ statusCode: 422 })
+     expect((err as Error).message).toContain('BOE')
+     expect(mocks.runImport).not.toHaveBeenCalled()
+-    expect(mocks.updateCalls).toHaveLength(0)
++    expect(mocks.updateCalls).toEqual([{ anexo4ImportStatus: 'failed' }])
++  })
++
++  it('T10b: informa si el marcado failed falla tras un enlace fuera del BOE', async () => {
++    mocks.getCertSourceInfo.mockResolvedValueOnce({
++      ...FAKE_CERT,
++      normativeUrl: 'https://atacante.invalido/boe.xml',
++    })
++    mocks.failMarkFailed = true
++
++    const err = await callIngest().catch(e => e)
++    expect(err).toMatchObject({ statusCode: 422 })
++    expect((err as Error).message).toContain('también falló el marcado failed')
++    expect(mocks.runImport).not.toHaveBeenCalled()
+   })
+ 
+   it('T11: rechaza un certificado sin enlace normativo conocido', async () => {
+@@ -481,7 +494,17 @@ describe('ingesta del Anexo IV desde el BOE', () => {
+     const err = await callIngest().catch(e => e)
+     expect(err).toMatchObject({ statusCode: 422 })
+     expect(mocks.runImport).not.toHaveBeenCalled()
+-    expect(mocks.updateCalls).toHaveLength(0)
++    expect(mocks.updateCalls).toEqual([{ anexo4ImportStatus: 'failed' }])
++  })
++
++  it('T11b: informa si el marcado failed también falla', async () => {
++    mocks.getCertSourceInfo.mockResolvedValueOnce({ ...FAKE_CERT, normativeUrl: null })
++    mocks.failMarkFailed = true
++
++    const err = await callIngest().catch(e => e)
++    expect(err).toMatchObject({ statusCode: 422 })
++    expect((err as Error).message).toContain('también falló el marcado failed')
++    expect(mocks.runImport).not.toHaveBeenCalled()
+   })
+ 
+   it('T12: rechaza un certificado inexistente sin mutar estado', async () => {
