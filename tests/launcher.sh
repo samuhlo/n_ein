@@ -39,6 +39,10 @@ $repo_dir/pi-package
 $repo_dir/pi-package/persona.md
 --use-theme
 ein
+--model
+openai-codex/gpt-6-sol
+--thinking
+high
 --print
 cambia este texto
 EOF

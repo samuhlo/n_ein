@@ -34,4 +34,5 @@ exec "$pi_bin" \
   -e "$repo_dir/pi-package" \
   --append-system-prompt "$repo_dir/pi-package/persona.md" \
   --use-theme ein \
+  --model openai-codex/gpt-6-sol --thinking high \
   "$@"
