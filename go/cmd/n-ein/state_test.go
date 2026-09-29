@@ -40,6 +40,8 @@ func TestFiveViewsUseObservedSources(t *testing.T) {
 	write(t, filepath.Join(project, "WORK.md"), "# Encargo\n\n## Objetivo\nCorregir el puerto.\n\n## Tareas\n- [x] Reproducir\n- [ ] Arreglar\n\n## Evidencia\nEl check pasó antes de editar.\n")
 	write(t, filepath.Join(project, "code.ts"), "export const port = 0\n")
 	git(t, project, "init", "-b", "main")
+	git(t, project, "config", "user.name", "n_ein test")
+	git(t, project, "config", "user.email", "test@n-ein.invalid")
 	git(t, project, "add", ".")
 	git(t, project, "commit", "-m", "test: base")
 
