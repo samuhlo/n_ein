@@ -1,0 +1,41 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+if [[ $# -lt 1 || -z "$1" || -z "${N_EIN_HANDOFF_SIGNAL:-}" || -z "${CLAUDE_CONFIG_DIR:-}" ]]; then
+  printf '[ERR] :: HANDOFF_BAD :: required: note, launcher and isolated home\n' >&2
+  exit 64
+fi
+if [[ ! -f "$N_EIN_HANDOFF_SIGNAL" ]]; then
+  printf '[ERR] :: HANDOFF_BAD :: signal: missing\n' >&2
+  exit 64
+fi
+
+note="$1"
+handoff_dir="$CLAUDE_CONFIG_DIR/handoffs"
+mkdir -p "$handoff_dir"
+summary_path="$(mktemp "$handoff_dir/handoff.XXXXXX")"
+
+if git_root="$(git rev-parse --show-toplevel 2>/dev/null)"; then
+  head="$(git rev-parse HEAD)"
+  status="$(git status --short)"
+  diff_stat="$(git diff --stat HEAD)"
+else
+  git_root="$PWD"
+  head="desconocido"
+  status="desconocido"
+  diff_stat="desconocido"
+fi
+work_doc="${N_EIN_WORK_DOC:-$git_root/WORK.md}"
+[[ -f "$work_doc" ]] || work_doc="ninguno"
+
+{
+  printf '# Relevo n_ein → Pi\n\n'
+  printf 'Proyecto: %s\nCommit de origen: %s\nDocumento de trabajo: %s\n\n' "$git_root" "$head" "$work_doc"
+  printf '## Resultado y decisiones de Claude\n%s\n\n' "$note"
+  printf '## Estado Git al cerrar Claude\n```text\n%s\n```\n\n' "${status:-limpio}"
+  printf 'Diff rastreado:\n```text\n%s\n```\n\n' "${diff_stat:-sin diff rastreado}"
+  printf '## Vigencia y siguiente paso\nLee el documento de trabajo si existe. Contrasta sus comprobaciones con el diff y los archivos actuales; su vigencia es desconocida hasta entonces. Conserva lo terminado y no infieras autorización de código de una conversación de diseño.\n'
+} > "$summary_path"
+
+printf 'pi\n%s\n' "$summary_path" > "$N_EIN_HANDOFF_SIGNAL"
+printf 'Relevo preparado: %s\nCierra Claude con /exit; Pi arrancará después.\n' "$summary_path"

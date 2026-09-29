@@ -40,6 +40,11 @@ done
 export CLAUDE_CONFIG_DIR="$claude_dir"
 unset PI_CODING_AGENT_DIR PI_CODING_AGENT_SESSION_DIR N_EIN_HANDOFF_SIGNAL
 persona="$(< "$repo_dir/pi-package/persona.md")"
+handoff_signal="$(mktemp "${TMPDIR:-/tmp}/n-ein-claude-handoff.XXXXXX")"
+trap 'rm -f "$handoff_signal"' EXIT
+export N_EIN_HANDOFF_SIGNAL="$handoff_signal"
+export N_EIN_ROOT="$repo_dir"
+claude_args=(--append-system-prompt "$persona")
 
 if [[ "${1:-}" == "--handoff" ]]; then
   if [[ $# -lt 2 || ! -f "$2" ]]; then
@@ -49,7 +54,25 @@ if [[ "${1:-}" == "--handoff" ]]; then
   summary="$(< "$2")"
   shift 2
   prompt=$'Continúa desde este relevo de n_ein. Primero contrasta el estado real del repositorio y el documento de trabajo.\n\n'"$summary"
-  exec "$claude_bin" --append-system-prompt "$persona" "$prompt" "$@"
+  claude_args+=("$prompt")
 fi
 
-exec "$claude_bin" --append-system-prompt "$persona" "$@"
+if "$claude_bin" "${claude_args[@]}" "$@"; then
+  claude_exit=0
+else
+  claude_exit=$?
+fi
+
+if [[ -s "$handoff_signal" ]]; then
+  IFS= read -r destination < "$handoff_signal"
+  summary_path="$(sed -n '2p' "$handoff_signal")"
+  if [[ "$destination" != "pi" || ! -f "$summary_path" ]]; then
+    printf '[ERR] :: HANDOFF_BAD :: target: %s\n' "$destination" >&2
+    exit 69
+  fi
+  prompt=$'Retoma el relevo de Claude. Contrasta WORK.md, Git y el estado de los archivos antes de actuar.\n\n'"$(< "$summary_path")"
+  "$repo_dir/bin/n-ein-dev" "$prompt"
+  exit $?
+fi
+
+exit "$claude_exit"
