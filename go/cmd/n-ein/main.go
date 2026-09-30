@@ -68,7 +68,7 @@ func run(args []string) error {
 		return nil
 	}
 	if selected.launch == "doctor" {
-		cmd := exec.Command(filepath.Join(packageRoot, "bin", "n-ein-install"), "doctor", "--target", packageRoot)
+		cmd := exec.Command(filepath.Join(packageRoot, "bin", "n-ein-install"), "doctor", "--target", packageRoot, "--runtime")
 		cmd.Dir = absProject
 		cmd.Stdin, cmd.Stdout, cmd.Stderr = os.Stdin, os.Stdout, os.Stderr
 		return cmd.Run()

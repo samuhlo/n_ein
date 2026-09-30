@@ -47,7 +47,7 @@ mkdir -p dist
 (cd go && go build -o ../dist/n-ein-install ./cmd/n-ein-install)
 ./dist/n-ein-install install --source . --channel preview --dry-run
 ./dist/n-ein-install install --source . --channel preview
-./dist/n-ein-install doctor --channel preview
+./dist/n-ein-install doctor --channel preview --runtime
 ./dist/n-ein --project . --once
 ```
 
@@ -59,6 +59,6 @@ La instalación directa desde `.` sirve para desarrollo. Para probar y promover 
 ./dist/candidato-1/bin/n-ein-install install --source dist/candidato-1 --channel stable
 ```
 
-El código va a `~/.n_ein/installations/<canal>`; Pi y Claude guardan credenciales y sesiones en `~/.n_ein/<canal>/`, fuera del árbol gestionado. `update --source`, `restore` y `uninstall` crean o conservan backups del código sin borrar esos datos. El [ensayo del instalador](evals/results/2026-09-29-installer.md) verificó la promoción de un candidato en destinos temporales; todavía no hay releases remotas.
+El código va a `~/.n_ein/installations/<canal>`; Pi y Claude guardan credenciales y sesiones en `~/.n_ein/<canal>/`, fuera del árbol gestionado. `doctor` comprueba hashes y modos; con `--runtime` comprueba además que Bun está disponible y que la versión de Pi coincide con `runtime.json`, sin probar la autenticación. La vista Sistema usa ese diagnóstico ampliado. `update --source`, `restore` y `uninstall` crean o conservan backups del código sin borrar esos datos. El [ensayo del instalador](evals/results/2026-09-29-installer.md) verificó la promoción de un candidato en destinos temporales; todavía no hay releases remotas.
 
 `n-ein` abre Estado, Configuración, Sesiones, Sistema y Runtime. `tab` cambia de vista; `j/k`, `g/G`, `f` o `/`, `enter` y `q` conservan los atajos de Ein. `--once` o una salida sin TTY pintan una vez y salen con 0; `--view sesiones` permite inspeccionar otra vista en scripts. En la TUI, Runtime abre Pi o Claude, Sesiones reanuda una sesión del proyecto y Sistema ejecuta `doctor` sobre el paquete instalado. La [prueba del launcher](evals/results/2026-09-29-launcher.md) incluye el binario instalado fuera del checkout y el arranque y reanudación de una sesión Pi real desde el binario Go de desarrollo. La edición de ajustes y las actualizaciones remotas aún no están conectadas a esas vistas.

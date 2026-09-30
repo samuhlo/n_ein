@@ -48,6 +48,7 @@ rg -Fxq "arg=$target/pi-package" "$test_dir/pi-capture"
 rg -Fxq 'arg=openai-codex/gpt-6-sol' "$test_dir/pi-capture"
 rg -Fxq 'arg=high' "$test_dir/pi-capture"
 rg -Fxq 'arg=consulta de prueba' "$test_dir/pi-capture"
-"$target/bin/n-ein-install" doctor --target "$target" > /dev/null
+N_EIN_PI_BIN="$test_dir/pi" "$target/bin/n-ein-install" doctor --target "$target" --runtime > "$test_dir/runtime-doctor"
+rg -q 'Pi 0.87.1 · Bun disponible · autenticación no comprobada' "$test_dir/runtime-doctor"
 
 printf 'paquete instalado: OK\n'

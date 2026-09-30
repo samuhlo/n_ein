@@ -188,6 +188,41 @@ func TestProtectedTargetsWithSymlinkedHome(t *testing.T) {
 	}
 }
 
+func TestDoctorRuntimeSeparatesPackageAndDependencies(t *testing.T) {
+	source, self, target, _ := sourceFixture(t)
+	if _, err := call(t, self, "install", "--source", source, "--target", target); err != nil {
+		t.Fatal(err)
+	}
+	bin := t.TempDir()
+	pi := writeFixture(t, bin, "pi", "#!/bin/sh\nprintf '0.87.1\\n'\n", 0o755)
+	writeFixture(t, bin, "bun", "#!/bin/sh\nexit 0\n", 0o755)
+	t.Setenv("PATH", bin)
+	t.Setenv("N_EIN_PI_BIN", pi)
+	if output, err := call(t, self, "doctor", "--target", target, "--runtime"); err != nil || !strings.Contains(output, "Pi 0.87.1") {
+		t.Fatalf("doctor de runtime: %s %v", output, err)
+	}
+	writeFixture(t, bin, "pi", "#!/bin/sh\nprintf '0.88.0\\n'\n", 0o755)
+	if _, err := call(t, self, "doctor", "--target", target, "--runtime"); err == nil || !strings.Contains(err.Error(), "0.87.1") {
+		t.Fatalf("doctor aceptó Pi incompatible: %v", err)
+	}
+	if _, err := call(t, self, "doctor", "--target", target); err != nil {
+		t.Fatalf("la integridad del paquete no depende de Pi: %v", err)
+	}
+	if err := os.Remove(pi); err != nil {
+		t.Fatal(err)
+	}
+	if _, err := call(t, self, "doctor", "--target", target, "--runtime"); err == nil || !strings.Contains(err.Error(), "Pi no disponible") {
+		t.Fatalf("doctor aceptó Pi ausente: %v", err)
+	}
+	writeFixture(t, bin, "pi", "#!/bin/sh\nprintf '0.87.1\\n'\n", 0o755)
+	if err := os.Remove(filepath.Join(bin, "bun")); err != nil {
+		t.Fatal(err)
+	}
+	if _, err := call(t, self, "doctor", "--target", target, "--runtime"); err == nil || !strings.Contains(err.Error(), "Bun") {
+		t.Fatalf("doctor aceptó Bun ausente: %v", err)
+	}
+}
+
 func TestArtifactPromotionAndTamperDetection(t *testing.T) {
 	source, self, _, _ := sourceFixture(t)
 	root := filepath.Dir(source)

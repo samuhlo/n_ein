@@ -338,7 +338,7 @@ func loadState(root, project string) appState {
 	doctor := row{"doctor", "sin instalación", "n-ein-install", ""}
 	if _, err := os.Stat(filepath.Join(root, "install.json")); err == nil {
 		if _, err := os.Stat(filepath.Join(root, "bin", "n-ein-install")); err == nil {
-			doctor = row{"doctor", "enter para comprobar", "n-ein-install", "doctor"}
+			doctor = row{"doctor", "integridad y Pi/Bun", "n-ein-install", "doctor"}
 		}
 	}
 	piAction, piLabel := "pi", "abrir agente principal"

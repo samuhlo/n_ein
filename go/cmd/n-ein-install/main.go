@@ -2,11 +2,16 @@
 package main
 
 import (
+	"context"
+	"encoding/json"
 	"flag"
 	"fmt"
 	"io"
 	"os"
+	"os/exec"
 	"path/filepath"
+	"strings"
+	"time"
 )
 
 func main() {
@@ -37,6 +42,7 @@ func run(args []string, output io.Writer, self string) error {
 	target := flags.String("target", "", "directorio de código instalado")
 	channel := flags.String("channel", "preview", "preview o stable")
 	dryRun := flags.Bool("dry-run", false, "mostrar sin mutar")
+	runtime := flags.Bool("runtime", false, "comprobar Bun y versión de Pi (doctor)")
 	if err := flags.Parse(args[1:]); err != nil {
 		return err
 	}
@@ -45,6 +51,9 @@ func run(args []string, output io.Writer, self string) error {
 	}
 	if *channel != "preview" && *channel != "stable" {
 		return fmt.Errorf("canal inválido: %s", *channel)
+	}
+	if *runtime && verb != "doctor" {
+		return fmt.Errorf("--runtime solo se usa con doctor")
 	}
 	if verb == "package" {
 		if *artifactPath == "" {
@@ -99,10 +108,53 @@ func run(args []string, output io.Writer, self string) error {
 			return err
 		}
 		fmt.Fprintf(output, "// 000 ESTADO · %s · %s · %d archivos verificados\n", manifest.Channel, manifest.Version, len(manifest.Files))
+		if *runtime {
+			return checkRuntime(absTarget, output)
+		}
 		return nil
 	case "restore":
 		return restore(absTarget, *dryRun, output)
 	default:
 		return uninstall(absTarget, *dryRun, output)
 	}
+}
+
+// [FLOW] Diagnóstico opcional: la integridad del paquete no depende de tener Pi instalado.
+func checkRuntime(root string, output io.Writer) error {
+	var config struct {
+		Schema int `json:"schema"`
+		Pi     struct {
+			Version string `json:"version"`
+		} `json:"pi"`
+	}
+	data, err := os.ReadFile(filepath.Join(root, "runtime.json"))
+	if err != nil {
+		return err
+	}
+	if err := json.Unmarshal(data, &config); err != nil || config.Schema != 1 || config.Pi.Version == "" {
+		return fmt.Errorf("runtime.json inválido para diagnóstico")
+	}
+	if _, err := exec.LookPath("bun"); err != nil {
+		return fmt.Errorf("Bun no disponible en PATH")
+	}
+	piBin := os.Getenv("N_EIN_PI_BIN")
+	if piBin == "" {
+		piBin = "pi"
+	}
+	piPath, err := exec.LookPath(piBin)
+	if err != nil {
+		return fmt.Errorf("Pi no disponible: %s", piBin)
+	}
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
+	data, err = exec.CommandContext(ctx, piPath, "--version").Output()
+	if err != nil {
+		return fmt.Errorf("Pi --version falló: %w", err)
+	}
+	actual := strings.TrimSpace(string(data))
+	if actual != config.Pi.Version {
+		return fmt.Errorf("versión de Pi incompatible: esperada %s, observada %s", config.Pi.Version, actual)
+	}
+	fmt.Fprintf(output, "// 001 RUNTIME · Pi %s · Bun disponible · autenticación no comprobada\n", actual)
+	return nil
 }
