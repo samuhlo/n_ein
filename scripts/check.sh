@@ -19,7 +19,7 @@ export GOMODCACHE="$HOME/.n_ein/dev/go-cache/mod"
 export GOCACHE="$HOME/.n_ein/dev/go-cache/build"
 export GOPATH="$HOME/.n_ein/dev/go-cache/path"
 
-bash -n bin/n-ein-dev bin/n-ein-claude-dev bin/n-ein-prepare-pi
+bash -n bin/n-ein-dev bin/n-ein-claude-dev bin/n-ein-prepare-pi scripts/check.sh scripts/smoke-package.sh
 tests/launcher.sh
 tests/handoff-launcher.sh
 tests/reverse-launcher.sh
@@ -35,5 +35,7 @@ bun run tests/worker-error.ts
   GOTOOLCHAIN=local "$go_bin" build -o ../dist/n-ein ./cmd/n-ein
   GOTOOLCHAIN=local "$go_bin" build -o ../dist/n-ein-install ./cmd/n-ein-install
 )
+
+scripts/smoke-package.sh
 
 printf 'checks locales: OK\n'

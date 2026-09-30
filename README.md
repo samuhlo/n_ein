@@ -20,7 +20,7 @@ El [ensayo de cierre de intent](evals/results/2026-09-29-intent.md) comprobó va
 
 El contexto de origen y el plan están en [docs/START_HERE.md](docs/START_HERE.md). Las fuentes de `docs/archive/` y `docs/sources/` son referencias históricas; el lanzador solo carga `pi-package/`.
 
-`./scripts/check.sh` instala las dependencias de `bun.lock`, ejecuta los checks locales deterministas de shell, Bun y Go y compila los dos binarios; las evaluaciones con modelos reales se lanzan por separado. El [workflow de GitHub](.github/workflows/check.yml) ejecuta ese mismo recorrido sin credenciales ni llamadas a modelos.
+`./scripts/check.sh` instala las dependencias de `bun.lock`, ejecuta los checks locales deterministas de shell, Bun y Go, compila los dos binarios y prueba un paquete instalado fuera del checkout; las evaluaciones con modelos reales se lanzan por separado. El [workflow de GitHub](.github/workflows/check.yml) ejecuta ese mismo recorrido sin credenciales ni llamadas a modelos.
 
 El [primer caso de regresión](evals/results/2026-09-29-first-session.md) ya pasó con Sol high y, en una sesión directa separada, con Luna high.
 La [continuación SQLSTATE](evals/results/2026-09-29-sqlstate.md) probó TDD ya elegido, delegación a Luna, regresión roja y verde, y un arreglo posterior en sesión nueva sin repetir la entrevista.

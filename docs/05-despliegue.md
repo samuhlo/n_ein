@@ -40,7 +40,7 @@ Al principio: chequeo de tipos si aplica, pruebas relevantes y smoke determinist
 
 Las evaluaciones pagadas van separadas, con modelo/endpoint/configuración y presupuesto explícitos. Un test de proveedor simulado es válido para transporte y errores, pero no se etiqueta como evaluación de capacidad real.
 
-Los tests del artefacto se ejecutan desde una instalación limpia o aislada, sin enlaces que oculten archivos no empaquetados. Comprobar arranque, carga de skills, delegación si existe, rutas y continuidad. Mantener el entorno independiente de las instalaciones personales del desarrollador.
+`scripts/smoke-package.sh` ya empaqueta, instala en un destino temporal, comprueba hashes, abre la vista Configuración del binario instalado y verifica las rutas de Pi con un ejecutable simulado. Los ensayos con modelo real y el relevo Pi↔Claude siguen registrados aparte. Mantener el entorno independiente de las instalaciones personales del desarrollador.
 
 ## Versiones y evolución
 
