@@ -39,6 +39,22 @@ Para volver desde Claude, usa `/handoff-pi`. Esa skill conserva el resultado en 
 
 ## Instalación local de prueba
 
+La [preview 0.1.0-preview.1](https://github.com/samuhlo/n_ein/releases/tag/v0.1.0-preview.1) distribuye un candidato para macOS arm64 y otro para Linux amd64. En el Mac de Samu, con Bun y Pi 0.87.1 disponibles:
+
+```sh
+gh release download v0.1.0-preview.1 -R samuhlo/n_ein --pattern 'n-ein-0.1.0-preview.1-darwin-arm64.tar.gz*'
+shasum -a 256 -c n-ein-0.1.0-preview.1-darwin-arm64.tar.gz.sha256
+tar -xzf n-ein-0.1.0-preview.1-darwin-arm64.tar.gz
+./n-ein-0.1.0-preview.1-darwin-arm64/bin/n-ein-install install --source ./n-ein-0.1.0-preview.1-darwin-arm64 --channel preview --dry-run
+./n-ein-0.1.0-preview.1-darwin-arm64/bin/n-ein-install install --source ./n-ein-0.1.0-preview.1-darwin-arm64 --channel preview
+~/.n_ein/installations/preview/bin/n-ein-install doctor --channel preview --runtime
+~/.n_ein/installations/preview/bin/n-ein
+```
+
+El primer arranque de Pi en preview requiere `/login` en `~/.n_ein/preview/pi-agent`; esa autenticación no se copia desde desarrollo ni desde Ein. Para actualizar una preview posterior, descarga su candidato y usa `n-ein-install update --source <directorio-extraído> --channel preview`; `restore --channel preview` vuelve al backup anterior. La vista Sistema aún no descarga actualizaciones por sí sola.
+
+### Desde el checkout
+
 Con Go 1.27.1, construye el instalador separado y mira el plan antes de escribir:
 
 ```sh

@@ -1,6 +1,6 @@
 # Repositorio, desarrollo y despliegue
 
-Objetivo solicitado: repositorio limpio, pruebas mejores y canales comprensibles. El [repositorio público](https://github.com/samuhlo/n_ein), el [instalador y los canales locales](../README.md#instalación-local-de-prueba), y los checks ya existen. La distribución de releases sigue pendiente. Las secciones siguientes conservan los criterios originales de diseño; consulta el README y la evidencia para distinguirlos de lo ya implementado.
+Objetivo solicitado: repositorio limpio, pruebas mejores y canales comprensibles. El [repositorio público](https://github.com/samuhlo/n_ein), el [instalador y los canales locales](../README.md#instalación-local-de-prueba), los checks y una primera preview en archivos nativos ya existen. La distribución estable sigue pendiente. Las secciones siguientes conservan los criterios originales de diseño; consulta el README y la evidencia para distinguirlos de lo ya implementado.
 
 ## Repositorio nuevo
 
@@ -30,7 +30,7 @@ Pi vanilla, Ein legado, desarrollo n_ein y estable n_ein deben tener identidades
 
 La primera instalación es local y acotada: un lanzador de shell que exporta `PI_CODING_AGENT_DIR` hacia el hogar de n_ein y carga el paquete local. Ein ya usa lanzadores con configuración propia para Pi y Claude ([ejemplo Pi archivado](archive/ein-workspace/ein-pi/launchers/ein-pi.fish)). En otras integraciones, comprobar las ubicaciones y la precedencia reales: `CLAUDE_CONFIG_DIR`, `CODEX_HOME` y `OPENCODE_CONFIG_DIR` no son contratos intercambiables. En particular, `OPENCODE_CONFIG_DIR` añade configuración a fuentes globales/de proyecto; no basta para afirmar aislamiento completo ([documentación oficial](https://opencode.ai/docs/config/#custom-directory)). Probar también instrucciones/skills, sesiones y credenciales antes de declarar una integración aislada.
 
-El instalador es un binario Go separado del launcher, con `package`, `install`, `update`, `doctor`, `restore` y `uninstall` comprobados en destinos temporales ([evidencia](../evals/results/2026-09-29-installer.md)). `doctor` valida el paquete; `doctor --runtime` añade presencia de Bun y versión de Pi, pero no confirma autenticación ni acceso al modelo. Se reescribió a partir de los comportamientos útiles de Ein, sin portar sus migraciones SDD. Distribución por script o brew: pendiente.
+El instalador es un binario Go separado del launcher, con `package`, `install`, `update`, `doctor`, `restore` y `uninstall` comprobados en destinos temporales ([evidencia](../evals/results/2026-09-29-installer.md)). `doctor` valida el paquete; `doctor --runtime` añade presencia de Bun y versión de Pi, pero no confirma autenticación ni acceso al modelo. Se reescribió a partir de los comportamientos útiles de Ein, sin portar sus migraciones SDD. La primera distribución usa `.tar.gz` por plataforma con SHA-256; script o brew siguen pendientes.
 
 Update se prepara antes de reemplazar la versión activa, comprueba el resultado y conserva una recuperación entendible. `install` y `update` rechazan un destino existente sin marcador y manifest de n_ein, incluso en dry-run; no impiden reparar una instalación identificada con archivos dañados. Dry-run no debe mutar. Un fallo deja identificable qué versión y datos quedaron. Desinstalación separa código gestionado, configuración propia y datos del usuario.
 
@@ -50,4 +50,4 @@ Si una dependencia cambia un payload, corregir un único borde y comprobarlo con
 
 ## Fuera de alcance inicial
 
-Marketplace, instalador multiplataforma sofisticado, telemetría remota, autoactualizaciones silenciosas y hosting de modelos. Primero una versión útil y reversible. Samu autorizó publicar este repositorio en GitHub; publicar paquetes o releases requiere decidir antes su canal y contenido.
+Marketplace, instalador multiplataforma sofisticado, telemetría remota, autoactualizaciones silenciosas y hosting de modelos. Primero una versión útil y reversible. Samu autorizó terminar este primer corte: el canal elegido para el paquete público es preview, con binarios nativos y sin migración de hogares. La promoción a estable sigue pendiente de uso supervisado.

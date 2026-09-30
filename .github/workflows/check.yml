@@ -27,3 +27,14 @@ jobs:
           bun install --global @earendil-works/pi-coding-agent@0.87.1
       - name: Checks sin modelos
         run: ./scripts/check.sh
+      - name: Crear candidato nativo de preview
+        run: ./scripts/build-preview.sh 0.1.0-preview.1
+      - uses: actions/upload-artifact@v7
+        if: github.event_name == 'push'
+        with:
+          name: n-ein-preview-linux-amd64
+          path: |
+            dist/releases/*.tar.gz
+            dist/releases/*.sha256
+          if-no-files-found: error
+          retention-days: 14

@@ -8,8 +8,8 @@
 | Trabajador | Un mecanismo de proceso hijo Pi con cancelación y evidencias; [recorridos observados](../evals/results/2026-09-29-worker.md). | Coordinar procesos padre independientes en el mismo árbol si se necesita concurrencia. |
 | Corpus real | Samu escogió solo `planificador-didactico`; [regresión reproducida](../evals/results/2026-09-29-planificador.md) en copias aisladas. | Más casos representativos antes de generalizar ahorro o calidad. |
 | Documento y relevo | `WORK.md`, TODO y Pi↔Claude probados en TUI real. | Agentes de fondo y escritores padre independientes; Codex/OpenCode si se incorporan. |
-| Launcher e instalador | Go con Bubble Tea v2; paquete local, preview/estable, doctor, restore y cinco vistas. | Edición de ajustes desde la TUI, actualización remota y distribución pública. |
-| Remoto, licencia propia y distribución | Repositorio público `samuhlo/n_ein`; sin licencia propia ni release. | Decidir licencia y distribución cuando toque publicar paquetes. |
+| Launcher e instalador | Go con Bubble Tea v2; paquete local, preview/estable, doctor, restore y cinco vistas. | Edición de ajustes desde la TUI y actualización remota automática. |
+| Remoto, licencia propia y distribución | Repositorio público `samuhlo/n_ein` y primera preview en `.tar.gz`; sin licencia propia. | Decidir licencia y promoción estable después de uso supervisado. |
 | Modelo local | Objetivo posterior Qwen3.8-27B en 24 GB. | **Aplazado por Samu hasta que tenga la máquina**; no preparar servidor ni descargar pesos ahora. |
 
 ### Runner de trabajadores
@@ -48,7 +48,7 @@ No hacer una entrevista larga sobre estas decisiones antes de construir algo út
 
 ## Lo que no está demostrado todavía
 
-Hay implementación, evaluaciones registradas y repositorio público, pero **no release de paquetes**. No se ha probado Codex u OpenCode con n_ein, ni Qwen3.8-27B en la tarjeta objetivo; el trabajo local está aplazado a petición de Samu. Los ensayos actuales no demuestran una mejora general sobre el agente nativo ni un porcentaje de ahorro estable. No hay fechas o ahorro económico comprometidos.
+Hay implementación, evaluaciones registradas, repositorio público y preview de paquetes; **no hay canal estable**. No se ha probado Codex u OpenCode con n_ein, ni Qwen3.8-27B en la tarjeta objetivo; el trabajo local está aplazado a petición de Samu. Los ensayos actuales no demuestran una mejora general sobre el agente nativo ni un porcentaje de ahorro estable. No hay fechas o ahorro económico comprometidos.
 
 Las propuestas de cinco entregas, 12 casos y ahorro orientativo del 20 % son instrumentos de decisión. Se pueden simplificar cuando la evidencia lo aconseje; no son otra burocracia obligatoria.
 
