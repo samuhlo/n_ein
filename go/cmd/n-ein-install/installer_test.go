@@ -140,6 +140,41 @@ func TestInstallerLifecycle(t *testing.T) {
 	}
 }
 
+func TestInstallDoesNotReplaceUnmanagedTarget(t *testing.T) {
+	source, self, _, _ := sourceFixture(t)
+	for _, verb := range []string{"install", "update"} {
+		for _, dryRun := range []bool{false, true} {
+			target := filepath.Join(t.TempDir(), "unmanaged")
+			writeFixture(t, target, "important.txt", "conservar\n", 0o600)
+			args := []string{verb, "--source", source, "--target", target}
+			if dryRun {
+				args = append(args, "--dry-run")
+			}
+			if _, err := call(t, self, args...); err == nil {
+				t.Fatalf("%s aceptó destino ajeno (dry-run=%t)", verb, dryRun)
+			}
+			if data, err := os.ReadFile(filepath.Join(target, "important.txt")); err != nil || string(data) != "conservar\n" {
+				t.Fatalf("%s alteró destino ajeno: %q %v", verb, data, err)
+			}
+			if _, err := os.Stat(target + ".backups"); !os.IsNotExist(err) {
+				t.Fatalf("%s creó backup de destino ajeno: %v", verb, err)
+			}
+		}
+	}
+
+	target := filepath.Join(t.TempDir(), "managed")
+	if _, err := call(t, self, "install", "--source", source, "--target", target); err != nil {
+		t.Fatal(err)
+	}
+	writeFixture(t, target, "pi-package/persona.md", "dañado\n", 0o644)
+	if _, err := call(t, self, "update", "--source", source, "--target", target); err != nil {
+		t.Fatalf("update debe poder reparar una instalación identificada: %v", err)
+	}
+	if _, err := call(t, self, "doctor", "--target", target); err != nil {
+		t.Fatalf("update no reparó la instalación: %v", err)
+	}
+}
+
 func TestProtectedTargets(t *testing.T) {
 	source, self, _, _ := sourceFixture(t)
 	home, err := os.UserHomeDir()

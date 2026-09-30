@@ -436,6 +436,12 @@ func install(source, target, channel, self string, requireExisting, dryRun bool,
 	if requireExisting && !exists {
 		return fmt.Errorf("update requiere instalación existente: %s", target)
 	}
+	if exists {
+		// BLINDAJE -> El backup y reemplazo solo se aplican a una instalación identificada.
+		if err := managed(target); err != nil {
+			return fmt.Errorf("destino existente no es instalación de n_ein: %s: %w", target, err)
+		}
+	}
 	if dryRun {
 		fmt.Fprintf(output, "// 000 PLAN · %s · %s · %d archivos · backup: %t\n", channel, target, len(files)+1, exists)
 		return nil

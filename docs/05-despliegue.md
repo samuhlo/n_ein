@@ -32,7 +32,7 @@ La primera instalación es local y acotada: un lanzador de shell que exporta `PI
 
 El instalador es un binario Go separado del launcher, con `package`, `install`, `update`, `doctor`, `restore` y `uninstall` comprobados en destinos temporales ([evidencia](../evals/results/2026-09-29-installer.md)). `doctor` valida el paquete; `doctor --runtime` añade presencia de Bun y versión de Pi, pero no confirma autenticación ni acceso al modelo. Se reescribió a partir de los comportamientos útiles de Ein, sin portar sus migraciones SDD. Distribución por script o brew: pendiente.
 
-Update se prepara antes de reemplazar la versión activa, comprueba el resultado y conserva una recuperación entendible. Dry-run no debe mutar. Un fallo deja identificable qué versión y datos quedaron. Desinstalación separa código gestionado, configuración propia y datos del usuario.
+Update se prepara antes de reemplazar la versión activa, comprueba el resultado y conserva una recuperación entendible. `install` y `update` rechazan un destino existente sin marcador y manifest de n_ein, incluso en dry-run; no impiden reparar una instalación identificada con archivos dañados. Dry-run no debe mutar. Un fallo deja identificable qué versión y datos quedaron. Desinstalación separa código gestionado, configuración propia y datos del usuario.
 
 ## CI proporcional
 
