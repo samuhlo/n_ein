@@ -309,8 +309,16 @@ func loadState(root, project string) appState {
 		gitState = fmt.Sprintf("%d rutas con cambios", len(strings.Split(status, "\n")))
 	}
 	objective, tasks, current, evidence := workState(project)
-	piVersion := known(command(project, "pi", "--version"))
-	claudeVersion := known(command(project, "claude", "--version"))
+	piBin, piSource := os.Getenv("N_EIN_PI_BIN"), "N_EIN_PI_BIN"
+	if piBin == "" {
+		piBin, piSource = "pi", "pi --version"
+	}
+	claudeBin, claudeSource := os.Getenv("N_EIN_CLAUDE_BIN"), "N_EIN_CLAUDE_BIN"
+	if claudeBin == "" {
+		claudeBin, claudeSource = "claude", "claude --version"
+	}
+	piVersion := known(command(project, piBin, "--version"))
+	claudeVersion := known(command(project, claudeBin, "--version"))
 	installVersion := "desconocido"
 	var install struct {
 		Version string `json:"version"`
@@ -344,6 +352,10 @@ func loadState(root, project string) appState {
 	piAction, piLabel := "pi", "abrir agente principal"
 	if piVersion == "desconocido" {
 		piAction, piLabel = "", "no disponible"
+	} else if config.Pi.Version == "" {
+		piAction, piLabel = "", "versión esperada desconocida"
+	} else if piVersion != config.Pi.Version {
+		piAction, piLabel = "", "requiere Pi "+config.Pi.Version+" · actual "+piVersion
 	}
 	claudeAction, claudeLabel := "claude", "abrir relevo aislado"
 	if claudeVersion == "desconocido" {
@@ -362,8 +374,8 @@ func loadState(root, project string) appState {
 		}},
 		{2, "SESIONES", sessionRows},
 		{3, "SISTEMA", []row{
-			{"paquete", installVersion, "install.json", ""}, {"Pi", piVersion, "pi --version", ""},
-			{"Claude", claudeVersion, "claude --version", ""}, doctor, {"actualizaciones", "desconocido", "sin remoto", ""},
+			{"paquete", installVersion, "install.json", ""}, {"Pi", piVersion, piSource, ""},
+			{"Claude", claudeVersion, claudeSource, ""}, doctor, {"actualizaciones", "desconocido", "sin remoto", ""},
 		}},
 		{4, "RUNTIME", []row{
 			{"Pi", piLabel, "bin/n-ein-dev", piAction},

@@ -81,6 +81,41 @@ func TestFiveViewsUseObservedSources(t *testing.T) {
 	}
 }
 
+func TestRuntimeViewUsesConfiguredBinariesAndRejectsWrongPiVersion(t *testing.T) {
+	root := t.TempDir()
+	project := t.TempDir()
+	t.Setenv("N_EIN_AGENT_DIR", filepath.Join(root, "pi-agent"))
+	t.Setenv("N_EIN_CLAUDE_DIR", filepath.Join(root, "claude-agent"))
+	write(t, filepath.Join(root, "runtime.json"), `{"pi":{"version":"0.87.1","model":"openai-codex/gpt-6-sol","thinking":"high"}}`)
+	pi := filepath.Join(root, "custom-pi")
+	claude := filepath.Join(root, "custom-claude")
+	write(t, pi, "#!/bin/sh\nprintf '0.88.0\\n'\n")
+	write(t, claude, "#!/bin/sh\nprintf '2.0.0\\n'\n")
+	for _, path := range []string{pi, claude} {
+		if err := os.Chmod(path, 0o755); err != nil {
+			t.Fatal(err)
+		}
+	}
+	t.Setenv("N_EIN_PI_BIN", pi)
+	t.Setenv("N_EIN_CLAUDE_BIN", claude)
+
+	state := loadState(root, project)
+	if state.views[3].rows[1].value != "0.88.0" || state.views[3].rows[2].value != "2.0.0" {
+		t.Fatalf("Sistema ignoró los ejecutables configurados: %#v", state.views[3].rows)
+	}
+	if state.views[4].rows[0].action != "" || !strings.Contains(state.views[4].rows[0].value, "0.87.1") {
+		t.Fatalf("Runtime ofreció Pi incompatible: %#v", state.views[4].rows[0])
+	}
+	if state.views[4].rows[1].action != "claude" {
+		t.Fatalf("Runtime ocultó Claude configurado: %#v", state.views[4].rows[1])
+	}
+	write(t, pi, "#!/bin/sh\nprintf '0.87.1\\n'\n")
+	state = loadState(root, project)
+	if state.views[4].rows[0].action != "pi" {
+		t.Fatalf("Runtime no ofreció Pi compatible: %#v", state.views[4].rows[0])
+	}
+}
+
 func TestSessionsUseHumanPromptsFromCurrentProject(t *testing.T) {
 	root := t.TempDir()
 	project := filepath.Join(root, "project")
