@@ -30,8 +30,9 @@ if [[ "$(git -C "$repo_dir" merge-base "$head_commit" origin/main)" != "$base_co
   exit 64
 fi
 branch="$(git -C "$repo_dir" branch --show-current)"
+remote_branches="$(git -C "$repo_dir" branch -r --contains "$head_commit")"
 if [[ "$branch" != hotfix/* ]] \
-  && ! git -C "$repo_dir" branch -r --contains "$head_commit" | rg -q '^  origin/hotfix/'; then
+  && [[ "$remote_branches" != *origin/hotfix/* ]]; then
   printf '[ERR] :: HOTFIX_BRANCH :: HEAD must belong to hotfix/*\n' >&2
   exit 64
 fi
