@@ -2,7 +2,7 @@
 
 ## Estado y decisiones abiertas
 
-| Área | Estado a 29 de septiembre de 2026 | Pendiente real |
+| Área | Estado a 1 de octubre de 2026 | Pendiente real |
 |---|---|---|
 | Pi y modelos alojados | Paquete aislado sobre Pi 0.87.1; Sol high y Luna high por suscripción. | Compatibilidad al actualizar Pi y medición de coste total en más tareas reales. |
 | Trabajador | Un mecanismo de proceso hijo Pi con cancelación y evidencias; [recorridos observados](../evals/results/2026-09-29-worker.md). | Coordinar procesos padre independientes en el mismo árbol si se necesita concurrencia. |

@@ -58,6 +58,13 @@ if [[ "$installed_commit" == "$expected_commit" ]]; then
   printf '// 000 HOTFIX · ya instalado · commit: %s\n' "$commit"
   exit 0
 fi
+installed_source_commit="${installed_commit%%+dirty}"
+if [[ -z "$dirty_suffix" && "$installed_source_commit" =~ ^[0-9a-f]{40}$ ]] \
+  && git -C "$repo_dir" cat-file -e "$installed_source_commit^{commit}" 2>/dev/null \
+  && git -C "$repo_dir" diff --quiet "$installed_source_commit" "$commit" -- brand.json runtime.json bin pi-package go; then
+  printf '// 000 HOTFIX · runtime sin cambios desde %s; preview intacta\n' "$installed_source_commit"
+  exit 0
+fi
 short_commit="${commit:0:12}"
 version="$base_version+hotfix.$short_commit"
 case "$(uname -s)-$(uname -m)" in

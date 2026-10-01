@@ -63,7 +63,7 @@ La release `v0.1.0-preview.1` es una base inmutable. Para aplicar al canal previ
 ./scripts/hotfix-preview.sh rollback
 ```
 
-`plan` ejecuta los checks, compila un candidato nativo con versión `0.1.0-preview.1+hotfix.<commit>` y muestra el update sin sustituir la instalación. `apply` verifica el candidato, conserva un backup y ejecuta `doctor`; `rollback` recupera el último backup. El archivo de modelos, la autenticación y las sesiones siguen fuera del árbol reemplazado. Hazlo con las sesiones de ese canal cerradas. El hotfix no publica un tag ni modifica la release original.
+`plan` ejecuta los checks, compila un candidato nativo con versión `0.1.0-preview.1+hotfix.<commit>` y muestra el update sin sustituir la instalación. `apply` verifica el candidato, conserva un backup y ejecuta `doctor`; `rollback` recupera el último backup. Si desde el hotfix instalado solo cambiaron docs o herramientas de desarrollo, `apply` no reinstala el runtime. El archivo de modelos, la autenticación y las sesiones siguen fuera del árbol reemplazado. Hazlo con las sesiones de ese canal cerradas. El hotfix no publica un tag ni modifica la release original.
 
 ### Desde el checkout
 
