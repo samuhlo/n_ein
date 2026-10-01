@@ -41,7 +41,7 @@ Samu aplazó expresamente el ensayo de Qwen local hasta disponer de la máquina 
 
 El 1 de octubre pidió recuperar un selector de modelos por rol como el de Ein: principal y cada trabajador que exista, con esfuerzo configurable. Los valores Sol/Luna high siguen siendo los predeterminados, no una limitación del selector. La configuración personal vive fuera del paquete para sobrevivir a las actualizaciones.
 
-También pidió hotfixes para evitar una nueva alpha por cada arreglo. Este primer mecanismo aplica un commit limpio y verificado al canal preview mediante el mismo paquete e instalador transaccional; marca versión `+hotfix.<commit>` y usa el restore existente. No reintroduce ramas ni fases SDD en el trabajo ordinario, ni altera estable o Ein legado.
+También pidió hotfixes para evitar una nueva alpha por cada arreglo. El mecanismo local aplica un commit limpio y verificado al canal preview mediante el mismo paquete e instalador transaccional; marca versión `+hotfix.<commit>` y usa el restore existente. Después aclaró que quiere **también una release desde una rama**. Esa vía parte del tag publicado, lleva solo el arreglo, verifica su procedencia y publica una prerelease `.hotfix.N` independiente; el trabajo ordinario no hereda las fases SDD ni requiere rama `dev`.
 
 ## Recomendaciones de diseño, revisables
 

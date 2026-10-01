@@ -26,6 +26,12 @@ Promover el mismo artefacto/bytes, no reconstruir silenciosamente otro con depen
 
 Entre previews públicas, `scripts/hotfix-preview.sh` puede aplicar un commit limpio al canal preview local sin crear otro tag: usa `scripts/check.sh`, un candidato versionado con `+hotfix.<commit>` y el mismo `update`/backup/`restore` del instalador. `plan` deja revisar el candidato sin reemplazar la instalación. El paquete publicado continúa inmutable.
 
+### Hotfix desde rama
+
+Para compartir un arreglo de una preview publicada, crear `hotfix/<nombre>` desde su tag, sin incorporar lo que esté acumulado en `main`. La rama contiene solo el cambio y, si el tag base aún no lo tenía, el soporte de build/verificación. `scripts/verify-hotfix-branch.sh v<base>.hotfix.N` comprueba árbol limpio, tag base ancestro, bifurcación desde ese tag, pertenencia a una rama `hotfix/*` y cambio de runtime. La rama corre los checks normales. El tag `.hotfix.N` vuelve a ejecutar checks y genera el candidato Linux en CI; el macOS se construye de forma nativa desde el mismo tag. Comparar versión, commit, lista de archivos y hashes de cada plataforma antes de adjuntarlos a una prerelease. Publicar con `gh release create --verify-tag --prerelease --latest=false` evita que GitHub invente un tag desde `main`.
+
+El arreglo se incorpora o se comprueba equivalente en `main` después de publicar, sin obligar a una rama `dev`. Una release de rama no aplica automáticamente el hotfix al canal personal ni cambia estable. La ruta local anterior permanece disponible para iterar sin publicación.
+
 ## Instalación aislada
 
 Pi vanilla, Ein legado, desarrollo n_ein y estable n_ein deben tener identidades claras. Proponer hogares separados; confirmar y comprobar resolución de rutas antes de escribir. No copiar credenciales en paquetes ni migrar sign-ins automáticamente por conveniencia.

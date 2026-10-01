@@ -6,8 +6,8 @@ set -euo pipefail
 repo_dir="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd -P)"
 release_version="${1:-}"
 output_dir="${2:-$repo_dir/dist/releases}"
-if [[ ! "$release_version" =~ ^[0-9]+\.[0-9]+\.[0-9]+-preview\.[0-9]+(\+hotfix\.[0-9a-f]{7,40})?$ ]]; then
-  printf '[ERR] :: VERSION_BAD :: expected: 0.1.0-preview.1[+hotfix.sha]\n' >&2
+if [[ ! "$release_version" =~ ^[0-9]+\.[0-9]+\.[0-9]+-preview\.[0-9]+(\.hotfix\.[0-9]+|\+hotfix\.[0-9a-f]{7,40})?$ ]]; then
+  printf '[ERR] :: VERSION_BAD :: expected: 0.1.0-preview.1[.hotfix.N|+hotfix.sha]\n' >&2
   exit 64
 fi
 
