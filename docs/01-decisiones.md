@@ -51,6 +51,8 @@ Después pidió que **CodeGraph sea obligatorio**, no opcional como en Ein: inst
 
 Sobre la paridad con Claude decidió: **sin delegación en Luna y sin selector de modelo**; Claude usa el modelo de Claude Code (hoy Opus 5.5). Sí lleva el TODO, en su barra de estado, y su **esfuerzo** se fija en `/nein:models` y llega como `--effort`; sin ajuste decide Claude Code.
 
+También precisó que n_ein es **un producto que cualquiera pueda usar**, aunque sea principalmente para él: lo que se instala (persona, skills, lanzadores) habla del usuario, nunca de Samu; `tests/skills.ts` lo comprueba. Y que las skills sigan de verdad la manera de trabajar de Matt Pocock: `intent` recupera la redacción de `grilling` (entrevista implacable, árbol de decisiones, rondas sobre la frontera, cada pregunta numerada con su recomendación, hechos a cargo del agente) con las adaptaciones ya acordadas, y las skills que solo se lanzan a mano llevan `disable-model-invocation`.
+
 ## Recomendaciones de diseño, revisables
 
 - Pi como runtime inicial; n_ein como capa pequeña: un paquete Pi (skills, extensiones mínimas, prompts, tema) más un launcher que fija el hogar aislado. Pi ya ofrece el aislamiento (`PI_CODING_AGENT_DIR`) y la carga de paquetes (`pi install`, `pi -e`).

@@ -44,7 +44,7 @@ export DO_NOT_TRACK=1
 # n_ein fija la versión de Pi y la actualiza con su propio instalador: el aviso de `pi update` confundiría.
 export PI_SKIP_VERSION_CHECK=1
 export PI_CODING_AGENT_DIR="$agent_dir"
-# BLINDAJE -> El banner de n_ein sustituye al listado de arranque de Pi; si Samu fijó quietStartup, se respeta.
+# BLINDAJE -> El banner de n_ein sustituye al listado de arranque de Pi; si el usuario fijó quietStartup, se respeta.
 if [[ "${N_EIN_WORKER_CHILD:-0}" != 1 ]]; then
   bun -e '
     const path = process.argv[1];

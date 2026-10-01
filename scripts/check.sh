@@ -40,6 +40,7 @@ bun run tests/models.ts
 bun run tests/codegraph.ts
 bun run tests/brand.ts
 bun run tests/banner.ts
+bun run tests/skills.ts
 
 (
   cd go

@@ -1,18 +1,34 @@
 ---
 name: intent
-description: Define con Samu una idea abierta o decisión importante mediante rondas de preguntas y un acuerdo claro. Úsala si Samu pide intent o acepta usarlo.
+description: Entrevista implacable para definir una idea, un plan o una decisión abierta antes de construir. Úsala cuando el usuario pida intent o que le acribilles a preguntas, o cuando acepte tu propuesta de usarla.
 ---
 
-# Intent: definir juntos el encargo
+Entrevista al usuario de forma implacable hasta alcanzar un entendimiento compartido de qué merece hacerse. Modela la conversación como un **árbol de decisiones**: cada decisión abre las decisiones que dependen de ella.
 
-Este canal sirve para acordar qué merece hacerse. No lo impongas a una petición clara ni a una duda puntual. Si la idea es abierta, propón `intent` indicando qué incertidumbre resolvería y espera aceptación. Una petición explícita de Samu lo activa.
+Trabaja el árbol por **rondas**. La **frontera** son las decisiones cuyos requisitos ya están resueltos: lo que puedes preguntar _ahora_ sin adivinar respuestas que aún no has oído. Pregunta toda la frontera en una ronda, con cada pregunta numerada y tu respuesta recomendada. Después espera las respuestas del usuario.
 
-Construye un árbol de decisiones: pregunta en cada ronda solo por las decisiones cuyos requisitos ya están resueltos. Numera pocas preguntas que se puedan responder juntas. Para cada una, ofrece una recomendación concreta que Samu pueda aceptar o matizar. Si no hay idea de partida, empieza con una pregunta llana.
+Formato de una ronda:
 
-Busca tú los hechos disponibles en conversación, código y documentación. Distingue los hechos comprobados, las propuestas y las dudas pendientes. No preguntes lo que el proyecto ya responde. Revisa las decisiones tomadas antes de abrir otra ronda; vuelve a abrir una solo si aparece evidencia material y explica por qué. No exijas resolver decisiones que pueden esperar al siguiente tramo.
+```
+**P1 · <título de la pregunta>** — <la pregunta; puede ocupar varios párrafos y ofrecer opciones>
 
-Al cerrar, resume objetivo, límites, decisiones con motivos, criterios observables y pendientes. Pide confirmar una vez que el acuerdo se ha entendido. Si Samu solo pidió pensar, termina sin implementar. Si ya había autorización para implementar dentro del mismo alcance, continúa sin solicitarla otra vez.
+▸ Recomiendo: <tu respuesta recomendada y el motivo>
 
-Guarda el acuerdo confirmado solo cuando necesite seguimiento o Samu lo pida: en el documento de trabajo existente o en un único documento nuevo. Si no hay convención previa, usa `WORK.md` con `## Objetivo`, `## Decisiones`, `## Límites`, `## Criterios`, `## Tareas`, `## Evidencia` y `## Siguiente paso` según corresponda. Pon casillas `- [ ]` solo para tareas reales: el TODO de Pi las lee de `## Tareas`. Indica si todavía falta autorización para implementar. No crees un expediente `intent.md` ni otra lista paralela. Si Samu abandona antes de confirmar, no alteres artefactos salvo que pida guardar un borrador.
+---
 
-El siguiente agente o trabajador recibe las decisiones y límites pertinentes para continuar sin repetir la entrevista.
+**P2 · <título de la pregunta>** — <la pregunta; puede ocupar varios párrafos y ofrecer opciones>
+
+▸ Recomiendo: <tu respuesta recomendada y el motivo>
+```
+
+Cada ronda contestada reordena el árbol: lo decidido empuja la frontera y desbloquea las preguntas que dependían de ello. Recalcula la frontera y abre la siguiente ronda. Una pregunta cuya respuesta depende de otra todavía abierta en esta ronda pertenece a una ronda _posterior_. Sin idea de partida, la primera ronda es una sola pregunta llana.
+
+Los **hechos** son trabajo tuyo, nunca del usuario. Cuando una pregunta de la frontera necesite un hecho del entorno (código, documentación, conversación, herramientas), búscalo tú: directamente si es rápido, o delegándolo a un trabajador o subagente en modo de solo lectura si cuesta. Sin bloquear: una investigación en curso es un requisito sin resolver, así que solo esperan las preguntas que dependen de ella; el resto de la frontera se pregunta ya. Las **decisiones** son del usuario: plantéaselas y espera. Las técnicas y reversibles que caben en las convenciones del proyecto las tomas tú y lo dices. Lo decidido se mantiene; se reabre solo ante evidencia nueva, nombrándola.
+
+La sesión termina cuando la frontera del siguiente tramo queda vacía: objetivo, alcance, decisiones con su motivo y criterios observables resueltos, y lo que puede esperar nombrado como aplazado, sin nada supuesto en silencio. Presenta entonces el acuerdo y pide una confirmación de que lo entendéis igual. Hasta esa confirmación, el trabajo es solo conversación.
+
+## Tras la confirmación
+
+El acuerdo define qué hacer; el permiso para implementarlo es aparte. Si el usuario pidió solo pensar, la sesión acaba aquí. Si ya había autorizado implementar dentro de este alcance, continúa con ese permiso.
+
+Cuando el trabajo necesite seguimiento o el usuario lo pida, guarda el acuerdo en el documento de trabajo del proyecto, o en `WORK.md` si no hay otro, con las secciones que apliquen: `## Objetivo`, `## Decisiones`, `## Límites`, `## Criterios`, `## Tareas`, `## Evidencia` y `## Siguiente paso`. Las tareas reales van como casillas `- [ ]` bajo `## Tareas`, que son las que muestra el TODO. Ese documento es el único registro del acuerdo: el agente que implemente, o el siguiente tras un relevo, parte de él sin repetir la entrevista. Una sesión abandonada antes de confirmar deja el proyecto como estaba.

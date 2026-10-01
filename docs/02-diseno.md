@@ -10,6 +10,8 @@ La elección entre directo, delegado e investigación separada corresponde al ag
 
 Capacidad central desde la primera versión, basada en [grill-me](sources/matt-skills/skills/productivity/grill-me/SKILL.md), [grilling](sources/matt-skills/skills/productivity/grilling/SKILL.md) y el [intent-channel de Ein](archive/ein-workspace/runtime/skills/local/intent-channel/SKILL.md). Su propósito es entender y concretar qué merece construirse antes de gastar en una solución equivocada. Se implementa inicialmente como skill/instrucción invocable del runtime, sin un motor de entrevistas nuevo. El nombre exacto del comando puede adaptarse al host; el usuario lo reconoce como `intent`.
 
+La skill (`pi-package/skills/intent/SKILL.md`) sigue la redacción de `grilling`: sus palabras guía (*implacable*, *árbol de decisiones*, *frontera*, *rondas*) y su formato de ronda, con la pregunta numerada y debajo `▸ Recomiendo:`. Matt usa emoji en ese formato; aquí se cambian por la gramática de STYLE. Lo que n_ein añade va al final y en positivo: el permiso de implementar es aparte y el acuerdo se guarda en `WORK.md`.
+
 ### Cuándo se utiliza
 
 | Situación | Comportamiento |

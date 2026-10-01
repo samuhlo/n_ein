@@ -49,7 +49,7 @@ trap 'rm -f "$handoff_signal"' EXIT
 export N_EIN_HANDOFF_SIGNAL="$handoff_signal"
 export N_EIN_ROOT="$repo_dir"
 claude_args=(--append-system-prompt "$persona")
-# [FLOW] Claude usa el modelo de Claude Code; de n_ein solo toma el esfuerzo, si Samu lo fijó en /models.
+# [FLOW] Claude usa el modelo de Claude Code; de n_ein solo toma el esfuerzo, si el usuario lo fijó en /nein:models.
 runtime_values="$(bun "$repo_dir/pi-package/models.ts" "$repo_dir" "$channel")" || exit 64
 IFS=$'\t' read -r _pi_version _main_model _main_thinking _worker_model _worker_thinking claude_effort <<< "$runtime_values"
 if [[ -n "$claude_effort" && "$claude_effort" != "-" ]]; then

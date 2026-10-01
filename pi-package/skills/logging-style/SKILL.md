@@ -1,6 +1,6 @@
 ---
 name: logging-style
-description: Aplica el estilo de logs de Samu al añadir o revisar eventos de ejecución en código propio.
+description: "Estilo de logs de n_ein ([TAG] :: ACCION :: clave: valor). Úsala al añadir o revisar logs y eventos de ejecución."
 ---
 
 # Logs de eventos
@@ -16,5 +16,3 @@ Un registro representa un evento, no prosa. Usa `[TAG] SEP ACCION :: clave: valo
 Registra decisiones, fallos y operaciones relevantes o lentas; evita el ruido por iteración y los éxitos triviales. Cada error lleva contexto para diagnosticarlo sin secretos ni datos personales. Usa el logger y niveles del proyecto. Conserva campos estructurados si el sistema los consume, con la gramática como mensaje legible. Los logs técnicos van al canal de diagnóstico, nunca al stdout JSON/RPC ni mezclados con la TUI.
 
 Adapta el formato a las convenciones explícitas del proyecto y al lenguaje. No inventes logs para cumplir una cuota.
-
-Adaptado de la skill personal `logging-style` de Ein, conservada en `docs/archive/ein-workspace/runtime/skills/local/logging-style/SKILL.md` del repositorio n_ein.
