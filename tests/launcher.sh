@@ -20,6 +20,7 @@ chmod +x "$test_dir/pi"
 
 export N_EIN_PI_BIN="$test_dir/pi"
 export N_EIN_AGENT_DIR="$test_dir/home with spaces"
+export N_EIN_MODELS_FILE="$test_dir/models.json"
 export N_EIN_CAPTURE="$test_dir/captured"
 mkdir -p "$test_dir/project"
 cd "$test_dir/project"
@@ -49,6 +50,23 @@ high
 cambia este texto
 EOF
 diff -u "$test_dir/expected" "$N_EIN_CAPTURE"
+
+cat > "$N_EIN_MODELS_FILE" <<'MODELS'
+{"schema":1,"agents":{"principal":{"model":"openai-codex/gpt-6-luna","thinking":"medium"}}}
+MODELS
+"$repo_dir/bin/n-ein-dev" --print 'modelo elegido'
+rg -Fxq 'openai-codex/gpt-6-luna' "$N_EIN_CAPTURE"
+rg -Fxq 'medium' "$N_EIN_CAPTURE"
+
+printf '%s\n' '{"schema":1,"agents":{"principal":{"model":"bad model","thinking":"high"}}}' > "$N_EIN_MODELS_FILE"
+rm -f "$N_EIN_CAPTURE"
+if "$repo_dir/bin/n-ein-dev" --print 'no ejecutar' > "$test_dir/out" 2> "$test_dir/err"; then
+  printf 'Una selección inválida no debe arrancar Pi.\n' >&2
+  exit 1
+fi
+rg -q 'MODELS_BAD' "$test_dir/err"
+test ! -e "$N_EIN_CAPTURE"
+rm -f "$N_EIN_MODELS_FILE"
 
 export N_EIN_FAKE_VERSION=0.88.0
 if "$repo_dir/bin/n-ein-dev" > "$test_dir/out" 2> "$test_dir/err"; then

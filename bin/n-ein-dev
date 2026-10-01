@@ -4,18 +4,16 @@ set -euo pipefail
 # [FLOW] ARRANQUE AISLADO
 # Pi conserva su configuración, autenticación y sesiones dentro de este hogar.
 repo_dir="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd -P)"
+channel="dev"
+if [[ -f "$repo_dir/.n-ein-channel" ]]; then IFS= read -r channel < "$repo_dir/.n-ein-channel"; fi
+case "$channel" in dev|preview|stable) ;; *) printf '[ERR] :: CHANNEL_BAD :: value: %s\n' "$channel" >&2; exit 64 ;; esac
+export N_EIN_CHANNEL="$channel"
 if ! command -v bun >/dev/null 2>&1; then
   printf '[ERR] :: BUN_MISSING :: required: runtime.json\n' >&2
   exit 69
 fi
-runtime_values="$(bun -e 'const c=await Bun.file(process.argv[1]).json(); if(c.schema!==1||!/^\d+\.\d+\.\d+$/.test(c.pi?.version)||!/^[-a-z0-9]+\/[a-z0-9.-]+$/.test(c.pi?.model)||!/[a-z]+/.test(c.pi?.thinking)) process.exit(1); console.log([c.pi.version,c.pi.model,c.pi.thinking].join("\t"))' "$repo_dir/runtime.json")" || {
-  printf '[ERR] :: CONFIG_BAD :: file: runtime.json\n' >&2
-  exit 64
-}
-IFS=$'\t' read -r expected_pi_version main_model main_thinking <<< "$runtime_values"
-channel="dev"
-if [[ -f "$repo_dir/.n-ein-channel" ]]; then IFS= read -r channel < "$repo_dir/.n-ein-channel"; fi
-case "$channel" in dev|preview|stable) ;; *) printf '[ERR] :: CHANNEL_BAD :: value: %s\n' "$channel" >&2; exit 64 ;; esac
+runtime_values="$(bun "$repo_dir/pi-package/models.ts" "$repo_dir" "$channel")" || exit 64
+IFS=$'\t' read -r expected_pi_version main_model main_thinking worker_model worker_thinking <<< "$runtime_values"
 agent_dir="${N_EIN_AGENT_DIR:-$HOME/.n_ein/$channel/pi-agent}"
 pi_bin="${N_EIN_PI_BIN:-pi}"
 

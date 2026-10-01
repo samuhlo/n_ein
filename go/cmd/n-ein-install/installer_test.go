@@ -36,6 +36,7 @@ func sourceFixture(t *testing.T) (source, self, target, data string) {
 	writeFixture(t, source, "pi-package/package.json", `{"name":"n-ein-pi"}`, 0o644)
 	writeFixture(t, source, "pi-package/persona.md", "persona v1\n", 0o644)
 	writeFixture(t, source, "pi-package/pi-only.md", "Pi worker\n", 0o644)
+	writeFixture(t, source, "pi-package/models.ts", "export const model = 'test'\n", 0o644)
 	writeFixture(t, source, "pi-package/extensions/worker.ts", "export default () => {}\n", 0o644)
 	writeFixture(t, source, "pi-package/themes/ein.json", `{"name":"ein"}`, 0o644)
 	writeFixture(t, source, "pi-package/skills/intent/SKILL.md", "# Intent\n", 0o644)

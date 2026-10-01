@@ -232,7 +232,7 @@ Se conservan como producto. Se portan sus **comportamientos** (como casos de ace
 | Vista | En Ein | En n_ein |
 |---|---|---|
 | Estado | proyecto, fase OpenSpec, verificación, git | proyecto, documento de trabajo y su checklist, git, última comprobación y si sigue vigente |
-| Configuración | modo, TDD, Hypa, CodeGraph, persona | modelo de sesión, modelo barato, persona e idioma, opcionales |
+| Configuración | modo, TDD, Hypa, CodeGraph, persona | modelo y esfuerzo efectivos del principal y del trabajador; `/models` en Pi los edita por canal |
 | Sesiones | recientes con la última petición | recientes de todos los runtimes declarados |
 | Sistema | actualizaciones y diagnóstico | igual |
 | Runtime | elegir Pi o Claude y lanzar | elegir cualquier runtime declarado; lanzar o relevar con resumen |

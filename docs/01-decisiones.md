@@ -39,6 +39,8 @@ La facilidad de añadir agentes es el objetivo acordado. Que cada integración p
 
 Samu aplazó expresamente el ensayo de Qwen local hasta disponer de la máquina con 24 GB. La prioridad actual sigue en el producto con modelos alojados; no hay que descargar pesos ni preparar un servidor mientras tanto.
 
+El 1 de octubre pidió recuperar un selector de modelos por rol como el de Ein: principal y cada trabajador que exista, con esfuerzo configurable. Los valores Sol/Luna high siguen siendo los predeterminados, no una limitación del selector. La configuración personal vive fuera del paquete para sobrevivir a las actualizaciones.
+
 ## Recomendaciones de diseño, revisables
 
 - Pi como runtime inicial; n_ein como capa pequeña: un paquete Pi (skills, extensiones mínimas, prompts, tema) más un launcher que fija el hogar aislado. Pi ya ofrece el aislamiento (`PI_CODING_AGENT_DIR`) y la carga de paquetes (`pi install`, `pi -e`).

@@ -35,6 +35,7 @@ func TestFiveViewsUseObservedSources(t *testing.T) {
 	}
 	t.Setenv("N_EIN_AGENT_DIR", filepath.Join(root, "pi-agent"))
 	t.Setenv("N_EIN_CLAUDE_DIR", filepath.Join(root, "claude"))
+	t.Setenv("N_EIN_MODELS_FILE", filepath.Join(root, "no-models.json"))
 	write(t, filepath.Join(root, "runtime.json"), `{"pi":{"model":"openai-codex/gpt-6-sol","thinking":"high"},"worker":{"model":"openai-codex/gpt-6-luna","thinking":"high"}}`)
 	write(t, filepath.Join(root, "brand.json"), `{"colors":{"yellow":"#FFCA40","concrete":"#FAF3F0","structure":"#737373"}}`)
 	write(t, filepath.Join(project, "WORK.md"), "# Encargo\n\n## Objetivo\nCorregir el puerto.\n\n## Tareas\n- [x] Reproducir\n- [ ] Arreglar\n\n## Evidencia\nEl check pasó antes de editar.\n")
@@ -86,6 +87,7 @@ func TestRuntimeViewUsesConfiguredBinariesAndRejectsWrongPiVersion(t *testing.T)
 	project := t.TempDir()
 	t.Setenv("N_EIN_AGENT_DIR", filepath.Join(root, "pi-agent"))
 	t.Setenv("N_EIN_CLAUDE_DIR", filepath.Join(root, "claude-agent"))
+	t.Setenv("N_EIN_MODELS_FILE", filepath.Join(root, "no-models.json"))
 	write(t, filepath.Join(root, "runtime.json"), `{"pi":{"version":"0.87.1","model":"openai-codex/gpt-6-sol","thinking":"high"}}`)
 	pi := filepath.Join(root, "custom-pi")
 	claude := filepath.Join(root, "custom-claude")
@@ -113,6 +115,40 @@ func TestRuntimeViewUsesConfiguredBinariesAndRejectsWrongPiVersion(t *testing.T)
 	state = loadState(root, project)
 	if state.views[4].rows[0].action != "pi" {
 		t.Fatalf("Runtime no ofreció Pi compatible: %#v", state.views[4].rows[0])
+	}
+}
+
+func TestConfigViewShowsModelsFromChannelData(t *testing.T) {
+	root := t.TempDir()
+	project := t.TempDir()
+	settings := filepath.Join(root, "models.json")
+	t.Setenv("N_EIN_MODELS_FILE", settings)
+	t.Setenv("N_EIN_AGENT_DIR", filepath.Join(root, "pi-agent"))
+	t.Setenv("N_EIN_CLAUDE_DIR", filepath.Join(root, "claude-agent"))
+	write(t, filepath.Join(root, "runtime.json"), `{"schema":1,"pi":{"version":"0.87.1","model":"openai-codex/gpt-6-sol","thinking":"high"},"worker":{"model":"openai-codex/gpt-6-luna","thinking":"high"}}`)
+	pi := filepath.Join(root, "pi")
+	write(t, pi, "#!/bin/sh\nprintf '0.87.1\\n'\n")
+	if err := os.Chmod(pi, 0o755); err != nil {
+		t.Fatal(err)
+	}
+	t.Setenv("N_EIN_PI_BIN", pi)
+	write(t, settings, `{"schema":1,"agents":{"principal":{"model":"openai-codex/gpt-6-luna","thinking":"medium"}}}`)
+
+	state := loadState(root, project)
+	rows := state.views[1].rows
+	if rows[0].value != "openai-codex/gpt-6-luna · medium" || rows[0].source != "models.json" {
+		t.Fatalf("principal efectivo: %#v", rows[0])
+	}
+	if rows[1].value != "openai-codex/gpt-6-luna · high" || rows[1].source != "runtime.json" {
+		t.Fatalf("trabajador por defecto: %#v", rows[1])
+	}
+	if rows[2].action != "pi" || state.views[4].rows[0].action != "pi" {
+		t.Fatal("selector o runtime inaccesible con ajuste válido")
+	}
+	write(t, settings, `{"schema":1,"agents":{"principal":{"model":"bad model","thinking":"high"}}}`)
+	state = loadState(root, project)
+	if !strings.Contains(state.views[1].rows[0].value, "models.json inválido") || state.views[4].rows[0].action != "" {
+		t.Fatal("ajuste inválido no debe parecer efectivo ni abrir Pi")
 	}
 }
 

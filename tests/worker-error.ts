@@ -7,7 +7,9 @@ import registerWorker from "../pi-package/extensions/worker";
 const testDir = mkdtempSync(join(tmpdir(), "n-ein-worker-error-"));
 const previousHome = process.env.N_EIN_AGENT_DIR;
 const previousPiBin = process.env.N_EIN_PI_BIN;
+const previousModels = process.env.N_EIN_MODELS_FILE;
 process.env.N_EIN_AGENT_DIR = join(testDir, "empty-agent-home");
+process.env.N_EIN_MODELS_FILE = join(testDir, "missing-models.json");
 
 let tool: any;
 registerWorker({ registerTool(value: unknown) { tool = value; } } as any);
@@ -52,5 +54,7 @@ try {
   else process.env.N_EIN_AGENT_DIR = previousHome;
   if (previousPiBin === undefined) delete process.env.N_EIN_PI_BIN;
   else process.env.N_EIN_PI_BIN = previousPiBin;
+  if (previousModels === undefined) delete process.env.N_EIN_MODELS_FILE;
+  else process.env.N_EIN_MODELS_FILE = previousModels;
   rmSync(testDir, { recursive: true, force: true });
 }
