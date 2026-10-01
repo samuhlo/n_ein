@@ -1,0 +1,54 @@
+#!/usr/bin/env bun
+// =============================================================================
+// [UI] TODO FUERA DE PI
+// La barra de estado de Claude enseña lo mismo que el widget de Pi: la tarea en
+// curso de WORK.md y el avance. Las casillas siguen siendo la fuente de verdad;
+// Claude las marca editando el archivo, como Pi.
+// =============================================================================
+
+import { readWorkDoc, resolveWorkDoc } from "../pi-package/extensions/work-doc.ts";
+
+const color = !("NO_COLOR" in process.env);
+const paint = (hex: string, text: string): string => {
+  if (!color) return text;
+  const [r, g, b] = [1, 3, 5].map((i) => parseInt(hex.slice(i, i + 2), 16));
+  return `\x1b[38;2;${r};${g};${b}m${text}\x1b[39m`;
+};
+// Escala de STYLE: primario, acento, gris de cuerpo y estructura.
+const CONCRETE = "#FAF3F0", YELLOW = "#FFCA40", MUTED = "#9A9A9A", STRUCTURE = "#3A3A3A";
+const clip = (text: string, room: number): string => [...text].length <= room ? text : [...text].slice(0, room - 1).join("") + "…";
+
+function todoLine(cwd: string): string {
+  const path = resolveWorkDoc(cwd);
+  if (!path) return "";
+  try {
+    const { tasks } = readWorkDoc(path);
+    if (tasks.length === 0) return "";
+    const done = tasks.filter((task) => task.done).length;
+    const current = tasks.find((task) => !task.done);
+    const counter = paint(STRUCTURE, `${done}/${tasks.length}`);
+    return current
+      ? `${paint(YELLOW, "▸")} ${paint(CONCRETE, clip(current.text, 60))} ${paint(MUTED, "·")} ${counter}`
+      : `${paint(STRUCTURE, "✓")} ${paint(MUTED, `${done}/${tasks.length} tareas`)}`;
+  } catch {
+    return paint(MUTED, "WORK.md ilegible");
+  }
+}
+
+if (process.argv[2] === "--statusline") {
+  // Claude pasa el estado de la sesión como JSON por stdin; si falta, vale el cwd.
+  let input: { cwd?: string; workspace?: { current_dir?: string }; model?: { display_name?: string } } = {};
+  try { input = JSON.parse(await Bun.stdin.text()); } catch { /* sin estado: solo marca */ }
+  const cwd = input.workspace?.current_dir ?? input.cwd ?? process.cwd();
+  const wordmark = paint(CONCRETE, "n") + paint(YELLOW, "_") + paint(CONCRETE, "ein");
+  const model = [input.model?.display_name, process.env.N_EIN_CLAUDE_EFFORT].filter(Boolean).join(" · ");
+  const todo = todoLine(cwd);
+  console.log([wordmark, model && paint(MUTED, model), todo].filter(Boolean).join("   "));
+} else {
+  const path = resolveWorkDoc(process.cwd());
+  if (!path) {
+    console.log("Sin WORK.md activo.");
+  } else {
+    for (const task of readWorkDoc(path).tasks) console.log(`${task.index}. [${task.done ? "x" : " "}] ${task.text}`);
+  }
+}

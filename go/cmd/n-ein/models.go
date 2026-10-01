@@ -50,6 +50,9 @@ func applyModelSelections(config runtimeConfig, channel string) (runtimeConfig, 
 	var settings struct {
 		Schema int                       `json:"schema"`
 		Agents map[string]modelSelection `json:"agents"`
+		Claude *struct {
+			Effort string `json:"effort"`
+		} `json:"claude"`
 	}
 	if json.Unmarshal(data, &settings) != nil || settings.Schema != 1 || settings.Agents == nil {
 		return config, "models.json", "models.json", fmt.Errorf("models.json inválido")
@@ -57,6 +60,15 @@ func applyModelSelections(config runtimeConfig, channel string) (runtimeConfig, 
 	for role, value := range settings.Agents {
 		if !validModelSelection(value) {
 			return config, "models.json", "models.json", fmt.Errorf("models.json inválido: %s", role)
+		}
+	}
+	// Claude no elige modelo en n_ein: solo su esfuerzo, con los niveles que acepta Claude Code.
+	if settings.Claude != nil {
+		switch settings.Claude.Effort {
+		case "low", "medium", "high", "xhigh", "max":
+			config.Claude.Effort = settings.Claude.Effort
+		default:
+			return config, "models.json", "models.json", fmt.Errorf("models.json inválido: claude")
 		}
 	}
 	piSource, workerSource := "runtime.json", "runtime.json"

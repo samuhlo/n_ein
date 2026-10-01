@@ -2,7 +2,7 @@ import { strict as assert } from "node:assert";
 import { chmodSync, mkdtempSync, readFileSync, rmSync, statSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join, resolve } from "node:path";
-import { loadModels, saveModelChoice } from "../pi-package/models.ts";
+import { loadModels, saveClaudeEffort, saveModelChoice } from "../pi-package/models.ts";
 import registerModels from "../pi-package/extensions/models.ts";
 import registerWorker from "../pi-package/extensions/worker.ts";
 
@@ -24,11 +24,12 @@ try {
   assert.equal(defaults.principal.model, "openai-codex/gpt-6-sol");
   assert.equal(defaults.worker.model, "openai-codex/gpt-6-luna");
   assert.equal(defaults.overridden.length, 0);
+  assert.equal(defaults.claudeEffort, null, "Sin ajuste, el esfuerzo de Claude lo decide Claude Code");
 
   let modelsCommand: any;
   registerModels({ registerCommand(_name: string, value: any) { modelsCommand = value; } } as any);
   assert.ok(modelsCommand, "/models no se registró");
-  const choices = ["Principal", "openai-codex/gpt-6-luna", "medium", "Trabajador", "openai-codex/gpt-6-sol", "high"];
+  const choices = ["Principal", "openai-codex/gpt-6-luna", "medium", "Trabajador", "openai-codex/gpt-6-sol", "high", "Claude", "xhigh", "Claude", "Por defecto de Claude Code"];
   const notices: string[] = [];
   const ctx = {
     hasUI: true,
@@ -48,6 +49,13 @@ try {
   } as any;
   await modelsCommand.handler("", ctx);
   await modelsCommand.handler("", ctx);
+  await modelsCommand.handler("", ctx);
+  assert.equal(loadModels(root).claudeEffort, "xhigh");
+  const cli = Bun.spawnSync(["bun", join(root, "pi-package/models.ts"), root, "dev"], { env: process.env }).stdout.toString().trim().split("\t");
+  assert.equal(cli[5], "xhigh", "los lanzadores leen el esfuerzo de Claude como sexto campo");
+  await modelsCommand.handler("", ctx);
+  assert.equal(loadModels(root).claudeEffort, null);
+  assert.throws(() => saveClaudeEffort(root, "minimal"), /esfuerzo de Claude inválido/);
   let effective = loadModels(root);
   assert.deepEqual(effective.principal, { model: "openai-codex/gpt-6-luna", thinking: "medium" });
   assert.deepEqual(effective.worker, { model: "openai-codex/gpt-6-sol", thinking: "high" });
@@ -84,7 +92,7 @@ try {
   assert.throws(() => saveModelChoice(root, "worker", { model: "bad model", thinking: "high" }));
   writeFileSync(modelsFile, '{"schema":1,"agents":{"worker":{"model":"bad model","thinking":"high"}}}');
   assert.throws(() => loadModels(root), /models.json inválido/);
-  console.log("models: selector, persistencia por rol y worker efectivo");
+  console.log("models: selector, persistencia por rol, worker efectivo y esfuerzo de Claude");
 } finally {
   for (const [key, env] of [["N_EIN_MODELS_FILE", previous.file], ["N_EIN_CHANNEL", previous.channel],
     ["N_EIN_PI_BIN", previous.pi], ["N_EIN_AGENT_DIR", previous.home], ["N_EIN_CAPTURE", previous.capture]] as const) {

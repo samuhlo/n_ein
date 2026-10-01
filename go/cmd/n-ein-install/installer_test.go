@@ -83,7 +83,7 @@ func sourceFixture(t *testing.T) (source, self, target, data string) {
 	data = filepath.Join(root, "user-data")
 	self = writeFixture(t, root, "self-binary", "installer", 0o755)
 	writeFixture(t, source, "dist/n-ein", "launcher", 0o755)
-	for _, rel := range []string{"bin/nein", "bin/nein-setup", "bin/n-ein-dev", "bin/n-ein-claude-dev", "bin/n-ein-prepare-pi", "bin/n-ein-codegraph"} {
+	for _, rel := range []string{"bin/nein", "bin/nein-setup", "bin/n-ein-dev", "bin/n-ein-claude-dev", "bin/n-ein-prepare-pi", "bin/n-ein-codegraph", "bin/n-ein-todo"} {
 		writeFixture(t, source, rel, "#!/bin/sh\nexit 0\n", 0o755)
 	}
 	writeFixture(t, source, "brand.json", `{"colors":{"yellow":"#FFCA40"}}`, 0o644)

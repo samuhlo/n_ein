@@ -59,6 +59,10 @@ type runtimeConfig struct {
 	CodeGraph struct {
 		Version string `json:"version"`
 	} `json:"codegraph"`
+	// Claude no viene de runtime.json: solo existe si Samu fijó su esfuerzo en models.json.
+	Claude struct {
+		Effort string `json:"-"`
+	} `json:"-"`
 }
 
 type appState struct {
@@ -303,6 +307,17 @@ func recentSessions(channel, project string) []session {
 	return selected
 }
 
+func claudeRow(effort string, modelError error) row {
+	switch {
+	case modelError != nil:
+		return row{"claude", modelError.Error(), "models.json", ""}
+	case effort == "":
+		return row{"claude", "modelo de Claude Code · esfuerzo por defecto", "Claude Code", ""}
+	default:
+		return row{"claude", "modelo de Claude Code · " + effort, "models.json", ""}
+	}
+}
+
 func loadState(root, project string) appState {
 	var config runtimeConfig
 	_ = readJSON(filepath.Join(root, "runtime.json"), &config)
@@ -445,6 +460,7 @@ func loadState(root, project string) appState {
 		{2, "CONFIGURACIÓN", []row{
 			{"principal", principalValue, piModelSource, ""},
 			{"trabajador", workerValue, workerModelSource, ""},
+			claudeRow(config.Claude.Effort, modelError),
 			{"editar", "abrir Pi y usar /models", "Pi", piAction},
 			{"idioma", "español", "persona.md", ""}, {"canal", channel, ".n-ein-channel", ""},
 		}},

@@ -154,8 +154,21 @@ func TestConfigViewShowsModelsFromChannelData(t *testing.T) {
 	if rows[1].value != "openai-codex/gpt-6-luna · high" || rows[1].source != "runtime.json" {
 		t.Fatalf("trabajador por defecto: %#v", rows[1])
 	}
-	if rows[2].action != "pi" || state.views[0].rows[0].action != "pi" {
+	if rows[2].label != "claude" || rows[2].value != "modelo de Claude Code · esfuerzo por defecto" || rows[2].source != "Claude Code" {
+		t.Fatalf("Claude sin ajuste debe usar el esfuerzo de Claude Code: %#v", rows[2])
+	}
+	if rows[3].action != "pi" || state.views[0].rows[0].action != "pi" {
 		t.Fatal("selector o runtime inaccesible con ajuste válido")
+	}
+	write(t, settings, `{"schema":1,"agents":{},"claude":{"effort":"xhigh"}}`)
+	state = loadState(root, project)
+	if row := state.views[2].rows[2]; row.value != "modelo de Claude Code · xhigh" || row.source != "models.json" {
+		t.Fatalf("esfuerzo de Claude no leído: %#v", row)
+	}
+	write(t, settings, `{"schema":1,"agents":{},"claude":{"effort":"minimal"}}`)
+	state = loadState(root, project)
+	if !strings.Contains(state.views[2].rows[2].value, "models.json inválido: claude") {
+		t.Fatalf("esfuerzo de Claude inválido aceptado: %#v", state.views[2].rows[2])
 	}
 	write(t, settings, `{"schema":1,"agents":{"principal":{"model":"bad model","thinking":"high"}}}`)
 	state = loadState(root, project)

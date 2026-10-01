@@ -11,16 +11,19 @@ import { randomUUID } from "node:crypto";
 
 export type Role = "principal" | "worker";
 export type ModelChoice = { model: string; thinking: string };
-type Settings = { schema: 1; agents: Record<string, ModelChoice> };
+// Claude usa el modelo de Claude Code; n_ein solo guarda su esfuerzo, y sin ajuste decide Claude Code.
+type Settings = { schema: 1; agents: Record<string, ModelChoice>; claude?: { effort: string } };
 export type EffectiveModels = {
   version: string;
   principal: ModelChoice;
   worker: ModelChoice;
+  claudeEffort: string | null;
   path: string;
   overridden: Role[];
 };
 
 const THINKING = new Set(["off", "minimal", "low", "medium", "high", "xhigh", "max"]);
+export const CLAUDE_EFFORT = ["low", "medium", "high", "xhigh", "max"];
 const MODEL_ID = /^[A-Za-z0-9._-]+\/[A-Za-z0-9._:/+-]+$/;
 
 function validChoice(value: unknown): value is ModelChoice {
@@ -55,6 +58,9 @@ function readSettings(path: string): Settings {
   for (const [role, choice] of Object.entries(settings.agents)) {
     if (!validChoice(choice)) throw new Error(`models.json inválido: ${path} (${role})`);
   }
+  if (settings.claude !== undefined && !CLAUDE_EFFORT.includes(settings.claude?.effort)) {
+    throw new Error(`models.json inválido: ${path} (claude)`);
+  }
   return settings;
 }
 
@@ -68,6 +74,7 @@ export function loadModels(packageRoot: string, requestedChannel?: string): Effe
     version: defaults.pi.version,
     principal: settings.agents.principal ?? { model: defaults.pi.model, thinking: defaults.pi.thinking },
     worker: settings.agents.worker ?? { model: defaults.worker.model, thinking: defaults.worker.thinking },
+    claudeEffort: settings.claude?.effort ?? null,
     path,
     overridden: (["principal", "worker"] as const).filter((role) => role in settings.agents),
   };
@@ -75,11 +82,25 @@ export function loadModels(packageRoot: string, requestedChannel?: string): Effe
 
 export function saveModelChoice(packageRoot: string, role: Role, choice: ModelChoice | null, requestedChannel?: string): string {
   if (choice !== null && !validChoice(choice)) throw new Error(`modelo o esfuerzo inválido: ${role}`);
+  return updateSettings(packageRoot, requestedChannel, choice === null, (settings) => {
+    if (choice === null) delete settings.agents[role];
+    else settings.agents[role] = choice;
+  });
+}
+
+export function saveClaudeEffort(packageRoot: string, effort: string | null, requestedChannel?: string): string {
+  if (effort !== null && !CLAUDE_EFFORT.includes(effort)) throw new Error(`esfuerzo de Claude inválido: ${effort}`);
+  return updateSettings(packageRoot, requestedChannel, effort === null, (settings) => {
+    if (effort === null) delete settings.claude;
+    else settings.claude = { effort };
+  });
+}
+
+function updateSettings(packageRoot: string, requestedChannel: string | undefined, removing: boolean, change: (settings: Settings) => void): string {
   const path = modelsPath(packageRoot, requestedChannel);
   const settings = readSettings(path);
-  if (choice === null) delete settings.agents[role];
-  else settings.agents[role] = choice;
-  if (!existsSync(path) && choice === null) return path;
+  change(settings);
+  if (!existsSync(path) && removing) return path;
   mkdirSync(dirname(path), { recursive: true, mode: 0o700 });
   const temporary = `${path}.${process.pid}.${randomUUID()}.tmp`;
   try {
@@ -94,8 +115,9 @@ export function saveModelChoice(packageRoot: string, role: Role, choice: ModelCh
 if (import.meta.main) {
   try {
     const effective = loadModels(process.argv[2], process.argv[3]);
+    // `-` marca el esfuerzo de Claude sin ajustar: los lanzadores leen campos fijos.
     console.log([effective.version, effective.principal.model, effective.principal.thinking,
-      effective.worker.model, effective.worker.thinking].join("\t"));
+      effective.worker.model, effective.worker.thinking, effective.claudeEffort ?? "-"].join("\t"));
   } catch (error) {
     console.error(`[ERR] :: MODELS_BAD :: reason: ${error instanceof Error ? error.message : String(error)}`);
     process.exitCode = 64;

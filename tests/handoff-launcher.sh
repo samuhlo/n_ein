@@ -34,6 +34,8 @@ export N_EIN_TEST_ARGS="$test_dir/claude-args"
 printf '#!/bin/sh\nexit 0\n' > "$test_dir/codegraph with space"
 chmod +x "$test_dir/codegraph with space"
 export N_EIN_CODEGRAPH_BIN="$test_dir/codegraph with space"
+export N_EIN_MODELS_FILE="$test_dir/models.json"
+printf '{"schema":1,"agents":{},"claude":{"effort":"xhigh"}}\n' > "$N_EIN_MODELS_FILE"
 mkdir -p "$N_EIN_CLAUDE_DIR"
 ln -s "$repo_dir/pi-package/skills" "$N_EIN_CLAUDE_DIR/skills"
 
@@ -52,7 +54,10 @@ bun -e '
   const args = (await Bun.file(process.argv[1]).text()).split("\n");
   const bin = process.argv[2];
   const mcp = JSON.parse(args[args.indexOf("--mcp-config") + 1]).mcpServers.codegraph;
-  const hook = JSON.parse(args[args.indexOf("--settings") + 1]).hooks.UserPromptSubmit[0].hooks[0].command;
+  const settings = JSON.parse(args[args.indexOf("--settings") + 1]);
+  const hook = settings.hooks.UserPromptSubmit[0].hooks[0].command;
+  if (args[args.indexOf("--effort") + 1] !== "xhigh") throw new Error("Claude no recibió el esfuerzo de models.json");
+  if (!settings.statusLine.command.endsWith("bin/n-ein-todo\" --statusline")) throw new Error("Claude sin barra de TODO: " + settings.statusLine.command);
   if (mcp.command !== bin || mcp.args.join(" ") !== "serve --mcp" || mcp.env.DO_NOT_TRACK !== "1") throw new Error("MCP de CodeGraph mal declarado");
   if (hook !== JSON.stringify(bin) + " prompt-hook") throw new Error("hook de CodeGraph mal declarado: " + hook);
 ' "$N_EIN_TEST_ARGS" "$N_EIN_CODEGRAPH_BIN"

@@ -6,10 +6,11 @@
 import { fileURLToPath } from "node:url";
 import { dirname, resolve } from "node:path";
 import type { ExtensionAPI } from "@earendil-works/pi-coding-agent";
-import { loadModels, saveModelChoice, type Role } from "../models.ts";
+import { CLAUDE_EFFORT, loadModels, saveClaudeEffort, saveModelChoice, type Role } from "../models.ts";
 
 const packageRoot = resolve(dirname(fileURLToPath(import.meta.url)), "../..");
 const DEFAULT = "Restablecer valor del paquete";
+const CLAUDE_DEFAULT = "Por defecto de Claude Code";
 const CUSTOM = "Id de modelo personalizado…";
 const THINKING = ["off", "minimal", "low", "medium", "high", "xhigh", "max"];
 
@@ -17,7 +18,7 @@ export default function (pi: ExtensionAPI) {
   if (process.env.N_EIN_WORKER_CHILD === "1") return;
 
   pi.registerCommand("models", {
-    description: "Seleccionar modelo y esfuerzo del principal o del trabajador",
+    description: "Seleccionar modelo y esfuerzo del principal o del trabajador, y el esfuerzo de Claude",
     handler: async (_args, ctx) => {
       if (!ctx.hasUI) {
         ctx.ui.notify("Abre la TUI de Pi para usar /models.", "warning");
@@ -28,8 +29,18 @@ export default function (pi: ExtensionAPI) {
         const roles = [
           `Principal · ${current.principal.model} · ${current.principal.thinking}`,
           `Trabajador · ${current.worker.model} · ${current.worker.thinking}`,
+          `Claude · modelo de Claude Code · ${current.claudeEffort ?? "esfuerzo por defecto"}`,
         ];
         const selectedRole = await ctx.ui.select("Configurar modelo", roles);
+        // Claude no elige modelo: usa el de Claude Code y aquí solo se fija su esfuerzo.
+        if (selectedRole === roles[2]) {
+          const efforts = [...CLAUDE_EFFORT, CLAUDE_DEFAULT];
+          const effort = await ctx.ui.select("Esfuerzo de Claude", efforts);
+          if (!effort) return;
+          saveClaudeEffort(packageRoot, effort === CLAUDE_DEFAULT ? null : effort);
+          ctx.ui.notify(`Claude: ${effort}. Se aplicará al próximo arranque de Claude.`, "info");
+          return;
+        }
         const role: Role | undefined = selectedRole === roles[0] ? "principal" : selectedRole === roles[1] ? "worker" : undefined;
         if (!role) return;
 

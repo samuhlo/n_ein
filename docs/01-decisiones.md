@@ -49,6 +49,8 @@ También eligió la marca **004 Panel** para launcher e instalador y pidió cons
 
 Después pidió que **CodeGraph sea obligatorio**, no opcional como en Ein: instalado por n_ein, iniciado y al día en cada proyecto y usado por los agentes. Se fija como Pi, con versión y SHA-256 en `runtime.json`. El lanzador crea o sincroniza el índice al abrir Pi o Claude, Pi lo consulta con la herramienta `codegraph_explore` (también el trabajador) y Claude con el MCP y el hook de prompt de su hogar aislado. Un fallo del índice avisa y no impide trabajar. [Diseño](02-diseno.md#codegraph-obligatorio).
 
+Sobre la paridad con Claude decidió: **sin delegación en Luna y sin selector de modelo**; Claude usa el modelo de Claude Code (hoy Opus 5.5). Sí lleva el TODO, en su barra de estado, y su **esfuerzo** se fija en `/models` y llega como `--effort`; sin ajuste decide Claude Code.
+
 ## Recomendaciones de diseño, revisables
 
 - Pi como runtime inicial; n_ein como capa pequeña: un paquete Pi (skills, extensiones mínimas, prompts, tema) más un launcher que fija el hogar aislado. Pi ya ofrece el aislamiento (`PI_CODING_AGENT_DIR`) y la carga de paquetes (`pi install`, `pi -e`).

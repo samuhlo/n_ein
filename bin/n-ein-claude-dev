@@ -49,20 +49,32 @@ trap 'rm -f "$handoff_signal"' EXIT
 export N_EIN_HANDOFF_SIGNAL="$handoff_signal"
 export N_EIN_ROOT="$repo_dir"
 claude_args=(--append-system-prompt "$persona")
+# [FLOW] Claude usa el modelo de Claude Code; de n_ein solo toma el esfuerzo, si Samu lo fijó en /models.
+runtime_values="$(bun "$repo_dir/pi-package/models.ts" "$repo_dir" "$channel")" || exit 64
+IFS=$'\t' read -r _pi_version _main_model _main_thinking _worker_model _worker_thinking claude_effort <<< "$runtime_values"
+if [[ -n "$claude_effort" && "$claude_effort" != "-" ]]; then
+  claude_args+=(--effort "$claude_effort")
+  export N_EIN_CLAUDE_EFFORT="$claude_effort"
+fi
+
 # [FLOW] CodeGraph obligatorio también en Claude: MCP para consultar y hook que adelanta contexto
-# en cada petición. Viajan por argumentos, así que ~/.claude y su MCP global no se tocan.
+# en cada petición. La barra de estado enseña el TODO de WORK.md, como el widget de Pi. Todo viaja
+# por argumentos, así que ~/.claude y su MCP global no se tocan.
 "$repo_dir/bin/n-ein-codegraph"
 codegraph_bin="$("$repo_dir/bin/n-ein-codegraph" --bin 2>/dev/null)"
 export DO_NOT_TRACK=1
-if [[ -n "$codegraph_bin" ]]; then
-  { IFS= read -r mcp_config && IFS= read -r codegraph_settings; } < <(bun -e '
-    const bin = process.argv[1];
-    const mcp = { mcpServers: { codegraph: { type: "stdio", command: bin, args: ["serve", "--mcp"], env: { DO_NOT_TRACK: "1" } } } };
-    const hooks = { hooks: { UserPromptSubmit: [{ hooks: [{ type: "command", command: JSON.stringify(bin) + " prompt-hook" }] }] } };
-    console.log(JSON.stringify(mcp) + "\n" + JSON.stringify(hooks));
-  ' "$codegraph_bin") || { printf '[ERR] :: CODEGRAPH_CONFIG :: reason: bun\n' >&2; exit 69; }
-  claude_args+=(--mcp-config "$mcp_config" --settings "$codegraph_settings")
-fi
+{ IFS= read -r mcp_config && IFS= read -r claude_settings; } < <(bun -e '
+  const [todo, bin] = process.argv.slice(1);
+  const settings = { statusLine: { type: "command", command: JSON.stringify(todo) + " --statusline", padding: 0 } };
+  let mcp = "";
+  if (bin) {
+    mcp = JSON.stringify({ mcpServers: { codegraph: { type: "stdio", command: bin, args: ["serve", "--mcp"], env: { DO_NOT_TRACK: "1" } } } });
+    settings.hooks = { UserPromptSubmit: [{ hooks: [{ type: "command", command: JSON.stringify(bin) + " prompt-hook" }] }] };
+  }
+  console.log(mcp + "\n" + JSON.stringify(settings));
+' "$repo_dir/bin/n-ein-todo" "$codegraph_bin") || { printf '[ERR] :: CLAUDE_SETTINGS :: reason: bun\n' >&2; exit 69; }
+if [[ -n "$mcp_config" ]]; then claude_args+=(--mcp-config "$mcp_config"); fi
+claude_args+=(--settings "$claude_settings")
 
 if [[ "${1:-}" == "--handoff" ]]; then
   if [[ $# -lt 2 || ! -f "$2" ]]; then

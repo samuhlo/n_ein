@@ -7,7 +7,7 @@
 | Pi y modelos alojados | Paquete aislado sobre Pi 0.87.1; Sol high y Luna high por suscripción. | Compatibilidad al actualizar Pi y medición de coste total en más tareas reales. |
 | Trabajador | Un mecanismo de proceso hijo Pi con cancelación y evidencias; [recorridos observados](../evals/results/2026-09-29-worker.md). | Coordinar procesos padre independientes en el mismo árbol si se necesita concurrencia. |
 | Corpus real | Samu escogió solo `planificador-didactico`; [regresión reproducida](../evals/results/2026-09-29-planificador.md) en copias aisladas. | Más casos representativos antes de generalizar ahorro o calidad. |
-| Documento y relevo | `WORK.md`, TODO y Pi↔Claude probados en TUI real. | Agentes de fondo y escritores padre independientes; Codex/OpenCode si se incorporan. |
+| Documento y relevo | `WORK.md`, TODO y Pi↔Claude probados en TUI real; Claude muestra el TODO en su barra de estado y recibe su esfuerzo de `/models`; por decisión de Samu no delega en Luna ni elige modelo. | Agentes de fondo y escritores padre independientes; Codex/OpenCode si se incorporan. |
 | Launcher e instalador | Go con Bubble Tea v2; paquete local, preview/estable, doctor, restore, cinco vistas, selector `/models`, hotfix local y primera release de mantenimiento desde `hotfix/model-selector`. | Actualización remota automática; Configuración del launcher muestra los ajustes y abre Pi para editarlos. |
 | Remoto, licencia propia y distribución | Repositorio público `samuhlo/n_ein` y primera preview en `.tar.gz`; sin licencia propia. | Decidir licencia y promoción estable después de uso supervisado. |
 | Modelo local | Objetivo posterior Qwen3.8-27B en 24 GB. | **Aplazado por Samu hasta que tenga la máquina**; no preparar servidor ni descargar pesos ahora. |
