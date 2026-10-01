@@ -64,12 +64,13 @@ function readSettings(path: string): Settings {
   return settings;
 }
 
-export function loadModels(packageRoot: string, requestedChannel?: string): EffectiveModels {
+export function loadModels(packageRoot: string, requestedChannel?: string, options: { ignoreSettings?: boolean } = {}): EffectiveModels {
   const defaults = JSON.parse(readFileSync(join(packageRoot, "runtime.json"), "utf8"));
   if (defaults.schema !== 1 || !/^\d+\.\d+\.\d+$/.test(defaults.pi?.version)
     || !validChoice(defaults.pi) || !validChoice(defaults.worker)) throw new Error("runtime.json inválido");
   const path = modelsPath(packageRoot, requestedChannel);
-  const settings = readSettings(path);
+  // ignoreSettings da los valores del paquete: el panel los enseña como referencia al restablecer.
+  const settings: Settings = options.ignoreSettings ? { schema: 1, agents: {} } : readSettings(path);
   return {
     version: defaults.pi.version,
     principal: settings.agents.principal ?? { model: defaults.pi.model, thinking: defaults.pi.thinking },

@@ -461,7 +461,7 @@ func loadState(root, project string) appState {
 			{"principal", principalValue, piModelSource, ""},
 			{"trabajador", workerValue, workerModelSource, ""},
 			claudeRow(config.Claude.Effort, modelError),
-			{"editar", "abrir Pi y usar /models", "Pi", piAction},
+			{"editar", "abrir Pi y usar /nein:models", "Pi", piAction},
 			{"idioma", "español", "persona.md", ""}, {"canal", channel, ".n-ein-channel", ""},
 		}},
 		{3, "SESIONES", sessionRows},

@@ -41,6 +41,14 @@ func TestPanelSettlesOnWordmark(t *testing.T) {
 	if !strings.Contains(strings.Join(final, "\n"), "▀▀▀▀▀") {
 		t.Fatalf("el Panel asentado no dibuja el guion bajo:\n%s", strings.Join(final, "\n"))
 	}
+	// El mismo fotograma lo comprueba el Panel de TypeScript (tests/brand.ts): es el contrato entre lenguajes.
+	fixture, err := os.ReadFile(filepath.Join("..", "..", "..", "tests", "fixtures", "panel-final.txt"))
+	if err != nil {
+		t.Fatal(err)
+	}
+	if strings.Join(final, "\n")+"\n" != string(fixture) {
+		t.Fatalf("el Panel de Go no coincide con tests/fixtures/panel-final.txt")
+	}
 	if strings.Join(mono.Large(0), "") != "" {
 		t.Fatal("en t=0 no debería haber palas")
 	}

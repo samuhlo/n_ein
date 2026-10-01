@@ -41,7 +41,18 @@ if [[ "${N_EIN_WORKER_CHILD:-0}" != 1 ]]; then "$repo_dir/bin/n-ein-codegraph"; 
 N_EIN_CODEGRAPH_BIN="$("$repo_dir/bin/n-ein-codegraph" --bin 2>/dev/null)"
 if [[ -n "$N_EIN_CODEGRAPH_BIN" ]]; then export N_EIN_CODEGRAPH_BIN; else unset N_EIN_CODEGRAPH_BIN; fi
 export DO_NOT_TRACK=1
+# n_ein fija la versión de Pi y la actualiza con su propio instalador: el aviso de `pi update` confundiría.
+export PI_SKIP_VERSION_CHECK=1
 export PI_CODING_AGENT_DIR="$agent_dir"
+# BLINDAJE -> El banner de n_ein sustituye al listado de arranque de Pi; si Samu fijó quietStartup, se respeta.
+if [[ "${N_EIN_WORKER_CHILD:-0}" != 1 ]]; then
+  bun -e '
+    const path = process.argv[1];
+    const file = Bun.file(path);
+    const settings = (await file.exists()) ? await file.json() : {};
+    if (!("quietStartup" in settings)) await Bun.write(path, JSON.stringify({ ...settings, quietStartup: true }, null, 2) + "\n");
+  ' "$agent_dir/settings.json" 2>/dev/null || printf '[WARN] :: SETTINGS_SKIP :: path: %s\n' "$agent_dir/settings.json" >&2
+fi
 export PI_CODING_AGENT_SESSION_DIR="$agent_dir/sessions"
 handoff_signal="$(mktemp "${TMPDIR:-/tmp}/n-ein-handoff.XXXXXX")"
 trap 'rm -f "$handoff_signal"' EXIT

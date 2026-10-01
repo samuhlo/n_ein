@@ -1,75 +1,98 @@
 // =============================================================================
-// [UI] SELECTOR DE MODELOS
-// Un recorrido para el principal y el trabajador; Pi aporta el catálogo real.
+// [UI] SELECTOR DE MODELOS — /nein:models
+// Abre el panel de roles sobre la conversación. Pi aporta el catálogo real y
+// lo elegido se guarda en models.json del canal, fuera del código instalado.
 // =============================================================================
 
 import { fileURLToPath } from "node:url";
 import { dirname, resolve } from "node:path";
-import type { ExtensionAPI } from "@earendil-works/pi-coding-agent";
-import { CLAUDE_EFFORT, loadModels, saveClaudeEffort, saveModelChoice, type Role } from "../models.ts";
+import type { ExtensionAPI, ExtensionContext } from "@earendil-works/pi-coding-agent";
+import { loadModels, saveClaudeEffort, saveModelChoice } from "../models.ts";
+import { painter } from "./brand.ts";
+import { ModelsPanel, type Draft, type ModelChoice, type PanelKit, type PanelResult } from "./models-panel.ts";
 
 const packageRoot = resolve(dirname(fileURLToPath(import.meta.url)), "../..");
-const DEFAULT = "Restablecer valor del paquete";
-const CLAUDE_DEFAULT = "Por defecto de Claude Code";
-const CUSTOM = "Id de modelo personalizado…";
-const THINKING = ["off", "minimal", "low", "medium", "high", "xhigh", "max"];
+
+function savedDraft(): { saved: Draft; defaults: { principal: ModelChoice; worker: ModelChoice } } {
+  const effective = loadModels(packageRoot);
+  const fromPackage = loadModels(packageRoot, undefined, { ignoreSettings: true });
+  return {
+    saved: {
+      principal: effective.overridden.includes("principal") ? effective.principal : null,
+      worker: effective.overridden.includes("worker") ? effective.worker : null,
+      claude: effective.claudeEffort,
+    },
+    defaults: { principal: fromPackage.principal, worker: fromPackage.worker },
+  };
+}
+
+function persist(saved: Draft, draft: Draft): string[] {
+  const applied: string[] = [];
+  for (const role of ["principal", "worker"] as const) {
+    if (JSON.stringify(saved[role]) === JSON.stringify(draft[role])) continue;
+    saveModelChoice(packageRoot, role, draft[role]);
+    const value = draft[role] ? `${draft[role]!.model} · ${draft[role]!.thinking}` : "valor del paquete";
+    applied.push(role === "principal" ? `principal: ${value} (reinicia Pi)` : `trabajador: ${value} (próximo encargo)`);
+  }
+  if (saved.claude !== draft.claude) {
+    saveClaudeEffort(packageRoot, draft.claude);
+    applied.push(`claude: ${draft.claude ?? "esfuerzo por defecto"} (al abrir Claude)`);
+  }
+  return applied;
+}
+
+export async function openModels(ctx: ExtensionContext, kit: PanelKit): Promise<void> {
+  if (!ctx.hasUI) {
+    ctx.ui.notify("Abre la TUI de Pi para usar /nein:models.", "warning");
+    return;
+  }
+  let state;
+  try {
+    state = savedDraft();
+  } catch (error) {
+    ctx.ui.notify(`[ERR] :: MODELS_BAD :: reason: ${error instanceof Error ? error.message : String(error)}`, "warning");
+    return;
+  }
+  const models = (await ctx.modelRegistry.getAvailable())
+    .map((model) => `${model.provider}/${model.id}`)
+    .sort((left, right) => left.localeCompare(right));
+  if (models.length === 0) ctx.ui.notify("Catálogo vacío en este hogar de Pi; /login lo habilita.", "warning");
+
+  let draft: Draft = { ...state.saved };
+  // El id personalizado necesita el input nativo de Pi: el panel se cierra, se pregunta y se reabre con el borrador.
+  while (true) {
+    const result = await ctx.ui.custom<PanelResult>(
+      (tui, _theme, _keybindings, done) => new ModelsPanel(draft, state.defaults, state.saved, models, kit, painter(), done, () => tui.requestRender()),
+      { overlay: true, overlayOptions: { anchor: "center", width: "80%", minWidth: 70, maxHeight: "85%" } },
+    );
+    if (result.kind === "cancel") return;
+    if (result.kind === "custom") {
+      draft = result.draft;
+      const model = (await ctx.ui.input("Id proveedor/modelo"))?.trim();
+      if (model) {
+        const current = draft[result.role] ?? state.defaults[result.role];
+        draft = { ...draft, [result.role]: { model, thinking: current.thinking } };
+      }
+      continue;
+    }
+    try {
+      const applied = persist(state.saved, result.draft);
+      ctx.ui.notify(applied.length ? applied.join("\n") : "Sin cambios.", "info");
+    } catch (error) {
+      ctx.ui.notify(`[ERR] :: MODELS_BAD :: reason: ${error instanceof Error ? error.message : String(error)}`, "warning");
+    }
+    return;
+  }
+}
 
 export default function (pi: ExtensionAPI) {
   if (process.env.N_EIN_WORKER_CHILD === "1") return;
 
-  pi.registerCommand("models", {
-    description: "Seleccionar modelo y esfuerzo del principal o del trabajador, y el esfuerzo de Claude",
+  pi.registerCommand("nein:models", {
+    description: "Modelo y esfuerzo del principal y del trabajador, y esfuerzo de Claude",
     handler: async (_args, ctx) => {
-      if (!ctx.hasUI) {
-        ctx.ui.notify("Abre la TUI de Pi para usar /models.", "warning");
-        return;
-      }
-      try {
-        const current = loadModels(packageRoot);
-        const roles = [
-          `Principal · ${current.principal.model} · ${current.principal.thinking}`,
-          `Trabajador · ${current.worker.model} · ${current.worker.thinking}`,
-          `Claude · modelo de Claude Code · ${current.claudeEffort ?? "esfuerzo por defecto"}`,
-        ];
-        const selectedRole = await ctx.ui.select("Configurar modelo", roles);
-        // Claude no elige modelo: usa el de Claude Code y aquí solo se fija su esfuerzo.
-        if (selectedRole === roles[2]) {
-          const efforts = [...CLAUDE_EFFORT, CLAUDE_DEFAULT];
-          const effort = await ctx.ui.select("Esfuerzo de Claude", efforts);
-          if (!effort) return;
-          saveClaudeEffort(packageRoot, effort === CLAUDE_DEFAULT ? null : effort);
-          ctx.ui.notify(`Claude: ${effort}. Se aplicará al próximo arranque de Claude.`, "info");
-          return;
-        }
-        const role: Role | undefined = selectedRole === roles[0] ? "principal" : selectedRole === roles[1] ? "worker" : undefined;
-        if (!role) return;
-
-        const active = current[role];
-        const available = (await ctx.modelRegistry.getAvailable())
-          .map((model) => `${model.provider}/${model.id}`)
-          .sort((left, right) => left.localeCompare(right));
-        if (available.length === 0) ctx.ui.notify("Catálogo vacío en este hogar de Pi; /login lo habilita.", "warning");
-        const models = [...new Set([active.model, ...available]), CUSTOM, DEFAULT];
-        const selectedModel = await ctx.ui.select(`Modelo de ${role}`, models);
-        if (!selectedModel) return;
-        if (selectedModel === DEFAULT) {
-          saveModelChoice(packageRoot, role, null);
-          ctx.ui.notify(`${role}: se aplicará el valor del paquete en la próxima sesión o delegación.`, "info");
-          return;
-        }
-        const model = selectedModel === CUSTOM
-          ? (await ctx.ui.input("Id proveedor/modelo"))?.trim()
-          : selectedModel;
-        if (!model) return;
-        const effortOptions = [active.thinking, ...THINKING.filter((level) => level !== active.thinking)];
-        const thinking = await ctx.ui.select(`Esfuerzo de ${role}`, effortOptions);
-        if (!thinking) return;
-        saveModelChoice(packageRoot, role, { model, thinking });
-        const when = role === "principal" ? "Reinicia Pi para aplicarlo." : "Se aplicará al próximo encargo delegado.";
-        ctx.ui.notify(`${role}: ${model} · ${thinking}. ${when}`, "info");
-      } catch (error) {
-        ctx.ui.notify(`[ERR] :: MODELS_BAD :: reason: ${error instanceof Error ? error.message : String(error)}`, "warning");
-      }
+      const { matchesKey, truncateToWidth, visibleWidth } = await import("@earendil-works/pi-tui");
+      await openModels(ctx, { matchesKey: (data, key) => matchesKey(data, key as never), truncateToWidth, visibleWidth });
     },
   });
 }

@@ -3,7 +3,8 @@ import { chmodSync, mkdtempSync, readFileSync, rmSync, statSync, writeFileSync }
 import { tmpdir } from "node:os";
 import { join, resolve } from "node:path";
 import { loadModels, saveClaudeEffort, saveModelChoice } from "../pi-package/models.ts";
-import registerModels from "../pi-package/extensions/models.ts";
+import registerModels, { openModels } from "../pi-package/extensions/models.ts";
+import { visible } from "../pi-package/extensions/brand.ts";
 import registerWorker from "../pi-package/extensions/worker.ts";
 
 const root = resolve(import.meta.dir, "..");
@@ -26,11 +27,16 @@ try {
   assert.equal(defaults.overridden.length, 0);
   assert.equal(defaults.claudeEffort, null, "Sin ajuste, el esfuerzo de Claude lo decide Claude Code");
 
-  let modelsCommand: any;
-  registerModels({ registerCommand(_name: string, value: any) { modelsCommand = value; } } as any);
-  assert.ok(modelsCommand, "/models no se registró");
-  const choices = ["Principal", "openai-codex/gpt-6-luna", "medium", "Trabajador", "openai-codex/gpt-6-sol", "high", "Claude", "xhigh", "Claude", "Por defecto de Claude Code"];
+  let registered: string | undefined;
+  registerModels({ registerCommand(name: string) { registered = name; } } as any);
+  assert.equal(registered, "nein:models", "el selector vive en /nein:models");
+
+  // Teclas crudas como las manda la terminal; el kit falso hace de pi-tui.
+  const KEYS: Record<string, string> = { up: "\x1b[A", down: "\x1b[B", enter: "\r", escape: "\x1b", "ctrl+s": "\x13", backspace: "\x7f" };
+  const kit = { matchesKey: (data: string, key: string) => KEYS[key] === data, truncateToWidth: (text: string) => text, visibleWidth: visible };
   const notices: string[] = [];
+  const renders: string[] = [];
+  let sessions: string[][] = [];
   const ctx = {
     hasUI: true,
     modelRegistry: { async getAvailable() { return [
@@ -38,30 +44,51 @@ try {
       { provider: "openai-codex", id: "gpt-6-luna" },
     ]; } },
     ui: {
-      async select(_title: string, options: string[]) {
-        const wanted = choices.shift();
-        const selected = options.find((value) => value === wanted || value.startsWith(wanted ?? "\u0000"));
-        assert.ok(selected, `opción ausente: ${wanted}`);
-        return selected;
+      async custom(factory: any) {
+        const keys = sessions.shift() ?? [];
+        return await new Promise((resolveResult) => {
+          const panel = factory({ requestRender() {} }, {}, {}, resolveResult);
+          for (const data of keys) { panel.handleInput(data); renders.push(panel.render(100).join("\n").replace(/\x1b\[[0-9;]*m/g, "")); }
+        });
       },
+      async input() { return "openai-codex/gpt-7-prueba"; },
       notify(message: string) { notices.push(message); },
     },
   } as any;
-  await modelsCommand.handler("", ctx);
-  await modelsCommand.handler("", ctx);
-  await modelsCommand.handler("", ctx);
-  assert.equal(loadModels(root).claudeEffort, "xhigh");
-  const cli = Bun.spawnSync(["bun", join(root, "pi-package/models.ts"), root, "dev"], { env: process.env }).stdout.toString().trim().split("\t");
-  assert.equal(cli[5], "xhigh", "los lanzadores leen el esfuerzo de Claude como sexto campo");
-  await modelsCommand.handler("", ctx);
-  assert.equal(loadModels(root).claudeEffort, null);
-  assert.throws(() => saveClaudeEffort(root, "minimal"), /esfuerzo de Claude inválido/);
+  const type = (text: string) => [...text];
+
+  // Principal: buscar luna y subir esfuerzo; trabajador: sol; claude: dos pasos (por defecto → low → medium).
+  sessions = [[KEYS.enter, ...type("luna"), KEYS.enter, "e", KEYS.down, KEYS.enter, ...type("sol"), KEYS.enter, KEYS.down, "e", "e", KEYS["ctrl+s"]]];
+  await openModels(ctx, kit);
   let effective = loadModels(root);
-  assert.deepEqual(effective.principal, { model: "openai-codex/gpt-6-luna", thinking: "medium" });
+  assert.deepEqual(effective.principal, { model: "openai-codex/gpt-6-luna", thinking: "xhigh" });
   assert.deepEqual(effective.worker, { model: "openai-codex/gpt-6-sol", thinking: "high" });
+  assert.equal(effective.claudeEffort, "medium");
   assert.equal(statSync(modelsFile).mode & 0o777, 0o600);
-  assert.ok(notices.some((item) => item.includes("Reinicia Pi")));
-  assert.ok(notices.some((item) => item.includes("próximo encargo")));
+  assert.ok(notices.some((item) => item.includes("reinicia Pi")) && notices.some((item) => item.includes("próximo encargo")) && notices.some((item) => item.includes("al abrir Claude")));
+  assert.ok(renders.some((frame) => frame.includes("// 000  MODELOS") && frame.includes("trabajador") && frame.includes("•")), "la tabla marca lo pendiente");
+  assert.ok(renders.some((frame) => frame.includes("// 001  MODELO") && frame.includes("buscar  luna")), "el buscador filtra lo tecleado");
+  const cli = Bun.spawnSync(["bun", join(root, "pi-package/models.ts"), root, "dev"], { env: process.env }).stdout.toString().trim().split("\t");
+  assert.equal(cli[5], "medium", "los lanzadores leen el esfuerzo de Claude como sexto campo");
+
+  // Cancelar no escribe nada.
+  sessions = [["e", KEYS.escape]];
+  await openModels(ctx, kit);
+  assert.deepEqual(loadModels(root).principal, { model: "openai-codex/gpt-6-luna", thinking: "xhigh" });
+
+  // Id personalizado: el panel cierra, pregunta con el input de Pi y vuelve con el borrador.
+  sessions = [[KEYS.down, KEYS.enter, ...type("personalizado"), KEYS.enter], [KEYS["ctrl+s"]]];
+  await openModels(ctx, kit);
+  assert.deepEqual(loadModels(root).worker, { model: "openai-codex/gpt-7-prueba", thinking: "high" });
+
+  // r devuelve el principal al paquete y claude a su valor por defecto.
+  sessions = [["r", KEYS.down, KEYS.down, "r", KEYS["ctrl+s"]]];
+  await openModels(ctx, kit);
+  effective = loadModels(root);
+  assert.deepEqual(effective.principal, { model: "openai-codex/gpt-6-sol", thinking: "high" });
+  assert.equal(effective.claudeEffort, null);
+  assert.throws(() => saveClaudeEffort(root, "minimal"), /esfuerzo de Claude inválido/);
+  saveModelChoice(root, "worker", { model: "openai-codex/gpt-6-sol", thinking: "high" });
 
   const fakePi = join(temp, "pi");
   writeFileSync(fakePi, [
@@ -85,14 +112,10 @@ try {
   assert.match(args, /openai-codex\/gpt-6-sol/);
   assert.ok(args.lastIndexOf("openai-codex/gpt-6-sol") > args.indexOf("openai-codex/gpt-6-luna"), "el modelo delegado debe prevalecer");
 
-  saveModelChoice(root, "principal", null);
-  effective = loadModels(root);
-  assert.equal(effective.principal.model, "openai-codex/gpt-6-sol");
-  assert.equal(effective.worker.model, "openai-codex/gpt-6-sol");
   assert.throws(() => saveModelChoice(root, "worker", { model: "bad model", thinking: "high" }));
   writeFileSync(modelsFile, '{"schema":1,"agents":{"worker":{"model":"bad model","thinking":"high"}}}');
   assert.throws(() => loadModels(root), /models.json inválido/);
-  console.log("models: selector, persistencia por rol, worker efectivo y esfuerzo de Claude");
+  console.log("models: panel /nein:models, persistencia por rol, worker efectivo y esfuerzo de Claude");
 } finally {
   for (const [key, env] of [["N_EIN_MODELS_FILE", previous.file], ["N_EIN_CHANNEL", previous.channel],
     ["N_EIN_PI_BIN", previous.pi], ["N_EIN_AGENT_DIR", previous.home], ["N_EIN_CAPTURE", previous.capture]] as const) {

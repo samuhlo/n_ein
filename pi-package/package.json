@@ -4,6 +4,7 @@
   "private": true,
   "pi": {
     "extensions": [
+      "./extensions/banner.ts",
       "./extensions/worker.ts",
       "./extensions/todo.ts",
       "./extensions/handoff.ts",
@@ -19,6 +20,7 @@
   },
   "peerDependencies": {
     "@earendil-works/pi-coding-agent": "*",
-    "typebox": "*"
+    "typebox": "*",
+    "@earendil-works/pi-tui": "*"
   }
 }

@@ -188,7 +188,11 @@ El contrato visual es [STYLE.md de Ein](archive/ein-workspace/runtime/docs/STYLE
 
 El contrato pide diseño plano, una sola aparición animada y nada de animaciones en bucle. Si se quieren más «virguerías» en la TUI, se revisa el contrato explícitamente; si no, van en maquetación adaptable, transiciones y la marca.
 
-**Marca 004 Panel** (elegida el 1 de octubre entre [seis propuestas](https://claude.ai/artifact/WJrNM4HQfxjxYGSA1nmL6x)): un tablero de estación cuyas palas giran hasta asentarse en `n_ein`, de izquierda a derecha, en 2,2 s; el amarillo es solo la pala del `_`. Es la excepción aceptada a «sin fondos de tarjeta» de STYLE: las palas llevan dos tonos (`#1A1A1A`/`#141414`), solo dentro de la marca. Tamaño grande (39 × 6 celdas, letras en medios bloques) en la portada del launcher; pequeño (19 × 3) en el instalador; una pala girando como indicador de trabajo. Fuente única en `go/internal/brand`, cuyo test la compara con `brand.json`. Sin TTY o con `NO_COLOR` se pinta el último fotograma en monocromo.
+**Marca 004 Panel** (elegida el 1 de octubre entre [seis propuestas](https://claude.ai/artifact/WJrNM4HQfxjxYGSA1nmL6x)): un tablero de estación cuyas palas giran hasta asentarse en `n_ein`, de izquierda a derecha, en 2,2 s; el amarillo es solo la pala del `_`. Es la excepción aceptada a «sin fondos de tarjeta» de STYLE: las palas llevan dos tonos (`#1A1A1A`/`#141414`), solo dentro de la marca. Tamaño grande (39 × 6 celdas, letras en medios bloques) en la portada del launcher y en la cabecera de Pi; pequeño (19 × 3) en el instalador; una pala girando como indicador de trabajo. Go (`go/internal/brand`) y TypeScript (`pi-package/extensions/brand.ts`) la dibujan por separado y sus tests comparan el fotograma final con `tests/fixtures/panel-final.txt`.
+
+**Banner de Pi.** Como el de Ein: la marca abre la sesión y debajo entra en cascada el estado, ordenado por volatilidad (rama y cambios, índice, tarea de `WORK.md`, modelos) y una línea de comandos. El lanzador activa `quietStartup` en el hogar aislado si Samu no lo fijó, para que el listado de recursos de Pi no empuje la marca fuera de pantalla; por debajo de 36 filas el Panel cede al wordmark y el estado pierde los respiros. `PI_SKIP_VERSION_CHECK` evita el aviso de `pi update`: la versión de Pi la fija n_ein.
+
+**`/nein:models`.** Panel superpuesto con la tabla de roles, como el de Ein: enter busca modelo en el catálogo, `e` cicla el esfuerzo, `r` vuelve al paquete, `•` marca lo pendiente y nada se escribe hasta guardar. Claude es una fila de solo esfuerzo. Sin TTY o con `NO_COLOR` se pinta el último fotograma en monocromo.
 
 ### Comentarios de código y logs
 
@@ -247,7 +251,7 @@ Se conservan como producto. Se portan sus **comportamientos** (como casos de ace
 | Vista | En Ein | En n_ein |
 |---|---|---|
 | Estado | proyecto, fase OpenSpec, verificación, git | proyecto, documento de trabajo y su checklist, git, última comprobación y si sigue vigente |
-| Configuración | modo, TDD, Hypa, CodeGraph, persona | modelo y esfuerzo efectivos del principal y del trabajador; `/models` en Pi los edita por canal |
+| Configuración | modo, TDD, Hypa, CodeGraph, persona | modelo y esfuerzo efectivos del principal y del trabajador; `/nein:models` en Pi los edita por canal, más el esfuerzo de Claude |
 | Sesiones | recientes con la última petición | recientes de todos los runtimes declarados |
 | Sistema | actualizaciones y diagnóstico | igual |
 | Runtime | elegir Pi o Claude y lanzar | es la **portada**: marca, contexto y menú Pi (`p`), Claude Code (`c`), Codex sin adaptador, sesiones (`s`) y estado (`e`) |
