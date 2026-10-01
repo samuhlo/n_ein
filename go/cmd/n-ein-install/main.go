@@ -12,6 +12,8 @@ import (
 	"path/filepath"
 	"strings"
 	"time"
+
+	"n_ein/internal/layout"
 )
 
 func main() {
@@ -28,10 +30,10 @@ func main() {
 
 func run(args []string, output io.Writer, self string) error {
 	if len(args) == 0 {
-		return fmt.Errorf("uso: n-ein-install <package|install|update|doctor|restore|uninstall> [flags]")
+		return fmt.Errorf("uso: n-ein-install <package|runtime|install|update|doctor|activate|restore|uninstall> [flags]")
 	}
 	verb := args[0]
-	if verb != "package" && verb != "install" && verb != "update" && verb != "doctor" && verb != "restore" && verb != "uninstall" {
+	if verb != "package" && verb != "runtime" && verb != "install" && verb != "update" && verb != "doctor" && verb != "activate" && verb != "restore" && verb != "uninstall" {
 		return fmt.Errorf("verbo desconocido: %s", verb)
 	}
 
@@ -69,12 +71,19 @@ func run(args []string, output io.Writer, self string) error {
 		}
 		return packageArtifact(absSource, absOutput, self, *dryRun, output)
 	}
-	if *target == "" {
-		home, err := os.UserHomeDir()
+	if verb == "runtime" {
+		absSource, err := filepath.Abs(*source)
 		if err != nil {
 			return err
 		}
-		*target = filepath.Join(home, ".n_ein", "installations", *channel)
+		return installPiRuntime(absSource, *dryRun, output)
+	}
+	if *target == "" {
+		managed, err := layout.Installation(*channel)
+		if err != nil {
+			return err
+		}
+		*target = managed
 	}
 	absTarget, err := filepath.Abs(*target)
 	if err != nil {
@@ -112,6 +121,8 @@ func run(args []string, output io.Writer, self string) error {
 			return checkRuntime(absTarget, output)
 		}
 		return nil
+	case "activate":
+		return activateLauncher(absTarget, *channel, *dryRun, output)
 	case "restore":
 		return restore(absTarget, *dryRun, output)
 	default:
@@ -139,7 +150,10 @@ func checkRuntime(root string, output io.Writer) error {
 	}
 	piBin := os.Getenv("N_EIN_PI_BIN")
 	if piBin == "" {
-		piBin = "pi"
+		piBin, err = layout.PiBinary(config.Pi.Version)
+		if err != nil {
+			return err
+		}
 	}
 	piPath, err := exec.LookPath(piBin)
 	if err != nil {

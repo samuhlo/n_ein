@@ -18,8 +18,18 @@ case "$(uname -s)-$(uname -m)" in
 esac
 go_bin="$(command -v go || true)"
 if [[ -z "$go_bin" ]]; then go_bin="$HOME/.n_ein/dev/toolchain/go1.27.1/go/bin/go"; fi
-if [[ ! -x "$go_bin" ]] || ! command -v bun >/dev/null 2>&1 || ! command -v pi >/dev/null 2>&1 || ! command -v rg >/dev/null 2>&1; then
-  printf '[ERR] :: BUILD_DEPS :: required: Go 1.27.1, Bun, Pi 0.87.1 and ripgrep\n' >&2
+if [[ ! -x "$go_bin" ]] || ! command -v bun >/dev/null 2>&1 || ! command -v rg >/dev/null 2>&1; then
+  printf '[ERR] :: BUILD_DEPS :: required: Go 1.27.1, Bun and ripgrep\n' >&2
+  exit 69
+fi
+expected_pi_version="$(bun -e 'const c=await Bun.file(process.argv[1]).json(); console.log(c.pi.version)' "$repo_dir/runtime.json")"
+managed_pi="${N_EIN_HOME:-$HOME/.n_ein}/runtimes/pi/$expected_pi_version/bin/pi"
+if [[ -z "${N_EIN_PI_BIN:-}" ]]; then
+  if [[ -x "$managed_pi" ]]; then export N_EIN_PI_BIN="$managed_pi"
+  else export N_EIN_PI_BIN="$(command -v pi || true)"; fi
+fi
+if [[ ! -x "$N_EIN_PI_BIN" || "$("$N_EIN_PI_BIN" --version)" != "$expected_pi_version" ]]; then
+  printf '[ERR] :: BUILD_DEPS :: required: Pi %s\n' "$expected_pi_version" >&2
   exit 69
 fi
 

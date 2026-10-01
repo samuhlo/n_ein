@@ -3,3 +3,4 @@ node_modules/
 dist/
 .n_ein/
 *.log
+.codegraph/

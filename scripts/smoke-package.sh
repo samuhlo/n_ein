@@ -24,6 +24,13 @@ test ! -e "$candidate/node_modules"
 rg -q 'openai-codex/gpt-6-sol' "$test_dir/config-view"
 rg -q 'openai-codex/gpt-6-luna' "$test_dir/config-view"
 rg -q 'preview' "$test_dir/config-view"
+N_EIN_HOME="$test_dir" N_EIN_LINK_DIR="$test_dir/local-bin" \
+  "$target/bin/n-ein-install" activate --target "$target" --channel preview --dry-run > "$test_dir/activate-plan"
+test ! -e "$test_dir/local-bin/nein"
+N_EIN_HOME="$test_dir" N_EIN_LINK_DIR="$test_dir/local-bin" \
+  "$target/bin/n-ein-install" activate --target "$target" --channel preview > "$test_dir/activate"
+N_EIN_HOME="$test_dir" N_EIN_CHANNEL=dev "$test_dir/local-bin/nein" --project "$project" --view configuracion --once > "$test_dir/nein-view"
+rg -q 'preview' "$test_dir/nein-view"
 
 cat > "$test_dir/pi" <<'FAKE_PI'
 #!/usr/bin/env bash

@@ -1,0 +1,23 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+# [FLOW] ENTRADA DEL LAUNCHER
+# El enlace en PATH apunta aquí; todo el código real queda en el hogar n_ein.
+# El canal sale de la instalación enlazada, no del entorno: una sesión dev exporta N_EIN_CHANNEL=dev.
+self="${BASH_SOURCE[0]}"
+while [[ -L "$self" ]]; do
+  link="$(readlink "$self")"
+  case "$link" in /*) self="$link" ;; *) self="$(dirname "$self")/$link" ;; esac
+done
+package_root="$(cd "$(dirname "$self")/.." && pwd -P)"
+channel=""
+if [[ -f "$package_root/.n-ein-channel" ]]; then IFS= read -r channel < "$package_root/.n-ein-channel"; fi
+case "$channel" in
+  preview|stable) ;;
+  *) printf '[ERR] :: INSTALL_MISSING :: path: %s\n' "$package_root" >&2; exit 69 ;;
+esac
+if [[ ! -x "$package_root/bin/n-ein" ]]; then
+  printf '[ERR] :: INSTALL_MISSING :: channel: %s | path: %s\n' "$channel" "$package_root" >&2
+  exit 69
+fi
+exec "$package_root/bin/n-ein" --root "$package_root" "$@"

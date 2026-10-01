@@ -42,6 +42,20 @@ La primera instalación es local y acotada: un lanzador de shell que exporta `PI
 
 El instalador es un binario Go separado del launcher, con `package`, `install`, `update`, `doctor`, `restore` y `uninstall` comprobados en destinos temporales ([evidencia](../evals/results/2026-09-29-installer.md)). `doctor` valida el paquete; `doctor --runtime` añade presencia de Bun y versión de Pi, pero no confirma autenticación ni acceso al modelo. Se reescribió a partir de los comportamientos útiles de Ein, sin portar sus migraciones SDD. La primera distribución usa `.tar.gz` por plataforma con SHA-256; script o brew siguen pendientes.
 
+### Hogar gestionado y entrada `nein`
+
+```
+~/.n_ein/
+  bin/nein                    → installations/<canal>/bin/nein
+  installations/<canal>/      código gestionado (reemplazable por update/restore)
+  runtimes/pi/<versión>/      Pi fijado, instalado con Bun en directorios propios
+  cache/bun/                  caché de esas instalaciones
+  <canal>/                    pi-agent, claude, models.json: datos del usuario
+~/.local/bin/nein             → ~/.n_ein/bin/nein
+```
+
+`n-ein-install runtime` instala la versión de Pi de `runtime.json` con `BUN_INSTALL_GLOBAL_DIR`/`BUN_INSTALL_BIN` en un directorio temporal del propio hogar, comprueba paquete, marcador y `pi --version`, y solo entonces lo mueve a su sitio; si ya existe uno dañado con marcador propio, lo respalda antes. Rechaza destinos que salgan del hogar por un enlace. `activate` crea la cadena de enlaces solo hacia una instalación gestionada y no sustituye un `nein` ajeno. `bin/nein-setup`, incluido en el paquete, encadena runtime, install/update, activate y `doctor --runtime`; con `--dry-run` no escribe. `nein` deduce el canal de la instalación enlazada, no del entorno. Launcher, `doctor` y los scripts usan el Pi gestionado salvo que `N_EIN_PI_BIN` indique otro; `check.sh` y `build-preview.sh` recurren al `pi` del PATH si no hay runtime gestionado, como en CI. `N_EIN_HOME` y `N_EIN_LINK_DIR` permiten ensayar todo en un directorio temporal. Un runtime nuevo, como Codex, ocuparía `runtimes/<nombre>/<versión>` cuando exista su adaptador.
+
 Update se prepara antes de reemplazar la versión activa, comprueba el resultado y conserva una recuperación entendible. `install` y `update` rechazan un destino existente sin marcador y manifest de n_ein, incluso en dry-run; no impiden reparar una instalación identificada con archivos dañados. Dry-run no debe mutar. Un fallo deja identificable qué versión y datos quedaron. Desinstalación separa código gestionado, configuración propia y datos del usuario.
 
 ## CI proporcional

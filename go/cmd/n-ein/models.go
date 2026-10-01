@@ -7,6 +7,8 @@ import (
 	"os"
 	"path/filepath"
 	"regexp"
+
+	"n_ein/internal/layout"
 )
 
 type modelSelection struct {
@@ -32,11 +34,11 @@ func validModelSelection(value modelSelection) bool {
 func applyModelSelections(config runtimeConfig, channel string) (runtimeConfig, string, string, error) {
 	path := os.Getenv("N_EIN_MODELS_FILE")
 	if path == "" {
-		home, err := os.UserHomeDir()
+		home, err := layout.Root()
 		if err != nil {
 			return config, "runtime.json", "runtime.json", err
 		}
-		path = filepath.Join(home, ".n_ein", channel, "models.json")
+		path = filepath.Join(home, channel, "models.json")
 	}
 	data, err := os.ReadFile(path)
 	if errors.Is(err, os.ErrNotExist) {

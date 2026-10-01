@@ -4,8 +4,18 @@ set -euo pipefail
 repo_dir="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd -P)"
 cd "$repo_dir"
 
-if ! command -v bun >/dev/null 2>&1 || ! command -v pi >/dev/null 2>&1; then
-  printf '[ERR] :: CHECK_DEPS :: required: Bun and Pi 0.87.1\n' >&2
+if ! command -v bun >/dev/null 2>&1; then
+  printf '[ERR] :: CHECK_DEPS :: required: Bun\n' >&2
+  exit 69
+fi
+expected_pi_version="$(bun -e 'const c=await Bun.file(process.argv[1]).json(); console.log(c.pi.version)' "$repo_dir/runtime.json")"
+managed_pi="${N_EIN_HOME:-$HOME/.n_ein}/runtimes/pi/$expected_pi_version/bin/pi"
+if [[ -z "${N_EIN_PI_BIN:-}" ]]; then
+  if [[ -x "$managed_pi" ]]; then export N_EIN_PI_BIN="$managed_pi"
+  else export N_EIN_PI_BIN="$(command -v pi || true)"; fi
+fi
+if [[ ! -x "$N_EIN_PI_BIN" || "$("$N_EIN_PI_BIN" --version)" != "$expected_pi_version" ]]; then
+  printf '[ERR] :: CHECK_DEPS :: required: Pi %s\n' "$expected_pi_version" >&2
   exit 69
 fi
 go_bin="$(command -v go || true)"
@@ -19,7 +29,7 @@ export GOMODCACHE="$HOME/.n_ein/dev/go-cache/mod"
 export GOCACHE="$HOME/.n_ein/dev/go-cache/build"
 export GOPATH="$HOME/.n_ein/dev/go-cache/path"
 
-bash -n bin/n-ein-dev bin/n-ein-claude-dev bin/n-ein-prepare-pi scripts/check.sh scripts/smoke-package.sh scripts/build-preview.sh scripts/hotfix-preview.sh scripts/verify-hotfix-branch.sh
+bash -n bin/nein bin/nein-setup bin/n-ein-dev bin/n-ein-claude-dev bin/n-ein-prepare-pi scripts/check.sh scripts/smoke-package.sh scripts/build-preview.sh scripts/hotfix-preview.sh scripts/verify-hotfix-branch.sh
 tests/launcher.sh
 tests/handoff-launcher.sh
 tests/reverse-launcher.sh

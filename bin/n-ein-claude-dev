@@ -5,7 +5,8 @@ repo_dir="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd -P)"
 channel="dev"
 if [[ -f "$repo_dir/.n-ein-channel" ]]; then IFS= read -r channel < "$repo_dir/.n-ein-channel"; fi
 case "$channel" in dev|preview|stable) ;; *) printf '[ERR] :: CHANNEL_BAD :: value: %s\n' "$channel" >&2; exit 64 ;; esac
-claude_dir="${N_EIN_CLAUDE_DIR:-$HOME/.n_ein/$channel/claude}"
+n_ein_home="${N_EIN_HOME:-$HOME/.n_ein}"
+claude_dir="${N_EIN_CLAUDE_DIR:-$n_ein_home/$channel/claude}"
 claude_bin="${N_EIN_CLAUDE_BIN:-claude}"
 
 case "$claude_dir" in

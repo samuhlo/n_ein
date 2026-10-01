@@ -11,6 +11,8 @@ import (
 	"sort"
 	"strings"
 	"time"
+
+	"n_ein/internal/layout"
 )
 
 type row struct {
@@ -239,11 +241,11 @@ func sessionID(path string) string {
 }
 
 func recentSessions(channel, project string) []session {
-	home, err := os.UserHomeDir()
+	base, err := layout.Root()
 	if err != nil {
 		return nil
 	}
-	base := filepath.Join(home, ".n_ein", channel)
+	base = filepath.Join(base, channel)
 	piHome := os.Getenv("N_EIN_AGENT_DIR")
 	if piHome == "" {
 		piHome = filepath.Join(base, "pi-agent")
@@ -312,7 +314,9 @@ func loadState(root, project string) appState {
 	objective, tasks, current, evidence := workState(project)
 	piBin, piSource := os.Getenv("N_EIN_PI_BIN"), "N_EIN_PI_BIN"
 	if piBin == "" {
-		piBin, piSource = "pi", "pi --version"
+		if managed, err := layout.PiBinary(config.Pi.Version); err == nil {
+			piBin, piSource = managed, "runtime Pi de n_ein"
+		}
 	}
 	claudeBin, claudeSource := os.Getenv("N_EIN_CLAUDE_BIN"), "N_EIN_CLAUDE_BIN"
 	if claudeBin == "" {

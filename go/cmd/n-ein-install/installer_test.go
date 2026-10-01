@@ -28,7 +28,7 @@ func sourceFixture(t *testing.T) (source, self, target, data string) {
 	data = filepath.Join(root, "user-data")
 	self = writeFixture(t, root, "self-binary", "installer", 0o755)
 	writeFixture(t, source, "dist/n-ein", "launcher", 0o755)
-	for _, rel := range []string{"bin/n-ein-dev", "bin/n-ein-claude-dev", "bin/n-ein-prepare-pi"} {
+	for _, rel := range []string{"bin/nein", "bin/nein-setup", "bin/n-ein-dev", "bin/n-ein-claude-dev", "bin/n-ein-prepare-pi"} {
 		writeFixture(t, source, rel, "#!/bin/sh\nexit 0\n", 0o755)
 	}
 	writeFixture(t, source, "brand.json", `{"colors":{"yellow":"#FFCA40"}}`, 0o644)
@@ -256,6 +256,122 @@ func TestDoctorRuntimeSeparatesPackageAndDependencies(t *testing.T) {
 	}
 	if _, err := call(t, self, "doctor", "--target", target, "--runtime"); err == nil || !strings.Contains(err.Error(), "Bun") {
 		t.Fatalf("doctor aceptó Bun ausente: %v", err)
+	}
+}
+
+func TestManagedPiRuntimeIsolatedAndRepairable(t *testing.T) {
+	source, self, _, _ := sourceFixture(t)
+	home := filepath.Join(t.TempDir(), "n_ein")
+	t.Setenv("N_EIN_HOME", home)
+	fakeBun := writeFixture(t, t.TempDir(), "bun", `#!/bin/sh
+set -eu
+package="$BUN_INSTALL_GLOBAL_DIR/node_modules/@earendil-works/pi-coding-agent"
+mkdir -p "$BUN_INSTALL_BIN" "$package/dist/bundle"
+printf '{"name":"@earendil-works/pi-coding-agent","version":"0.87.1"}\n' > "$package/package.json"
+printf '#!/bin/sh\nprintf "0.87.1\\n"\n' > "$package/dist/bundle/cli.js"
+chmod +x "$package/dist/bundle/cli.js"
+ln -s ../global/node_modules/@earendil-works/pi-coding-agent/dist/bundle/cli.js "$BUN_INSTALL_BIN/pi"
+`, 0o755)
+	t.Setenv("N_EIN_BUN_BIN", fakeBun)
+	target := filepath.Join(home, "runtimes", "pi", "0.87.1")
+	if _, err := call(t, self, "runtime", "--source", source, "--dry-run"); err != nil {
+		t.Fatal(err)
+	}
+	if _, err := os.Stat(target); !os.IsNotExist(err) {
+		t.Fatalf("runtime dry-run creó Pi: %v", err)
+	}
+	if _, err := call(t, self, "runtime", "--source", source); err != nil {
+		t.Fatal(err)
+	}
+	if err := inspectPiRuntime(target, "0.87.1"); err != nil {
+		t.Fatal(err)
+	}
+	if _, err := call(t, self, "runtime", "--source", source); err != nil {
+		t.Fatalf("instalación idempotente: %v", err)
+	}
+	writeFixture(t, target, "global/node_modules/@earendil-works/pi-coding-agent/package.json", `{"name":"@earendil-works/pi-coding-agent","version":"0.88.0"}`, 0o644)
+	if _, err := call(t, self, "runtime", "--source", source); err != nil {
+		t.Fatalf("reparación de Pi gestionado: %v", err)
+	}
+	if err := inspectPiRuntime(target, "0.87.1"); err != nil {
+		t.Fatal(err)
+	}
+	backups, err := os.ReadDir(target + ".backups")
+	if err != nil || len(backups) != 1 {
+		t.Fatalf("Pi anterior no quedó respaldado: %v %#v", err, backups)
+	}
+}
+
+func TestManagedPiRuntimeRejectsRedirectedParent(t *testing.T) {
+	source, self, _, _ := sourceFixture(t)
+	home := filepath.Join(t.TempDir(), "n_ein")
+	outside := t.TempDir()
+	if err := os.MkdirAll(home, 0o700); err != nil {
+		t.Fatal(err)
+	}
+	if err := os.Symlink(outside, filepath.Join(home, "runtimes")); err != nil {
+		t.Fatal(err)
+	}
+	t.Setenv("N_EIN_HOME", home)
+	if _, err := call(t, self, "runtime", "--source", source); err == nil || !strings.Contains(err.Error(), "sale del hogar") {
+		t.Fatalf("runtime Pi aceptó redirección externa: %v", err)
+	}
+	if entries, err := os.ReadDir(outside); err != nil || len(entries) != 0 {
+		t.Fatalf("runtime Pi escribió fuera del hogar: %v %#v", err, entries)
+	}
+}
+
+func TestActivateNeinLinksOnlyManagedInstallation(t *testing.T) {
+	source, self, target, _ := sourceFixture(t)
+	home := filepath.Dir(source)
+	linkDir := filepath.Join(home, "entry")
+	t.Setenv("N_EIN_HOME", home)
+	t.Setenv("N_EIN_LINK_DIR", linkDir)
+	if _, err := call(t, self, "install", "--source", source, "--target", target); err != nil {
+		t.Fatal(err)
+	}
+	if _, err := call(t, self, "activate", "--target", target, "--dry-run"); err != nil {
+		t.Fatal(err)
+	}
+	if _, err := os.Lstat(filepath.Join(linkDir, "nein")); !os.IsNotExist(err) {
+		t.Fatalf("activate dry-run creó enlace: %v", err)
+	}
+	if _, err := call(t, self, "activate", "--target", target); err != nil {
+		t.Fatal(err)
+	}
+	internal := filepath.Join(home, "bin", "nein")
+	if value, err := os.Readlink(internal); err != nil || value != filepath.Join(target, "bin", "nein") {
+		t.Fatalf("enlace interno: %s %v", value, err)
+	}
+	if value, err := os.Readlink(filepath.Join(linkDir, "nein")); err != nil || value != internal {
+		t.Fatalf("enlace PATH: %s %v", value, err)
+	}
+	if _, err := call(t, self, "activate", "--target", target); err != nil {
+		t.Fatalf("activate repetido: %v", err)
+	}
+	if _, err := call(t, self, "activate", "--target", target, "--channel", "stable"); err == nil {
+		t.Fatal("activate aceptó otro canal")
+	}
+}
+
+func TestActivateNeinRejectsUnrelatedEntry(t *testing.T) {
+	source, self, target, _ := sourceFixture(t)
+	home := filepath.Dir(source)
+	linkDir := filepath.Join(home, "entry")
+	t.Setenv("N_EIN_HOME", home)
+	t.Setenv("N_EIN_LINK_DIR", linkDir)
+	if _, err := call(t, self, "install", "--source", source, "--target", target); err != nil {
+		t.Fatal(err)
+	}
+	writeFixture(t, linkDir, "nein", "original\n", 0o600)
+	if _, err := call(t, self, "activate", "--target", target); err == nil {
+		t.Fatal("activate sustituyó una entrada ajena")
+	}
+	if data, err := os.ReadFile(filepath.Join(linkDir, "nein")); err != nil || string(data) != "original\n" {
+		t.Fatalf("entrada ajena alterada: %q %v", data, err)
+	}
+	if _, err := os.Lstat(filepath.Join(home, "bin", "nein")); !os.IsNotExist(err) {
+		t.Fatalf("activate dejó enlace parcial: %v", err)
 	}
 }
 

@@ -41,7 +41,7 @@ function channelOf(packageRoot: string, requested?: string): string {
 }
 
 export function modelsPath(packageRoot: string, requestedChannel?: string): string {
-  return process.env.N_EIN_MODELS_FILE || join(homedir(), ".n_ein", channelOf(packageRoot, requestedChannel), "models.json");
+  return process.env.N_EIN_MODELS_FILE || join(process.env.N_EIN_HOME || join(homedir(), ".n_ein"), channelOf(packageRoot, requestedChannel), "models.json");
 }
 
 function readSettings(path: string): Settings {

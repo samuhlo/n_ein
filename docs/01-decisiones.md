@@ -43,6 +43,8 @@ El 1 de octubre pidió recuperar un selector de modelos por rol como el de Ein: 
 
 También pidió hotfixes para evitar una nueva alpha por cada arreglo. El mecanismo local aplica un commit limpio y verificado al canal preview mediante el mismo paquete e instalador transaccional; marca versión `+hotfix.<commit>` y usa el restore existente. Después aclaró que quiere **también una release desde una rama**. Esa vía parte del tag publicado, lleva solo el arreglo, verifica su procedencia y publica una prerelease `.hotfix.N` independiente; el trabajo ordinario no hereda las fases SDD ni requiere rama `dev`.
 
+Ese mismo día pidió arrancar con `nein` y que Pi y n_ein quedaran dentro del hogar de n_ein, como en Ein: originales separados de las modificaciones y sitio previsto para futuros runtimes como Codex. El hogar es `~/.n_ein`, no el checkout, para que las actualizaciones no dependan del código fuente. Pi se instala versionado en `runtimes/pi/<versión>`, el código en `installations/<canal>` y credenciales y sesiones siguen en `<canal>/`. El único cambio fuera del hogar es el enlace `nein` en `~/.local/bin`; el Pi global y Ein legado no se tocan.
+
 ## Recomendaciones de diseño, revisables
 
 - Pi como runtime inicial; n_ein como capa pequeña: un paquete Pi (skills, extensiones mínimas, prompts, tema) más un launcher que fija el hogar aislado. Pi ya ofrece el aislamiento (`PI_CODING_AGENT_DIR`) y la carga de paquetes (`pi install`, `pi -e`).
