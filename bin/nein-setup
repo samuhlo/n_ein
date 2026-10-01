@@ -34,7 +34,8 @@ if [[ -e "$target" ]]; then verb=update; fi
 if [[ "$dry_run" == 1 ]]; then
   "$installer" runtime --source "$package_root" --dry-run
   "$installer" "$verb" --source "$package_root" --channel "$channel" --dry-run
-  if [[ -e "$target" ]]; then
+  # BLINDAJE -> Una instalación anterior sin bin/nein solo se puede activar tras el update.
+  if [[ -x "$target/bin/nein" ]]; then
     "$installer" activate --channel "$channel" --dry-run
   else
     printf '// 000 PLAN · nein se activará después de instalar %s\n' "$channel"
