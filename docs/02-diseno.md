@@ -186,7 +186,9 @@ El contrato visual es [STYLE.md de Ein](archive/ein-workspace/runtime/docs/STYLE
 - `// NNN  TÍTULO`, `▏`, `▸`, `·`, `✓`; minúsculas en el texto corrido; `NO_COLOR` y salida sin TTY monocromas.
 - Markdown publicado con `## // NNN.`; commits en Conventional Commits sin atribución a IA.
 
-El contrato pide diseño plano, una sola aparición animada y nada de animaciones en bucle. Si se quieren más «virguerías» en la TUI, se revisa el contrato explícitamente; si no, van en maquetación adaptable, transiciones y el televisor de la marca.
+El contrato pide diseño plano, una sola aparición animada y nada de animaciones en bucle. Si se quieren más «virguerías» en la TUI, se revisa el contrato explícitamente; si no, van en maquetación adaptable, transiciones y la marca.
+
+**Marca 004 Panel** (elegida el 1 de octubre entre [seis propuestas](https://claude.ai/artifact/WJrNM4HQfxjxYGSA1nmL6x)): un tablero de estación cuyas palas giran hasta asentarse en `n_ein`, de izquierda a derecha, en 2,2 s; el amarillo es solo la pala del `_`. Es la excepción aceptada a «sin fondos de tarjeta» de STYLE: las palas llevan dos tonos (`#1A1A1A`/`#141414`), solo dentro de la marca. Tamaño grande (39 × 6 celdas, letras en medios bloques) en la portada del launcher; pequeño (19 × 3) en el instalador; una pala girando como indicador de trabajo. Fuente única en `go/internal/brand`, cuyo test la compara con `brand.json`. Sin TTY o con `NO_COLOR` se pinta el último fotograma en monocromo.
 
 ### Comentarios de código y logs
 
@@ -235,11 +237,11 @@ Se conservan como producto. Se portan sus **comportamientos** (como casos de ace
 | Configuración | modo, TDD, Hypa, CodeGraph, persona | modelo y esfuerzo efectivos del principal y del trabajador; `/models` en Pi los edita por canal |
 | Sesiones | recientes con la última petición | recientes de todos los runtimes declarados |
 | Sistema | actualizaciones y diagnóstico | igual |
-| Runtime | elegir Pi o Claude y lanzar | elegir cualquier runtime declarado; lanzar o relevar con resumen |
+| Runtime | elegir Pi o Claude y lanzar | es la **portada**: marca, contexto y menú Pi (`p`), Claude Code (`c`), Codex sin adaptador, sesiones (`s`) y estado (`e`) |
 
-Se mantienen atajos (`tab`, `j/k`, `g/G`, `f` o `/`, `enter`, `q`), `--once`, `--project` y `--no-intro`; sin terminal interactiva pinta una vez y sale. Cada fila declara su fuente.
+Se mantienen atajos (`tab`, `j/k`, `g/G`, `f` o `/`, `enter`, `q`), `--once`, `--project` y `--no-intro`; sin terminal interactiva pinta una vez y sale. Cada fila de las vistas declara su fuente. La portada sustituye a Runtime porque lo primero que se viene a hacer es abrir un agente; antes quedaba en la quinta pestaña y la pantalla inicial no tenía nada seleccionable. `--view runtime` sigue abriendo la portada.
 
-**Instalador.** Binario separado del launcher, que sirve de vía de reparación cuando el launcher está roto. Verbos `install`, `update`, `doctor`, `restore`, `uninstall`. Se conservan estos comportamientos:
+**Instalador.** Binario separado del launcher, que sirve de vía de reparación cuando el launcher está roto. Verbos `install`, `update`, `doctor`, `restore`, `uninstall`, más `runtime` y `activate`; `setup` los encadena con la superficie del diseño (marca pequeña, `// 000  INSTALAR`, un paso por línea con su pala viva y `✓`), escribiendo solo hacia delante como el progreso de Ein. Se conservan estos comportamientos:
 
 - backup antes de tocar un árbol existente;
 - `--dry-run` enseña el plan sin mutar nada;

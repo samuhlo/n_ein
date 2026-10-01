@@ -2,53 +2,13 @@
 set -euo pipefail
 
 # [FLOW] INSTALACIÓN AGRUPADA
-# Usa el instalador Go para Pi, código y entrada PATH; no copia autenticación.
+# Envoltorio del paquete: n-ein-install setup instala Pi, código y entrada PATH; no copia autenticación.
 package_root="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd -P)"
 installer="$package_root/bin/n-ein-install"
-channel=preview
-dry_run=0
-while [[ $# -gt 0 ]]; do
-  case "$1" in
-    --channel)
-      [[ $# -ge 2 ]] || { printf '[ERR] :: CHANNEL_MISSING\n' >&2; exit 64; }
-      channel="$2"
-      shift 2
-      ;;
-    --dry-run) dry_run=1; shift ;;
-    *) printf '[ERR] :: ARG_BAD :: value: %s\n' "$1" >&2; exit 64 ;;
-  esac
-done
-case "$channel" in preview|stable) ;; *) printf '[ERR] :: CHANNEL_BAD :: value: %s\n' "$channel" >&2; exit 64 ;; esac
 if [[ ! -x "$installer" || ! -f "$package_root/package-manifest.json" ]]; then
   printf '[ERR] :: PACKAGE_BAD :: nein-setup requiere un candidato empaquetado\n' >&2
   exit 64
 fi
-n_ein_home="${N_EIN_HOME:-$HOME/.n_ein}"
-case "$n_ein_home" in /*) ;; *) printf '[ERR] :: HOME_INVALID :: path: %s\n' "$n_ein_home" >&2; exit 64 ;; esac
-export N_EIN_HOME="$n_ein_home"
+# BLINDAJE -> El doctor final debe comprobar el Pi gestionado, no uno heredado del entorno.
 unset N_EIN_PI_BIN
-target="$n_ein_home/installations/$channel"
-verb=install
-if [[ -e "$target" ]]; then verb=update; fi
-
-if [[ "$dry_run" == 1 ]]; then
-  "$installer" runtime --source "$package_root" --dry-run
-  "$installer" "$verb" --source "$package_root" --channel "$channel" --dry-run
-  # BLINDAJE -> Una instalación anterior sin bin/nein solo se puede activar tras el update.
-  if [[ -x "$target/bin/nein" ]]; then
-    "$installer" activate --channel "$channel" --dry-run
-  else
-    printf '// 000 PLAN · nein se activará después de instalar %s\n' "$channel"
-  fi
-  exit 0
-fi
-
-"$installer" runtime --source "$package_root"
-if [[ "$verb" == update ]] && cmp -s "$package_root/package-manifest.json" "$target/package-manifest.json"; then
-  printf '// 000 PAQUETE · ya instalado · %s\n' "$channel"
-else
-  "$installer" "$verb" --source "$package_root" --channel "$channel"
-fi
-"$installer" activate --channel "$channel"
-"$target/bin/n-ein-install" doctor --channel "$channel" --runtime
-printf '// 000 LISTO · ejecuta nein desde PATH · canal: %s\n' "$channel"
+exec "$installer" setup --source "$package_root" "$@"

@@ -6,6 +6,8 @@ import (
 	"testing"
 
 	tea "charm.land/bubbletea/v2"
+
+	"n_ein/internal/brand"
 )
 
 func key(code rune, text string) tea.KeyPressMsg {
@@ -58,8 +60,8 @@ func TestKeyboardNavigationAndSearch(t *testing.T) {
 
 func TestRenderMonochromeAndUnknown(t *testing.T) {
 	t.Setenv("NO_COLOR", "1")
-	panel := panel{0, "ESTADO", []row{{"verificación", "desconocida", "WORK.md", ""}}}
-	output := render(panel, 0, "", false, true, palette{Yellow: "#FFCA40", Concrete: "#FAF3F0"})
+	state := appState{views: []panel{{}, {0, "ESTADO", []row{{"verificación", "desconocida", "WORK.md", ""}}}}}
+	output := render(state, 1, 0, "", false, brand.Painter{Color: brand.Enabled()}, screen{})
 	if strings.Contains(output, "\x1b[") || !strings.Contains(output, "desconocida") || !strings.Contains(output, "// 000") {
 		t.Fatal("NO_COLOR o datos desconocidos no respetados")
 	}
@@ -73,5 +75,61 @@ func TestNullDeviceIsNotATerminal(t *testing.T) {
 	defer null.Close()
 	if isTerminal(null) {
 		t.Fatal("/dev/null no debe abrir la TUI")
+	}
+}
+
+func homeState() appState {
+	menu := []menuItem{
+		{"Pi", "gpt-6-sol · high", "p", "pi"},
+		{"Claude Code", "", "c", "claude"},
+		{"Codex", "sin adaptador", "", ""},
+		{"Elegir una sesión", "2 recientes", "s", "view:2"},
+	}
+	rows := make([]row, len(menu))
+	for i, item := range menu {
+		rows[i] = row{item.label, item.note, item.key, item.action}
+	}
+	return appState{menu: menu, home: homeContext{name: "demo", branch: "main", changes: "limpio"}, views: []panel{
+		{0, "INICIO", rows}, {1, "ESTADO", nil}, {2, "SESIONES", []row{{"pi 01/10", "hola", "sesión", "resume-pi:x"}}},
+	}}
+}
+
+func TestHomeOffersRuntimesAndShortcuts(t *testing.T) {
+	m := newUIModel(homeState(), homeView, false)
+	updated, _ := m.Update(key('c', "c"))
+	if got := updated.(uiModel).launch; got != "claude" {
+		t.Fatalf("c no lanza Claude: %q", got)
+	}
+	updated, _ = m.Update(key('s', "s"))
+	if got := updated.(uiModel); got.view != 2 || got.launch != "" {
+		t.Fatalf("s no abre sesiones sin salir: view %d launch %q", got.view, got.launch)
+	}
+	m.row = 2
+	updated, _ = m.Update(key(tea.KeyEnter, ""))
+	if got := updated.(uiModel).launch; got != "" {
+		t.Fatalf("Codex sin adaptador no debe lanzar nada: %q", got)
+	}
+	m.row = 0
+	updated, _ = m.Update(key(tea.KeyEnter, ""))
+	if got := updated.(uiModel).launch; got != "pi" {
+		t.Fatalf("enter en Pi no lo lanza: %q", got)
+	}
+}
+
+func TestHomeIntroSettlesOnKeyAndPlainOutput(t *testing.T) {
+	t.Setenv("NO_COLOR", "1")
+	m := newUIModel(homeState(), homeView, true)
+	if !m.intro || strings.Contains(m.View().Content, "Claude Code") {
+		t.Fatal("la apertura debe empezar sin menú")
+	}
+	updated, _ := m.Update(key('j', "j"))
+	m = updated.(uiModel)
+	content := m.View().Content
+	if m.intro || !strings.Contains(content, "Claude Code") || !strings.Contains(content, "demo · main · limpio") {
+		t.Fatalf("una tecla no asienta la portada:\n%s", content)
+	}
+	plain := render(homeState(), homeView, 0, "", false, brand.Painter{}, screen{elapsed: brand.IntroSeconds})
+	if strings.Contains(plain, "\x1b[") || !strings.Contains(plain, "▸ Pi") || !strings.Contains(plain, "▀▀▀▀▀") {
+		t.Fatalf("portada sin TTY ilegible:\n%s", plain)
 	}
 }

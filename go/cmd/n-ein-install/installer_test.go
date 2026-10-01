@@ -259,11 +259,7 @@ func TestDoctorRuntimeSeparatesPackageAndDependencies(t *testing.T) {
 	}
 }
 
-func TestManagedPiRuntimeIsolatedAndRepairable(t *testing.T) {
-	source, self, _, _ := sourceFixture(t)
-	home := filepath.Join(t.TempDir(), "n_ein")
-	t.Setenv("N_EIN_HOME", home)
-	fakeBun := writeFixture(t, t.TempDir(), "bun", `#!/bin/sh
+const fakeBunScript = `#!/bin/sh
 set -eu
 package="$BUN_INSTALL_GLOBAL_DIR/node_modules/@earendil-works/pi-coding-agent"
 mkdir -p "$BUN_INSTALL_BIN" "$package/dist/bundle"
@@ -271,8 +267,13 @@ printf '{"name":"@earendil-works/pi-coding-agent","version":"0.87.1"}\n' > "$pac
 printf '#!/bin/sh\nprintf "0.87.1\\n"\n' > "$package/dist/bundle/cli.js"
 chmod +x "$package/dist/bundle/cli.js"
 ln -s ../global/node_modules/@earendil-works/pi-coding-agent/dist/bundle/cli.js "$BUN_INSTALL_BIN/pi"
-`, 0o755)
-	t.Setenv("N_EIN_BUN_BIN", fakeBun)
+`
+
+func TestManagedPiRuntimeIsolatedAndRepairable(t *testing.T) {
+	source, self, _, _ := sourceFixture(t)
+	home := filepath.Join(t.TempDir(), "n_ein")
+	t.Setenv("N_EIN_HOME", home)
+	t.Setenv("N_EIN_BUN_BIN", writeFixture(t, t.TempDir(), "bun", fakeBunScript, 0o755))
 	target := filepath.Join(home, "runtimes", "pi", "0.87.1")
 	if _, err := call(t, self, "runtime", "--source", source, "--dry-run"); err != nil {
 		t.Fatal(err)
@@ -318,6 +319,50 @@ func TestManagedPiRuntimeRejectsRedirectedParent(t *testing.T) {
 	}
 	if entries, err := os.ReadDir(outside); err != nil || len(entries) != 0 {
 		t.Fatalf("runtime Pi escribió fuera del hogar: %v %#v", err, entries)
+	}
+}
+
+func TestSetupInstallsEverythingOnceFromPackage(t *testing.T) {
+	source, self, _, _ := sourceFixture(t)
+	artifact := filepath.Join(filepath.Dir(source), "candidate")
+	if _, err := call(t, self, "package", "--source", source, "--output", artifact); err != nil {
+		t.Fatal(err)
+	}
+	home := filepath.Join(t.TempDir(), "n_ein")
+	links := filepath.Join(t.TempDir(), "local-bin")
+	t.Setenv("N_EIN_HOME", home)
+	t.Setenv("N_EIN_LINK_DIR", links)
+	t.Setenv("N_EIN_PI_BIN", "")
+	t.Setenv("N_EIN_BUN_BIN", writeFixture(t, t.TempDir(), "bun", fakeBunScript, 0o755))
+
+	plan, err := call(t, self, "setup", "--source", artifact, "--dry-run")
+	if err != nil {
+		t.Fatal(err)
+	}
+	if _, err := os.Stat(home); !os.IsNotExist(err) || !strings.Contains(plan, "// 000  PLAN") || !strings.Contains(plan, "se activará tras instalar") {
+		t.Fatalf("setup --dry-run mutó o no explicó el plan: %v\n%s", err, plan)
+	}
+	first, err := call(t, self, "setup", "--source", artifact)
+	if err != nil {
+		t.Fatalf("%v\n%s", err, first)
+	}
+	for _, want := range []string{"// 000  INSTALAR", "✓ pi", "✓ código", "✓ entrada", "✓ doctor", "instalador · preview", "listo."} {
+		if !strings.Contains(first, want) {
+			t.Fatalf("falta %q en la salida:\n%s", want, first)
+		}
+	}
+	if strings.Contains(first, "\x1b[") {
+		t.Fatal("setup sin TTY emitió ANSI")
+	}
+	if value, err := os.Readlink(filepath.Join(links, "nein")); err != nil || value != filepath.Join(home, "bin", "nein") {
+		t.Fatalf("enlace nein: %s %v", value, err)
+	}
+	again, err := call(t, self, "setup", "--source", artifact)
+	if err != nil || strings.Count(again, "ya instalado") != 2 {
+		t.Fatalf("setup repetido reinstaló: %v\n%s", err, again)
+	}
+	if _, err := os.Stat(filepath.Join(home, "installations", "preview.backups")); !os.IsNotExist(err) {
+		t.Fatalf("setup repetido creó backup: %v", err)
 	}
 }
 

@@ -11,6 +11,8 @@ import (
 
 	tea "charm.land/bubbletea/v2"
 	"github.com/charmbracelet/x/term"
+
+	"n_ein/internal/brand"
 )
 
 func main() {
@@ -24,9 +26,9 @@ func run(args []string) error {
 	flags := flag.NewFlagSet("n-ein", flag.ContinueOnError)
 	project := flags.String("project", ".", "proyecto que mostrar")
 	root := flags.String("root", "", "raíz del paquete (desarrollo)")
-	viewName := flags.String("view", "estado", "estado, configuracion, sesiones, sistema o runtime")
+	viewName := flags.String("view", "inicio", "inicio, estado, configuracion, sesiones o sistema")
 	once := flags.Bool("once", false, "pintar una vez y salir")
-	_ = flags.Bool("no-intro", false, "omitir la introducción")
+	noIntro := flags.Bool("no-intro", false, "omitir la introducción")
 	if err := flags.Parse(args); err != nil {
 		return err
 	}
@@ -52,13 +54,13 @@ func run(args []string) error {
 	}
 	interactive := isTerminal(os.Stdin) && isTerminal(os.Stdout) && os.Getenv("TERM") != "dumb"
 	if *once || !interactive {
-		fmt.Fprint(os.Stdout, render(state.views[view], 0, "", false, false, state.colors))
+		fmt.Fprint(os.Stdout, render(state, view, 0, "", false, brand.ForWriter(os.Stdout), screen{elapsed: brand.IntroSeconds}))
 		if !interactive {
 			fmt.Fprintln(os.Stdout, "\n[terminal] vista única · sin TTY")
 		}
 		return nil
 	}
-	final, err := tea.NewProgram(uiModel{state: state, view: view}).Run()
+	final, err := tea.NewProgram(newUIModel(state, view, !*noIntro)).Run()
 	if err != nil {
 		// Un fallo de pintura no impide abrir Pi o Claude desde sus lanzadores.
 		return fmt.Errorf("interfaz: %w; usa bin/n-ein-dev o bin/n-ein-claude-dev", err)
@@ -116,11 +118,15 @@ func findPackageRoot(explicit string) (string, error) {
 }
 
 func viewIndex(name string) int {
-	names := []string{"estado", "configuracion", "sesiones", "sistema", "runtime"}
+	names := []string{"inicio", "estado", "configuracion", "sesiones", "sistema"}
 	for index, candidate := range names {
 		if strings.EqualFold(name, candidate) {
 			return index
 		}
+	}
+	// runtime era la vista con Pi y Claude; ahora eso vive en la portada.
+	if strings.EqualFold(name, "runtime") {
+		return homeView
 	}
 	return -1
 }

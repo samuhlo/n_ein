@@ -369,7 +369,7 @@ func packageArtifact(source, output, self string, dryRun bool, writer io.Writer)
 		return err
 	}
 	if dryRun {
-		fmt.Fprintf(writer, "// 000 PLAN · package · %s · %d archivos\n", output, len(files))
+		say(writer, "// 000 PLAN · package · %s · %d archivos\n", output, len(files))
 		return nil
 	}
 	if err := os.MkdirAll(filepath.Dir(output), 0o755); err != nil {
@@ -395,7 +395,7 @@ func packageArtifact(source, output, self string, dryRun bool, writer io.Writer)
 	if err := os.Rename(stage, output); err != nil {
 		return err
 	}
-	fmt.Fprintf(writer, "// 000 PAQUETE · %s · sha256: %s\n", output, meta.Digest)
+	say(writer, "// 000 PAQUETE · %s · sha256: %s\n", output, meta.Digest)
 	return nil
 }
 
@@ -443,7 +443,7 @@ func install(source, target, channel, self string, requireExisting, dryRun bool,
 		}
 	}
 	if dryRun {
-		fmt.Fprintf(output, "// 000 PLAN · %s · %s · %d archivos · backup: %t\n", channel, target, len(files)+1, exists)
+		say(output, "// 000 PLAN · %s · %s · %d archivos · backup: %t\n", channel, target, len(files)+1, exists)
 		return nil
 	}
 
@@ -490,7 +490,7 @@ func install(source, target, channel, self string, requireExisting, dryRun bool,
 		}
 		return err
 	}
-	fmt.Fprintf(output, "// 000 INSTALADO · %s · %s\n", channel, target)
+	say(output, "// 000 INSTALADO · %s · %s\n", channel, target)
 	return nil
 }
 
@@ -554,7 +554,7 @@ func restore(target string, dryRun bool, output io.Writer) error {
 		return fmt.Errorf("backup inválido: %w", err)
 	}
 	if dryRun {
-		fmt.Fprintf(output, "// 000 PLAN · restore · %s → %s\n", backup, target)
+		say(output, "// 000 PLAN · restore · %s → %s\n", backup, target)
 		return nil
 	}
 	stage, err := os.MkdirTemp(filepath.Dir(target), ".n-ein-restore-")
@@ -586,7 +586,7 @@ func restore(target string, dryRun bool, output io.Writer) error {
 		}
 		return err
 	}
-	fmt.Fprintf(output, "// 000 RESTAURADO · %s\n", target)
+	say(output, "// 000 RESTAURADO · %s\n", target)
 	return nil
 }
 
@@ -595,7 +595,7 @@ func uninstall(target string, dryRun bool, output io.Writer) error {
 		return err
 	}
 	if dryRun {
-		fmt.Fprintf(output, "// 000 PLAN · uninstall · %s · datos de usuario separados\n", target)
+		say(output, "// 000 PLAN · uninstall · %s · datos de usuario separados\n", target)
 		return nil
 	}
 	backup, err := backupPath(target, "backup")
@@ -605,7 +605,7 @@ func uninstall(target string, dryRun bool, output io.Writer) error {
 	if err := os.Rename(target, backup); err != nil {
 		return err
 	}
-	fmt.Fprintf(output, "// 000 DESINSTALADO · backup: %s · datos conservados\n", backup)
+	say(output, "// 000 DESINSTALADO · backup: %s · datos conservados\n", backup)
 	return nil
 }
 

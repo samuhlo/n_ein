@@ -28,11 +28,22 @@ type panel struct {
 	rows   []row
 }
 
-type palette struct {
-	Carbon    string `json:"carbon"`
-	Concrete  string `json:"concrete"`
-	Structure string `json:"structure"`
-	Yellow    string `json:"yellow"`
+// menuItem es una entrada de la portada: lo que se viene a hacer, con su atajo.
+type menuItem struct {
+	label  string
+	note   string
+	key    string
+	action string
+}
+
+// homeContext es el estado que la portada enseña bajo la marca; no son filas porque no se eligen.
+type homeContext struct {
+	name    string
+	branch  string
+	changes string
+	root    string
+	channel string
+	version string
 }
 
 type runtimeConfig struct {
@@ -48,8 +59,9 @@ type runtimeConfig struct {
 }
 
 type appState struct {
-	views  []panel
-	colors palette
+	views []panel
+	menu  []menuItem
+	home  homeContext
 }
 
 func readJSON(path string, target any) bool {
@@ -289,10 +301,6 @@ func recentSessions(channel, project string) []session {
 }
 
 func loadState(root, project string) appState {
-	var brand struct {
-		Colors palette `json:"colors"`
-	}
-	_ = readJSON(filepath.Join(root, "brand.json"), &brand)
 	var config runtimeConfig
 	_ = readJSON(filepath.Join(root, "runtime.json"), &config)
 	channel := "dev"
@@ -305,11 +313,12 @@ func loadState(root, project string) appState {
 	config, piModelSource, workerModelSource, modelError := applyModelSelections(config, channel)
 	branch := known(command(project, "git", "branch", "--show-current"))
 	status := command(project, "git", "status", "--short")
-	gitState := "limpio"
+	gitState, changes := "limpio", "limpio"
 	if branch == "desconocido" {
-		gitState = "desconocido"
+		gitState, changes = "desconocido", "sin Git"
 	} else if status != "" {
-		gitState = fmt.Sprintf("%d rutas con cambios", len(strings.Split(status, "\n")))
+		count := len(strings.Split(status, "\n"))
+		gitState, changes = fmt.Sprintf("%d rutas con cambios", count), fmt.Sprintf("%d sin confirmar", count)
 	}
 	objective, tasks, current, evidence := workState(project)
 	piBin, piSource := os.Getenv("N_EIN_PI_BIN"), "N_EIN_PI_BIN"
@@ -373,26 +382,56 @@ func loadState(root, project string) appState {
 	if modelError != nil {
 		principalValue, workerValue = modelError.Error(), modelError.Error()
 	}
-	return appState{colors: brand.Colors, views: []panel{
-		{0, "ESTADO", []row{
+	piNote := piLabel
+	if piAction != "" {
+		piNote = strings.TrimPrefix(known(config.Pi.Model), "openai-codex/") + " · " + known(config.Pi.Thinking)
+	}
+	claudeNote := ""
+	if claudeAction == "" {
+		claudeNote = claudeLabel
+	}
+	sessionNote := "sin sesiones"
+	if count := len(sessionRows); sessionRows[0].action != "" && count == 1 {
+		sessionNote = "1 reciente"
+	} else if sessionRows[0].action != "" {
+		sessionNote = fmt.Sprintf("%d recientes", count)
+	}
+	// Codex aparece para que se vea dónde irá; no se elige hasta que exista su adaptador.
+	menu := []menuItem{
+		{"Pi", piNote, "p", piAction},
+		{"Claude Code", claudeNote, "c", claudeAction},
+		{"Codex", "sin adaptador", "", ""},
+		{"Elegir una sesión", sessionNote, "s", "view:3"},
+		{"Estado del proyecto", tasks, "e", "view:1"},
+	}
+	homeRows := make([]row, len(menu))
+	for i, item := range menu {
+		homeRows[i] = row{item.label, item.note, item.key, item.action}
+	}
+	displayRoot := project
+	if home, err := os.UserHomeDir(); err == nil && strings.HasPrefix(project, home+string(filepath.Separator)) {
+		displayRoot = "~" + strings.TrimPrefix(project, home)
+	}
+	return appState{menu: menu, home: homeContext{
+		name: filepath.Base(project), branch: branch, changes: changes, root: displayRoot,
+		channel: channel, version: installVersion,
+	}, views: []panel{
+		{0, "INICIO", homeRows},
+		{1, "ESTADO", []row{
 			{"proyecto", project, "cwd", ""}, {"rama", branch, "Git", ""}, {"cambios", gitState, "Git", ""},
 			{"objetivo", objective, "WORK.md", ""}, {"tareas", tasks, "WORK.md", ""}, {"siguiente", current, "WORK.md", ""},
 			{"comprobación", evidence, "WORK.md", ""},
 		}},
-		{1, "CONFIGURACIÓN", []row{
+		{2, "CONFIGURACIÓN", []row{
 			{"principal", principalValue, piModelSource, ""},
 			{"trabajador", workerValue, workerModelSource, ""},
 			{"editar", "abrir Pi y usar /models", "Pi", piAction},
 			{"idioma", "español", "persona.md", ""}, {"canal", channel, ".n-ein-channel", ""},
 		}},
-		{2, "SESIONES", sessionRows},
-		{3, "SISTEMA", []row{
+		{3, "SESIONES", sessionRows},
+		{4, "SISTEMA", []row{
 			{"paquete", installVersion, "install.json", ""}, {"Pi", piVersion, piSource, ""},
 			{"Claude", claudeVersion, claudeSource, ""}, doctor, {"actualizaciones", "desconocido", "sin remoto", ""},
-		}},
-		{4, "RUNTIME", []row{
-			{"Pi", piLabel, "bin/n-ein-dev", piAction},
-			{"Claude", claudeLabel, "bin/n-ein-claude-dev", claudeAction},
 		}},
 	}}
 }

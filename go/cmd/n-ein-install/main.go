@@ -30,10 +30,10 @@ func main() {
 
 func run(args []string, output io.Writer, self string) error {
 	if len(args) == 0 {
-		return fmt.Errorf("uso: n-ein-install <package|runtime|install|update|doctor|activate|restore|uninstall> [flags]")
+		return fmt.Errorf("uso: n-ein-install <setup|package|runtime|install|update|doctor|activate|restore|uninstall> [flags]")
 	}
 	verb := args[0]
-	if verb != "package" && verb != "runtime" && verb != "install" && verb != "update" && verb != "doctor" && verb != "activate" && verb != "restore" && verb != "uninstall" {
+	if verb != "setup" && verb != "package" && verb != "runtime" && verb != "install" && verb != "update" && verb != "doctor" && verb != "activate" && verb != "restore" && verb != "uninstall" {
 		return fmt.Errorf("verbo desconocido: %s", verb)
 	}
 
@@ -71,6 +71,13 @@ func run(args []string, output io.Writer, self string) error {
 		}
 		return packageArtifact(absSource, absOutput, self, *dryRun, output)
 	}
+	if verb == "setup" {
+		absSource, err := filepath.Abs(*source)
+		if err != nil {
+			return err
+		}
+		return setup(absSource, *channel, self, *dryRun, output)
+	}
 	if verb == "runtime" {
 		absSource, err := filepath.Abs(*source)
 		if err != nil {
@@ -99,16 +106,8 @@ func run(args []string, output io.Writer, self string) error {
 		if err != nil {
 			return err
 		}
-		actualSource, err := resolvedPath(absSource)
-		if err != nil {
+		if err := separate(absSource, absTarget); err != nil {
 			return err
-		}
-		actualTarget, err := resolvedPath(absTarget)
-		if err != nil {
-			return err
-		}
-		if inside(actualSource, actualTarget) || inside(actualTarget, actualSource) {
-			return fmt.Errorf("fuente y destino no pueden solaparse")
 		}
 		return install(absSource, absTarget, *channel, self, verb == "update", *dryRun, output)
 	case "doctor":
@@ -116,7 +115,7 @@ func run(args []string, output io.Writer, self string) error {
 		if err != nil {
 			return err
 		}
-		fmt.Fprintf(output, "// 000 ESTADO · %s · %s · %d archivos verificados\n", manifest.Channel, manifest.Version, len(manifest.Files))
+		say(output, "// 000 ESTADO · %s · %s · %d archivos verificados\n", manifest.Channel, manifest.Version, len(manifest.Files))
 		if *runtime {
 			return checkRuntime(absTarget, output)
 		}
@@ -128,6 +127,21 @@ func run(args []string, output io.Writer, self string) error {
 	default:
 		return uninstall(absTarget, *dryRun, output)
 	}
+}
+
+func separate(source, target string) error {
+	actualSource, err := resolvedPath(source)
+	if err != nil {
+		return err
+	}
+	actualTarget, err := resolvedPath(target)
+	if err != nil {
+		return err
+	}
+	if inside(actualSource, actualTarget) || inside(actualTarget, actualSource) {
+		return fmt.Errorf("fuente y destino no pueden solaparse")
+	}
+	return nil
 }
 
 // [FLOW] Diagnóstico opcional: la integridad del paquete no depende de tener Pi instalado.
@@ -169,6 +183,6 @@ func checkRuntime(root string, output io.Writer) error {
 	if actual != config.Pi.Version {
 		return fmt.Errorf("versión de Pi incompatible: esperada %s, observada %s", config.Pi.Version, actual)
 	}
-	fmt.Fprintf(output, "// 001 RUNTIME · Pi %s · Bun disponible · autenticación no comprobada\n", actual)
+	say(output, "// 001 RUNTIME · Pi %s · Bun disponible · autenticación no comprobada\n", actual)
 	return nil
 }

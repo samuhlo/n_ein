@@ -117,7 +117,7 @@ func installPiRuntime(source string, dryRun bool, output io.Writer) error {
 	}
 	if exists {
 		if err := inspectPiRuntime(target, version); err == nil {
-			fmt.Fprintf(output, "// 000 PI · ya instalado · %s · %s\n", version, target)
+			say(output, "// 000 PI · ya instalado · %s · %s\n", version, target)
 			return nil
 		}
 		if _, err := os.Stat(filepath.Join(target, "runtime-install.json")); err != nil {
@@ -125,7 +125,7 @@ func installPiRuntime(source string, dryRun bool, output io.Writer) error {
 		}
 	}
 	if dryRun {
-		fmt.Fprintf(output, "// 000 PLAN · Pi %s · %s · backup: %t\n", version, target, exists)
+		say(output, "// 000 PLAN · Pi %s · %s · backup: %t\n", version, target, exists)
 		return nil
 	}
 	bun := os.Getenv("N_EIN_BUN_BIN")
@@ -184,6 +184,6 @@ func installPiRuntime(source string, dryRun bool, output io.Writer) error {
 		}
 		return err
 	}
-	fmt.Fprintf(output, "// 000 PI INSTALADO · %s · %s\n", version, target)
+	say(output, "// 000 PI INSTALADO · %s · %s\n", version, target)
 	return nil
 }

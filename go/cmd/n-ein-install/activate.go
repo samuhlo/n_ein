@@ -31,6 +31,14 @@ func linkStatus(path, expected string) (bool, error) {
 	return true, nil
 }
 
+// linkDirectory es donde vive el enlace de PATH; junto al hogar para que un hogar de prueba no toque ~/.local/bin.
+func linkDirectory(root string) string {
+	if custom := os.Getenv("N_EIN_LINK_DIR"); custom != "" {
+		return custom
+	}
+	return filepath.Join(filepath.Dir(root), ".local", "bin")
+}
+
 // [FLOW] El comando en PATH es solo un enlace; binarios y datos quedan en n_ein.
 func activateLauncher(target, channel string, dryRun bool, output io.Writer) error {
 	meta, err := validate(target)
@@ -72,10 +80,7 @@ func activateLauncher(target, channel string, dryRun bool, output io.Writer) err
 	if err != nil || !inside(actualRoot, actualInternal) {
 		return fmt.Errorf("enlace interno sale del hogar n_ein: %s", internal)
 	}
-	linkDir := os.Getenv("N_EIN_LINK_DIR")
-	if linkDir == "" {
-		linkDir = filepath.Join(filepath.Dir(root), ".local", "bin")
-	}
+	linkDir := linkDirectory(root)
 	external := filepath.Join(linkDir, "nein")
 	internalReady, err := linkStatus(internal, entry)
 	if err != nil {
@@ -86,7 +91,7 @@ func activateLauncher(target, channel string, dryRun bool, output io.Writer) err
 		return err
 	}
 	if dryRun {
-		fmt.Fprintf(output, "// 000 PLAN · nein · %s → %s → %s\n", external, internal, entry)
+		say(output, "// 000 PLAN · nein · %s → %s → %s\n", external, internal, entry)
 		return nil
 	}
 	if err := os.MkdirAll(filepath.Dir(internal), 0o700); err != nil {
@@ -110,6 +115,6 @@ func activateLauncher(target, channel string, dryRun bool, output io.Writer) err
 			return err
 		}
 	}
-	fmt.Fprintf(output, "// 000 ACTIVADO · nein · %s\n", external)
+	say(output, "// 000 ACTIVADO · nein · %s\n", external)
 	return nil
 }
