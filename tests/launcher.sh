@@ -15,8 +15,23 @@ fi
   printf '%s\n' "$PI_CODING_AGENT_DIR" "$PI_CODING_AGENT_SESSION_DIR" "$PWD"
   printf '%s\n' "$@"
 } > "$N_EIN_CAPTURE"
+printf '%s\n' "${N_EIN_CODEGRAPH_BIN:-}" > "$N_EIN_CAPTURE.codegraph"
 FAKE_PI
 chmod +x "$test_dir/pi"
+
+# CodeGraph falso: registra cada orden y crea .codegraph/ en init, como el real.
+cat > "$test_dir/codegraph" <<'FAKE_CODEGRAPH'
+#!/usr/bin/env bash
+printf '%s\n' "$*" >> "$N_EIN_CODEGRAPH_LOG"
+case "$1" in
+  --version) printf '1.6.1\n' ;;
+  status) if [[ -d "$3/.codegraph" ]]; then printf '{"initialized":true,"index":{"reindexRecommended":false}}\n'; else printf '{"initialized":false}\n'; fi ;;
+  init) mkdir -p "$3/.codegraph" ;;
+esac
+FAKE_CODEGRAPH
+chmod +x "$test_dir/codegraph"
+export N_EIN_CODEGRAPH_BIN="$test_dir/codegraph"
+export N_EIN_CODEGRAPH_LOG="$test_dir/codegraph.log"
 
 export N_EIN_PI_BIN="$test_dir/pi"
 export N_EIN_AGENT_DIR="$test_dir/home with spaces"
@@ -82,5 +97,25 @@ if "$repo_dir/bin/n-ein-dev" > "$test_dir/out" 2> "$test_dir/err"; then
   exit 1
 fi
 rg -q 'HOME_INVALID' "$test_dir/err"
+
+# [FLOW] El índice se crea en la primera apertura, se sincroniza en la siguiente y no lo tocan los hijos.
+unset N_EIN_AGENT_DIR
+export N_EIN_AGENT_DIR="$test_dir/agent"
+git init -q "$test_dir/repo"
+cd "$test_dir/repo"
+rm -f "$N_EIN_CODEGRAPH_LOG"
+N_EIN_CODEGRAPH_ALLOW_TEMP=1 "$repo_dir/bin/n-ein-dev" --print 'primera' 2> "$test_dir/err"
+rg -q '^init --yes ' "$N_EIN_CODEGRAPH_LOG"
+rg -q 'CODEGRAPH · creando índice' "$test_dir/err"
+test "$(< "$N_EIN_CAPTURE.codegraph")" == "$N_EIN_CODEGRAPH_BIN"
+N_EIN_CODEGRAPH_ALLOW_TEMP=1 "$repo_dir/bin/n-ein-dev" --print 'segunda'
+rg -q '^sync --quiet ' "$N_EIN_CODEGRAPH_LOG"
+rm -f "$N_EIN_CODEGRAPH_LOG"
+N_EIN_WORKER_CHILD=1 N_EIN_CODEGRAPH_ALLOW_TEMP=1 "$repo_dir/bin/n-ein-dev" --print 'hijo'
+test ! -e "$N_EIN_CODEGRAPH_LOG"
+# Sin permiso explícito, un temporal no se indexa, pero Pi arranca igual.
+"$repo_dir/bin/n-ein-dev" --print 'temporal' 2> "$test_dir/err"
+rg -q 'CODEGRAPH_SKIP :: reason: no se indexan temporales' "$test_dir/err"
+rg -Fxq 'temporal' "$N_EIN_CAPTURE"
 
 printf 'launcher: OK\n'

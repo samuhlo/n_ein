@@ -32,6 +32,13 @@ if [[ ! -x "$N_EIN_PI_BIN" || "$("$N_EIN_PI_BIN" --version)" != "$expected_pi_ve
   printf '[ERR] :: BUILD_DEPS :: required: Pi %s\n' "$expected_pi_version" >&2
   exit 69
 fi
+# BLINDAJE -> El candidato se verifica con el CodeGraph fijado; el del sistema puede ser otra versión.
+expected_codegraph_version="$(bun -e 'const c=await Bun.file(process.argv[1]).json(); console.log(c.codegraph.version)' "$repo_dir/runtime.json")"
+export N_EIN_CODEGRAPH_BIN="${N_EIN_CODEGRAPH_BIN:-${N_EIN_HOME:-$HOME/.n_ein}/runtimes/codegraph/$expected_codegraph_version/bin/codegraph}"
+if [[ ! -x "$N_EIN_CODEGRAPH_BIN" || "$(DO_NOT_TRACK=1 "$N_EIN_CODEGRAPH_BIN" --version)" != "$expected_codegraph_version" ]]; then
+  printf '[ERR] :: BUILD_DEPS :: required: CodeGraph %s | fix: n-ein-install runtime --source %s\n' "$expected_codegraph_version" "$repo_dir" >&2
+  exit 69
+fi
 
 dirty_suffix=""
 if [[ -n "$(git -C "$repo_dir" status --porcelain)" ]]; then

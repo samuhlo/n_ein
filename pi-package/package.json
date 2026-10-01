@@ -3,9 +3,19 @@
   "version": "0.1.0-dev",
   "private": true,
   "pi": {
-    "extensions": ["./extensions/worker.ts", "./extensions/todo.ts", "./extensions/handoff.ts", "./extensions/models.ts"],
-    "skills": ["./skills"],
-    "themes": ["./themes/ein.json"]
+    "extensions": [
+      "./extensions/worker.ts",
+      "./extensions/todo.ts",
+      "./extensions/handoff.ts",
+      "./extensions/models.ts",
+      "./extensions/codegraph.ts"
+    ],
+    "skills": [
+      "./skills"
+    ],
+    "themes": [
+      "./themes/ein.json"
+    ]
   },
   "peerDependencies": {
     "@earendil-works/pi-coding-agent": "*",

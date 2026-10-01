@@ -56,6 +56,9 @@ type runtimeConfig struct {
 		Model    string `json:"model"`
 		Thinking string `json:"thinking"`
 	} `json:"worker"`
+	CodeGraph struct {
+		Version string `json:"version"`
+	} `json:"codegraph"`
 }
 
 type appState struct {
@@ -333,6 +336,23 @@ func loadState(root, project string) appState {
 	}
 	piVersion := known(command(project, piBin, "--version"))
 	claudeVersion := known(command(project, claudeBin, "--version"))
+	codegraphBin, codegraphSource := os.Getenv("N_EIN_CODEGRAPH_BIN"), "N_EIN_CODEGRAPH_BIN"
+	if codegraphBin == "" {
+		if managed, err := layout.CodeGraphBinary(config.CodeGraph.Version); err == nil {
+			codegraphBin, codegraphSource = managed, "runtime CodeGraph de n_ein"
+		}
+	}
+	codegraphVersion := known(command(project, codegraphBin, "--version"))
+	if codegraphVersion != "desconocido" && codegraphVersion != config.CodeGraph.Version {
+		codegraphVersion = "requiere " + config.CodeGraph.Version + " · actual " + codegraphVersion
+	}
+	// El índice vive en la raíz del repositorio; el lanzador lo crea o sincroniza al abrir un agente.
+	index := "se creará al abrir Pi o Claude"
+	if top := command(project, "git", "rev-parse", "--show-toplevel"); top == "" {
+		index = "sin repositorio git"
+	} else if _, err := os.Stat(filepath.Join(top, ".codegraph")); err == nil {
+		index = "presente · se sincroniza al abrir Pi o Claude"
+	}
 	installVersion := "desconocido"
 	var install struct {
 		Version string `json:"version"`
@@ -420,7 +440,7 @@ func loadState(root, project string) appState {
 		{1, "ESTADO", []row{
 			{"proyecto", project, "cwd", ""}, {"rama", branch, "Git", ""}, {"cambios", gitState, "Git", ""},
 			{"objetivo", objective, "WORK.md", ""}, {"tareas", tasks, "WORK.md", ""}, {"siguiente", current, "WORK.md", ""},
-			{"comprobación", evidence, "WORK.md", ""},
+			{"comprobación", evidence, "WORK.md", ""}, {"índice", index, "CodeGraph", ""},
 		}},
 		{2, "CONFIGURACIÓN", []row{
 			{"principal", principalValue, piModelSource, ""},
@@ -431,7 +451,7 @@ func loadState(root, project string) appState {
 		{3, "SESIONES", sessionRows},
 		{4, "SISTEMA", []row{
 			{"paquete", installVersion, "install.json", ""}, {"Pi", piVersion, piSource, ""},
-			{"Claude", claudeVersion, claudeSource, ""}, doctor, {"actualizaciones", "desconocido", "sin remoto", ""},
+			{"Claude", claudeVersion, claudeSource, ""}, {"CodeGraph", codegraphVersion, codegraphSource, ""}, doctor, {"actualizaciones", "desconocido", "sin remoto", ""},
 		}},
 	}}
 }

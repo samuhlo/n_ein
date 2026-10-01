@@ -8,5 +8,12 @@
   "worker": {
     "model": "openai-codex/gpt-6-luna",
     "thinking": "high"
+  },
+  "codegraph": {
+    "version": "1.6.1",
+    "sha256": {
+      "darwin-arm64": "7a08cf8cf26cdf9e4ba5f8b2a36bb9c039b8966a6cb30b5e27c4b82074abf499",
+      "linux-amd64": "767c112faf8175a3dd768defc1688203fef459de29c4b52c02e16a472b8f5d26"
+    }
   }
 }

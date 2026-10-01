@@ -44,7 +44,7 @@ func run(args []string, output io.Writer, self string) error {
 	target := flags.String("target", "", "directorio de código instalado")
 	channel := flags.String("channel", "preview", "preview o stable")
 	dryRun := flags.Bool("dry-run", false, "mostrar sin mutar")
-	runtime := flags.Bool("runtime", false, "comprobar Bun y versión de Pi (doctor)")
+	runtime := flags.Bool("runtime", false, "comprobar Bun, Pi y CodeGraph (doctor)")
 	if err := flags.Parse(args[1:]); err != nil {
 		return err
 	}
@@ -83,7 +83,10 @@ func run(args []string, output io.Writer, self string) error {
 		if err != nil {
 			return err
 		}
-		return installPiRuntime(absSource, *dryRun, output)
+		if err := installPiRuntime(absSource, *dryRun, output); err != nil {
+			return err
+		}
+		return installCodeGraphRuntime(absSource, *dryRun, output)
 	}
 	if *target == "" {
 		managed, err := layout.Installation(*channel)
@@ -151,6 +154,9 @@ func checkRuntime(root string, output io.Writer) error {
 		Pi     struct {
 			Version string `json:"version"`
 		} `json:"pi"`
+		CodeGraph struct {
+			Version string `json:"version"`
+		} `json:"codegraph"`
 	}
 	data, err := os.ReadFile(filepath.Join(root, "runtime.json"))
 	if err != nil {
@@ -184,5 +190,33 @@ func checkRuntime(root string, output io.Writer) error {
 		return fmt.Errorf("versión de Pi incompatible: esperada %s, observada %s", config.Pi.Version, actual)
 	}
 	say(output, "// 001 RUNTIME · Pi %s · Bun disponible · autenticación no comprobada\n", actual)
+	return checkCodeGraph(config.CodeGraph.Version, output)
+}
+
+// checkCodeGraph exige el índice de código: sin él, los agentes vuelven al grep a ciegas.
+func checkCodeGraph(version string, output io.Writer) error {
+	if version == "" {
+		return fmt.Errorf("runtime.json no fija CodeGraph")
+	}
+	binary := os.Getenv("N_EIN_CODEGRAPH_BIN")
+	if binary == "" {
+		managed, err := layout.CodeGraphBinary(version)
+		if err != nil {
+			return err
+		}
+		binary = managed
+	}
+	ctx, cancel := context.WithTimeout(context.Background(), 20*time.Second)
+	defer cancel()
+	command := exec.CommandContext(ctx, binary, "--version")
+	command.Env = append(os.Environ(), "DO_NOT_TRACK=1")
+	data, err := command.Output()
+	if err != nil {
+		return fmt.Errorf("CodeGraph no disponible: %s; fix: n-ein-install runtime", binary)
+	}
+	if actual := strings.TrimSpace(string(data)); actual != version {
+		return fmt.Errorf("versión de CodeGraph incompatible: esperada %s, observada %s", version, actual)
+	}
+	say(output, "// 002 CODEGRAPH · %s · índice por proyecto al abrir un agente", version)
 	return nil
 }

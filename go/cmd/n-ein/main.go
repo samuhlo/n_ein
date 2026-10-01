@@ -35,6 +35,8 @@ func run(args []string) error {
 	if flags.NArg() != 0 {
 		return fmt.Errorf("argumentos inesperados: %v", flags.Args())
 	}
+	// CodeGraph y sus hijos heredan esto: sin telemetría ni avisos de versión, que la fija runtime.json.
+	_ = os.Setenv("DO_NOT_TRACK", "1")
 	absProject, err := filepath.Abs(*project)
 	if err != nil {
 		return err

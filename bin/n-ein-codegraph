@@ -1,0 +1,54 @@
+#!/usr/bin/env bash
+set -uo pipefail
+
+# [FLOW] ÍNDICE DEL PROYECTO
+# Cada agente abre con el índice de CodeGraph creado y al día. Un fallo avisa y
+# no impide trabajar: sin índice el agente es más torpe, no inútil.
+repo_dir="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd -P)"
+export DO_NOT_TRACK=1
+
+warn() {
+  printf '[WARN] :: CODEGRAPH_SKIP :: reason: %s\n' "$1" >&2
+  exit 0
+}
+
+codegraph_bin="${N_EIN_CODEGRAPH_BIN:-}"
+if [[ -z "$codegraph_bin" ]]; then
+  version="$(bun -e 'const c=await Bun.file(process.argv[1]).json(); console.log(c.codegraph?.version ?? "")' "$repo_dir/runtime.json" 2>/dev/null)"
+  [[ -n "$version" ]] || warn "runtime.json sin versión de CodeGraph"
+  codegraph_bin="${N_EIN_HOME:-$HOME/.n_ein}/runtimes/codegraph/$version/bin/codegraph"
+fi
+[[ -x "$codegraph_bin" ]] || warn "binario ausente: $codegraph_bin | fix: n-ein-install runtime"
+# --bin solo resuelve el binario: los lanzadores lo pasan al MCP de Claude y a la herramienta de Pi.
+if [[ "${1:-}" == "--bin" ]]; then
+  printf '%s\n' "$codegraph_bin"
+  exit 0
+fi
+
+project="$(git rev-parse --show-toplevel 2>/dev/null)" || warn "sin repositorio git en $PWD"
+project="$(cd "$project" && pwd -P)"
+# BLINDAJE -> Nunca indexar el hogar ni temporales: no son proyectos y el índice crecería sin control.
+case "$project" in
+  "/"|"$HOME"|"$(cd "$HOME" && pwd -P)") warn "no se indexa el hogar: $project" ;;
+  /tmp/*|/private/tmp/*|/var/folders/*|/private/var/folders/*)
+    [[ "${N_EIN_CODEGRAPH_ALLOW_TEMP:-0}" == 1 ]] || warn "no se indexan temporales: $project" ;;
+esac
+
+status="$("$codegraph_bin" status --json "$project" 2>/dev/null)"
+# Un estado vacío o ilegible no autoriza init: podría pisar un índice que sí existe.
+state="$(printf '%s' "$status" | bun -e 'const s=JSON.parse(await Bun.stdin.text()); console.log(s.initialized === false ? "init" : s.initialized !== true ? "unknown" : s.index?.reindexRecommended ? "index" : "sync")' 2>/dev/null)"
+case "$state" in
+  init)
+    printf '// 000 CODEGRAPH · creando índice · %s\n' "$project" >&2
+    "$codegraph_bin" init --yes "$project" >&2 || warn "init falló en $project"
+    ;;
+  index)
+    printf '// 000 CODEGRAPH · reindexando tras actualizar · %s\n' "$project" >&2
+    "$codegraph_bin" index "$project" >&2 || warn "index falló en $project"
+    ;;
+  sync)
+    "$codegraph_bin" sync --quiet "$project" >&2 || warn "sync falló en $project"
+    ;;
+  *) warn "estado ilegible en $project" ;;
+esac
+exit 0

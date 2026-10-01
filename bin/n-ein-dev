@@ -36,6 +36,11 @@ if [[ "$pi_version" != "$expected_pi_version" ]]; then
   exit 69
 fi
 
+# BLINDAJE -> El índice se prepara una vez por sesión; los trabajadores hijos reutilizan el del padre.
+if [[ "${N_EIN_WORKER_CHILD:-0}" != 1 ]]; then "$repo_dir/bin/n-ein-codegraph"; fi
+N_EIN_CODEGRAPH_BIN="$("$repo_dir/bin/n-ein-codegraph" --bin 2>/dev/null)"
+if [[ -n "$N_EIN_CODEGRAPH_BIN" ]]; then export N_EIN_CODEGRAPH_BIN; else unset N_EIN_CODEGRAPH_BIN; fi
+export DO_NOT_TRACK=1
 export PI_CODING_AGENT_DIR="$agent_dir"
 export PI_CODING_AGENT_SESSION_DIR="$agent_dir/sessions"
 handoff_signal="$(mktemp "${TMPDIR:-/tmp}/n-ein-handoff.XXXXXX")"

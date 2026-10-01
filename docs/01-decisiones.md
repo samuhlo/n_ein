@@ -47,6 +47,8 @@ Ese mismo día pidió arrancar con `nein` y que Pi y n_ein quedaran dentro del h
 
 También eligió la marca **004 Panel** para launcher e instalador y pidió conservar el resto de estilos de Ein. La portada del launcher pasa a ser el menú de runtimes. [Diseño](02-diseno.md#estilo).
 
+Después pidió que **CodeGraph sea obligatorio**, no opcional como en Ein: instalado por n_ein, iniciado y al día en cada proyecto y usado por los agentes. Se fija como Pi, con versión y SHA-256 en `runtime.json`. El lanzador crea o sincroniza el índice al abrir Pi o Claude, Pi lo consulta con la herramienta `codegraph_explore` (también el trabajador) y Claude con el MCP y el hook de prompt de su hogar aislado. Un fallo del índice avisa y no impide trabajar. [Diseño](02-diseno.md#codegraph-obligatorio).
+
 ## Recomendaciones de diseño, revisables
 
 - Pi como runtime inicial; n_ein como capa pequeña: un paquete Pi (skills, extensiones mínimas, prompts, tema) más un launcher que fija el hogar aislado. Pi ya ofrece el aislamiento (`PI_CODING_AGENT_DIR`) y la carga de paquetes (`pi install`, `pi -e`).

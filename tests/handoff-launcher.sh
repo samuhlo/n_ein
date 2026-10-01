@@ -31,6 +31,9 @@ export N_EIN_TEST_SUMMARY="$test_dir/summary.md"
 export N_EIN_TEST_DONE="$test_dir/pi-done"
 export N_EIN_TEST_ENV="$test_dir/claude-env"
 export N_EIN_TEST_ARGS="$test_dir/claude-args"
+printf '#!/bin/sh\nexit 0\n' > "$test_dir/codegraph with space"
+chmod +x "$test_dir/codegraph with space"
+export N_EIN_CODEGRAPH_BIN="$test_dir/codegraph with space"
 mkdir -p "$N_EIN_CLAUDE_DIR"
 ln -s "$repo_dir/pi-package/skills" "$N_EIN_CLAUDE_DIR/skills"
 
@@ -44,6 +47,15 @@ test -f "$N_EIN_CLAUDE_DIR/skills/synced/sentinel"
 test ! -f "$repo_dir/pi-package/skills/synced/sentinel"
 rg -q 'Objetivo: terminar el arreglo' "$N_EIN_TEST_ARGS"
 rg -q 'Eres Ein' "$N_EIN_TEST_ARGS"
+# CodeGraph llega a Claude por argumentos: MCP para consultar y hook en cada petición.
+bun -e '
+  const args = (await Bun.file(process.argv[1]).text()).split("\n");
+  const bin = process.argv[2];
+  const mcp = JSON.parse(args[args.indexOf("--mcp-config") + 1]).mcpServers.codegraph;
+  const hook = JSON.parse(args[args.indexOf("--settings") + 1]).hooks.UserPromptSubmit[0].hooks[0].command;
+  if (mcp.command !== bin || mcp.args.join(" ") !== "serve --mcp" || mcp.env.DO_NOT_TRACK !== "1") throw new Error("MCP de CodeGraph mal declarado");
+  if (hook !== JSON.stringify(bin) + " prompt-hook") throw new Error("hook de CodeGraph mal declarado: " + hook);
+' "$N_EIN_TEST_ARGS" "$N_EIN_CODEGRAPH_BIN"
 if rg -q 'n_ein_worker' "$N_EIN_TEST_ARGS"; then
   printf 'Claude no debe recibir instrucciones de herramientas exclusivas de Pi.\n' >&2
   exit 1

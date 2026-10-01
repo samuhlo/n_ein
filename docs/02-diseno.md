@@ -225,6 +225,19 @@ Integrar con el logger que ya tenga el proyecto y sus niveles. Mantener campos e
 
 **Adopción sin otra ceremonia.** Adaptar las dos skills una vez y referenciarlas desde el catálogo compartido. La revisión comprueba claridad y alcance del diff; los tests de comentarios no comparan frases exactas. Para logs, comprobar lo mecánico cuando exista un emisor: nivel/formato, campos, redacción de datos y separación de canales. Una corrección de estilo se hace en el mismo cambio, sin nuevas fases ni rondas de aprobación.
 
+## CodeGraph obligatorio
+
+Las preguntas estructurales (cómo funciona algo, quién llama a qué, qué rompe un cambio) se resuelven con el índice de [CodeGraph](https://github.com/colbymchenry/codegraph) antes que con grep y lecturas sueltas. Una consulta devuelve el código literal de los símbolos, sus rutas de llamada y lo que depende de ellos: menos rondas y menos tokens, sobre todo para el trabajador barato.
+
+- **Binario.** Release oficial por plataforma (lleva su propio Node), versión y SHA-256 en `runtime.json`, copia en `~/.n_ein/runtimes/codegraph/<versión>`. `n-ein-install runtime` y `setup` lo instalan; `doctor --runtime` lo exige. El codegraph del sistema y `~/.codegraph` no se tocan.
+- **Índice por proyecto.** `bin/n-ein-codegraph` corre al abrir Pi o Claude en un repositorio git: `init` si no hay `.codegraph/`, `index` si CodeGraph recomienda reindexar tras actualizarse y `sync` en el resto (≈0,2 s sin cambios). Nunca indexa el hogar ni temporales. Los trabajadores hijos no repiten el paso. Un fallo da `[WARN] :: CODEGRAPH_SKIP` y el agente arranca igual.
+- **Pi.** Sin MCP nativo, la extensión `codegraph.ts` registra `codegraph_explore`: sincroniza y explora en cada llamada, de modo que tras una edición responde el código actual. El trabajador la recibe también en modos de solo lectura.
+- **Claude.** El lanzador pasa `--mcp-config` con `codegraph serve --mcp` y `--settings` con el hook `prompt-hook`, que adelanta contexto en cada petición. Viajan por argumentos: el `~/.claude` habitual no cambia.
+- **Persona.** Una regla común: consultar el índice antes de grep/find/read en preguntas estructurales y decir cuándo no estaba disponible.
+- `DO_NOT_TRACK=1` en todos los lanzamientos: sin telemetría y sin avisos de versión, porque la versión la fija n_ein.
+
+El índice `.codegraph/` es el mismo que usa un codegraph global instalado aparte. Si ese global es de otra versión, conviene alinearlo para que no reindexen por turnos.
+
 ## Launcher e instalador
 
 Se conservan como producto. Se portan sus **comportamientos** (como casos de aceptación) y se reescribe el código en Go.

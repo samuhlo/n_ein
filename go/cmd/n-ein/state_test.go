@@ -90,7 +90,7 @@ func TestRuntimeViewUsesConfiguredBinariesAndRejectsWrongPiVersion(t *testing.T)
 	t.Setenv("N_EIN_AGENT_DIR", filepath.Join(root, "pi-agent"))
 	t.Setenv("N_EIN_CLAUDE_DIR", filepath.Join(root, "claude-agent"))
 	t.Setenv("N_EIN_MODELS_FILE", filepath.Join(root, "no-models.json"))
-	write(t, filepath.Join(root, "runtime.json"), `{"pi":{"version":"0.87.1","model":"openai-codex/gpt-6-sol","thinking":"high"}}`)
+	write(t, filepath.Join(root, "runtime.json"), `{"pi":{"version":"0.87.1","model":"openai-codex/gpt-6-sol","thinking":"high"},"codegraph":{"version":"1.6.1"}}`)
 	pi := filepath.Join(root, "custom-pi")
 	claude := filepath.Join(root, "custom-claude")
 	write(t, pi, "#!/bin/sh\nprintf '0.88.0\\n'\n")
@@ -104,6 +104,16 @@ func TestRuntimeViewUsesConfiguredBinariesAndRejectsWrongPiVersion(t *testing.T)
 	t.Setenv("N_EIN_CLAUDE_BIN", claude)
 
 	state := loadState(root, project)
+	codegraph := filepath.Join(root, "codegraph")
+	write(t, codegraph, "#!/bin/sh\nprintf '1.6.0\\n'\n")
+	if err := os.Chmod(codegraph, 0o755); err != nil {
+		t.Fatal(err)
+	}
+	t.Setenv("N_EIN_CODEGRAPH_BIN", codegraph)
+	state = loadState(root, project)
+	if row := state.views[4].rows[3]; row.label != "CodeGraph" || row.value != "requiere 1.6.1 · actual 1.6.0" {
+		t.Fatalf("Sistema no distingue CodeGraph incompatible: %#v", row)
+	}
 	if state.views[4].rows[1].value != "0.88.0" || state.views[4].rows[2].value != "2.0.0" {
 		t.Fatalf("Sistema ignoró los ejecutables configurados: %#v", state.views[4].rows)
 	}

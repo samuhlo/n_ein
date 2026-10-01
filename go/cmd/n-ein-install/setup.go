@@ -81,7 +81,7 @@ func visible(text string) int {
 func (v setupView) line(mark, label string, index int, detail string, labelColor, detailColor string) string {
 	p := v.painter
 	counter := fmt.Sprintf("%d/%d", index+1, v.total)
-	return fmt.Sprintf("  %s %s %s  %s", mark, p.Fg(labelColor, fmt.Sprintf("%-9s", label)), p.Fg(brand.Structure, counter), p.Fg(detailColor, detail))
+	return fmt.Sprintf("  %s %s %s  %s", mark, p.Fg(labelColor, fmt.Sprintf("%-10s", label)), p.Fg(brand.Structure, counter), p.Fg(detailColor, detail))
 }
 
 func (v setupView) step(index int, item setupStep) (string, error) {
@@ -181,6 +181,23 @@ func setup(source, channel, self string, dryRun bool, output io.Writer) error {
 				return version + " · instalado en runtimes/pi", nil
 			}
 		}},
+		{"codegraph", func(report io.Writer) (string, error) {
+			pin, err := codeGraphFrom(source)
+			if err != nil {
+				return "", err
+			}
+			if err := installCodeGraphRuntime(source, dryRun, report); err != nil {
+				return "", err
+			}
+			switch text := report.(*bytes.Buffer).String(); {
+			case strings.Contains(text, "ya instalado"):
+				return pin.Version + " · ya instalado", nil
+			case dryRun:
+				return pin.Version + " · se descargará y verificará", nil
+			default:
+				return pin.Version + " · verificado en runtimes/codegraph", nil
+			}
+		}},
 		{"código", func(report io.Writer) (string, error) {
 			if unchanged {
 				return artifact.Version + " · ya instalado", nil
@@ -218,7 +235,7 @@ func setup(source, channel, self string, dryRun bool, output io.Writer) error {
 			if err := checkRuntime(target, report); err != nil {
 				return "", err
 			}
-			return fmt.Sprintf("%d archivos · Pi %s · Bun", len(meta.Files), version), nil
+			return fmt.Sprintf("%d archivos · Pi %s · CodeGraph · Bun", len(meta.Files), version), nil
 		}},
 	}
 

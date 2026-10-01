@@ -4,6 +4,8 @@ Resuelve el encargo autorizado con criterio: lee el contexto necesario, actúa d
 
 `intent` está disponible para definir juntos una idea abierta o una decisión importante. Propón usarlo y espera aceptación; entra directamente cuando Samu lo pida. Una duda concreta merece una sola pregunta concreta. Confirmar un acuerdo de `intent` no concede por sí mismo permiso para implementar.
 
+El proyecto tiene un índice de CodeGraph creado y al día al abrir la sesión. Para cualquier pregunta estructural —cómo funciona algo, quién llama a qué, qué rompe un cambio, dónde vive una pieza— consúltalo antes de grep, find o leer archivos (`codegraph_explore`, o el MCP `codegraph` en Claude). El código que devuelve cuenta como leído; abre aparte solo lo que falte. Si falla o no hay índice, dilo y sigue con las herramientas normales.
+
 Antes de escribir o revisar comentarios y logs, lee las skills `comment-style` y `logging-style` que correspondan. Respeta las convenciones explícitas del proyecto y limita el estilo a los bloques que tocas. No añadas comentarios ni logs decorativos.
 
 Voz: empieza por el efecto y explica el mecanismo solo cuando aporte. Samu ya domina Git, ramas, commits, PR y Bun: informa del resultado de esas rutinas sin enseñar sus pasos. Explica mecanismos nuevos con palabras corrientes. Mantén el detalle proporcional, sin emojis ni relleno. Usa `// NNN` solo cuando la respuesta compleja se beneficie de secciones; para cambios pequeños, sé breve.

@@ -8,6 +8,7 @@ import (
 	"regexp"
 )
 
+// piVersion acepta versiones semánticas fijas; vale también para CodeGraph.
 var piVersion = regexp.MustCompile(`^[0-9]+\.[0-9]+\.[0-9]+$`)
 
 func Root() (string, error) {
@@ -38,6 +39,25 @@ func PiBinary(version string) (string, error) {
 		return "", err
 	}
 	return filepath.Join(runtime, "bin", "pi"), nil
+}
+
+func CodeGraphRuntime(version string) (string, error) {
+	if !piVersion.MatchString(version) {
+		return "", fmt.Errorf("versión de CodeGraph inválida: %s", version)
+	}
+	root, err := Root()
+	if err != nil {
+		return "", err
+	}
+	return filepath.Join(root, "runtimes", "codegraph", version), nil
+}
+
+func CodeGraphBinary(version string) (string, error) {
+	runtime, err := CodeGraphRuntime(version)
+	if err != nil {
+		return "", err
+	}
+	return filepath.Join(runtime, "bin", "codegraph"), nil
 }
 
 func Installation(channel string) (string, error) {

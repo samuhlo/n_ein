@@ -131,7 +131,7 @@ export default function (pi: ExtensionAPI) {
       };
       const commandsById = new Map<string, Command>();
       const args = ["--mode", "json", "--print", "--no-session", "--model", selected.model, "--thinking", selected.thinking];
-      if (mode !== "work") args.push("--tools", "read,grep,find,ls");
+      if (mode !== "work") args.push("--tools", "read,grep,find,ls,codegraph_explore");
       args.push(taskPrompt(mode, params.task, params.acceptance, params.knownFailures));
 
       let stderr = "";
