@@ -32,6 +32,8 @@ Para compartir un arreglo de una preview publicada, crear `hotfix/<nombre>` desd
 
 El arreglo se incorpora o se comprueba equivalente en `main` después de publicar, sin obligar a una rama `dev`. Una release de rama no aplica automáticamente el hotfix al canal personal ni cambia estable. La ruta local anterior permanece disponible para iterar sin publicación.
 
+La primera prueba real siguió esta ruta: `hotfix/model-selector` partió de `v0.1.0-preview.1`, llevó solo el selector y el soporte mínimo de release, y publicó [v0.1.0-preview.1.hotfix.1](https://github.com/samuhlo/n_ein/releases/tag/v0.1.0-preview.1.hotfix.1) tras checks de rama y tag. `main` ya tenía el mismo código de runtime, comprobado por diff, así que no hizo falta un merge que duplicase commits. La preview personal continuó con su hotfix local.
+
 ## Instalación aislada
 
 Pi vanilla, Ein legado, desarrollo n_ein y estable n_ein deben tener identidades claras. Proponer hogares separados; confirmar y comprobar resolución de rutas antes de escribir. No copiar credenciales en paquetes ni migrar sign-ins automáticamente por conveniencia.
