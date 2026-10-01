@@ -32,6 +32,7 @@ type setupView struct {
 	output  io.Writer
 	painter brand.Painter
 	live    bool
+	plan    bool
 	total   int
 }
 
@@ -117,7 +118,12 @@ func (v setupView) step(index int, item setupStep) (string, error) {
 		fmt.Fprintln(v.output, v.line(p.Fg(brand.Concrete, "✗"), item.label, index, err.Error(), brand.Concrete, brand.Muted))
 		return report.String(), err
 	}
-	fmt.Fprintln(v.output, v.line(p.Fg(brand.Structure, "✓"), item.label, index, detail, brand.Muted, brand.Faint))
+	// En el plan nada está hecho: `·` es pendiente y `✓` queda para lo ejecutado.
+	mark := "✓"
+	if v.plan {
+		mark = "·"
+	}
+	fmt.Fprintln(v.output, v.line(p.Fg(brand.Structure, mark), item.label, index, detail, brand.Muted, brand.Faint))
 	return report.String(), nil
 }
 
@@ -217,7 +223,7 @@ func setup(source, channel, self string, dryRun bool, output io.Writer) error {
 	}
 
 	p := brand.ForWriter(output)
-	view := setupView{output: output, painter: p, live: p.Color, total: len(steps)}
+	view := setupView{output: output, painter: p, live: p.Color, plan: dryRun, total: len(steps)}
 	fmt.Fprintln(output)
 	view.intro(p.Small, [3]string{
 		"",

@@ -339,7 +339,7 @@ func TestSetupInstallsEverythingOnceFromPackage(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	if _, err := os.Stat(home); !os.IsNotExist(err) || !strings.Contains(plan, "// 000  PLAN") || !strings.Contains(plan, "se activará tras instalar") {
+	if _, err := os.Stat(home); !os.IsNotExist(err) || !strings.Contains(plan, "// 000  PLAN") || !strings.Contains(plan, "se activará tras instalar") || strings.Contains(plan, "✓") {
 		t.Fatalf("setup --dry-run mutó o no explicó el plan: %v\n%s", err, plan)
 	}
 	first, err := call(t, self, "setup", "--source", artifact)
