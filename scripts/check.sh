@@ -19,7 +19,7 @@ export GOMODCACHE="$HOME/.n_ein/dev/go-cache/mod"
 export GOCACHE="$HOME/.n_ein/dev/go-cache/build"
 export GOPATH="$HOME/.n_ein/dev/go-cache/path"
 
-bash -n bin/n-ein-dev bin/n-ein-claude-dev bin/n-ein-prepare-pi scripts/check.sh scripts/smoke-package.sh scripts/build-preview.sh
+bash -n bin/n-ein-dev bin/n-ein-claude-dev bin/n-ein-prepare-pi scripts/check.sh scripts/smoke-package.sh scripts/build-preview.sh scripts/verify-hotfix-branch.sh
 tests/launcher.sh
 tests/handoff-launcher.sh
 tests/reverse-launcher.sh
