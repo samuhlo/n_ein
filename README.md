@@ -1,6 +1,6 @@
 # n_ein
 
-n_ein es el nuevo entorno personal de programación de Samu. La versión de desarrollo arranca Pi 0.87.1 con hogar aislado, tema de Ein, voz docente, las skills `intent`, `comment-style` y `logging-style`, y un trabajador Luna high. El relevo Pi↔Claude, un instalador local y el launcher de cinco vistas en Go ya tienen recorridos verificados.
+n_ein es el nuevo entorno personal de programación de Samu. La versión de desarrollo arranca Pi 0.87.1 con hogar aislado, tema de Ein, voz docente, las skills `intent`, `comment-style` y `logging-style`, y un trabajador configurable (Luna high por defecto). El relevo Pi↔Claude, un instalador local y el launcher de cinco vistas en Go ya tienen recorridos verificados.
 
 ## Arrancar
 
@@ -12,7 +12,7 @@ Con Pi 0.87.1 instalado:
 
 El lanzador conserva el directorio de trabajo actual y pasa los argumentos a Pi. Usa `~/.n_ein/dev/pi-agent` para configuración, autenticación y sesiones. No copia credenciales de Pi normal, Codex CLI ni Ein legado. Si quieres probar con otro hogar aislado, define `N_EIN_AGENT_DIR` antes de arrancar.
 
-El modelo principal es `openai-codex/gpt-6-sol` con razonamiento `high`. El trabajador usa `openai-codex/gpt-6-luna` también con razonamiento `high`. Esta elección es explícita: una falta de acceso no debe enviar la petición a otro proveedor. Para usar la suscripción desde Pi, inicia sesión en ese hogar con `/login` y el proveedor OpenAI Codex. El inicio de sesión ya hecho en Codex CLI no se copia automáticamente a Pi.
+Por defecto, el principal usa `openai-codex/gpt-6-sol` y el trabajador `openai-codex/gpt-6-luna`, ambos con razonamiento `high`. En las instalaciones que incluyen el selector, `/models` dentro de Pi elige modelo y esfuerzo de cada rol desde el catálogo disponible; admite un ID personalizado y restablecer el valor del paquete. Guarda la elección en `~/.n_ein/<canal>/models.json`, fuera del código gestionado: el principal cambia al reiniciar Pi y el trabajador en su siguiente encargo. Configuración muestra el valor efectivo y si procede del paquete o del ajuste del canal. Un modelo inaccesible da un error visible, sin cambiar silenciosamente de proveedor. Para usar la suscripción desde Pi, inicia sesión en ese hogar con `/login` y el proveedor OpenAI Codex. El inicio de sesión ya hecho en Codex CLI no se copia automáticamente a Pi.
 
 `/skill:intent` inicia la conversación para concretar una idea. En peticiones claras se trabaja directamente. Las otras skills se cargan según la tarea.
 
@@ -25,7 +25,7 @@ El contexto de origen y el plan están en [docs/START_HERE.md](docs/START_HERE.m
 El [primer caso de regresión](evals/results/2026-09-29-first-session.md) ya pasó con Sol high y, en una sesión directa separada, con Luna high.
 La [continuación SQLSTATE](evals/results/2026-09-29-sqlstate.md) probó TDD ya elegido, delegación a Luna, regresión roja y verde, y un arreglo posterior en sesión nueva sin repetir la entrevista.
 
-El agente principal puede usar `n_ein_worker` para encargar trabajo completo a Luna high. `work` permite editar y comprobar; `explore` y `review` solo cargan herramientas de lectura. El resultado incluye el modelo realmente usado, estado final, comandos observados y una estimación de catálogo separada del coste facturado. Hay un trabajador activo por sesión de Pi; el padre revisa el diff y la evidencia antes de aceptar el resultado. El [primer recorrido delegado](evals/results/2026-09-29-worker.md) incluye una regresión y una API de notas pequeña.
+El agente principal puede usar `n_ein_worker` para encargar trabajo completo al modelo configurado para el trabajador (Luna high por defecto). `work` permite editar y comprobar; `explore` y `review` solo cargan herramientas de lectura. El resultado incluye el modelo realmente usado, estado final, comandos observados y una estimación de catálogo separada del coste facturado. Hay un trabajador activo por sesión de Pi; el padre revisa el diff y la evidencia antes de aceptar el resultado. El [primer recorrido delegado](evals/results/2026-09-29-worker.md) incluye una regresión y una API de notas pequeña.
 
 La cancelación se comprobó con `bun run evals/cancel-smoke.ts`: al interrumpir una herramienta larga, el cambio previo permanece y el proceso hijo deja de escribir. Es una evaluación manual que usa la suscripción.
 

@@ -300,6 +300,7 @@ func loadState(root, project string) appState {
 	if channel != "dev" && channel != "preview" && channel != "stable" {
 		channel = "desconocido"
 	}
+	config, piModelSource, workerModelSource, modelError := applyModelSelections(config, channel)
 	branch := known(command(project, "git", "branch", "--show-current"))
 	status := command(project, "git", "status", "--short")
 	gitState := "limpio"
@@ -352,6 +353,8 @@ func loadState(root, project string) appState {
 	piAction, piLabel := "pi", "abrir agente principal"
 	if piVersion == "desconocido" {
 		piAction, piLabel = "", "no disponible"
+	} else if modelError != nil {
+		piAction, piLabel = "", "ajustes de modelos inválidos"
 	} else if config.Pi.Version == "" {
 		piAction, piLabel = "", "versión esperada desconocida"
 	} else if piVersion != config.Pi.Version {
@@ -361,6 +364,11 @@ func loadState(root, project string) appState {
 	if claudeVersion == "desconocido" {
 		claudeAction, claudeLabel = "", "no disponible"
 	}
+	principalValue := known(config.Pi.Model) + " · " + known(config.Pi.Thinking)
+	workerValue := known(config.Worker.Model) + " · " + known(config.Worker.Thinking)
+	if modelError != nil {
+		principalValue, workerValue = modelError.Error(), modelError.Error()
+	}
 	return appState{colors: brand.Colors, views: []panel{
 		{0, "ESTADO", []row{
 			{"proyecto", project, "cwd", ""}, {"rama", branch, "Git", ""}, {"cambios", gitState, "Git", ""},
@@ -368,8 +376,9 @@ func loadState(root, project string) appState {
 			{"comprobación", evidence, "WORK.md", ""},
 		}},
 		{1, "CONFIGURACIÓN", []row{
-			{"principal", known(config.Pi.Model) + " · " + known(config.Pi.Thinking), "runtime.json", ""},
-			{"trabajador", known(config.Worker.Model) + " · " + known(config.Worker.Thinking), "runtime.json", ""},
+			{"principal", principalValue, piModelSource, ""},
+			{"trabajador", workerValue, workerModelSource, ""},
+			{"editar", "abrir Pi y usar /models", "Pi", piAction},
 			{"idioma", "español", "persona.md", ""}, {"canal", channel, ".n-ein-channel", ""},
 		}},
 		{2, "SESIONES", sessionRows},

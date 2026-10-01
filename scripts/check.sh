@@ -26,6 +26,7 @@ tests/reverse-launcher.sh
 bun run tests/work-doc.ts
 bun run tests/handoff.ts
 bun run tests/worker-error.ts
+bun run tests/models.ts
 
 (
   cd go

@@ -1,14 +1,14 @@
 // =============================================================================
-// [FLOW] TRABAJADOR LUNA
+// [FLOW] TRABAJADOR CONFIGURADO
 // Un proceso Pi por encargo: contexto nuevo, mismo proyecto y hogar aislado.
 // =============================================================================
 
 import { spawn } from "node:child_process";
-import { readFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 import { dirname, resolve } from "node:path";
 import type { ExtensionAPI } from "@earendil-works/pi-coding-agent";
 import { Type } from "typebox";
+import { loadModels } from "../models.ts";
 
 type Mode = "explore" | "work" | "review";
 type Command = { command: string; exitCode: number | null; output: string };
@@ -24,11 +24,8 @@ type Run = {
 
 const OUTPUT_LIMIT = 1200;
 const CHILD_GRACE_MS = 5000;
-const launcher = resolve(dirname(fileURLToPath(import.meta.url)), "../../bin/n-ein-dev");
-const runtime = JSON.parse(readFileSync(resolve(dirname(fileURLToPath(import.meta.url)), "../../runtime.json"), "utf8"));
-const [WORKER_PROVIDER, LUNA] = String(runtime.worker.model).split("/");
-const WORKER_THINKING = String(runtime.worker.thinking);
-if (runtime.schema !== 1 || !WORKER_PROVIDER || !LUNA || !WORKER_THINKING) throw new Error("runtime.json inválido para trabajador");
+const packageRoot = resolve(dirname(fileURLToPath(import.meta.url)), "../..");
+const launcher = resolve(packageRoot, "bin/n-ein-dev");
 
 function taskPrompt(mode: Mode, task: string, acceptance: string, knownFailures?: string): string {
   const boundary = mode === "work"
@@ -48,7 +45,7 @@ function readText(result: unknown): string {
   return content?.filter((part) => part.type === "text").map((part) => part.text ?? "").join("\n") ?? "";
 }
 
-function consumeEvent(line: string, run: Run, commandsById: Map<string, Command>): string | undefined {
+function consumeEvent(line: string, run: Run, commandsById: Map<string, Command>, modelName: string): string | undefined {
   let event: any;
   try {
     event = JSON.parse(line);
@@ -82,7 +79,7 @@ function consumeEvent(line: string, run: Run, commandsById: Map<string, Command>
         run.usage.catalogEstimateUsd = (run.usage.catalogEstimateUsd ?? 0) + usage.cost.total;
       }
     }
-    return `${LUNA}: turno ${run.stopReason ?? "en curso"}`;
+    return `${modelName}: turno ${run.stopReason ?? "en curso"}`;
   }
 
   if (event.type === "tool_execution_end" && event.toolName === "bash") {
@@ -92,9 +89,9 @@ function consumeEvent(line: string, run: Run, commandsById: Map<string, Command>
     const code = output.match(/Command exited with code (\d+)/);
     command.exitCode = event.isError ? (code ? Number(code[1]) : null) : 0;
     command.output = output.slice(0, OUTPUT_LIMIT);
-    return `${LUNA}: $ ${command.command.slice(0, 60)} → ${command.exitCode ?? "error"}`;
+    return `${modelName}: $ ${command.command.slice(0, 60)} → ${command.exitCode ?? "error"}`;
   }
-  if (event.type === "tool_execution_end") return `${LUNA}: ${event.toolName} ${event.isError ? "falló" : "terminó"}`;
+  if (event.type === "tool_execution_end") return `${modelName}: ${event.toolName} ${event.isError ? "falló" : "terminó"}`;
   return undefined;
 }
 
@@ -105,8 +102,8 @@ export default function (pi: ExtensionAPI) {
 
   pi.registerTool({
     name: "n_ein_worker",
-    label: "Trabajador Luna",
-    description: "Delega un encargo acotado y útil a GPT-6 Luna high. Usa work para implementar, explore para investigar y review para revisar. Espera el resultado y contrasta diff y evidencia antes de aceptarlo.",
+    label: "Trabajador n_ein",
+    description: "Delega un encargo acotado al modelo configurado para este trabajador. Usa work para implementar, explore para investigar y review para revisar. Espera el resultado y contrasta diff y evidencia antes de aceptarlo.",
     parameters: Type.Object({
       mode: Type.Union([Type.Literal("explore"), Type.Literal("work"), Type.Literal("review")]),
       task: Type.String({ description: "Resultado esperado, alcance y referencias pertinentes" }),
@@ -115,6 +112,15 @@ export default function (pi: ExtensionAPI) {
     }),
     async execute(_toolCallId, params, signal, onUpdate, ctx) {
       if (active) return { content: [{ type: "text", text: "[WARN] :: WORKER_BUSY :: Hay otro trabajador activo en este árbol." }] };
+      let selected;
+      try {
+        selected = loadModels(packageRoot).worker;
+      } catch (error) {
+        return { content: [{ type: "text", text: `[ERR] :: MODELS_BAD :: reason: ${error instanceof Error ? error.message : String(error)}` }] };
+      }
+      const separator = selected.model.indexOf("/");
+      const provider = selected.model.slice(0, separator);
+      const modelName = selected.model.slice(separator + 1);
       active = true;
 
       const mode = params.mode as Mode;
@@ -124,7 +130,7 @@ export default function (pi: ExtensionAPI) {
         usage: { input: 0, output: 0, cacheRead: 0, cacheWrite: 0, catalogEstimateUsd: null },
       };
       const commandsById = new Map<string, Command>();
-      const args = ["--mode", "json", "--print", "--no-session", "--model", `${WORKER_PROVIDER}/${LUNA}`, "--thinking", WORKER_THINKING];
+      const args = ["--mode", "json", "--print", "--no-session", "--model", selected.model, "--thinking", selected.thinking];
       if (mode !== "work") args.push("--tools", "read,grep,find,ls");
       args.push(taskPrompt(mode, params.task, params.acceptance, params.knownFailures));
 
@@ -146,7 +152,7 @@ export default function (pi: ExtensionAPI) {
             const lines = buffer.split("\n");
             buffer = lines.pop() ?? "";
             for (const line of lines) {
-              const progress = consumeEvent(line, run, commandsById);
+              const progress = consumeEvent(line, run, commandsById, modelName);
               if (progress) {
                 onUpdate?.({ content: [{ type: "text", text: progress }] });
               }
@@ -170,14 +176,14 @@ export default function (pi: ExtensionAPI) {
           child.on("close", (code) => {
             closed = true;
             signal?.removeEventListener("abort", stopChild);
-            if (buffer.trim()) consumeEvent(buffer, run, commandsById);
+            if (buffer.trim()) consumeEvent(buffer, run, commandsById, modelName);
             resolveExit(code ?? 1);
           });
           if (signal?.aborted) stopChild();
           else signal?.addEventListener("abort", stopChild, { once: true });
         });
 
-        const complete = !aborted && exitCode === 0 && run.provider === WORKER_PROVIDER && run.model === LUNA && run.stopReason === "stop" && Boolean(run.finalText.trim());
+        const complete = !aborted && exitCode === 0 && run.provider === provider && run.model === modelName && run.stopReason === "stop" && Boolean(run.finalText.trim());
         const status = complete ? "completo" : aborted ? "cancelado" : "parcial o fallido";
         const action = complete ? "COMPLETE" : aborted ? "CANCELLED" : "PARTIAL";
         const header = `[WORK] :: ${action} :: modo: ${mode} | modelo: ${run.provider ?? "desconocido"}/${run.model ?? "desconocido"} | cwd: ${ctx.cwd} | exit: ${exitCode}`;
