@@ -6,8 +6,8 @@ set -euo pipefail
 repo_dir="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd -P)"
 release_version="${1:-}"
 output_dir="${2:-$repo_dir/dist/releases}"
-if [[ ! "$release_version" =~ ^[0-9]+\.[0-9]+\.[0-9]+-preview\.[0-9]+$ ]]; then
-  printf '[ERR] :: VERSION_BAD :: expected: 0.1.0-preview.1\n' >&2
+if [[ ! "$release_version" =~ ^[0-9]+\.[0-9]+\.[0-9]+-preview\.[0-9]+(\+hotfix\.[0-9a-f]{7,40})?$ ]]; then
+  printf '[ERR] :: VERSION_BAD :: expected: 0.1.0-preview.1[+hotfix.sha]\n' >&2
   exit 64
 fi
 
@@ -39,6 +39,17 @@ if [[ -e "$candidate" || -e "$archive" ]]; then
   printf '[ERR] :: CANDIDATE_EXISTS :: path: %s\n' "$candidate" >&2
   exit 64
 fi
+candidate_created=0
+finished=0
+smoke_dir=""
+cleanup_preview_build() {
+  if [[ -n "$smoke_dir" ]]; then rm -rf "$smoke_dir"; fi
+  if [[ "$candidate_created" == 1 && "$finished" != 1 ]]; then
+    rm -rf "$candidate"
+    rm -f "$archive" "$archive.sha256"
+  fi
+}
+trap cleanup_preview_build EXIT
 
 (
   cd "$repo_dir/go"
@@ -46,6 +57,7 @@ fi
   GOTOOLCHAIN=local "$go_bin" build -trimpath -ldflags "-X main.version=$release_version" -o ../dist/n-ein-install ./cmd/n-ein-install
 )
 "$repo_dir/dist/n-ein-install" package --source "$repo_dir" --output "$candidate"
+candidate_created=1
 
 expected_commit="$(git -C "$repo_dir" rev-parse HEAD)"
 if [[ -n "$dirty_suffix" ]]; then expected_commit+="+dirty"; fi
@@ -56,12 +68,11 @@ bun -e 'const m = await Bun.file(process.argv[1]).json(); if (m.version !== proc
 }
 
 smoke_dir="$(mktemp -d)"
-trap 'rm -rf "$smoke_dir"' EXIT
 mkdir -p "$smoke_dir/project"
 "$candidate/bin/n-ein-install" install --source "$candidate" --target "$smoke_dir/preview" --channel preview > /dev/null
 "$smoke_dir/preview/bin/n-ein-install" doctor --target "$smoke_dir/preview" --runtime > /dev/null
 "$smoke_dir/preview/bin/n-ein" --project "$smoke_dir/project" --view configuracion --once > "$smoke_dir/launcher"
-rg -q "$release_version" "$smoke_dir/preview/install.json"
+rg -Fq "$release_version" "$smoke_dir/preview/install.json"
 rg -q 'openai-codex/gpt-6-sol' "$smoke_dir/launcher"
 
 tar -czf "$archive" -C "$output_dir" "$(basename "$candidate")"
@@ -76,3 +87,4 @@ extracted="$smoke_dir/extracted/$(basename "$candidate")"
 )
 printf '// 000 PREVIEW · %s\n' "$archive"
 cat "$archive.sha256"
+finished=1

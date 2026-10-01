@@ -53,6 +53,18 @@ tar -xzf n-ein-0.1.0-preview.1-darwin-arm64.tar.gz
 
 El primer arranque de Pi en preview requiere `/login` en `~/.n_ein/preview/pi-agent`; esa autenticación no se copia desde desarrollo ni desde Ein. Para actualizar una preview posterior, descarga su candidato y usa `n-ein-install update --source <directorio-extraído> --channel preview`; `restore --channel preview` vuelve al backup anterior. La vista Sistema aún no descarga actualizaciones por sí sola.
 
+### Hotfix local de preview
+
+La release `v0.1.0-preview.1` es una base inmutable. Para aplicar al canal preview un commit posterior comprobado —por ejemplo, el selector `/models`— sin publicar otra prerelease, desde un checkout limpio de n_ein:
+
+```sh
+./scripts/hotfix-preview.sh plan
+./scripts/hotfix-preview.sh apply
+./scripts/hotfix-preview.sh rollback
+```
+
+`plan` ejecuta los checks, compila un candidato nativo con versión `0.1.0-preview.1+hotfix.<commit>` y muestra el update sin sustituir la instalación. `apply` verifica el candidato, conserva un backup y ejecuta `doctor`; `rollback` recupera el último backup. El archivo de modelos, la autenticación y las sesiones siguen fuera del árbol reemplazado. Hazlo con las sesiones de ese canal cerradas. El hotfix no publica un tag ni modifica la release original.
+
 ### Desde el checkout
 
 Con Go 1.27.1, construye el instalador separado y mira el plan antes de escribir:

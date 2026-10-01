@@ -24,6 +24,8 @@ El canal `alpha` de Ein corresponde a preview. Como en Ein, el canal elegido se 
 
 Promover el mismo artefacto/bytes, no reconstruir silenciosamente otro con dependencias distintas. Registrar identificador de release, commit, versiones runtime/dependencias y hash. No hace falta una plataforma de releases propia.
 
+Entre previews públicas, `scripts/hotfix-preview.sh` puede aplicar un commit limpio al canal preview local sin crear otro tag: usa `scripts/check.sh`, un candidato versionado con `+hotfix.<commit>` y el mismo `update`/backup/`restore` del instalador. `plan` deja revisar el candidato sin reemplazar la instalación. El paquete publicado continúa inmutable.
+
 ## Instalación aislada
 
 Pi vanilla, Ein legado, desarrollo n_ein y estable n_ein deben tener identidades claras. Proponer hogares separados; confirmar y comprobar resolución de rutas antes de escribir. No copiar credenciales en paquetes ni migrar sign-ins automáticamente por conveniencia.

@@ -41,6 +41,8 @@ Samu aplazó expresamente el ensayo de Qwen local hasta disponer de la máquina 
 
 El 1 de octubre pidió recuperar un selector de modelos por rol como el de Ein: principal y cada trabajador que exista, con esfuerzo configurable. Los valores Sol/Luna high siguen siendo los predeterminados, no una limitación del selector. La configuración personal vive fuera del paquete para sobrevivir a las actualizaciones.
 
+También pidió hotfixes para evitar una nueva alpha por cada arreglo. Este primer mecanismo aplica un commit limpio y verificado al canal preview mediante el mismo paquete e instalador transaccional; marca versión `+hotfix.<commit>` y usa el restore existente. No reintroduce ramas ni fases SDD en el trabajo ordinario, ni altera estable o Ein legado.
+
 ## Recomendaciones de diseño, revisables
 
 - Pi como runtime inicial; n_ein como capa pequeña: un paquete Pi (skills, extensiones mínimas, prompts, tema) más un launcher que fija el hogar aislado. Pi ya ofrece el aislamiento (`PI_CODING_AGENT_DIR`) y la carga de paquetes (`pi install`, `pi -e`).
