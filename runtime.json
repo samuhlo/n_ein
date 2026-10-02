@@ -5,9 +5,17 @@
     "model": "openai-codex/gpt-6-sol",
     "thinking": "high"
   },
+  "scout": {
+    "model": "openai-codex/gpt-6-luna",
+    "thinking": "low"
+  },
   "worker": {
     "model": "openai-codex/gpt-6-luna",
     "thinking": "high"
+  },
+  "reviewer": {
+    "model": "openai-codex/gpt-6-sol",
+    "thinking": "medium"
   },
   "codegraph": {
     "version": "1.6.1",

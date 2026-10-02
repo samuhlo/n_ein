@@ -31,21 +31,23 @@ func validModelSelection(value modelSelection) bool {
 }
 
 // [DATA] Los ajustes del canal sobreviven al reemplazo del paquete instalado.
-func applyModelSelections(config runtimeConfig, channel string) (runtimeConfig, string, string, error) {
+// Devuelve la configuración efectiva y, por rol, si su valor viene de runtime.json o de models.json.
+func applyModelSelections(config runtimeConfig, channel string) (runtimeConfig, map[string]string, error) {
+	sources := map[string]string{"principal": "runtime.json", "scout": "runtime.json", "worker": "runtime.json", "reviewer": "runtime.json"}
 	path := os.Getenv("N_EIN_MODELS_FILE")
 	if path == "" {
 		home, err := layout.Root()
 		if err != nil {
-			return config, "runtime.json", "runtime.json", err
+			return config, sources, err
 		}
 		path = filepath.Join(home, channel, "models.json")
 	}
 	data, err := os.ReadFile(path)
 	if errors.Is(err, os.ErrNotExist) {
-		return config, "runtime.json", "runtime.json", nil
+		return config, sources, nil
 	}
 	if err != nil {
-		return config, "runtime.json", "runtime.json", err
+		return config, sources, err
 	}
 	var settings struct {
 		Schema int                       `json:"schema"`
@@ -55,11 +57,11 @@ func applyModelSelections(config runtimeConfig, channel string) (runtimeConfig, 
 		} `json:"claude"`
 	}
 	if json.Unmarshal(data, &settings) != nil || settings.Schema != 1 || settings.Agents == nil {
-		return config, "models.json", "models.json", fmt.Errorf("models.json inválido")
+		return config, sources, fmt.Errorf("models.json inválido")
 	}
 	for role, value := range settings.Agents {
 		if !validModelSelection(value) {
-			return config, "models.json", "models.json", fmt.Errorf("models.json inválido: %s", role)
+			return config, sources, fmt.Errorf("models.json inválido: %s", role)
 		}
 	}
 	// Claude no elige modelo en n_ein: solo su esfuerzo, con los niveles que acepta Claude Code.
@@ -68,17 +70,19 @@ func applyModelSelections(config runtimeConfig, channel string) (runtimeConfig, 
 		case "low", "medium", "high", "xhigh", "max":
 			config.Claude.Effort = settings.Claude.Effort
 		default:
-			return config, "models.json", "models.json", fmt.Errorf("models.json inválido: claude")
+			return config, sources, fmt.Errorf("models.json inválido: claude")
 		}
 	}
-	piSource, workerSource := "runtime.json", "runtime.json"
-	if value, ok := settings.Agents["principal"]; ok {
-		config.Pi.Model, config.Pi.Thinking = value.Model, value.Thinking
-		piSource = "models.json"
+	targets := map[string]*modelSelection{"scout": &config.Scout, "worker": &config.Worker, "reviewer": &config.Reviewer}
+	for role, value := range settings.Agents {
+		if role == "principal" {
+			config.Pi.Model, config.Pi.Thinking = value.Model, value.Thinking
+		} else if target, ok := targets[role]; ok {
+			*target = value
+		} else {
+			continue
+		}
+		sources[role] = "models.json"
 	}
-	if value, ok := settings.Agents["worker"]; ok {
-		config.Worker.Model, config.Worker.Thinking = value.Model, value.Thinking
-		workerSource = "models.json"
-	}
-	return config, piSource, workerSource, nil
+	return config, sources, nil
 }

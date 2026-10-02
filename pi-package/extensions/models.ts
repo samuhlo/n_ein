@@ -9,30 +9,37 @@ import { dirname, resolve } from "node:path";
 import type { ExtensionAPI, ExtensionContext } from "@earendil-works/pi-coding-agent";
 import { loadModels, saveClaudeEffort, saveModelChoice } from "../models.ts";
 import { painter } from "./brand.ts";
-import { ModelsPanel, type Draft, type ModelChoice, type PanelKit, type PanelResult } from "./models-panel.ts";
+import { ModelsPanel, type Draft, type ModelChoice, type ModelRole, type PanelKit, type PanelResult } from "./models-panel.ts";
+
+const MODEL_ROLES: ModelRole[] = ["principal", "scout", "worker", "reviewer"];
+const APPLIES: Record<ModelRole, string> = {
+  principal: "reinicia Pi",
+  scout: "próxima exploración",
+  worker: "próximo encargo",
+  reviewer: "próxima revisión",
+};
 
 const packageRoot = resolve(dirname(fileURLToPath(import.meta.url)), "../..");
 
-function savedDraft(): { saved: Draft; defaults: { principal: ModelChoice; worker: ModelChoice } } {
+function savedDraft(): { saved: Draft; defaults: Record<ModelRole, ModelChoice> } {
   const effective = loadModels(packageRoot);
   const fromPackage = loadModels(packageRoot, undefined, { ignoreSettings: true });
-  return {
-    saved: {
-      principal: effective.overridden.includes("principal") ? effective.principal : null,
-      worker: effective.overridden.includes("worker") ? effective.worker : null,
-      claude: effective.claudeEffort,
-    },
-    defaults: { principal: fromPackage.principal, worker: fromPackage.worker },
-  };
+  const saved = { claude: effective.claudeEffort } as Draft;
+  const defaults = {} as Record<ModelRole, ModelChoice>;
+  for (const role of MODEL_ROLES) {
+    saved[role] = effective.overridden.includes(role) ? effective[role] : null;
+    defaults[role] = fromPackage[role];
+  }
+  return { saved, defaults };
 }
 
 function persist(saved: Draft, draft: Draft): string[] {
   const applied: string[] = [];
-  for (const role of ["principal", "worker"] as const) {
+  for (const role of MODEL_ROLES) {
     if (JSON.stringify(saved[role]) === JSON.stringify(draft[role])) continue;
     saveModelChoice(packageRoot, role, draft[role]);
     const value = draft[role] ? `${draft[role]!.model} · ${draft[role]!.thinking}` : "valor del paquete";
-    applied.push(role === "principal" ? `principal: ${value} (reinicia Pi)` : `trabajador: ${value} (próximo encargo)`);
+    applied.push(`${role === "principal" ? "principal" : `nein-${role}`}: ${value} (${APPLIES[role]})`);
   }
   if (saved.claude !== draft.claude) {
     saveClaudeEffort(packageRoot, draft.claude);
@@ -89,7 +96,7 @@ export default function (pi: ExtensionAPI) {
   if (process.env.N_EIN_WORKER_CHILD === "1") return;
 
   pi.registerCommand("nein:models", {
-    description: "Modelo y esfuerzo del principal y del trabajador, y esfuerzo de Claude",
+    description: "Modelo y esfuerzo del principal y de nein-scout, nein-worker y nein-reviewer; esfuerzo de Claude",
     handler: async (_args, ctx) => {
       const { matchesKey, truncateToWidth, visibleWidth } = await import("@earendil-works/pi-tui");
       await openModels(ctx, { matchesKey: (data, key) => matchesKey(data, key as never), truncateToWidth, visibleWidth });

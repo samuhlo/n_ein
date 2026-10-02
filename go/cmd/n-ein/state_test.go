@@ -137,38 +137,44 @@ func TestConfigViewShowsModelsFromChannelData(t *testing.T) {
 	t.Setenv("N_EIN_MODELS_FILE", settings)
 	t.Setenv("N_EIN_AGENT_DIR", filepath.Join(root, "pi-agent"))
 	t.Setenv("N_EIN_CLAUDE_DIR", filepath.Join(root, "claude-agent"))
-	write(t, filepath.Join(root, "runtime.json"), `{"schema":1,"pi":{"version":"0.87.1","model":"openai-codex/gpt-6-sol","thinking":"high"},"worker":{"model":"openai-codex/gpt-6-luna","thinking":"high"}}`)
+	write(t, filepath.Join(root, "runtime.json"), `{"schema":1,"pi":{"version":"0.87.1","model":"openai-codex/gpt-6-sol","thinking":"high"},"scout":{"model":"openai-codex/gpt-6-luna","thinking":"low"},"worker":{"model":"openai-codex/gpt-6-luna","thinking":"high"},"reviewer":{"model":"openai-codex/gpt-6-sol","thinking":"medium"}}`)
 	pi := filepath.Join(root, "pi")
 	write(t, pi, "#!/bin/sh\nprintf '0.87.1\\n'\n")
 	if err := os.Chmod(pi, 0o755); err != nil {
 		t.Fatal(err)
 	}
 	t.Setenv("N_EIN_PI_BIN", pi)
-	write(t, settings, `{"schema":1,"agents":{"principal":{"model":"openai-codex/gpt-6-luna","thinking":"medium"}}}`)
+	write(t, settings, `{"schema":1,"agents":{"principal":{"model":"openai-codex/gpt-6-luna","thinking":"medium"},"reviewer":{"model":"openai-codex/gpt-6-sol","thinking":"high"}}}`)
 
 	state := loadState(root, project)
 	rows := state.views[2].rows
 	if rows[0].value != "openai-codex/gpt-6-luna · medium" || rows[0].source != "models.json" {
 		t.Fatalf("principal efectivo: %#v", rows[0])
 	}
-	if rows[1].value != "openai-codex/gpt-6-luna · high" || rows[1].source != "runtime.json" {
-		t.Fatalf("trabajador por defecto: %#v", rows[1])
+	for i, want := range []row{
+		{"nein-scout", "openai-codex/gpt-6-luna · low", "runtime.json", ""},
+		{"nein-worker", "openai-codex/gpt-6-luna · high", "runtime.json", ""},
+		{"nein-reviewer", "openai-codex/gpt-6-sol · high", "models.json", ""},
+	} {
+		if rows[i+1] != want {
+			t.Fatalf("rol %d: quería %#v, hay %#v", i+1, want, rows[i+1])
+		}
 	}
-	if rows[2].label != "claude" || rows[2].value != "modelo de Claude Code · esfuerzo por defecto" || rows[2].source != "Claude Code" {
-		t.Fatalf("Claude sin ajuste debe usar el esfuerzo de Claude Code: %#v", rows[2])
+	if rows[4].label != "claude" || rows[4].value != "modelo de Claude Code · esfuerzo por defecto" || rows[4].source != "Claude Code" {
+		t.Fatalf("Claude sin ajuste debe usar el esfuerzo de Claude Code: %#v", rows[4])
 	}
-	if rows[3].action != "pi" || state.views[0].rows[0].action != "pi" {
+	if rows[5].action != "pi" || state.views[0].rows[0].action != "pi" {
 		t.Fatal("selector o runtime inaccesible con ajuste válido")
 	}
 	write(t, settings, `{"schema":1,"agents":{},"claude":{"effort":"xhigh"}}`)
 	state = loadState(root, project)
-	if row := state.views[2].rows[2]; row.value != "modelo de Claude Code · xhigh" || row.source != "models.json" {
+	if row := state.views[2].rows[4]; row.value != "modelo de Claude Code · xhigh" || row.source != "models.json" {
 		t.Fatalf("esfuerzo de Claude no leído: %#v", row)
 	}
 	write(t, settings, `{"schema":1,"agents":{},"claude":{"effort":"minimal"}}`)
 	state = loadState(root, project)
-	if !strings.Contains(state.views[2].rows[2].value, "models.json inválido: claude") {
-		t.Fatalf("esfuerzo de Claude inválido aceptado: %#v", state.views[2].rows[2])
+	if !strings.Contains(state.views[2].rows[4].value, "models.json inválido: claude") {
+		t.Fatalf("esfuerzo de Claude inválido aceptado: %#v", state.views[2].rows[4])
 	}
 	write(t, settings, `{"schema":1,"agents":{"principal":{"model":"bad model","thinking":"high"}}}`)
 	state = loadState(root, project)

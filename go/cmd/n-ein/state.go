@@ -52,14 +52,13 @@ type runtimeConfig struct {
 		Model    string `json:"model"`
 		Thinking string `json:"thinking"`
 	} `json:"pi"`
-	Worker struct {
-		Model    string `json:"model"`
-		Thinking string `json:"thinking"`
-	} `json:"worker"`
+	Scout     modelSelection `json:"scout"`
+	Worker    modelSelection `json:"worker"`
+	Reviewer  modelSelection `json:"reviewer"`
 	CodeGraph struct {
 		Version string `json:"version"`
 	} `json:"codegraph"`
-	// Claude no viene de runtime.json: solo existe si Samu fijó su esfuerzo en models.json.
+	// Claude no viene de runtime.json: solo existe si el usuario fijó su esfuerzo en models.json.
 	Claude struct {
 		Effort string `json:"-"`
 	} `json:"-"`
@@ -328,7 +327,7 @@ func loadState(root, project string) appState {
 	if channel != "dev" && channel != "preview" && channel != "stable" {
 		channel = "desconocido"
 	}
-	config, piModelSource, workerModelSource, modelError := applyModelSelections(config, channel)
+	config, modelSources, modelError := applyModelSelections(config, channel)
 	branch := known(command(project, "git", "branch", "--show-current"))
 	status := command(project, "git", "status", "--short")
 	gitState, changes := "limpio", "limpio"
@@ -412,11 +411,14 @@ func loadState(root, project string) appState {
 	if claudeVersion == "desconocido" {
 		claudeAction, claudeLabel = "", "no disponible"
 	}
-	principalValue := known(config.Pi.Model) + " · " + known(config.Pi.Thinking)
-	workerValue := known(config.Worker.Model) + " · " + known(config.Worker.Thinking)
-	if modelError != nil {
-		principalValue, workerValue = modelError.Error(), modelError.Error()
+	// Una fila por rol: el principal decide; los tres nein-* son delegaciones con su propio modelo.
+	roleRow := func(label, key string, choice modelSelection) row {
+		if modelError != nil {
+			return row{label, modelError.Error(), "models.json", ""}
+		}
+		return row{label, known(choice.Model) + " · " + known(choice.Thinking), modelSources[key], ""}
 	}
+	principal := modelSelection{Model: config.Pi.Model, Thinking: config.Pi.Thinking}
 	piNote := piLabel
 	if piAction != "" {
 		piNote = strings.TrimPrefix(known(config.Pi.Model), "openai-codex/") + " · " + known(config.Pi.Thinking)
@@ -458,8 +460,10 @@ func loadState(root, project string) appState {
 			{"comprobación", evidence, "WORK.md", ""}, {"índice", index, "CodeGraph", ""},
 		}},
 		{2, "CONFIGURACIÓN", append(append([]row{
-			{"principal", principalValue, piModelSource, ""},
-			{"trabajador", workerValue, workerModelSource, ""},
+			roleRow("principal", "principal", principal),
+			roleRow("nein-scout", "scout", config.Scout),
+			roleRow("nein-worker", "worker", config.Worker),
+			roleRow("nein-reviewer", "reviewer", config.Reviewer),
 			claudeRow(config.Claude.Effort, modelError),
 			{"editar", "abrir Pi y usar /nein:models", "Pi", piAction},
 		}, langRows(channel)...), row{"canal", channel, ".n-ein-channel", ""})},

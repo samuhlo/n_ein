@@ -35,7 +35,7 @@ tests/handoff-launcher.sh
 tests/reverse-launcher.sh
 bun run tests/work-doc.ts
 bun run tests/handoff.ts
-bun run tests/worker-error.ts
+bun run tests/agents.ts
 bun run tests/models.ts
 bun run tests/codegraph.ts
 bun run tests/brand.ts

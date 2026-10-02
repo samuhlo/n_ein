@@ -38,12 +38,14 @@ function initialData(cwd: string): BannerData {
   const channel = readText(join(packageRoot, ".n-ein-channel")) || "dev";
   let version = "desarrollo";
   try { version = JSON.parse(readFileSync(join(packageRoot, "install.json"), "utf8")).version ?? version; } catch { /* checkout de desarrollo */ }
-  let models = { principal: "desconocido", worker: "desconocido", claude: "modelo de Claude Code" };
+  let models = { principal: "desconocido", scout: "desconocido", worker: "desconocido", reviewer: "desconocido", claude: "modelo de Claude Code" };
   try {
     const effective = loadModels(packageRoot);
     models = {
       principal: shortModel(effective.principal.model, effective.principal.thinking),
+      scout: shortModel(effective.scout.model, effective.scout.thinking),
       worker: shortModel(effective.worker.model, effective.worker.thinking),
+      reviewer: shortModel(effective.reviewer.model, effective.reviewer.thinking),
       claude: `modelo de Claude Code · ${effective.claudeEffort ?? "esfuerzo por defecto"}`,
     };
   } catch (error) {

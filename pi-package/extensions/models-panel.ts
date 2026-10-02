@@ -14,34 +14,35 @@ export type PanelKit = {
   visibleWidth(text: string): number;
 };
 
-export type Role = "principal" | "worker" | "claude";
+export type ModelRole = "principal" | "scout" | "worker" | "reviewer";
+export type Role = ModelRole | "claude";
 export type ModelChoice = { model: string; thinking: string };
 /** null en un rol = valor del paquete (o de Claude Code); lo que se guarda al final. */
-export type Draft = { principal: ModelChoice | null; worker: ModelChoice | null; claude: string | null };
+export type Draft = Record<ModelRole, ModelChoice | null> & { claude: string | null };
 export type PanelResult =
   | { kind: "save"; draft: Draft }
   | { kind: "cancel" }
-  | { kind: "custom"; role: "principal" | "worker"; draft: Draft };
+  | { kind: "custom"; role: ModelRole; draft: Draft };
 
 export const THINKING = ["off", "minimal", "low", "medium", "high", "xhigh", "max"];
 export const CLAUDE_EFFORT = ["low", "medium", "high", "xhigh", "max"];
 export const CUSTOM_MODEL = "id de modelo personalizado…";
 
-const ROLES: Role[] = ["principal", "worker", "claude"];
-const LABEL: Record<Role, string> = { principal: "principal", worker: "trabajador", claude: "claude" };
+const ROLES: Role[] = ["principal", "scout", "worker", "reviewer", "claude"];
+const LABEL: Record<Role, string> = { principal: "principal", scout: "nein-scout", worker: "nein-worker", reviewer: "nein-reviewer", claude: "claude" };
 const SAVE = ROLES.length;
 const CANCEL = ROLES.length + 1;
 const VISIBLE_MODELS = 10;
 
 export class ModelsPanel {
   private cursor = 0;
-  private picking: "principal" | "worker" | null = null;
+  private picking: ModelRole | null = null;
   private query = "";
   private pickCursor = 0;
 
   constructor(
     private draft: Draft,
-    private readonly defaults: { principal: ModelChoice; worker: ModelChoice },
+    private readonly defaults: Record<ModelRole, ModelChoice>,
     private readonly saved: Draft,
     private readonly models: string[],
     private readonly kit: PanelKit,
@@ -50,7 +51,7 @@ export class ModelsPanel {
     private readonly requestRender: () => void = () => {},
   ) {}
 
-  private effective(role: "principal" | "worker"): ModelChoice {
+  private effective(role: ModelRole): ModelChoice {
     return this.draft[role] ?? this.defaults[role];
   }
 
@@ -123,15 +124,15 @@ export class ModelsPanel {
 
   private tableLines(width: number): string[] {
     const p = this.p;
-    const modelWidth = Math.max(14, Math.min(34, width - 44));
+    const modelWidth = Math.max(14, Math.min(34, width - 47));
     const lines = [
-      p.fg(COLORS.muted, `   ${"ROL".padEnd(12)}${"MODELO".padEnd(modelWidth + 2)}ESFUERZO`),
+      p.fg(COLORS.muted, `   ${"ROL".padEnd(15)}${"MODELO".padEnd(modelWidth + 2)}ESFUERZO`),
       p.fg(COLORS.structure, `   ${"─".repeat(Math.max(10, width - 6))}`),
     ];
     ROLES.forEach((role, index) => {
       const focus = index === this.cursor;
       const pointer = focus ? p.fg(COLORS.yellow, "▸") : " ";
-      const label = (focus ? p.bold(p.fg(COLORS.concrete, LABEL[role].padEnd(12))) : p.fg(COLORS.muted, LABEL[role].padEnd(12)));
+      const label = (focus ? p.bold(p.fg(COLORS.concrete, LABEL[role].padEnd(15))) : p.fg(COLORS.muted, LABEL[role].padEnd(15)));
       let model: string, effort: string, origin: string;
       if (role === "claude") {
         model = p.fg(COLORS.faint, "el de Claude Code".padEnd(modelWidth + 2));
@@ -151,7 +152,7 @@ export class ModelsPanel {
     lines.push("", ` ${button(SAVE, "✓ guardar")}      ${button(CANCEL, "✗ cancelar")}`, "");
     lines.push(p.fg(COLORS.faint, " ↑↓ mover · enter modelo · e esfuerzo · r paquete · ctrl+s guardar · esc salir"));
     const dirty = ROLES.some((role) => this.changed(role));
-    if (dirty) lines.push(p.fg(COLORS.faint, " • sin guardar: principal al reiniciar Pi, trabajador en el próximo encargo, claude al abrirlo"));
+    if (dirty) lines.push(p.fg(COLORS.faint, " • sin guardar: principal al reiniciar Pi, cada rol en su próxima delegación, claude al abrirlo"));
     return lines;
   }
 

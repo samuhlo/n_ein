@@ -17,11 +17,11 @@ export type BannerData = {
   git?: { branch: string; changes: string };
   index: string;
   todo?: { current?: string; done: number; total: number };
-  models: { principal: string; worker: string; claude: string };
+  models: { principal: string; scout: string; worker: string; reviewer: string; claude: string };
 };
 
 const BLOCK = 58;
-const LABEL = 12;
+const LABEL = 15;
 const CASCADE_START = 0.3;
 const CASCADE_STEP = 0.04;
 
@@ -50,7 +50,9 @@ function statusRows(p: Painter, data: BannerData, room: number, compact = false)
   }
   rows.push(...gap, heading(p, data.todo ? 3 : 2, "MODELOS"), ...gap);
   rows.push(field("principal", data.models.principal));
-  rows.push(field("trabajador", data.models.worker));
+  rows.push(field("nein-scout", data.models.scout));
+  rows.push(field("nein-worker", data.models.worker));
+  rows.push(field("nein-reviewer", data.models.reviewer));
   rows.push(field("claude", data.models.claude));
   rows.push(...gap, p.fg(COLORS.faint, clip("/nein:models · /todo · /handoff claude · /skill:intent", room)));
   return rows;

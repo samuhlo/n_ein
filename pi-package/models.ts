@@ -9,14 +9,18 @@ import { homedir } from "node:os";
 import { dirname, join } from "node:path";
 import { randomUUID } from "node:crypto";
 
-export type Role = "principal" | "worker";
+// El principal decide y los tres roles son delegaciones por coste: buscar, hacer, comprobar.
+export const ROLES = ["principal", "scout", "worker", "reviewer"] as const;
+export type Role = (typeof ROLES)[number];
 export type ModelChoice = { model: string; thinking: string };
 // Claude usa el modelo de Claude Code; n_ein solo guarda su esfuerzo, y sin ajuste decide Claude Code.
 type Settings = { schema: 1; agents: Record<string, ModelChoice>; claude?: { effort: string } };
 export type EffectiveModels = {
   version: string;
   principal: ModelChoice;
+  scout: ModelChoice;
   worker: ModelChoice;
+  reviewer: ModelChoice;
   claudeEffort: string | null;
   path: string;
   overridden: Role[];
@@ -72,17 +76,19 @@ function readSettings(path: string): Settings {
 export function loadModels(packageRoot: string, requestedChannel?: string, options: { ignoreSettings?: boolean } = {}): EffectiveModels {
   const defaults = JSON.parse(readFileSync(join(packageRoot, "runtime.json"), "utf8"));
   if (defaults.schema !== 1 || !/^\d+\.\d+\.\d+$/.test(defaults.pi?.version)
-    || !validChoice(defaults.pi) || !validChoice(defaults.worker)) throw new Error("runtime.json inválido");
+    || !ROLES.every((role) => validChoice(role === "principal" ? defaults.pi : defaults[role]))) throw new Error("runtime.json inválido");
   const path = modelsPath(packageRoot, requestedChannel);
   // ignoreSettings da los valores del paquete: el panel los enseña como referencia al restablecer.
   const settings: Settings = options.ignoreSettings ? { schema: 1, agents: {} } : readSettings(path);
   return {
     version: defaults.pi.version,
     principal: settings.agents.principal ?? { model: defaults.pi.model, thinking: defaults.pi.thinking },
+    scout: settings.agents.scout ?? { model: defaults.scout.model, thinking: defaults.scout.thinking },
     worker: settings.agents.worker ?? { model: defaults.worker.model, thinking: defaults.worker.thinking },
+    reviewer: settings.agents.reviewer ?? { model: defaults.reviewer.model, thinking: defaults.reviewer.thinking },
     claudeEffort: settings.claude?.effort ?? null,
     path,
-    overridden: (["principal", "worker"] as const).filter((role) => role in settings.agents),
+    overridden: ROLES.filter((role) => role in settings.agents),
   };
 }
 

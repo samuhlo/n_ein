@@ -7,7 +7,7 @@ const data: BannerData = {
   channel: "preview", version: "0.1.0-preview.1+hotfix.abc", piVersion: "0.87.1", cwd: "~/proyecto",
   index: "codegraph · al día",
   todo: { current: "Corregir el puerto", done: 1, total: 3 },
-  models: { principal: "gpt-6-sol · high", worker: "gpt-6-luna · high", claude: "modelo de Claude Code · xhigh" },
+  models: { principal: "gpt-6-sol · high", scout: "gpt-6-luna · low", worker: "gpt-6-luna · high", reviewer: "gpt-6-sol · medium", claude: "modelo de Claude Code · xhigh" },
 };
 
 const opening = renderBanner(p, data, 0, 100).join("\n");
@@ -20,7 +20,7 @@ data.git = { branch: "main", changes: "2 sin confirmar" };
 const settled = renderBanner(p, data, bannerSeconds(data, p), 100).join("\n");
 for (const expected of ["▀▀▀▀▀", "no hace falta tanto", "preview · 0.1.0-preview.1+hotfix.abc · pi 0.87.1", "// 001  PROYECTO",
   "main · 2 sin confirmar", "codegraph · al día", "// 002  TRABAJO", "▸ Corregir el puerto  1/3", "// 003  MODELOS",
-  "gpt-6-luna · high", "modelo de Claude Code · xhigh", "/nein:models"]) {
+  "gpt-6-luna · high", "nein-scout     gpt-6-luna · low", "nein-reviewer  gpt-6-sol · medium", "modelo de Claude Code · xhigh", "/nein:models"]) {
   assert.ok(settled.includes(expected), `falta «${expected}» en el banner asentado`);
 }
 assert.doesNotMatch(settled, /\x1b\[/, "sin color no hay ANSI");
