@@ -43,23 +43,22 @@ Para volver desde Claude, usa `/to-pi`. Esa skill conserva el resultado en `WORK
 
 ## Instalación local de prueba
 
-La [preview 0.1.0-preview.1](https://github.com/samuhlo/n_ein/releases/tag/v0.1.0-preview.1) distribuye un candidato para macOS arm64 y otro para Linux amd64. En el Mac de Samu, con Bun y Pi 0.87.1 disponibles:
+La [preview 0.1.0-preview.2](https://github.com/samuhlo/n_ein/releases/tag/v0.1.0-preview.2) distribuye un candidato para macOS arm64 y otro para Linux amd64. Solo hace falta Bun: `nein-setup` instala Pi y CodeGraph fijados dentro de `~/.n_ein`.
 
 ```sh
-gh release download v0.1.0-preview.1 -R samuhlo/n_ein --pattern 'n-ein-0.1.0-preview.1-darwin-arm64.tar.gz*'
-shasum -a 256 -c n-ein-0.1.0-preview.1-darwin-arm64.tar.gz.sha256
-tar -xzf n-ein-0.1.0-preview.1-darwin-arm64.tar.gz
-./n-ein-0.1.0-preview.1-darwin-arm64/bin/n-ein-install install --source ./n-ein-0.1.0-preview.1-darwin-arm64 --channel preview --dry-run
-./n-ein-0.1.0-preview.1-darwin-arm64/bin/n-ein-install install --source ./n-ein-0.1.0-preview.1-darwin-arm64 --channel preview
-~/.n_ein/installations/preview/bin/n-ein-install doctor --channel preview --runtime
-~/.n_ein/installations/preview/bin/n-ein
+gh release download v0.1.0-preview.2 -R samuhlo/n_ein --pattern 'n-ein-0.1.0-preview.2-darwin-arm64.tar.gz*'
+shasum -a 256 -c n-ein-0.1.0-preview.2-darwin-arm64.tar.gz.sha256
+tar -xzf n-ein-0.1.0-preview.2-darwin-arm64.tar.gz
+./n-ein-0.1.0-preview.2-darwin-arm64/bin/nein-setup --dry-run
+./n-ein-0.1.0-preview.2-darwin-arm64/bin/nein-setup
+nein
 ```
 
-El primer arranque de Pi en preview requiere `/login` en `~/.n_ein/preview/pi-agent`; esa autenticación no se copia desde desarrollo ni desde Ein. Para actualizar una preview posterior, descarga su candidato y usa `n-ein-install update --source <directorio-extraído> --channel preview`; `restore --channel preview` vuelve al backup anterior. La vista Sistema aún no descarga actualizaciones por sí sola.
+El primer arranque de Pi en preview requiere `/login` en `~/.n_ein/preview/pi-agent`; esa autenticación no se copia desde desarrollo ni desde Ein. Sobre una preview anterior, `nein-setup` actualiza con backup y `n-ein-install restore --channel preview` vuelve al anterior. La vista Sistema aún no descarga actualizaciones por sí sola. Notas de cada versión en [docs/releases](docs/releases/).
 
 ### Entrada `nein` con Pi gestionado
 
-Desde los paquetes posteriores a `0.1.0-preview.1.hotfix.1`, un candidato extraído se instala completo con un solo comando, solo con Bun disponible:
+Desde `0.1.0-preview.2`, un candidato extraído se instala completo con un solo comando, solo con Bun disponible:
 
 ```sh
 ./<candidato>/bin/nein-setup --dry-run
@@ -79,7 +78,7 @@ Al abrir Pi o Claude desde n_ein en un repositorio git, el índice de CodeGraph 
 
 ### Hotfix local de preview
 
-La release `v0.1.0-preview.1` es una base inmutable. Para aplicar al canal preview un commit posterior comprobado —por ejemplo, el selector `/models`— sin publicar otra prerelease, desde un checkout limpio de n_ein:
+Cada release publicada es una base inmutable. Para aplicar al canal preview un commit posterior comprobado sin publicar otra prerelease, desde un checkout limpio de n_ein:
 
 ```sh
 ./scripts/hotfix-preview.sh plan
@@ -87,7 +86,7 @@ La release `v0.1.0-preview.1` es una base inmutable. Para aplicar al canal previ
 ./scripts/hotfix-preview.sh rollback
 ```
 
-`plan` ejecuta los checks, compila un candidato nativo con versión `0.1.0-preview.1+hotfix.<commit>` y muestra el update sin sustituir la instalación. `apply` verifica el candidato, conserva un backup y ejecuta `doctor`; `rollback` recupera el último backup. Si desde el hotfix instalado solo cambiaron docs o herramientas de desarrollo, `apply` no reinstala el runtime. El archivo de modelos, la autenticación y las sesiones siguen fuera del árbol reemplazado. Hazlo con las sesiones de ese canal cerradas. El hotfix no publica un tag ni modifica la release original.
+`plan` ejecuta los checks, compila un candidato nativo con versión `<preview instalada>+hotfix.<commit>` y muestra el update sin sustituir la instalación. `apply` verifica el candidato, conserva un backup y ejecuta `doctor`; `rollback` recupera el último backup. Si desde el hotfix instalado solo cambiaron docs o herramientas de desarrollo, `apply` no reinstala el runtime. El archivo de modelos, la autenticación y las sesiones siguen fuera del árbol reemplazado. Hazlo con las sesiones de ese canal cerradas. El hotfix no publica un tag ni modifica la release original.
 
 También hay una **release de hotfix desde rama** para compartir una corrección sin arrastrar lo que esté en `main`: se crea `hotfix/<nombre>` desde el tag publicado, se incorporan solo la corrección y el soporte de build, y se etiqueta `v<base>.hotfix.N`. `scripts/verify-hotfix-branch.sh <tag>` rechaza una rama nacida de `main`, un árbol sucio o un tag sin cambio de runtime. El tag pasa CI y genera el paquete Linux; el paquete macOS se construye nativamente con `scripts/build-preview.sh <versión>`. Ambos adjuntos se publican como prerelease con `gh release create --verify-tag`, conservando `main` y el hotfix local como vías independientes. La [primera release de rama, 0.1.0-preview.1.hotfix.1](https://github.com/samuhlo/n_ein/releases/tag/v0.1.0-preview.1.hotfix.1), contiene el selector `/models`. El [procedimiento](docs/05-despliegue.md#hotfix-desde-rama) y su [evidencia](evals/results/2026-10-01-branch-release.md) documentan el recorrido.
 
