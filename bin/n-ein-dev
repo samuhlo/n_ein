@@ -14,6 +14,10 @@ if ! command -v bun >/dev/null 2>&1; then
 fi
 runtime_values="$(bun "$repo_dir/pi-package/models.ts" "$repo_dir" "$channel")" || exit 64
 IFS=$'\t' read -r expected_pi_version main_model main_thinking worker_model worker_thinking _claude_effort <<< "$runtime_values"
+lang_directive="$(bun "$repo_dir/pi-package/lang.ts" "$repo_dir" "$channel")" || exit 64
+# El flujo de trabajo es del agente principal; un trabajador hijo recibe solo su encargo acotado.
+flow_args=(--append-system-prompt "$repo_dir/pi-package/pi-only.md" --append-system-prompt "$repo_dir/pi-package/flow.md")
+if [[ "${N_EIN_WORKER_CHILD:-0}" == 1 ]]; then flow_args=(); fi
 n_ein_home="${N_EIN_HOME:-$HOME/.n_ein}"
 agent_dir="${N_EIN_AGENT_DIR:-$n_ein_home/$channel/pi-agent}"
 pi_bin="${N_EIN_PI_BIN:-$n_ein_home/runtimes/pi/$expected_pi_version/bin/pi}"
@@ -63,7 +67,8 @@ if "$pi_bin" \
   --no-extensions --no-skills --no-prompt-templates --no-themes \
   -e "$repo_dir/pi-package" \
   --append-system-prompt "$repo_dir/pi-package/persona.md" \
-  --append-system-prompt "$repo_dir/pi-package/pi-only.md" \
+  ${flow_args[@]+"${flow_args[@]}"} \
+  --append-system-prompt "$lang_directive" \
   --use-theme ein \
   --model "$main_model" --thinking "$main_thinking" \
   "$@"; then

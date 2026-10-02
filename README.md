@@ -69,6 +69,10 @@ nein
 
 Instala Pi 0.87.1 en `~/.n_ein/runtimes/pi/0.87.1`, CodeGraph 1.6.1 en `~/.n_ein/runtimes/codegraph/1.6.1`, el código en `~/.n_ein/installations/<canal>` y enlaza `~/.local/bin/nein`. El `pi` global y Ein legado no se modifican; la autenticación no se copia. Repetirlo no reinstala lo que ya está bien. La [estructura del hogar](docs/05-despliegue.md#hogar-gestionado-y-entrada-nein) detalla cada pieza.
 
+### Flujo, skills e idioma
+
+El agente principal trabaja con un flujo fijo, adaptado del de Gentle Shell: autoriza, explora, resuelve dudas (una pregunta o `intent`), registra en `WORK.md` el trabajo sustancial, implementa tarea a tarea con TDD cuando aplica y un commit por tarea en una rama, y cierra con lo verificado. El catálogo suma trece skills adaptadas de Matt Pocock: `tdd`, `diagnosing-bugs`, `code-review`, `codebase-design`, `domain-modeling`, `research`, `prototype`, `pr` y `writing-for-agents`, que el agente usa cuando tocan, y `to-spec`, `to-tickets`, `retro` y `wait-what`, que lanzas tú. En Configuración del launcher, Enter cambia el idioma de la conversación (español o inglés) y el de los artefactos (el del proyecto, español o inglés). [Detalle](docs/02-diseno.md#recorrido-ordinario).
+
 ### CodeGraph en cada proyecto
 
 Al abrir Pi o Claude desde n_ein en un repositorio git, el índice de CodeGraph se crea si falta y se sincroniza si ya existe. Pi lo consulta con `codegraph_explore` y Claude con su MCP y el hook de prompt, configurados solo en su hogar aislado. Estado muestra si el proyecto tiene índice y Sistema la versión. Un fallo avisa con `CODEGRAPH_SKIP` y no impide trabajar. [Detalle](docs/02-diseno.md#codegraph-obligatorio).

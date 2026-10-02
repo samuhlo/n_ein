@@ -84,6 +84,22 @@ func (m uiModel) choose(action string) (uiModel, tea.Cmd) {
 	if action == "" {
 		return m, nil
 	}
+	// Los ajustes que se ciclan se guardan al momento y se repintan sin salir de la TUI.
+	if axis, ok := strings.CutPrefix(action, "cycle:"); ok {
+		_, err := cycleLang(m.state.home.channel, axis)
+		rows := m.state.views[m.view].rows
+		for i, item := range rows {
+			for _, fresh := range langRows(m.state.home.channel) {
+				if item.action != "" && item.action == fresh.action {
+					rows[i] = fresh
+				}
+			}
+			if err != nil && item.action == action {
+				rows[i].value = "no se pudo guardar: " + err.Error()
+			}
+		}
+		return m, nil
+	}
 	var target int
 	if _, err := fmt.Sscanf(action, "view:%d", &target); err == nil && target >= 0 && target < len(m.state.views) {
 		m.view, m.row, m.filter, m.intro = target, 0, "", false

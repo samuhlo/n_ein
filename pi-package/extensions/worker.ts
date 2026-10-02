@@ -36,6 +36,7 @@ function taskPrompt(mode: Mode, task: string, acceptance: string, knownFailures?
     `Resultado esperado y alcance: ${task}`,
     `Aceptación observable: ${acceptance}`,
     knownFailures ? `Fallos conocidos de la base, no exenciones generales: ${knownFailures}` : "",
+    mode === "work" ? "Deja los cambios sin commitear y sin tocar WORK.md: el agente principal los revisa e integra." : "",
     "Devuelve resultado completo o parcial, archivos cambiados, comandos y resultados observados, discrepancias y pendiente. No publiques ni amplíes el alcance.",
   ].filter(Boolean).join("\n\n");
 }

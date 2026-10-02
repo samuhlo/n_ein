@@ -53,6 +53,8 @@ Sobre la paridad con Claude decidió: **sin delegación en Luna y sin selector d
 
 También precisó que n_ein es **un producto que cualquiera pueda usar**, aunque sea principalmente para él: lo que se instala (persona, skills, lanzadores) habla del usuario, nunca de Samu; `tests/skills.ts` lo comprueba. Y que las skills sigan de verdad la manera de trabajar de Matt Pocock: `intent` recupera la redacción de `grilling` (entrevista implacable, árbol de decisiones, rondas sobre la frontera, cada pregunta numerada con su recomendación, hechos a cargo del agente) con las adaptaciones ya acordadas, y las skills que solo se lanzan a mano llevan `disable-model-invocation`.
 
+El 2 de octubre pidió que n_ein sea de verdad **una mezcla de Matt y Gentle Shell**: el método en skills pequeñas de Matt y el flujo de trabajo de Gentle. Decisiones de esa ronda: **commit por tarea** en una rama de trabajo cuando el encargo está autorizado, sin push, merge ni PR sin pedirlo; **`WORK.md`** como única fuente de especificación y tareas, por ser lo que menos tokens gasta (sin gestor de incidencias ni memoria Engram); **idioma elegible en el launcher** en dos ejes, conversación y artefactos, como en Ein; y el orden **método y flujo primero**, después una prueba en un proyecto real y solo entonces roles y revisión. [Diseño](02-diseno.md#recorrido-ordinario).
+
 ## Recomendaciones de diseño, revisables
 
 - Pi como runtime inicial; n_ein como capa pequeña: un paquete Pi (skills, extensiones mínimas, prompts, tema) más un launcher que fija el hogar aislado. Pi ya ofrece el aislamiento (`PI_CODING_AGENT_DIR`) y la carga de paquetes (`pi install`, `pi -e`).

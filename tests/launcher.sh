@@ -36,6 +36,7 @@ export N_EIN_CODEGRAPH_LOG="$test_dir/codegraph.log"
 export N_EIN_PI_BIN="$test_dir/pi"
 export N_EIN_AGENT_DIR="$test_dir/home with spaces"
 export N_EIN_MODELS_FILE="$test_dir/models.json"
+export N_EIN_LANG_FILE="$test_dir/lang.json"
 export N_EIN_CAPTURE="$test_dir/captured"
 mkdir -p "$test_dir/project"
 cd "$test_dir/project"
@@ -55,6 +56,10 @@ $repo_dir/pi-package
 $repo_dir/pi-package/persona.md
 --append-system-prompt
 $repo_dir/pi-package/pi-only.md
+--append-system-prompt
+$repo_dir/pi-package/flow.md
+--append-system-prompt
+Idioma: conversa con el usuario en español. Escribe código, comentarios, identificadores, commits, PR y documentación del repositorio en el idioma que ya use el proyecto; en un proyecto sin convención, en español.
 --use-theme
 ein
 --model
@@ -82,6 +87,17 @@ fi
 rg -q 'MODELS_BAD' "$test_dir/err"
 test ! -e "$N_EIN_CAPTURE"
 rm -f "$N_EIN_MODELS_FILE"
+
+# El idioma del launcher llega a Pi como instrucción; uno ilegible no arranca Pi con un idioma inventado.
+printf '{"chat":"en","artifacts":"es"}\n' > "$N_EIN_LANG_FILE"
+"$repo_dir/bin/n-ein-dev" --print 'idioma'
+rg -Fxq 'Language: talk with the user in English. Write code comments, commit messages, PRs and repository docs in Spanish, whatever the conversation language.' "$N_EIN_CAPTURE"
+printf '{"chat":"fr","artifacts":"es"}\n' > "$N_EIN_LANG_FILE"
+rm -f "$N_EIN_CAPTURE"
+if "$repo_dir/bin/n-ein-dev" --print 'no' 2> "$test_dir/err"; then printf 'Un lang.json inválido no debe arrancar Pi.\n' >&2; exit 1; fi
+rg -q 'LANG_BAD' "$test_dir/err"
+test ! -e "$N_EIN_CAPTURE"
+rm -f "$N_EIN_LANG_FILE"
 
 export N_EIN_FAKE_VERSION=0.88.0
 if "$repo_dir/bin/n-ein-dev" > "$test_dir/out" 2> "$test_dir/err"; then
@@ -113,6 +129,9 @@ rg -q '^sync --quiet ' "$N_EIN_CODEGRAPH_LOG"
 rm -f "$N_EIN_CODEGRAPH_LOG"
 N_EIN_WORKER_CHILD=1 N_EIN_CODEGRAPH_ALLOW_TEMP=1 "$repo_dir/bin/n-ein-dev" --print 'hijo'
 test ! -e "$N_EIN_CODEGRAPH_LOG"
+# El hijo recibe su encargo acotado: ni el flujo del principal ni las instrucciones para delegar.
+if rg -q 'flow.md|pi-only.md' "$N_EIN_CAPTURE"; then printf 'Un trabajador hijo no debe recibir el flujo del principal.\n' >&2; exit 1; fi
+rg -Fxq "$repo_dir/pi-package/persona.md" "$N_EIN_CAPTURE"
 # Sin permiso explícito, un temporal no se indexa, pero Pi arranca igual.
 "$repo_dir/bin/n-ein-dev" --print 'temporal' 2> "$test_dir/err"
 rg -q 'CODEGRAPH_SKIP :: reason: no se indexan temporales' "$test_dir/err"

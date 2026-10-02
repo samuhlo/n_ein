@@ -44,6 +44,9 @@ done
 export CLAUDE_CONFIG_DIR="$claude_dir"
 unset PI_CODING_AGENT_DIR PI_CODING_AGENT_SESSION_DIR N_EIN_HANDOFF_SIGNAL
 persona="$(< "$repo_dir/pi-package/persona.md")"
+# El idioma elegido en el launcher viaja junto a la persona: Claude recibe un solo texto añadido.
+lang_directive="$(bun "$repo_dir/pi-package/lang.ts" "$repo_dir" "$channel")" || exit 64
+persona+=$'\n\n'"$(< "$repo_dir/pi-package/flow.md")"$'\n\n'"$lang_directive"
 handoff_signal="$(mktemp "${TMPDIR:-/tmp}/n-ein-claude-handoff.XXXXXX")"
 trap 'rm -f "$handoff_signal"' EXIT
 export N_EIN_HANDOFF_SIGNAL="$handoff_signal"

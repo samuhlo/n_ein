@@ -457,13 +457,12 @@ func loadState(root, project string) appState {
 			{"objetivo", objective, "WORK.md", ""}, {"tareas", tasks, "WORK.md", ""}, {"siguiente", current, "WORK.md", ""},
 			{"comprobación", evidence, "WORK.md", ""}, {"índice", index, "CodeGraph", ""},
 		}},
-		{2, "CONFIGURACIÓN", []row{
+		{2, "CONFIGURACIÓN", append(append([]row{
 			{"principal", principalValue, piModelSource, ""},
 			{"trabajador", workerValue, workerModelSource, ""},
 			claudeRow(config.Claude.Effort, modelError),
 			{"editar", "abrir Pi y usar /nein:models", "Pi", piAction},
-			{"idioma", "español", "persona.md", ""}, {"canal", channel, ".n-ein-channel", ""},
-		}},
+		}, langRows(channel)...), row{"canal", channel, ".n-ein-channel", ""})},
 		{3, "SESIONES", sessionRows},
 		{4, "SISTEMA", []row{
 			{"paquete", installVersion, "install.json", ""}, {"Pi", piVersion, piSource, ""},

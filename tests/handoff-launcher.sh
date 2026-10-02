@@ -24,6 +24,7 @@ chmod +x "$test_dir/pi" "$test_dir/claude"
 
 printf '# Relevo\n\nObjetivo: terminar el arreglo.\n' > "$test_dir/summary.md"
 export N_EIN_PI_BIN="$test_dir/pi"
+export N_EIN_LANG_FILE="$test_dir/lang.json"
 export N_EIN_CLAUDE_BIN="$test_dir/claude"
 export N_EIN_AGENT_DIR="$test_dir/pi-home"
 export N_EIN_CLAUDE_DIR="$test_dir/claude-home"

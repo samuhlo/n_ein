@@ -126,7 +126,7 @@ func collect(source, self string) ([]sourceFile, error) {
 	}
 	for _, rel := range []string{
 		"brand.json", "runtime.json", "bin/nein", "bin/nein-setup", "bin/n-ein-dev", "bin/n-ein-claude-dev", "bin/n-ein-prepare-pi", "bin/n-ein-codegraph", "bin/n-ein-todo",
-		"pi-package/package.json", "pi-package/persona.md", "pi-package/pi-only.md", "pi-package/models.ts",
+		"pi-package/package.json", "pi-package/persona.md", "pi-package/pi-only.md", "pi-package/flow.md", "pi-package/models.ts", "pi-package/lang.ts", "pi-package/NOTICE.md",
 	} {
 		if err := add(filepath.Join(source, rel), rel); err != nil {
 			return nil, err

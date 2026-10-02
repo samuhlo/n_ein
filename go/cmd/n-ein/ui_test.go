@@ -2,6 +2,7 @@ package main
 
 import (
 	"os"
+	"path/filepath"
 	"strings"
 	"testing"
 
@@ -131,5 +132,38 @@ func TestHomeIntroSettlesOnKeyAndPlainOutput(t *testing.T) {
 	plain := render(homeState(), homeView, 0, "", false, brand.Painter{}, screen{elapsed: brand.IntroSeconds})
 	if strings.Contains(plain, "\x1b[") || !strings.Contains(plain, "▸ Pi") || !strings.Contains(plain, "▀▀▀▀▀") {
 		t.Fatalf("portada sin TTY ilegible:\n%s", plain)
+	}
+}
+
+func TestConfigCyclesLanguageWithoutLeavingTUI(t *testing.T) {
+	path := filepath.Join(t.TempDir(), "lang.json")
+	t.Setenv("N_EIN_LANG_FILE", path)
+	rows := langRows("dev")
+	if rows[0].value != "español · enter cambia" || rows[1].value != "el del proyecto · enter cambia" || rows[0].source != "por defecto" {
+		t.Fatalf("idioma por defecto: %#v", rows)
+	}
+	state := appState{home: homeContext{channel: "dev"}, views: []panel{{}, {}, {2, "CONFIGURACIÓN", rows}}}
+	m := uiModel{state: state, view: 2}
+	updated, _ := m.Update(key(tea.KeyEnter, ""))
+	m = updated.(uiModel)
+	if m.launch != "" || m.state.views[2].rows[0].value != "inglés · enter cambia" || m.state.views[2].rows[0].source != "lang.json" {
+		t.Fatalf("enter no cicla la conversación sin salir: %q %#v", m.launch, m.state.views[2].rows[0])
+	}
+	m.row = 1
+	for _, want := range []string{"español", "inglés", "el del proyecto"} {
+		updated, _ = m.Update(key(tea.KeyEnter, ""))
+		m = updated.(uiModel)
+		if m.state.views[2].rows[1].value != want+" · enter cambia" {
+			t.Fatalf("artefactos: quería %s, hay %#v", want, m.state.views[2].rows[1])
+		}
+	}
+	if data, err := os.ReadFile(path); err != nil || !strings.Contains(string(data), `"chat": "en"`) {
+		t.Fatalf("lang.json no guardado: %s %v", data, err)
+	}
+	if err := os.WriteFile(path, []byte(`{"chat":"fr","artifacts":"es"}`), 0o600); err != nil {
+		t.Fatal(err)
+	}
+	if rows := langRows("dev"); !strings.Contains(rows[0].value, "lang.json inválido") || rows[0].action != "" {
+		t.Fatalf("lang.json inválido aceptado: %#v", rows)
 	}
 }
