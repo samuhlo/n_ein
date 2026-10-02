@@ -1,27 +1,39 @@
-## Flujo de trabajo
+## The n_ein workflow
 
-Cada petición recorre este flujo sin que el usuario lo pida. Lo pequeño se queda pequeño: el flujo pesa solo donde el trabajo lo pide.
+Every request runs through this workflow without the user asking for it. Small work stays small: the workflow weighs only where the work does.
 
-1. **Autoriza.** Una consulta, una investigación o una propuesta son de solo lectura; implementar empieza cuando el usuario lo ha pedido. Ante una intención ambigua, una pregunta.
-2. **Explora** antes de cambiar nada, en proporción a la petición: CodeGraph primero, después lecturas concretas. Si existe `GLOSSARY.md`, habla con su lenguaje y respeta los ADR de la zona.
-3. **Resuelve la incertidumbre.** Una decisión real abierta merece una pregunta concreta con tu recomendación. Una idea o una decisión importante abierta: propón `intent`, di qué incertidumbre resolvería y espera a que el usuario acepte. Los hechos los buscas tú.
-4. **Clasifica.** El trabajo es sustancial cuando la exploración deja dos o más pasos de implementación con sentido. El trabajo pequeño y entendido se hace directamente, sin documento.
-5. **Registra antes de la primera escritura**, si es sustancial: crea o actualiza `WORK.md` (o el documento de trabajo del proyecto) con `## Objetivo`, `## Decisiones`, `## Límites`, `## Criterios`, `## Tareas` (casillas `- [ ]` con ID estable), `## Evidencia` y `## Siguiente paso`, y dilo en una línea. Es la única fuente de verdad del trabajo; el TODO la refleja.
-6. **Implementa tarea a tarea.** En la rama principal, crea antes una rama de trabajo. Si hay comportamiento con un test ejecutable y un resultado claro, sigue la skill `tdd`: rojo observado, verde, después revisión. Si no aplica, haz la comprobación funcional proporcionada y di por qué. Cierra cada tarea con un **commit de unidad de trabajo** (Conventional Commits, mensaje en el idioma de los artefactos) que lleve juntos comportamiento, tests y documentación; marca su casilla solo con prueba observada y anota el commit en `## Evidencia`. Push, merge, PR y operaciones destructivas quedan para cuando el usuario los pida.
-7. **Cierra** con el resultado verificado, las comprobaciones que fallaron o siguen pendientes y el siguiente paso.
+1. **Permission.** A question, an investigation or a proposal is read-only; building starts once the user has asked for it. If the intent is ambiguous, ask one question.
+2. **Look** before changing anything, in proportion to the request: CodeGraph first, then targeted reads. If `GLOSSARY.md` exists, speak its language and respect the ADRs of the area.
+3. **Settle** the uncertainty. An open decision that matters gets one concrete question with your recommendation. An open idea or a weighty decision: offer `intent`, say which uncertainty it would settle, and wait for the user to accept. Facts are yours to find.
+4. **Size.** The job is substantial when looking leaves two or more meaningful build steps. Small, understood work is done directly, with no document.
+5. **Record** before the first write, when substantial: create or update `WORK.md` and say so in one line. It is the single source of truth for the job; the TODO mirrors it.
+6. **Build task by task.** On the default branch, start a work branch first. When there is behaviour with a runnable test and a clear expected result, follow `tdd`: observed red, then green, then review. Otherwise run the proportionate functional check and say why. Close each task with a **work-unit commit** (Conventional Commits, message in the artifact language) carrying behaviour, tests and docs together; tick its box only on observed proof and note the commit under the evidence section. Push, merge, PRs and destructive operations wait until the user asks.
+7. **Close** with the verified outcome, the checks that failed or are still pending, and the next step.
 
-**Al retomar**, lee `WORK.md` entero y contrástalo con Git y con el código antes de seguir; si discrepan, conserva ambas versiones y pregunta cuál vale.
+**On resume**, read `WORK.md` in full and check it against Git and the code before going on; if they disagree, keep both versions and ask which one holds.
 
-## Delegación
+## WORK.md
 
-La pregunta es siempre la misma: ¿esto infla tu contexto sin necesidad?
+One file at the project root (or the project's own working document), written in the artifact language. Spanish and English headings both work:
 
-- **Presupuesto de evidencia.** Lee directamente si cabe en una tanda (hasta 3 lecturas, unos 10 000 tokens, con rangos de líneas). Si hace falta más, o más de unas 5 consultas seguidas, delega una exploración que devuelva como mucho unos 2 000 tokens con evidencia `ruta:línea`, y no vuelvas a leer lo que ya cubrió más allá de una comprobación puntual.
-- **Escritura en varios archivos.** Dos o más archivos no triviales que cambiar se delegan en un trabajador, con las **superficies de edición** explícitas en el encargo (rutas o globs concretos del repo; nunca la raíz entera). Las superficies las deduces tú.
-- **Verificación.** Las suites completas y los builds los ejecuta un trabajador o se lanzan con la salida acotada (recuentos, `--stat`, `tail`); tú lees el resultado.
-- **Un solo escritor.** Espera a que el trabajador termine antes de escribir en el mismo árbol, y contrasta su resultado con el diff y las comprobaciones: un resumen no es una prueba.
-- **Lo pequeño, directo.** Preparar y revisar una delegación cuesta; si cuesta más que hacerlo, hazlo tú.
+- `## Objetivo` / `## Goal`: the problem and the intended outcome.
+- `## Decisiones` / `## Decisions`: each decision with its reason.
+- `## Límites` / `## Limits`: what is out of scope.
+- `## Criterios` / `## Criteria`: observable acceptance and the agreed test seams.
+- `## Tareas` / `## Tasks`: one checkbox per task, `- [ ] T1 · <title> — <what it delivers>. Blocked by: <ids or none>.`, with criteria as plain sub-bullets so the TODO counts only tasks.
+- `## Evidencia` / `## Evidence`: commits and observed check results.
+- `## Siguiente paso` / `## Next step`.
 
-## Revisión
+## Roles
 
-Al cerrar una tarea con riesgo (lógica nueva o compleja, seguridad, datos, contratos públicos), revisa su commit con la skill `code-review` antes de pasar a la siguiente. Una tarea mecánica o de bajo riesgo queda con sus comprobaciones funcionales. Los hallazgos no amplían el alcance por sí solos: los cambios que salgan de ellos van como tareas nuevas en `WORK.md`.
+Delegating is a cost decision, never a phase: do it when it is cheaper than doing it yourself, and do small things directly. Three roles, each with its own model (set in `/nein:models`):
+
+- **nein-scout** explores, read-only. Reach for it when an answer needs more than one batch of reads (over ~3 reads or ~10k tokens) or several lookups in a row; it comes back with a short answer and `path:line` evidence. Re-read only for a spot check. Several scouts can run at once.
+- **nein-worker** builds a bounded change. Reach for it when a task touches two or more non-trivial files or would flood your context. Give it the narrowest **surfaces** (repo-relative paths or globs) you can derive yourself; edits outside them are blocked. One worker at a time: wait for it before writing in the same tree.
+- **nein-reviewer** reviews and verifies without editing. Reach for it to review a task's commit, or to run a full suite or build so only the bounded result reaches you.
+
+A role's summary is a claim, not proof: check its diff, the files Git reports and its evidence before accepting the work. In Claude, use its own subagents in the same three roles.
+
+## Review
+
+When closing a task with risk (new or complex logic, security, data, public contracts), run `review` on its commit before moving on. Mechanical or low-risk tasks keep their functional checks. Findings do not widen the scope by themselves: whatever comes out of them goes into `WORK.md` as new tasks.

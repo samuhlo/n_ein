@@ -116,6 +116,16 @@ func workSection(content, title string) string {
 	return strings.TrimSpace(strings.Join(body, "\n"))
 }
 
+// firstSection admite los títulos de WORK.md en castellano y en inglés: sigue el idioma de los artefactos.
+func firstSection(content string, titles ...string) string {
+	for _, title := range titles {
+		if body := workSection(content, title); body != "" {
+			return body
+		}
+	}
+	return ""
+}
+
 func workState(project string) (objective, tasks, current, evidence string) {
 	path := filepath.Join(project, "WORK.md")
 	data, err := os.ReadFile(path)
@@ -123,15 +133,9 @@ func workState(project string) (objective, tasks, current, evidence string) {
 		return "sin documento", "sin documento", "sin documento", "desconocida"
 	}
 	content := string(data)
-	objectiveText := workSection(content, "Objetivo")
-	if objectiveText == "" {
-		objectiveText = workSection(content, "Acuerdo confirmado")
-	}
+	objectiveText := firstSection(content, "Objetivo", "Goal", "Acuerdo confirmado")
 	objective = known(strings.Split(objectiveText, "\n")[0])
-	taskSection := workSection(content, "Tareas")
-	if taskSection == "" {
-		taskSection = workSection(content, "Checklist")
-	}
+	taskSection := firstSection(content, "Tareas", "Tasks", "Checklist")
 	total, done := 0, 0
 	for _, line := range strings.Split(taskSection, "\n") {
 		trimmed := strings.TrimSpace(line)
@@ -153,7 +157,7 @@ func workState(project string) (objective, tasks, current, evidence string) {
 			current = "todo completado"
 		}
 	}
-	if workSection(content, "Evidencia") == "" {
+	if firstSection(content, "Evidencia", "Evidence") == "" {
 		evidence = "sin comprobaciones"
 	} else {
 		evidence = "consignada · vigencia desconocida"

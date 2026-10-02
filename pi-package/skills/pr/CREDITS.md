@@ -1,3 +1,0 @@
-# Créditos
-
-El menú de visuales de la sección **Resumen** (pseudocódigo, árboles de llamadas, de componentes y de archivos, Mermaid, diffs) y su criterio de colocación vienen de la skill [`show-me`](https://github.com/humanlayer/humanlayer) de [Dex Horthy](https://github.com/dexhorthy), reproducidos casi palabra por palabra en la skill `pr` de Matt Pocock y apuntados a un diff en vez de a una conversación en vivo. `pr` no depende de `show-me` como skill (una dependencia dura rompería las instalaciones sueltas), así que el contenido se copia en vez de enlazarse; este archivo es la atribución que habría llevado esa dependencia.

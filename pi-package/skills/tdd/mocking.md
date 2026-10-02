@@ -1,55 +1,36 @@
-# Cuándo usar dobles
+# Test doubles
 
-Usa dobles solo en las **fronteras del sistema**:
+Use doubles only at **system boundaries**: external APIs (payments, email), databases (sometimes; prefer a test database), time and randomness, the file system (sometimes). What you control is tested for real: your own modules and their internal collaborators.
 
-- APIs externas (pagos, correo, etc.)
-- Bases de datos (a veces; mejor una base de datos de test)
-- Tiempo y aleatoriedad
-- Sistema de archivos (a veces)
+## Design boundaries to be doubled
 
-Lo que controlas se prueba de verdad: tus propias clases y módulos y sus colaboradores internos van sin dobles.
-
-## Diseñar para poder doblar
-
-En las fronteras del sistema, diseña interfaces fáciles de doblar:
-
-**1. Inyecta las dependencias**
-
-Pasa las dependencias externas en lugar de crearlas dentro:
+**Inject dependencies** instead of creating them inside:
 
 ```typescript
-// Fácil de doblar
+// Easy to double
 function processPayment(order, paymentClient) {
   return paymentClient.charge(order.total);
 }
 
-// Difícil de doblar
+// Hard to double
 function processPayment(order) {
   const client = new StripeClient(process.env.STRIPE_KEY);
   return client.charge(order.total);
 }
 ```
 
-**2. Prefiere interfaces tipo SDK a un fetch genérico**
-
-Una función específica por operación externa en vez de una genérica con lógica condicional:
+**Prefer SDK-style interfaces** (one function per external operation) over a generic fetcher:
 
 ```typescript
-// BIEN: cada función se dobla por separado
+// GOOD: each function doubles on its own
 const api = {
   getUser: (id) => fetch(`/users/${id}`),
   getOrders: (userId) => fetch(`/users/${userId}/orders`),
-  createOrder: (data) => fetch('/orders', { method: 'POST', body: data }),
+  createOrder: (data) => fetch("/orders", { method: "POST", body: data }),
 };
 
-// MAL: el doble necesita lógica condicional
-const api = {
-  fetch: (endpoint, options) => fetch(endpoint, options),
-};
+// BAD: the double needs conditional logic
+const api = { fetch: (endpoint, options) => fetch(endpoint, options) };
 ```
 
-Con el estilo SDK:
-- Cada doble devuelve una sola forma
-- Sin lógica condicional en la preparación del test
-- Se ve qué endpoints usa cada test
-- Tipos por endpoint
+Each double then returns one shape, test setup has no branching, and you can see which endpoints a test touches.

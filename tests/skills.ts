@@ -24,8 +24,16 @@ const shipped = ["pi-package", "bin"].flatMap(function walk(dir: string): string
     return statSync(path).isDirectory() ? walk(relative(root, path)) : [path];
   });
 });
+// Las skills son de n_ein: la procedencia y las licencias de terceros viven solo en NOTICE.md.
+const RETIRED = /\b(comment-style|logging-style|handoff-pi|diagnosing-bugs|code-review|codebase-design|domain-modeling|writing-for-agents|to-spec|to-tickets|wait-what|n_ein_worker)\b/;
 for (const path of shipped) {
-  assert.doesNotMatch(readFileSync(path, "utf8"), /\bSamu\b/, `${relative(root, path)} nombra a una persona concreta`);
+  const text = readFileSync(path, "utf8");
+  const name = relative(root, path);
+  assert.doesNotMatch(text, /\bSamu\b/, `${name} nombra a una persona concreta`);
+  if (name !== "pi-package/NOTICE.md") {
+    assert.doesNotMatch(text, /Gentle|Pocock|\bMatt\b|Horthy|show-me/, `${name} cita a terceros fuera de NOTICE.md`);
+    assert.doesNotMatch(text, RETIRED, `${name} usa un nombre de skill o herramienta retirado`);
+  }
 }
 
-console.log("skills: frontmatter válido y sin nombres propios en lo instalable");
+console.log("skills: frontmatter válido, sin nombres propios ni de terceros y sin nombres retirados");

@@ -1,8 +1,8 @@
 # Avisos de terceros
 
-## Skills de Matt Pocock
+## Skills derivadas de mattpocock/skills
 
-Las skills `tdd`, `diagnosing-bugs`, `code-review`, `codebase-design`, `domain-modeling`, `research`, `prototype`, `pr`, `writing-for-agents`, `to-spec`, `to-tickets`, `retro` y `wait-what`, y la redacción de `intent` (a partir de `grilling`), son adaptaciones al español de [mattpocock/skills](https://github.com/mattpocock/skills), revisión `d81f3a183412e71a5b1e84ca21bc1a35eea03a60`. Se adaptaron a n_ein: lenguaje neutro, `WORK.md` en lugar de un gestor de incidencias y la gramática visual de n_ein. La sección de resumen de `pr` procede de `show-me`, de Dex Horthy (ver `skills/pr/CREDITS.md`).
+`tdd`, `diagnose`, `review`, `design`, `glossary`, `research`, `prototype`, `pr`, `agent-docs`, `spec`, `tasks`, `retro` y `tell-again`, y la manera de entrevistar de `intent`, son obras derivadas de [mattpocock/skills](https://github.com/mattpocock/skills) (revisión `d81f3a183412e71a5b1e84ca21bc1a35eea03a60`), reescritas para n_ein: sus roles, `WORK.md`, CodeGraph y su flujo. El menú de vistas de `pr` procede a su vez de la skill `show-me` de Dex Horthy (Humanlayer). Licencia de origen:
 
 ```
 MIT License
@@ -27,3 +27,7 @@ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 ```
+
+## Flujo de trabajo
+
+El flujo de n_ein (`flow.md`) se inspira en el Organic Driven Development de [Gentle Shell](https://github.com/Gentleman-Programming/gentle-shell) (licencia MIT); no reproduce su texto. Los nombres y logos de Gentle Shell no se usan.

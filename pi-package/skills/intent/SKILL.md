@@ -1,34 +1,34 @@
 ---
 name: intent
-description: Entrevista implacable para definir una idea, un plan o una decisión abierta antes de construir. Úsala cuando el usuario pida intent o que le acribilles a preguntas, o cuando acepte tu propuesta de usarla.
+description: Relentless interview to pin down an open idea, plan or decision before building. Use when the user asks for intent or to be grilled with questions, or accepts your offer to run it.
 ---
 
-Entrevista al usuario de forma implacable hasta alcanzar un entendimiento compartido de qué merece hacerse. Modela la conversación como un **árbol de decisiones**: cada decisión abre las decisiones que dependen de ella.
+Interview the user relentlessly until you share one understanding of what is worth building. Hold the conversation as a **decision tree**: every decision opens the decisions that hang off it.
 
-Trabaja el árbol por **rondas**. La **frontera** son las decisiones cuyos requisitos ya están resueltos: lo que puedes preguntar _ahora_ sin adivinar respuestas que aún no has oído. Pregunta toda la frontera en una ronda, con cada pregunta numerada y tu respuesta recomendada. Después espera las respuestas del usuario.
+Work the tree in **rounds**. The **frontier** is every decision whose prerequisites are already settled: what you can ask _now_ without guessing at answers you have not heard. Ask the whole frontier in one round, each question numbered and carrying your recommended answer. Then wait for the user.
 
-Formato de una ronda:
+A round looks like this, written in the conversation language:
 
 ```
-**P1 · <título de la pregunta>** — <la pregunta; puede ocupar varios párrafos y ofrecer opciones>
+**Q1 · <question title>** — <the question; several paragraphs and options if it needs them>
 
-▸ Recomiendo: <tu respuesta recomendada y el motivo>
+▸ I recommend: <your answer and why>
 
 ---
 
-**P2 · <título de la pregunta>** — <la pregunta; puede ocupar varios párrafos y ofrecer opciones>
+**Q2 · <question title>** — <the question>
 
-▸ Recomiendo: <tu respuesta recomendada y el motivo>
+▸ I recommend: <your answer and why>
 ```
 
-Cada ronda contestada reordena el árbol: lo decidido empuja la frontera y desbloquea las preguntas que dependían de ello. Recalcula la frontera y abre la siguiente ronda. Una pregunta cuya respuesta depende de otra todavía abierta en esta ronda pertenece a una ronda _posterior_. Sin idea de partida, la primera ronda es una sola pregunta llana.
+Every answered round reshapes the tree: settled decisions push the frontier out and unblock what depended on them. Recompute the frontier and open the next round. A question whose answer depends on another question still open in this round belongs to a _later_ round. With no starting idea, the first round is one plain question.
 
-Los **hechos** son trabajo tuyo, nunca del usuario. Cuando una pregunta de la frontera necesite un hecho del entorno (código, documentación, conversación, herramientas), búscalo tú: directamente si es rápido, o delegándolo a un trabajador o subagente en modo de solo lectura si cuesta. Sin bloquear: una investigación en curso es un requisito sin resolver, así que solo esperan las preguntas que dependen de ella; el resto de la frontera se pregunta ya. Las **decisiones** son del usuario: plantéaselas y espera. Las técnicas y reversibles que caben en las convenciones del proyecto las tomas tú y lo dices. Lo decidido se mantiene; se reabre solo ante evidencia nueva, nombrándola.
+**Facts are your job, never the user's.** When a frontier question needs a fact from the code, the docs or the conversation, find it: directly if it is quick, through `nein_scout` if it takes a batch of reading. Keep going while it reads: a running scout is an unsettled prerequisite, so only the questions downstream of it wait; ask the rest of the frontier now. **Decisions are the user's**: put each one to them and wait. Technical, reversible choices that fit the project's conventions are yours: take them and say so. A settled decision stays settled; reopen it only for new evidence, and name it.
 
-La sesión termina cuando la frontera del siguiente tramo queda vacía: objetivo, alcance, decisiones con su motivo y criterios observables resueltos, y lo que puede esperar nombrado como aplazado, sin nada supuesto en silencio. Presenta entonces el acuerdo y pide una confirmación de que lo entendéis igual. Hasta esa confirmación, el trabajo es solo conversación.
+The session ends when the frontier for the next stretch of work is empty: goal, scope, decisions with their reasons and observable criteria settled, and whatever can wait named as deferred, with nothing silently assumed. Then present the agreement and ask once for confirmation that you both read it the same way. Until that confirmation, this is conversation only.
 
-## Tras la confirmación
+## After confirmation
 
-El acuerdo define qué hacer; el permiso para implementarlo es aparte. Si el usuario pidió solo pensar, la sesión acaba aquí. Si ya había autorizado implementar dentro de este alcance, continúa con ese permiso.
+The agreement says what to do; permission to build it is separate. If the user only asked to think, stop here. If they had already authorized building within this scope, carry on under that permission.
 
-Cuando el trabajo necesite seguimiento o el usuario lo pida, guarda el acuerdo en el documento de trabajo del proyecto, o en `WORK.md` si no hay otro, con las secciones que apliquen: `## Objetivo`, `## Decisiones`, `## Límites`, `## Criterios`, `## Tareas`, `## Evidencia` y `## Siguiente paso`. Las tareas reales van como casillas `- [ ]` bajo `## Tareas`, que son las que muestra el TODO. Ese documento es el único registro del acuerdo: el agente que implemente, o el siguiente tras un relevo, parte de él sin repetir la entrevista. Una sesión abandonada antes de confirmar deja el proyecto como estaba.
+When the work needs tracking or the user asks, record the agreement in `WORK.md` (shape defined in the n_ein workflow), using only the sections that apply. `spec` turns the agreement into a full spec and `tasks` slices it into tasks. That document is the single record: whoever builds it, including a delegated role or the next agent after a handoff, starts from it without repeating the interview. A session dropped before confirmation leaves the project as it was.

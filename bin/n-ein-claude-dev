@@ -30,6 +30,11 @@ if [[ -L "$skills_dir" ]]; then
   unlink "$skills_dir"
 fi
 mkdir -p "$skills_dir"
+# BLINDAJE -> Una skill renombrada o retirada deja un enlace roto; solo se quitan los que apuntaban a este catálogo.
+for skill_link in "$skills_dir"/*; do
+  [[ -L "$skill_link" && ! -e "$skill_link" ]] || continue
+  case "$(readlink "$skill_link")" in "$repo_dir"/pi-package/skills/*) unlink "$skill_link" ;; esac
+done
 for source_skill in "$repo_dir"/pi-package/skills/*; do
   [[ -f "$source_skill/SKILL.md" ]] || continue
   skill_link="$skills_dir/${source_skill##*/}"

@@ -55,6 +55,8 @@ También precisó que n_ein es **un producto que cualquiera pueda usar**, aunque
 
 El 2 de octubre pidió que n_ein sea de verdad **una mezcla de Matt y Gentle Shell**: el método en skills pequeñas de Matt y el flujo de trabajo de Gentle. Decisiones de esa ronda: **commit por tarea** en una rama de trabajo cuando el encargo está autorizado, sin push, merge ni PR sin pedirlo; **`WORK.md`** como única fuente de especificación y tareas, por ser lo que menos tokens gasta (sin gestor de incidencias ni memoria Engram); **idioma elegible en el launcher** en dos ejes, conversación y artefactos, como en Ein; y el orden **método y flujo primero**, después una prueba en un proyecto real y solo entonces roles y revisión. [Diseño](02-diseno.md#recorrido-ordinario).
 
+Ese mismo día pidió **un producto más personal y no una copia**: tres roles con nombre propio y modelo asignable (`nein-scout`, `nein-worker`, `nein-reviewer`; por defecto Luna low, Luna high y Sol medium), sin volver a los agentes por fase de Ein; skills y flujo reescritos como propios, sin referencias a Gentle ni a Matt fuera de `NOTICE.md`, con nombres de n_ein (`diagnose`, `review`, `design`, `glossary`, `agent-docs`, `spec`, `tasks`, `tell-again`, `comments`, `logs`, `to-pi`); y **todo lo que lee el agente en inglés**, con las respuestas y los artefactos en el idioma elegido.
+
 ## Recomendaciones de diseño, revisables
 
 - Pi como runtime inicial; n_ein como capa pequeña: un paquete Pi (skills, extensiones mínimas, prompts, tema) más un launcher que fija el hogar aislado. Pi ya ofrece el aislamiento (`PI_CODING_AGENT_DIR`) y la carga de paquetes (`pi install`, `pi -e`).

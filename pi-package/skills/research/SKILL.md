@@ -1,15 +1,12 @@
 ---
 name: research
-description: Investiga una pregunta en fuentes primarias de confianza y deja lo encontrado en un archivo Markdown del repo. Úsala cuando el usuario quiera investigar un tema, reunir datos de documentación o de una API, o delegar la lectura a un agente en segundo plano.
+description: Investigate a question in high-trust primary sources and keep the findings as a Markdown note in the repo. Use when the user wants a topic researched, documentation or API facts gathered, or reading delegated.
 ---
 
-Delega la investigación en un **agente en segundo plano** (el trabajador en modo `explore`, o un subagente), para seguir trabajando mientras lee.
+Hand the reading to **nein-scout** (a subagent in Claude) so you keep working while it reads. The scout reads the repo, installed packages and local docs; sources that live on the web you fetch yourself, or give to a Claude subagent with web access. The brief:
 
-Su encargo:
+1. Investigate the question in **primary sources**: official documentation, source code, specs, the provider's own API. Follow every claim back to the source that owns it, not to a write-up of it.
+2. Separate checked facts, assumptions, contradictions, how fresh each source is, and gaps.
+3. Return the findings with the source of each claim.
 
-1. Investigar la pregunta en **fuentes primarias** (documentación oficial, código fuente, especificaciones, APIs del propio proveedor), no en resúmenes de terceros. Seguir cada afirmación hasta la fuente que la posee.
-2. Distinguir hechos comprobados, supuestos, contradicciones, fecha de lo leído y huecos.
-3. Escribir lo encontrado en un único archivo Markdown, citando la fuente de cada afirmación.
-4. Guardarlo donde el repo ya guarde estas notas, siguiendo su convención; si no hay ninguna, en un sitio razonable, diciendo dónde.
-
-Al volver, lee el archivo, contrasta lo que afecte a la decisión en curso y resume al usuario la recomendación, sus compromisos y lo que queda abierto.
+When it comes back, write the note yourself: one Markdown file where the repo already keeps such notes (or a sensible place, saying where), every claim with its source. Then tell the user the recommendation, its trade-offs and what remains open for the decision at hand.

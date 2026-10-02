@@ -26,12 +26,15 @@ export function resolveWorkDoc(cwd: string, configured = process.env.N_EIN_WORK_
   return existsSync(path) && statSync(path).isFile() ? path : null;
 }
 
+// WORK.md sigue el idioma de los artefactos: la sección de tareas vale en castellano o en inglés.
+const TASKS_HEADING = /^##\s+(Tareas|Tasks|Checklist)\s*$/i;
+
 function taskLines(content: string): WorkTask[] {
   const lines = content.split(/\r?\n/);
   const tasks: WorkTask[] = [];
   let inChecklist = false;
   for (let line = 0; line < lines.length; line++) {
-    if (/^##\s+(Tareas|Checklist)\s*$/i.test(lines[line])) { inChecklist = true; continue; }
+    if (TASKS_HEADING.test(lines[line])) { inChecklist = true; continue; }
     if (/^#{1,2}\s+/.test(lines[line])) inChecklist = false;
     if (!inChecklist) continue;
     const match = /^(\s*[-*]\s+\[)([ xX])(\]\s+)(.+)$/.exec(lines[line]);
@@ -62,10 +65,12 @@ export function addWorkTask(path: string, description: string): WorkDoc {
   const content = readFileSync(path, "utf8");
   const newline = content.includes("\r\n") ? "\r\n" : "\n";
   const lines = content.split(/\r?\n/);
-  const start = lines.findIndex((line) => /^##\s+(Tareas|Checklist)\s*$/i.test(line));
+  const start = lines.findIndex((line) => TASKS_HEADING.test(line));
   if (start < 0) {
     const separator = content.endsWith(newline) ? newline : newline + newline;
-    writeFileSync(path, `${content}${separator}## Tareas${newline}${newline}- [ ] ${task}${newline}`);
+    // WORK.md sigue el idioma de los artefactos: la sección nueva usa el de los títulos que ya tenga.
+    const heading = /^##\s+(Goal|Decisions|Criteria|Evidence)\s*$/im.test(content) ? "Tasks" : "Tareas";
+    writeFileSync(path, `${content}${separator}## ${heading}${newline}${newline}- [ ] ${task}${newline}`);
   } else {
     let end = start + 1;
     while (end < lines.length && !/^#{1,2}\s+/.test(lines[end])) end++;

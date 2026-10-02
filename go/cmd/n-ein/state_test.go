@@ -73,6 +73,12 @@ func TestFiveViewsUseObservedSources(t *testing.T) {
 		t.Fatal("un acuerdo anterior debe seguir siendo legible")
 	}
 
+	write(t, filepath.Join(project, "WORK.md"), "# Work\n\n## Goal\nShip the parser.\n\n## Tasks\n- [x] T1\n- [ ] T2 · Render\n\n## Evidence\nbun test\n")
+	state = loadState(root, project)
+	if rows := state.views[1].rows; rows[3].value != "Ship the parser." || rows[4].value != "1/2 hechas" || rows[5].value != "T2 · Render" || rows[6].value != "consignada · vigencia desconocida" {
+		t.Fatalf("WORK.md en inglés no leído: %#v", rows)
+	}
+
 	noDoc := t.TempDir()
 	other := loadState(root, noDoc)
 	if other.views[1].rows[3].value != "sin documento" || other.views[1].rows[6].value != "desconocida" {

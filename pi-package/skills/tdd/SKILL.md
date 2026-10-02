@@ -1,37 +1,35 @@
 ---
 name: tdd
-description: Desarrollo guiado por tests (TDD). Úsala al construir funcionalidad o corregir fallos test primero, cuando el usuario mencione rojo-verde-refactor o pida tests de integración, y cuando el proyecto tenga TDD activo.
+description: Test-first development, red then green. Use when building behaviour or fixing a bug with a runnable test and a clear expected result, when the user mentions red-green-refactor or integration tests, or when the project has TDD on.
 ---
 
-# Desarrollo guiado por tests
+# Test first
 
-TDD es el bucle rojo → verde. Esta skill es la referencia que hace que ese bucle produzca tests que merece la pena conservar: qué es un buen test, dónde van los tests, los antipatrones y las reglas del bucle. Cada sección aplica en cada ciclo: consúltalas antes y durante el bucle, no después.
+TDD is the **red → green** loop. This skill is what makes that loop leave tests worth keeping: what a good test is, where it goes, the anti-patterns and the rules of the loop. Every section applies on every cycle.
 
-Al explorar el código, lee `GLOSSARY.md` si existe, para que los nombres de los tests y el vocabulario de las interfaces coincidan con el lenguaje del dominio, y respeta los ADR de la zona que tocas.
+Read `GLOSSARY.md` if it exists, so test names and interface words match the domain, and respect the ADRs of the area.
 
-## Qué es un buen test
+## A good test
 
-Los tests verifican comportamiento a través de interfaces públicas, no detalles de implementación. El código puede cambiar por completo; los tests no deberían. Un buen test se lee como una especificación: «el usuario puede pagar con un carrito válido» dice exactamente qué capacidad existe, y sobrevive a los refactors porque no le importa la estructura interna.
+It checks behaviour through a public interface, never implementation details. The code behind it can change completely; the test should not. A good test reads like a spec ("user can check out with a valid cart") and survives refactors because it does not care about internal structure. Examples in [tests.md](tests.md); when to use test doubles in [mocking.md](mocking.md).
 
-Mira [tests.md](tests.md) para ejemplos y [mocking.md](mocking.md) para cuándo usar dobles.
+## Seams
 
-## Costuras: dónde van los tests
+A **seam** is the public boundary you test at: where behaviour is observable without reaching inside. Tests live at seams.
 
-Una **costura** (_seam_) es la frontera pública en la que pruebas: la interfaz donde observas el comportamiento sin meter la mano dentro. Los tests viven en costuras, nunca contra lo interno.
+**Declare the seams before the first test**, in one line, and go on; if `WORK.md` already lists them under its criteria, use those. Ask the user only when choosing the seam is a real decision about scope or behaviour: "What is the public interface, and which seams should we test?" You cannot test everything; fixing the seams up front puts the effort on critical paths and complex logic instead of every edge case.
 
-**Prueba solo en costuras declaradas.** Antes del primer test, escribe en una línea las costuras que vas a probar y sigue; si ya figuran en `## Criterios` de `WORK.md`, úsalas. Pregunta al usuario solo cuando elegir la costura es una decisión material de alcance o comportamiento: «¿Cuál es la interfaz pública y qué costuras deberíamos probar?». No se puede probar todo: fijar las costuras al principio es lo que lleva el esfuerzo de test a los caminos críticos y a la lógica compleja en lugar de a cada caso límite.
+When the shape of the interface itself is in question (how deep the module is, where the seam belongs, what it should expose), load `design` for the vocabulary.
 
-Cuando la forma de esa interfaz está en duda (qué profundidad tiene el módulo, dónde va la costura, qué debe exponer), carga la skill `codebase-design` para el vocabulario. Es la fuente común de los términos módulo, interfaz, profundidad, costura, adaptador, palanca y localidad, y se consulta como referencia, no se ejecuta como sesión.
+## Anti-patterns
 
-## Antipatrones
+- **Implementation-coupled**: doubles internal collaborators, tests private methods, or verifies through a side channel (queries the database instead of using the interface). The tell: it breaks on a refactor that kept the behaviour.
+- **Tautological**: the assertion recomputes the expected value the way the code does (`expect(add(a, b)).toBe(a + b)`), so it passes by construction. Expected values come from an independent source: a known literal, a worked example, the spec.
+- **Horizontal slicing**: all tests first, then all code. Bulk tests check imagined behaviour and lock in a test structure before you understand the implementation. Work in **vertical slices**: one test → one implementation → repeat, each test a **tracer bullet** shaped by what the last cycle taught you.
 
-- **Acoplado a la implementación**: dobla colaboradores internos, prueba métodos privados o verifica por un canal lateral (consulta la base de datos en vez de usar la interfaz). La señal: el test se rompe al refactorizar aunque el comportamiento no haya cambiado.
-- **Tautológico**: la aserción recalcula el valor esperado igual que el código (`expect(add(a, b)).toBe(a + b)`, un snapshot derivado a mano del mismo modo, una constante comparada consigo misma), así que pasa por construcción y nunca puede discrepar del código. Los valores esperados salen de una fuente de verdad independiente: un literal conocido, un ejemplo resuelto, la especificación.
-- **Corte horizontal**: escribir primero todos los tests y luego toda la implementación. Los tests en bloque verifican comportamiento _imaginado_: prueban la _forma_ de las cosas en vez del comportamiento que ve el usuario, se vuelven insensibles a cambios reales y te atan a una estructura de tests antes de entender la implementación. Trabaja en **cortes verticales**: un test → una implementación → repetir, cada test una **bala trazadora** (_tracer bullet_) que responde a lo que enseñó el ciclo anterior.
+## Rules of the loop
 
-## Reglas del bucle
-
-- **Rojo antes que verde.** Primero el test que falla, y lo observas fallar; después solo el código justo para que pase. Sin anticipar tests futuros ni añadir funcionalidad especulativa.
-- **Un corte cada vez.** Una costura, un test, una implementación mínima por ciclo.
-- **Refactorizar no es parte del bucle.** Pertenece a la revisión (skill `code-review`), no al ciclo rojo → verde.
-- **Cuando no hay rojo posible** (documentación, cambios que no se pueden probar, sin runner), dilo y haz la comprobación funcional o estructural proporcionada.
+- **Red before green.** Write the failing test and watch it fail, then write only the code that makes it pass. No speculative features, no tests for the future.
+- **One slice at a time.** One seam, one test, one minimal implementation per cycle.
+- **Refactor at review, not inside the loop.** It belongs to `review` (or `nein-reviewer`), after green.
+- **No red possible** (docs, untestable change, no runner): say so and run the proportionate functional or structural check instead.

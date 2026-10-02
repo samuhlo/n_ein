@@ -41,7 +41,12 @@ mkdir -p "$N_EIN_CLAUDE_DIR"
 ln -s "$repo_dir/pi-package/skills" "$N_EIN_CLAUDE_DIR/skills"
 
 "$repo_dir/bin/n-ein-dev"
+# Una skill retirada deja un enlace roto: se quita el nuestro y se respeta el ajeno.
+ln -s "$repo_dir/pi-package/skills/comment-style" "$N_EIN_CLAUDE_DIR/skills/comment-style"
+ln -s "$test_dir/nada" "$N_EIN_CLAUDE_DIR/skills/ajena"
 "$repo_dir/bin/n-ein-dev"
+test ! -L "$N_EIN_CLAUDE_DIR/skills/comment-style"
+test -L "$N_EIN_CLAUDE_DIR/skills/ajena"
 test "$(sed -n '1p' "$N_EIN_TEST_ENV")" = "$N_EIN_CLAUDE_DIR"
 test "$(sed -n '2p' "$N_EIN_TEST_ENV")" = "unset"
 test -d "$N_EIN_CLAUDE_DIR/skills"
@@ -49,7 +54,7 @@ test "$(readlink "$N_EIN_CLAUDE_DIR/skills/intent")" = "$repo_dir/pi-package/ski
 test -f "$N_EIN_CLAUDE_DIR/skills/synced/sentinel"
 test ! -f "$repo_dir/pi-package/skills/synced/sentinel"
 rg -q 'Objetivo: terminar el arreglo' "$N_EIN_TEST_ARGS"
-rg -q 'Eres Ein' "$N_EIN_TEST_ARGS"
+rg -q 'You are Ein' "$N_EIN_TEST_ARGS"
 # CodeGraph llega a Claude por argumentos: MCP para consultar y hook en cada petición.
 bun -e '
   const args = (await Bun.file(process.argv[1]).text()).split("\n");

@@ -57,7 +57,7 @@ Las propuestas de cinco entregas, 12 casos y ahorro orientativo del 20 % son ins
 Hechas el 2 de octubre la fase A (13 skills de Matt adaptadas) y la B (flujo ODD de Gentle en `flow.md`, solo para el agente principal). Pendiente, en este orden:
 
 1. **Prueba real** de dos o tres encargos en un proyecto de Samu, comparando con el agente a secas: ¿sigue el flujo, crea `WORK.md` cuando toca, hace un commit por tarea, usa CodeGraph y las skills? Necesita la cuota de Codex disponible.
-2. **Fase C, roles y revisión:** modo `verify` en el trabajador; varios trabajadores de solo lectura en paralelo (hoy uno cada vez, lo que serializa los revisores de `code-review`); superficies de edición comprobadas por el runtime, no solo pedidas; revisión con los cuatro ejes de Gentle (legibilidad, fiabilidad, resiliencia, riesgo) y un juicio doble solo para lo de alto riesgo.
+2. **Fase C, revisión:** hechos los tres roles con modelo propio, roles de solo lectura en paralelo y superficies impuestas por el runtime (2 de octubre). Queda decidir si la revisión gana ejes (legibilidad, fiabilidad, resiliencia, riesgo) o un juicio doble para lo de alto riesgo, a la vista de la prueba real.
 3. **Fase D, interfaz de sesión:** vista de trabajadores en vivo, visor de cambios hechos por el agente, paleta de comandos y modo de permiso amplio por sesión.
 4. Skills de Matt que faltan si se echan de menos: `teach`, `handoff`, `to-questionnaire`, `triage`/`wayfinder` si un día se usa un gestor de incidencias.
 

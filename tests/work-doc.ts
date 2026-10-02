@@ -3,7 +3,7 @@ import { mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from "nod
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import registerTodo from "../pi-package/extensions/todo";
-import { readWorkDoc, resolveWorkDoc } from "../pi-package/extensions/work-doc";
+import { addWorkTask, readWorkDoc, resolveWorkDoc } from "../pi-package/extensions/work-doc";
 
 const dir = mkdtempSync(join(tmpdir(), "n-ein-work-doc-"));
 const previous = process.env.N_EIN_WORK_DOC;
@@ -68,7 +68,16 @@ try {
   assert.equal(resolveWorkDoc(nested), existingDoc);
   sessionStart({}, ctx);
   assert.match(widgets.at(-1)?.[0] ?? "", /▸ Revisar/);
-  console.log("work doc: TODO proyecta y edita el markdown único");
+
+  // WORK.md sigue el idioma de los artefactos: títulos en inglés valen igual.
+  const english = join(dir, "english.md");
+  writeFileSync(english, "# Work\n\n## Goal\nShip it.\n\n## Tasks\n- [x] T1 · Parse\n- [ ] T2 · Render\n  - Criterion: shows the panel\n");
+  assert.deepEqual(readWorkDoc(english).tasks.map((task) => [task.text, task.done]), [["T1 · Parse", true], ["T2 · Render", false]]);
+  const newEnglish = join(dir, "new-english.md");
+  writeFileSync(newEnglish, "# Work\n\n## Goal\nShip it.\n");
+  addWorkTask(newEnglish, "First task");
+  assert.match(readFileSync(newEnglish, "utf8"), /## Tasks\n\n- \[ \] First task/, "la sección nueva sigue el idioma del documento");
+  console.log("work doc: TODO proyecta y edita el markdown único, en castellano o en inglés");
 } finally {
   if (previous === undefined) delete process.env.N_EIN_WORK_DOC;
   else process.env.N_EIN_WORK_DOC = previous;

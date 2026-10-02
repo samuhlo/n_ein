@@ -59,7 +59,7 @@ $repo_dir/pi-package/pi-only.md
 --append-system-prompt
 $repo_dir/pi-package/flow.md
 --append-system-prompt
-Idioma: conversa con el usuario en español. Escribe código, comentarios, identificadores, commits, PR y documentación del repositorio en el idioma que ya use el proyecto; en un proyecto sin convención, en español.
+Language: talk with the user in Spanish. Write code, comments, identifiers, commit messages, PRs, WORK.md and repository docs in the language the project already uses; in a project with no convention yet, use Spanish.
 --use-theme
 ein
 --model
@@ -91,7 +91,7 @@ rm -f "$N_EIN_MODELS_FILE"
 # El idioma del launcher llega a Pi como instrucción; uno ilegible no arranca Pi con un idioma inventado.
 printf '{"chat":"en","artifacts":"es"}\n' > "$N_EIN_LANG_FILE"
 "$repo_dir/bin/n-ein-dev" --print 'idioma'
-rg -Fxq 'Language: talk with the user in English. Write code comments, commit messages, PRs and repository docs in Spanish, whatever the conversation language.' "$N_EIN_CAPTURE"
+rg -Fxq 'Language: talk with the user in English. Write code comments, commit messages, PRs, WORK.md and repository docs in Spanish, whatever the conversation language.' "$N_EIN_CAPTURE"
 printf '{"chat":"fr","artifacts":"es"}\n' > "$N_EIN_LANG_FILE"
 rm -f "$N_EIN_CAPTURE"
 if "$repo_dir/bin/n-ein-dev" --print 'no' 2> "$test_dir/err"; then printf 'Un lang.json inválido no debe arrancar Pi.\n' >&2; exit 1; fi

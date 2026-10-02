@@ -1,170 +1,84 @@
 ---
 name: pr
-description: "Úsala al escribir el cuerpo de una PR."
-metadata:
-  credits:
-    skill: show-me
-    author: Dex Horthy
-    organisation: Humanlayer
-    url: "https://github.com/humanlayer/skills/blob/main/plugins/show-me/skills/show-me/SKILL.md"
+description: Write a pull request body that shows the change, its evidence and its merge risk. Use when writing or updating a PR description.
 ---
 
-Usa esta plantilla para el cuerpo de la PR, en el idioma de los artefactos (traduce también los títulos si no es español):
+Write the body in the artifact language with this shape (translate the headings too):
 
 ```markdown
-## Resumen
+## Summary
 
-<diagrama, boceto de diff o árbol>
+<diagram, diff sketch or tree>
 
-## Evidencia
+## Evidence
 
-- **Antes:** <captura/salida/test que falla>
-  **Después:** <captura/salida/test que pasa>
+- **Before:** <screenshot / output / failing test>
+  **After:** <screenshot / output / passing test>
 
-## Riesgo del merge
+## Merge risk
 
-**Puerta:** <de un sentido o de dos>
+**Door:** <one-way or two-way>
 
-<opcional: descripción>
+<optional: why>
 
-**Radio de impacto:** <descripción de una palabra>
+**Blast radius:** <one word>
 
-<opcional: posibles consecuencias del merge>
+<optional: what could break>
 ```
 
-## Secciones
+No preamble, brief prose, and the domain language of `GLOSSARY.md`. Pull the goal and decisions from `WORK.md` and the evidence from its evidence section and the task commits.
 
-Sin preámbulos y con prosa breve. Usa el lenguaje del dominio de `GLOSSARY.md`.
+## Summary
 
-### Resumen
+Pick the smallest view that makes the key point clear, next to the short text it supports. Keep only the calls, files, props, states and boundaries the reader needs; one view is often enough, several are fine, all of them never.
 
-Elige la vista más pequeña que deje clara la idea clave.
+- **Logic or an algorithm** → pseudocode:
 
-- Lógica o un algoritmo, como pseudocódigo:
+  ```text
+  on(save)
+    if content is unchanged
+      return cached result
+    write new content
+    return fresh result
+  ```
 
-```text
-on(save)
-  if content is unchanged
-    return cached result
-  write new content
-  return fresh result
-```
+- **Runtime control flow** → a call tree:
 
-- Flujo de control en ejecución, como árbol de llamadas:
+  ```text
+  submitForm
+    createSession
+      persistPrompt
+      launchAgent
+    navigateToSession
+  ```
 
-```text
-submitForm
-  createSession
-    persistPrompt
-    launchAgent
-  navigateToSession
-```
+- **UI structure** → a component tree with the state and module boundaries that matter:
 
-- Estructura de interfaz, como árbol de componentes, con el estado y las fronteras de módulo que importan:
+  ```text
+  <SessionPage> (apps/web/src/routes/session.tsx)
+    useSessionEvents()
+    <SessionToolbar>
+      <RunSkillButton> (packages/ui)
+  ```
 
-```text
-<SessionPage> (apps/example/src/routes/session.tsx)
-  useSessionEvents()
-  <SessionToolbar>
-    <RunSkillButton> (packages/ui)
-```
+- **File responsibilities or a broad refactor** → a shallow file tree with one comment per entry.
+- **Interaction or data flow between parts** → a Mermaid sequence diagram.
+- **What changes inside a shape that already exists** → a `diff` of that shape (component tree, file tree, call tree or control flow):
 
-- Responsabilidad de archivos o un refactor amplio, como árbol de archivos poco profundo:
+  ```diff
+   submitForm
+     createSession
+       persistPrompt
+  +    expandSkillMention
+       launchAgent
+  ```
 
-```text
-src/
-├── commands/       # interpreta las acciones del usuario
-├── sessions/       # posee el estado de la sesión
-└── transport/      # envía las peticiones a la API
-```
+- **Mostly new code, or order and ownership matter** → the whole block.
 
-- Interacción entre componentes, flujo de control o de datos, con Mermaid:
+## Evidence
 
-```mermaid
-sequenceDiagram
-    participant Usuario
-    participant UI
-    participant Daemon
-    Usuario->>UI: elige comando
-    UI->>Daemon: envía el prompt expandido
-    Daemon-->>UI: transmite el resultado
-```
+Proof that the change works, as before and after. Screenshots are best when the change is visual and the environment allows it; next best is execution: the exact test that failed and now passes (as pseudocode), or the command output.
 
-- Usa `diff` cuando la idea es qué cambia y la forma de alrededor ya existe. Ajusta la forma del diff al tema.
+## Merge risk
 
-Para un cambio de componente:
-
-```diff
- <SessionPage>
-   useSessionEvents()
-   <SessionToolbar>
-+    <RunSkillButton />
-   <SessionTimeline>
-+    <SkillResultCard />
-```
-
-Para un cambio en la disposición de archivos:
-
-```diff
- src/
- ├── commands/
-+│   └── show-me.ts       # expande el comando
- ├── sessions/
--└── transport.ts
-+└── transport/
-+    ├── client.ts
-+    └── stream.ts
-```
-
-Para un cambio en un árbol o pila de llamadas:
-
-```diff
- submitForm
-   createSession
-     persistPrompt
-+    expandSkillMention
-     launchAgent
--  navigateToSession
-+  navigateToSession
-+    subscribeToEvents
-```
-
-Para un cambio de estado o de flujo de control:
-
-```diff
- on(save)
--  write content
-+  if content is unchanged
-+    return cached result
-+  write new content
-+  invalidate cache
-```
-
-- Enseña el bloque entero cuando casi todo es nuevo, cuando omitir el contexto escondería a quién pertenece algo o el orden, o cuando el lector necesita una forma objetivo que pueda copiar:
-
-```ts
-function expandSkill(command: string): string {
-  const skillName = command.slice(1);
-  return `use the ${skillName} skill`;
-}
-```
-
-#### Criterio
-
-Pon cada visual junto al texto breve al que apoya. Quédate solo con las llamadas, archivos, props, estados y fronteras necesarios para responder la pregunta actual del lector o las opciones del punto en discusión.
-
-Puedes usar una de estas vistas o varias; es improbable que uses todas. Usa tu criterio y no abrumes al lector.
-
-### Evidencia
-
-Prueba concreta de que el cambio funciona. Enseña un antes y un después.
-
-Las capturas son lo mejor cuando el entorno lo permite y el cambio es visual.
-
-La evidencia de ejecución es lo siguiente: resultados de tests, salida de consola. Enseña el test exacto que antes fallaba y ahora pasa, en pseudocódigo.
-
-### Riesgo del merge
-
-Di si es una puerta de un sentido o de dos. Por una puerta de dos sentidos se puede volver; por una de un sentido, no. Una PR barata de revertir es de menor riesgo. Los cambios con acciones destructivas o decisiones difíciles de revertir son puertas de un sentido.
-
-El radio de impacto es el alcance potencial de los cambios de la PR. Considera todas las posibilidades: saltos de maquetación, roturas para quien consume la API, comportamiento en móvil, etc.
+A **two-way door** can be walked back cheaply; a **one-way door** cannot (destructive actions, data migrations, hard-to-reverse decisions). The **blast radius** is everything the change could touch: layout shifts, consumers of an API, mobile behaviour, performance. Think through all of it before naming it.
