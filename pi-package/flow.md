@@ -10,7 +10,7 @@ Every request runs through this workflow without the user asking for it. Small w
 6. **Build task by task.** On the default branch, start a work branch first. When there is behaviour with a runnable test and a clear expected result, follow `tdd`: observed red, then green. Otherwise run the proportionate functional check and say why. Update the documentation the change makes stale (README, docs, specs, comments) in the same task. Close each task with a **work-unit commit** (Conventional Commits, message in the artifact language) carrying behaviour, tests, docs and the `WORK.md` update together: tick the box and note the evidence in that same commit, so Git and the document never disagree. Push, merge, PRs and destructive operations wait until the user asks.
 7. **Review when the risk is high.** A change is high risk when a mistake would be hard to see or to undo: stored data and migrations, users, permissions and authentication, contracts others already consume, concurrency, delivery and deployment, or behaviour no test would catch. Run `review` on it before closing. Other changes keep their own checks.
 8. **Close** only when the full test suite and the type checks pass, or say exactly which fail and why. Then report:
-   - the verified outcome, ask by ask;
+   - the verified outcome, ask by ask, and the commit that carries each task (commit before you report);
    - **where to look**: the files that matter, one line each on why;
    - **how to check it**: the command or test that proves it, and what a failure would look like;
    - `Risk: none` or `Risk: <item> (<reason>)`;

@@ -63,7 +63,7 @@ try {
   await openModels(ctx, kit);
   let effective = loadModels(root);
   assert.deepEqual(effective.principal, { model: "openai-codex/gpt-6-luna", thinking: "high" });
-  assert.deepEqual(effective.routing.mecanico, { model: "openai-codex/gpt-6-luna", thinking: "high" });
+  assert.deepEqual(effective.routing.mecanico, { model: "openai-codex/gpt-6-luna", thinking: "xhigh" });
   assert.deepEqual(effective.routing.ordinario, { model: "openai-codex/gpt-6-sol", thinking: "medium" });
   assert.deepEqual(effective.routing.riesgo, { model: "openai-codex/gpt-6-sol", thinking: "high" }, "la clase intacta conserva el valor del paquete");
   assert.equal(effective.claudeEffort, "medium");

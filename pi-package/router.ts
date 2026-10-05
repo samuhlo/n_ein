@@ -17,7 +17,7 @@ export type Classification = { clase: JobClass; motivo: string; fuente: "usuario
 
 // Tabla de partida; runtime.json puede sobrescribirla por clase. Sol high donde equivocarse cuesta caro.
 export const DEFAULT_ROUTING: RoutingTable = {
-  mecanico: { model: "openai-codex/gpt-6-luna", thinking: "medium" },
+  mecanico: { model: "openai-codex/gpt-6-luna", thinking: "high" },
   ordinario: { model: "openai-codex/gpt-6-sol", thinking: "medium" },
   riesgo: { model: "openai-codex/gpt-6-sol", thinking: "high" },
   abierto: { model: "openai-codex/gpt-6-sol", thinking: "high" },

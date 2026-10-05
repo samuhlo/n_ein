@@ -5,6 +5,8 @@ import { classify, DEFAULT_ROUTING, loadRouting, parseOverride, type JobClass } 
 import registerRouter, { nextState, type RouterState } from "../pi-package/extensions/router.ts";
 
 const root = resolve(import.meta.dir, "..");
+// La tabla del test es la del paquete: sin los ajustes del canal de quien lo ejecuta.
+process.env.N_EIN_MODELS_FILE = join(root, "no-existe", "models.json");
 type Labeled = { id: string | number; peticion: string; clase: JobClass };
 const load = (name: string): Labeled[] => JSON.parse(readFileSync(join(root, "evals/reserved/router", name), "utf8")).peticiones;
 const cheap = (c: JobClass) => c === "mecanico" || c === "ordinario";
@@ -52,7 +54,7 @@ registerRouter({
 assert.equal(`${virtual.provider}/${virtual.id}`, "nein/auto");
 const ctx = { modelRegistry: { find: (provider: string, id: string) => ({ provider, id }) } } as never;
 const first = await virtual.route({ reason: "user", state: undefined, messages: user("Documenta los scripts en el README. Es solo documentación."), thinkingLevel: "medium" }, ctx);
-assert.deepEqual([first.model.id, first.thinkingLevel, first.state.clase], ["gpt-6-luna", "medium", "mecanico"]);
+assert.deepEqual([first.model.id, first.thinkingLevel, first.state.clase], ["gpt-6-luna", "high", "mecanico"]);
 const again = await virtual.route({ reason: "continuation", state: first.state, messages: user("x"), thinkingLevel: "medium" }, ctx);
 assert.equal(again.state, undefined, "sin cambio de clase no se reescribe el estado");
 assert.equal(again.model.id, "gpt-6-luna");

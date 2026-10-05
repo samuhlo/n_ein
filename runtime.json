@@ -27,7 +27,7 @@
   "routing": {
     "mecanico": {
       "model": "openai-codex/gpt-6-luna",
-      "thinking": "medium"
+      "thinking": "high"
     },
     "ordinario": {
       "model": "openai-codex/gpt-6-sol",
