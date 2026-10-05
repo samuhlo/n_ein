@@ -24,6 +24,8 @@ case "$scenario" in
   s1) base=111489af; prompt='Los certificados sin enlace normativo válido, o cuyo enlace no pasa la allowlist del BOE, se rechazan con 422 antes de importar, pero su estado se queda en `not_imported` y el poblador los reintenta en cada pasada. Arréglalo: deben quedar en `failed`, sin tocar la red ni pasar por `importing`. Un certificado inexistente sigue dando 404 sin mutar nada.' ;;
   s2) base=4d66007; prompt='Haz que el Anexo III lea la planificación guardada del curso en el servidor en vez del cuerpo que manda el cliente, y que el cliente deje de mandarla cuando hay curso.' ;;
   s3) base=4d66007; prompt='Cierra las deudas de `docs/alpha-v1/estado-actual.md`: que al dar de alta un centro se rechace a quien ya tiene cursos propios o módulos asignados; que `tests/pages/anexo-iv-codigo.test.ts` monte el componente en vez de leerlo como texto; y corrige el documento, que todavía da en gris el botón «Crear un curso» del centro.' ;;
+  # S3b: las mismas deudas pedidas sin detalle; el enrutador la cree mecánica y el agente debe escalar.
+  s3b) base=4d66007; prompt='Cierra las tres deudas que quedan en `docs/alpha-v1/estado-actual.md`.' ;;
   s5) base=4d66007; prompt='Documenta en el README todos los scripts de base de datos y de semillas de `package.json` (los `db:*` y `seed:*`): qué hace cada uno y sobre qué entorno actúa. Es solo documentación: no cambies código.' ;;
   s6) base=4d66007; prompt='En el panel del centro, que el título «Los cursos del centro» muestre cuántos cursos hay, por ejemplo «Los cursos del centro (3)». Si no hay ninguno, el título se queda como está.' ;;
   *) printf '[ERR] :: BENCH_SCENARIO :: %s\n' "$scenario" >&2; exit 64 ;;
@@ -75,7 +77,7 @@ case "$arm" in
 esac
 uniform="{\"model\":\"openai-codex/$model\",\"thinking\":\"$effort\"}"
 printf '{"schema":1,"agents":{"principal":%s,"scout":%s,"worker":%s,"reviewer":%s}}\n' "$uniform" "$uniform" "$uniform" "$uniform" > "$home/models.json"
-if [[ "$arm" == NR ]]; then
+if [[ "$arm" == NR || "$arm" == NR2 || "$arm" == NR3 ]]; then
   printf '{"schema":1,"agents":{"principal":{"model":"nein/auto","thinking":"medium"}}}\n' > "$home/models.json"
 fi
 if [[ "$arm" == N1L ]]; then
@@ -94,8 +96,8 @@ launch() {
     A|AL)
       PI_CODING_AGENT_DIR="$home/pi-agent" "$pi_bin" -p "$1" --mode json --no-extensions --no-skills \
         --model "openai-codex/$model" --thinking "$effort" ;;
-    N0L|N0LH|N0S|N0SH|N0SNC|N0SNR|NR)
-      local product="$bench/products/n0"; [[ "$arm" == N0SNR ]] && product="$bench/products/n0nr"; [[ "$arm" == NR ]] && product="$bench/products/nr"
+    N0L|N0LH|N0S|N0SH|N0SNC|N0SNR|NR|NR2|NR3)
+      local product="$bench/products/n0"; [[ "$arm" == N0SNR ]] && product="$bench/products/n0nr"; [[ "$arm" == NR ]] && product="$bench/products/nr"; [[ "$arm" == NR2 ]] && product="$bench/products/nr2"; [[ "$arm" == NR3 ]] && product="$bench/products/nr3"
       # Sin CodeGraph: un binario inexistente hace que el lanzador avise y siga, y la herramienta no se registra.
       local cg=(); [[ "$arm" == N0SNC ]] && cg=(N_EIN_CODEGRAPH_BIN=/nonexistent/codegraph)
       env ${cg[@]+"${cg[@]}"} N_EIN_HOME=/Users/samu/.n_ein N_EIN_AGENT_DIR="$home/pi-agent" N_EIN_MODELS_FILE="$home/models.json" \

@@ -35,7 +35,7 @@ case "$scenario" in
   s2)
     cp -R "$repo/evals/reserved/s2-anexo3/tests/." tests/
     read -r hidden_pass hidden_total _ <<< "$(vt tests/api/export/zz-oculto-anexo3-guardado.test.ts tests/components/zz-oculto-panel-anexo3.test.ts)" ;;
-  s3)
+  s3|s3b)
     cp -R "$repo/evals/reserved/s3-deudas/tests/." tests/
     read -r hidden_pass hidden_total _ <<< "$(vt tests/api/zz-oculto-alta-centro.test.ts)"
     # S3b: el test del Anexo IV debe montar la página y caer ante dos mutantes.
