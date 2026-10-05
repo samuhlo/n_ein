@@ -9,20 +9,23 @@ import { join } from "node:path";
 const bench = process.env.N_EIN_BENCH ?? "/Users/samu/Documents/01_Proyectos/n_ein-bench";
 const logs = join(bench, "logs");
 const read = (p: string) => (existsSync(p) ? JSON.parse(readFileSync(p, "utf8")) : null);
-const ARMS = ["A", "N1", "N1L", "N2", "N3", "G", "GE", "M", "C"];
+const ARMS = ["A", "AL", "N0L", "N0LH", "N0S", "N0SH", "N0SNC", "N0SNR", "NR", "N1", "N1L", "N2", "N3", "G", "GE", "M", "C"];
+// Solo las tandas con revisabilidad (sobre 30) son comparables entre sí; las antiguas eran sobre 25.
+const ONLY30 = process.argv.includes("--30");
 
 const judged: Record<string, number[]> = {};
 for (const dir of existsSync(join(bench, "judge")) ? readdirSync(join(bench, "judge")) : []) {
   const v = read(join(bench, "judge", dir, "verdict.json"));
   for (const p of v ?? []) {
     if (p.source.startsWith("control:")) continue;
-    (judged[p.source] ??= []).push(p.correccion + p.tests + p.alcance + p.legibilidad + p.documentacion);
+    if (ONLY30 && p.revisabilidad === undefined) continue;
+    (judged[p.source] ??= []).push(p.correccion + p.tests + p.alcance + p.legibilidad + p.documentacion + (p.revisabilidad ?? 0));
   }
 }
 
 const mean = (xs: number[]) => (xs.length ? xs.reduce((a, b) => a + b, 0) / xs.length : NaN);
-for (const s of ["s1", "s2", "s3"]) {
-  console.log(`\n### ${s.toUpperCase()}\n\n| Variante | n | Coste | Tiempo | Tokens | Oculta | Tests rotos | Juez (0–25) | Commits | Hijos | Doc |\n|---|---:|---:|---:|---:|---|---|---|---:|---:|---|`);
+for (const s of ["s1", "s2", "s3", "s5", "s6"]) {
+  console.log(`\n### ${s.toUpperCase()}\n\n| Variante | n | Coste | Tiempo | Tokens | Oculta | Tests rotos | Juez | Commits | Hijos | Doc |\n|---|---:|---:|---:|---:|---|---|---|---:|---:|---|`);
   for (const arm of ARMS) {
     const runs = [1, 2].map((r) => `${s}-${arm}-r${r}`).filter((r) => existsSync(join(logs, r, "metrics.json")) && !existsSync(join(logs, r, "discarded")));
     if (!runs.length) continue;

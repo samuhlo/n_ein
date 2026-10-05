@@ -52,6 +52,20 @@ vi.mock('../../server/db/index', async () => {
       select: (campos?: Record<string, unknown>) => consulta(campos),
       selectDistinct: (campos?: Record<string, unknown>) => consulta(campos),
       $count: async (tabla: unknown) => (mocks.filas[nombre(tabla)] ?? []).length,
+      // SQL directo: hay actividad si alguna tabla nombrada en la consulta tiene filas. Cualquier
+      // columna de la fila devuelta (exists, count, alias propio) responde con ese resultado.
+      execute: async (consulta: unknown) => {
+        const tablas: string[] = []
+        const recorrer = (v: unknown): void => {
+          if (is(v, Table)) tablas.push(nombre(v))
+          else if (v && typeof v === 'object' && 'queryChunks' in v) for (const c of (v as { queryChunks: unknown[] }).queryChunks) recorrer(c)
+          else if (v && typeof v === 'object' && 'table' in v && is((v as { table: unknown }).table, Table)) tablas.push(nombre((v as { table: unknown }).table))
+        }
+        recorrer(consulta)
+        const hay = tablas.some((t) => t !== 'municipios' && (mocks.filas[t] ?? []).length > 0)
+        const fila = new Proxy({}, { get: (_o, k) => (k === 'then' ? undefined : hay ? 1 : 0) })
+        return Object.assign([fila], { rows: [fila] })
+      },
       query,
       insert: () => ({
         values: (values: unknown) => {
