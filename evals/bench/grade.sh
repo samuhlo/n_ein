@@ -53,7 +53,10 @@ case "$scenario" in
     cp /tmp/bench-page.vue "$page"
     # S3c: el documento ya no da en gris el botón del centro.
     doc_fixed=true
-    rg -q "Crear un curso».{0,60}(sigue|está) en gris|sigue en gris.{0,40}Crear un curso" docs/alpha-v1/estado-actual.md && doc_fixed=false
+    # Corregido = no queda ninguna de las tres frases de 4d66007 que daban el botón por gris.
+    for stale in "«Crear un curso» del panel del centro sigue en gris" "«Crear un curso» del centro, que sigue en gris" "sigue en gris a propósito es el botón «Crear un curso»"; do
+      grep -Fq "$stale" docs/alpha-v1/estado-actual.md && doc_fixed=false
+    done
     extra="{\"mount\":{\"readsText\":$reads_text,\"mounts\":$mounts,\"pass\":\"$own_pass/$own_total\",\"mutantsKilled\":$killed},\"docFixed\":$doc_fixed}" ;;
   s5)
     # Cobertura: cada script db:* y seed:* de package.json nombrado en el README; y solo documentación tocada.

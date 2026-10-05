@@ -75,6 +75,9 @@ case "$arm" in
 esac
 uniform="{\"model\":\"openai-codex/$model\",\"thinking\":\"$effort\"}"
 printf '{"schema":1,"agents":{"principal":%s,"scout":%s,"worker":%s,"reviewer":%s}}\n' "$uniform" "$uniform" "$uniform" "$uniform" > "$home/models.json"
+if [[ "$arm" == NR ]]; then
+  printf '{"schema":1,"agents":{"principal":{"model":"nein/auto","thinking":"medium"}}}\n' > "$home/models.json"
+fi
 if [[ "$arm" == N1L ]]; then
   # Bloque de delegación: el principal igual que el resto; los roles con los modelos por defecto de n_ein.
   printf '{"schema":1,"agents":{"principal":%s,"scout":{"model":"openai-codex/gpt-6-luna","thinking":"low"},"worker":{"model":"openai-codex/gpt-6-luna","thinking":"high"},"reviewer":{"model":"openai-codex/gpt-6-sol","thinking":"medium"}}}\n' "$uniform" > "$home/models.json"
@@ -91,8 +94,8 @@ launch() {
     A|AL)
       PI_CODING_AGENT_DIR="$home/pi-agent" "$pi_bin" -p "$1" --mode json --no-extensions --no-skills \
         --model "openai-codex/$model" --thinking "$effort" ;;
-    N0L|N0LH|N0S|N0SH|N0SNC|N0SNR)
-      local product="$bench/products/n0"; [[ "$arm" == N0SNR ]] && product="$bench/products/n0nr"
+    N0L|N0LH|N0S|N0SH|N0SNC|N0SNR|NR)
+      local product="$bench/products/n0"; [[ "$arm" == N0SNR ]] && product="$bench/products/n0nr"; [[ "$arm" == NR ]] && product="$bench/products/nr"
       # Sin CodeGraph: un binario inexistente hace que el lanzador avise y siga, y la herramienta no se registra.
       local cg=(); [[ "$arm" == N0SNC ]] && cg=(N_EIN_CODEGRAPH_BIN=/nonexistent/codegraph)
       env ${cg[@]+"${cg[@]}"} N_EIN_HOME=/Users/samu/.n_ein N_EIN_AGENT_DIR="$home/pi-agent" N_EIN_MODELS_FILE="$home/models.json" \
