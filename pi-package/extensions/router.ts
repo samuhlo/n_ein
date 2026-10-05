@@ -78,7 +78,7 @@ export default function (pi: ExtensionAPI, table: RoutingTable = effectiveRoutin
   pi.registerTool({
     name: "nein_escalate",
     label: "Escalar el encargo",
-    description: "Pass the rest of this job to the high-risk model. Call it once, before the first write, when looking shows the change touches stored data or migrations, users, permissions or authentication, contracts others consume, concurrency, or delivery. Harmless if the job already runs on that model.",
+    description: "Pass the rest of this job to the high-risk model. Call it once, before the first write, when looking shows the change needs migrations or schema changes, changes or deletes data that already exists, touches users, permissions or authentication, changes a contract others consume, or touches concurrency or delivery. Saving the records a feature is meant to save, or adding an optional field, is not high risk. Harmless if the job already runs on that model.",
     parameters: Type.Object({ reason: Type.String({ description: "What makes this change high risk, in a few words" }) }),
     async execute(_toolCallId, params) {
       pending.escalate = String(params.reason).slice(0, 200);
