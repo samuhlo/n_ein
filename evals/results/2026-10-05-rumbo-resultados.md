@@ -115,3 +115,28 @@ Ningún test de la suite queda en rojo y el typecheck pasa siempre.
 - Probar la lista de riesgo más estrecha en S1.
 - Instalar en la preview y usarlo en un proyecto real (fase 5). Hace falta login en los hogares de n_ein, cuyo token quedó invalidado.
 - Claude sigue con su modelo y su esfuerzo; la tabla de enrutado no le aplica.
+
+## 6 de octubre: lista de riesgo y retirada de los roles
+
+**Roles retirados** (`3e27d03`):
+- se borran la extensión `agents.ts` y su test, los roles de `runtime.json`, del panel, del banner y del launcher, y el modo `N_EIN_WORKER_CHILD`;
+- el lanzador lee cuatro campos de `models.ts`;
+- `./scripts/check.sh` pasa.
+
+**Lista de riesgo.** S1 escalaba siempre a Sol high porque escribe un estado guardado. Se probaron tres versiones de la lista, cada una en la misma tanda del juez:
+
+| Variante | Qué cambia | S1, notas sobre 30 | Coste medio |
+|---|---|---|---|
+| NR | Lista amplia para la revisión y para el escalado | 28 · 29 · 26 · 23 · 27 (media 26,6) | $0,38 |
+| NR2 (`fcfb31c`) | Lista estrecha para las dos | 22 · 23 y 20 · 19 en dos tandas | $0,17 |
+| **NR3 (`1ac6059`)** | Revisión con la lista amplia, escalado con la estrecha | 25 · 24 · 27 · 29 · 24 (media 25,8) | **$0,31** |
+
+- **Lo que sostiene la calidad es la revisión, no Sol high.** NR2, sin revisión, pierde documentación y tests. NR3 iguala a NR (0,8 puntos de diferencia, dentro del ruido del juez) por un 18 % menos.
+- **NR3 escala S1 de todas formas**, con un motivo que sí está en la lista estrecha («cambia el estado persistido de certificados existentes»).
+- **S3b, prueba de seguridad:** las deudas pedidas con una frase vaga, que el enrutador clasifica como mecánica por la palabra `docs`.
+  - En las tres ejecuciones (NR2 ×2, NR3 ×1) el agente empezó en Luna high y **escaló solo a Sol high antes de escribir**, con motivos concretos (permisos de alta de cuentas, fuente de las exportaciones).
+  - Aceptación oculta del alta: 3/3.
+- **S2 con NR2:** 14/14, en Sol high desde la primera petición.
+
+**Pendiente:**
+- **Actualizar la documentación afectada solo ocurre en algo más de la mitad de las ejecuciones** (los cierres que no lo hacen se puntúan con 2 de 5 en documentación). Es la deducción más frecuente que queda.
