@@ -7,7 +7,7 @@
 // miden si el juez distingue. La tabla de etiquetas solo se guarda en disco.
 // =============================================================================
 import { execFileSync, spawnSync } from "node:child_process";
-import { mkdirSync, readFileSync, writeFileSync } from "node:fs";
+import { mkdirSync, readdirSync, readFileSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 
 const bench = process.env.N_EIN_BENCH ?? "/Users/samu/Documents/01_Proyectos/n_ein-bench";
@@ -19,6 +19,8 @@ for (let i = 0; i < rest.length; i++) {
 
 const PROMPTS: Record<string, string> = {
   s2: "Haz que el Anexo III lea la planificación guardada del curso en el servidor en vez del cuerpo que manda el cliente, y que el cliente deje de mandarla cuando hay curso.",
+  s5: "Documenta en el README todos los scripts de base de datos y de semillas de `package.json` (los `db:*` y `seed:*`): qué hace cada uno y sobre qué entorno actúa. Es solo documentación: no cambies código.",
+  s6: "En el panel del centro, que el título «Los cursos del centro» muestre cuántos cursos hay, por ejemplo «Los cursos del centro (3)». Si no hay ninguno, el título se queda como está.",
   s3: "Cierra las deudas de `docs/alpha-v1/estado-actual.md`: que al dar de alta un centro se rechace a quien ya tiene cursos propios o módulos asignados; que `tests/pages/anexo-iv-codigo.test.ts` monte el componente en vez de leerlo como texto; y corrige el documento, que todavía da en gris el botón «Crear un curso» del centro.",
 };
 
@@ -32,8 +34,29 @@ function diffOf(run: string): string {
   return execFileSync("git", ["-C", copy, "diff", meta.base_rev, "--", ".", ...EXCLUDE], { encoding: "utf8", maxBuffer: 64 << 20 });
 }
 
+// Lo que el usuario recibe para revisar: los mensajes de commit y el mensaje de cierre del agente.
+function reviewKit(run: string): string {
+  const copy = join(bench, "copies", run), log = join(bench, "logs", run);
+  const meta = JSON.parse(readFileSync(join(log, "meta.json"), "utf8"));
+  const commits = execFileSync("git", ["-C", copy, "log", "--all", "--reverse", "--format=* %s%n%b", `^${meta.base_rev}`], { encoding: "utf8" }).trim();
+  let closing = "";
+  for (const f of readdirSync(log).filter((n) => n.startsWith("events-")).sort()) {
+    for (const line of readFileSync(join(log, f), "utf8").split("\n").filter(Boolean)) {
+      let e: any; try { e = JSON.parse(line); } catch { continue; }
+      if (e.type === "message_end" && e.message?.role === "assistant") {
+        const text = (e.message.content ?? []).filter((c: any) => c.type === "text").map((c: any) => c.text).join("\n").trim();
+        if (text) closing = text;
+      }
+      if (e.type === "item.completed" && e.item?.type === "agent_message" && e.item.text) closing = e.item.text;
+    }
+  }
+  // El nombre de la herramienta o del flujo delataría la variante.
+  const scrub = (t: string) => t.replace(/WORK\.md|work\/[\w-]+\/\w+\.md|odd\/tasks\/[\w-]+\.md|\.scratch\/[\w\/-]+\.md/g, "<documento de trabajo>");
+  return `--- commits ---\n${scrub(commits) || "(sin commits)"}\n--- mensaje final al usuario ---\n${scrub(closing).slice(0, 4000) || "(sin mensaje)"}`;
+}
+
 const items = [
-  ...runs.map((r) => ({ source: r, diff: diffOf(r) })),
+  ...runs.map((r) => ({ source: r, diff: `${reviewKit(r)}\n--- diff ---\n${diffOf(r)}` })),
   ...controls.map(([n, p]) => ({ source: `control:${n}`, diff: readFileSync(p, "utf8") })),
 ];
 for (let i = items.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [items[i], items[j]] = [items[j]!, items[i]!]; }
@@ -50,11 +73,12 @@ Puntúa cada propuesta de 1 (malo) a 5 (excelente) en:
 - alcance: no añade cambios no pedidos ni deja partes del encargo sin hacer.
 - legibilidad: el código y los comentarios se entienden y siguen las convenciones del repo.
 - documentacion: actualiza la documentación afectada cuando hace falta.
+- revisabilidad: el usuario puede revisar y verificar el cambio en pocos minutos: commits acotados con mensajes claros, un mensaje final que dice qué se hizo, dónde mirar y cómo comprobarlo sin exagerar, y errores o logs que dirían dónde falla. Los controles sin commits ni mensaje se puntúan solo por el diff.
 
 Lista los defectos reales con archivo:línea y severidad (bloqueante | importante | menor). No inventes defectos: si una propuesta está bien, dilo.
 
 Responde SOLO con JSON válido, sin texto alrededor:
-{"propuestas":[{"etiqueta":"P01","correccion":n,"tests":n,"alcance":n,"legibilidad":n,"documentacion":n,"defectos":[{"severidad":"...","lugar":"...","descripcion":"..."}],"resumen":"una frase"}]}
+{"propuestas":[{"etiqueta":"P01","correccion":n,"tests":n,"alcance":n,"legibilidad":n,"documentacion":n,"revisabilidad":n,"defectos":[{"severidad":"...","lugar":"...","descripcion":"..."}],"resumen":"una frase"}]}
 
 ${labeled.map((it) => `===== PROPUESTA ${it.label} =====\n${it.diff.slice(0, 60000)}`).join("\n\n")}`;
 
@@ -78,8 +102,8 @@ const bySource = Object.fromEntries(labeled.map((it) => [it.label, it.source]));
 const scored = verdict.propuestas.map((p: any) => ({ source: bySource[p.etiqueta], ...p }));
 writeFileSync(join(out, "verdict.json"), JSON.stringify(scored, null, 2));
 for (const p of scored) {
-  const sum = p.correccion + p.tests + p.alcance + p.legibilidad + p.documentacion;
+  const sum = p.correccion + p.tests + p.alcance + p.legibilidad + p.documentacion + (p.revisabilidad ?? 0);
   const block = p.defectos.filter((d: any) => d.severidad === "bloqueante").length;
-  console.log(`${p.source.padEnd(16)} total ${sum}/25 · c${p.correccion} t${p.tests} a${p.alcance} l${p.legibilidad} d${p.documentacion} · bloqueantes ${block} · ${p.resumen}`);
+  console.log(`${p.source.padEnd(16)} total ${sum}/30 · c${p.correccion} t${p.tests} a${p.alcance} l${p.legibilidad} d${p.documentacion} r${p.revisabilidad} · bloqueantes ${block} · ${p.resumen}`);
 }
 console.log(`\n${out}`);

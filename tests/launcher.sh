@@ -5,6 +5,9 @@ repo_dir="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd -P)"
 test_dir="$(mktemp -d)"
 trap 'rm -rf "$test_dir"' EXIT
 # La versión de Pi la marca runtime.json: el Pi falso la repite para no tocar los tests en cada subida.
+# El modelo principal por defecto también sale de runtime.json (desde el 5 de octubre, nein/auto).
+export N_EIN_TEST_PI_MODEL="$(bun -e 'console.log((await Bun.file(process.argv[1]).json()).pi.model)' "$repo_dir/runtime.json")"
+export N_EIN_TEST_PI_THINKING="$(bun -e 'console.log((await Bun.file(process.argv[1]).json()).pi.thinking)' "$repo_dir/runtime.json")"
 export N_EIN_TEST_PI_VERSION="$(bun -e 'console.log((await Bun.file(process.argv[1]).json()).pi.version)' "$repo_dir/runtime.json")"
 
 cat > "$test_dir/pi" <<'FAKE_PI'
@@ -65,9 +68,9 @@ Language: talk with the user in Spanish. Write code, comments, identifiers, comm
 --use-theme
 ein
 --model
-openai-codex/gpt-6-sol
+$N_EIN_TEST_PI_MODEL
 --thinking
-high
+$N_EIN_TEST_PI_THINKING
 --print
 cambia este texto
 EOF

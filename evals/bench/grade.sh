@@ -55,6 +55,15 @@ case "$scenario" in
     doc_fixed=true
     rg -q "Crear un curso».{0,60}(sigue|está) en gris|sigue en gris.{0,40}Crear un curso" docs/alpha-v1/estado-actual.md && doc_fixed=false
     extra="{\"mount\":{\"readsText\":$reads_text,\"mounts\":$mounts,\"pass\":\"$own_pass/$own_total\",\"mutantsKilled\":$killed},\"docFixed\":$doc_fixed}" ;;
+  s5)
+    # Cobertura: cada script db:* y seed:* de package.json nombrado en el README; y solo documentación tocada.
+    scripts="$(bun -e 'const p=JSON.parse(await Bun.file("package.json").text()); console.log(Object.keys(p.scripts).filter(k=>/^(db|seed):/.test(k)).join(" "))')"
+    for k in $(printf '%s' "$scripts"); do hidden_total=$((hidden_total + 1)); grep -Fq "$k" README.md && hidden_pass=$((hidden_pass + 1)); done
+    code_touched="$(git diff --name-only "$base_rev" -- . ':(exclude)*.md' | grep -cv '^$')"
+    extra="{\"codeFilesTouched\":$code_touched}" ;;
+  s6)
+    cp -R "$repo/evals/reserved/s6-titulo/tests/." tests/
+    read -r hidden_pass hidden_total _ <<< "$(vt tests/components/zz-oculto-titulo-centro.test.ts)" ;;
 esac
 
 printf '{"run":"%s","hidden":"%s/%s","hiddenPass":%s,"hiddenTotal":%s,"suite":"%s/%s","suiteBadFiles":%s,"suiteFailed":%s,"typecheck":%s,"extra":%s}\n' \

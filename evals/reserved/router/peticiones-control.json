@@ -1,0 +1,20 @@
+{
+  "nota": "Conjunto de control: 15 peticiones de commits no vistos al ajustar las reglas, etiquetadas por el agente antes de clasificarlas (5 de octubre de 2026).",
+  "peticiones": [
+    { "id": "c1", "peticion": "Corrige los selects del perfil, que no cargan bien las preferencias guardadas.", "clase": "ordinario" },
+    { "id": "c2", "peticion": "Añade unos scripts que extraigan en TypeScript los datos del repertorio oficial de certificados.", "clase": "ordinario" },
+    { "id": "c3", "peticion": "Fija bun como gestor de paquetes del proyecto.", "clase": "mecanico" },
+    { "id": "c4", "peticion": "El Anexo V tiene que generarse por unidad evaluable, no por módulo.", "clase": "ordinario" },
+    { "id": "c5", "peticion": "Extrae los enlaces de los reales decretos y crea la semilla con su tabla N:M.", "clase": "riesgo" },
+    { "id": "c6", "peticion": "Añade un endpoint que genere el DOCX con docxtemplater.", "clase": "ordinario" },
+    { "id": "c7", "peticion": "seleccionarCertificado coge el certificado por defecto; que use obtenerCertificado(codigo).", "clase": "ordinario" },
+    { "id": "c8", "peticion": "Prepara la release del instalador v0.73.1.", "clase": "riesgo" },
+    { "id": "c9", "peticion": "Que el agente avise cuando la sesión se ha quedado vieja porque se actualizó a mitad.", "clase": "ordinario" },
+    { "id": "c10", "peticion": "Haz que el índice de EIN.md se actualice solo al cerrar un cambio.", "clase": "ordinario" },
+    { "id": "c11", "peticion": "Centraliza en un solo archivo las rutas y la lista de extensiones del núcleo.", "clase": "ordinario" },
+    { "id": "c12", "peticion": "Alinea la documentación con el flujo único.", "clase": "mecanico" },
+    { "id": "c13", "peticion": "Arregla el doctor, que falla al leer settings.json.", "clase": "ordinario" },
+    { "id": "c14", "peticion": "Separa diseño y tareas en dos fases distintas del flujo.", "clase": "ordinario" },
+    { "id": "c15", "peticion": "En el README, explica los modos de trabajo Solo y Team de forma más orientada a producto.", "clase": "mecanico" }
+  ]
+}

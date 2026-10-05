@@ -34,7 +34,7 @@ function files(dir: string, out: string[] = []): string[] {
 }
 
 const total = zero(), parent = zero(), children = zero();
-let childUsd = 0, childUsdMissing = false;
+let childUsd = 0, childUsdMissing = false, parentUsd = 0;
 const tools: Record<string, number> = {};
 const childRoles: Record<string, number> = {};
 const sessions: string[] = [];
@@ -72,7 +72,7 @@ if (meta.arm === "C") {
   const seen = new Set<string>();
   for (const f of files(home)) {
     const lines = readFileSync(f, "utf8").split("\n").filter(Boolean);
-    let isSession = false;
+    let isSession = false, localUsd = 0, localUsdMissing = false;
     const local = zero();
     for (const line of lines) {
       let e: any; try { e = JSON.parse(line); } catch { continue; }
@@ -84,6 +84,8 @@ if (meta.arm === "C") {
       const m = e.message;
       if (m.role === "assistant") {
         if (m.usage) add(local, m.usage);
+        // Pi anota el coste de catálogo del modelo que respondió: es la cifra justa cuando no es Sol.
+        if (typeof m.usage?.cost?.total === "number") localUsd += m.usage.cost.total; else localUsdMissing = true;
         if (m.model) models.add(`${m.provider}/${m.model}`);
         assistantTurns++;
         for (const c of m.content ?? []) if (c.type === "toolCall") countTool(c.name, c.arguments);
@@ -100,8 +102,8 @@ if (meta.arm === "C") {
     }
     if (isSession) sessions.push(relative(home, f));
     // Gentle guarda las sesiones de sus subagentes aparte: cuentan como hijos.
-    if (f.includes("/gentle-agents/")) { add(children, local); childRoles["gentle-subagent"] = (childRoles["gentle-subagent"] ?? 0) + 1; }
-    else add(parent, local);
+    if (f.includes("/gentle-agents/")) { add(children, local); childRoles["gentle-subagent"] = (childRoles["gentle-subagent"] ?? 0) + 1; childUsd += localUsdMissing ? usd(local) : localUsd; }
+    else { add(parent, local); parentUsd += localUsdMissing ? usd(local) : localUsd; }
   }
   add(total, parent); add(total, children);
 }
@@ -124,7 +126,7 @@ const stat = git("diff", "--shortstat", baseRev);
 
 const metrics = {
   ...meta,
-  usage: { total, parent, children, usd: Number((childUsdMissing || childUsd === 0 ? usd(total) : usd(parent) + childUsd).toFixed(4)), usdAllSol: Number(usd(total).toFixed(4)) },
+  usage: { total, parent, children, usd: Number((meta.arm === "C" ? usd(total) : parentUsd + (childUsdMissing ? usd(children) : childUsd)).toFixed(4)), usdAllSol: Number(usd(total).toFixed(4)) },
   assistantTurns, toolCalls: toolIndex, tools, childRoles, models: [...models],
   firstCodegraph, firstLook, sessions: sessions.length,
   git: { branches, commits: commits.length, pushed, coauthor, dirty: status.length, changedFiles: changed.length + untracked.length, shortstat: stat },

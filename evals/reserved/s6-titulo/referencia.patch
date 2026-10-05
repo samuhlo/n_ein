@@ -1,0 +1,13 @@
+diff --git a/app/components/academia/CursosDelCentro.vue b/app/components/academia/CursosDelCentro.vue
+index 3e4de2d..536926a 100644
+--- a/app/components/academia/CursosDelCentro.vue
++++ b/app/components/academia/CursosDelCentro.vue
+@@ -8,7 +8,7 @@ defineProps<{ cursos: CursoPanel[]; avisos: AvisoPanel[] }>()
+ 
+ <template>
+   <section aria-labelledby="cursos-centro-titulo" class="space-y-2">
+-    <h2 id="cursos-centro-titulo" class="font-display text-lg font-bold text-cream-900">Los cursos del centro</h2>
++    <h2 id="cursos-centro-titulo" class="font-display text-lg font-bold text-cream-900">Los cursos del centro<template v-if="cursos.length > 0"> ({{ cursos.length }})</template></h2>
+ 
+     <p v-if="cursos.length === 0" class="text-sm text-cream-600">
+       Todavía no hay cursos en el centro. Cuando crees el primero aparecerá aquí con sus módulos.

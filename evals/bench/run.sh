@@ -24,6 +24,8 @@ case "$scenario" in
   s1) base=111489af; prompt='Los certificados sin enlace normativo válido, o cuyo enlace no pasa la allowlist del BOE, se rechazan con 422 antes de importar, pero su estado se queda en `not_imported` y el poblador los reintenta en cada pasada. Arréglalo: deben quedar en `failed`, sin tocar la red ni pasar por `importing`. Un certificado inexistente sigue dando 404 sin mutar nada.' ;;
   s2) base=4d66007; prompt='Haz que el Anexo III lea la planificación guardada del curso en el servidor en vez del cuerpo que manda el cliente, y que el cliente deje de mandarla cuando hay curso.' ;;
   s3) base=4d66007; prompt='Cierra las deudas de `docs/alpha-v1/estado-actual.md`: que al dar de alta un centro se rechace a quien ya tiene cursos propios o módulos asignados; que `tests/pages/anexo-iv-codigo.test.ts` monte el componente en vez de leerlo como texto; y corrige el documento, que todavía da en gris el botón «Crear un curso» del centro.' ;;
+  s5) base=4d66007; prompt='Documenta en el README todos los scripts de base de datos y de semillas de `package.json` (los `db:*` y `seed:*`): qué hace cada uno y sobre qué entorno actúa. Es solo documentación: no cambies código.' ;;
+  s6) base=4d66007; prompt='En el panel del centro, que el título «Los cursos del centro» muestre cuántos cursos hay, por ejemplo «Los cursos del centro (3)». Si no hay ninguno, el título se queda como está.' ;;
   *) printf '[ERR] :: BENCH_SCENARIO :: %s\n' "$scenario" >&2; exit 64 ;;
 esac
 
@@ -64,6 +66,13 @@ mkdir -p "$home/pi-agent" "$home/.config"
 if [[ -z "${RESUME_FROM:-}" ]]; then
 printf '[user]\n\tname = samuhlo\n\temail = samu13lop@gmail.com\n' > "$home/.gitconfig"
 cp "$auth_master" "$home/pi-agent/auth.json"
+# Fase 2: cada variante N0 y AL trabaja entera en un modelo y esfuerzo.
+case "$arm" in
+  N0L|AL) model=gpt-6-luna; effort=medium ;;
+  N0LH) model=gpt-6-luna; effort=high ;;
+  N0S|N0SNC|N0SNR) model=gpt-6-sol; effort=medium ;;
+  N0SH) model=gpt-6-sol; effort=high ;;
+esac
 uniform="{\"model\":\"openai-codex/$model\",\"thinking\":\"$effort\"}"
 printf '{"schema":1,"agents":{"principal":%s,"scout":%s,"worker":%s,"reviewer":%s}}\n' "$uniform" "$uniform" "$uniform" "$uniform" > "$home/models.json"
 if [[ "$arm" == N1L ]]; then
@@ -79,9 +88,15 @@ export BUN_INSTALL_CACHE_DIR="/Users/samu/.bun/install/cache"
 
 launch() {
   case "$arm" in
-    A)
+    A|AL)
       PI_CODING_AGENT_DIR="$home/pi-agent" "$pi_bin" -p "$1" --mode json --no-extensions --no-skills \
         --model "openai-codex/$model" --thinking "$effort" ;;
+    N0L|N0LH|N0S|N0SH|N0SNC|N0SNR)
+      local product="$bench/products/n0"; [[ "$arm" == N0SNR ]] && product="$bench/products/n0nr"
+      # Sin CodeGraph: un binario inexistente hace que el lanzador avise y siga, y la herramienta no se registra.
+      local cg=(); [[ "$arm" == N0SNC ]] && cg=(N_EIN_CODEGRAPH_BIN=/nonexistent/codegraph)
+      env ${cg[@]+"${cg[@]}"} N_EIN_HOME=/Users/samu/.n_ein N_EIN_AGENT_DIR="$home/pi-agent" N_EIN_MODELS_FILE="$home/models.json" \
+        N_EIN_LANG_FILE="$home/lang.json" "$product/bin/n-ein-dev" -p "$1" --mode json ;;
     N1|N2|N3|N1L)
       local product="$bench/products/$(tr '[:upper:]' '[:lower:]' <<< "${arm%L}")"
       N_EIN_HOME=/Users/samu/.n_ein N_EIN_AGENT_DIR="$home/pi-agent" N_EIN_MODELS_FILE="$home/models.json" \

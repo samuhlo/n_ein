@@ -23,7 +23,7 @@ process.env.N_EIN_CHANNEL = "dev";
 
 try {
   const defaults = loadModels(root);
-  assert.equal(defaults.principal.model, "openai-codex/gpt-6-sol");
+  assert.equal(defaults.principal.model, "nein/auto", "por defecto, un modelo por encargo");
   assert.equal(defaults.worker.model, "openai-codex/gpt-6-luna");
   assert.equal(defaults.overridden.length, 0);
   assert.equal(defaults.claudeEffort, null, "Sin ajuste, el esfuerzo de Claude lo decide Claude Code");
@@ -62,7 +62,7 @@ try {
   sessions = [[KEYS.enter, ...type("luna"), KEYS.enter, "e", KEYS.down, "e", KEYS.down, KEYS.enter, ...type("sol"), KEYS.enter, KEYS.down, KEYS.down, "e", "e", KEYS["ctrl+s"]]];
   await openModels(ctx, kit);
   let effective = loadModels(root);
-  assert.deepEqual(effective.principal, { model: "openai-codex/gpt-6-luna", thinking: "xhigh" });
+  assert.deepEqual(effective.principal, { model: "openai-codex/gpt-6-luna", thinking: "high" });
   assert.deepEqual(effective.scout, { model: "openai-codex/gpt-6-luna", thinking: "medium" });
   assert.deepEqual(effective.worker, { model: "openai-codex/gpt-6-sol", thinking: "high" });
   assert.deepEqual(effective.reviewer, { model: "openai-codex/gpt-6-sol", thinking: "medium" }, "el reviewer intacto conserva el valor del paquete");
@@ -77,7 +77,7 @@ try {
   // Cancelar no escribe nada.
   sessions = [["e", KEYS.escape]];
   await openModels(ctx, kit);
-  assert.deepEqual(loadModels(root).principal, { model: "openai-codex/gpt-6-luna", thinking: "xhigh" });
+  assert.deepEqual(loadModels(root).principal, { model: "openai-codex/gpt-6-luna", thinking: "high" });
 
   // Id personalizado: el panel cierra, pregunta con el input de Pi y vuelve con el borrador.
   sessions = [[KEYS.down, KEYS.down, KEYS.enter, ...type("personalizado"), KEYS.enter], [KEYS["ctrl+s"]]];
@@ -88,7 +88,7 @@ try {
   sessions = [["r", KEYS.down, KEYS.down, KEYS.down, KEYS.down, "r", KEYS["ctrl+s"]]];
   await openModels(ctx, kit);
   effective = loadModels(root);
-  assert.deepEqual(effective.principal, { model: "openai-codex/gpt-6-sol", thinking: "high" });
+  assert.deepEqual(effective.principal, { model: "nein/auto", thinking: "medium" });
   assert.equal(effective.claudeEffort, null);
   assert.throws(() => saveClaudeEffort(root, "minimal"), /esfuerzo de Claude inválido/);
   saveModelChoice(root, "worker", { model: "openai-codex/gpt-6-sol", thinking: "high" });
