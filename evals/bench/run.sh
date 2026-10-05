@@ -73,7 +73,8 @@ fi
 printf '{"chat":"es","artifacts":"proyecto"}\n' > "$home/lang.json"
 fi
 
-export HOME="$home" DO_NOT_TRACK=1 PI_SKIP_VERSION_CHECK=1 NO_UPDATE_NOTIFIER=1
+# PI_OFFLINE solo quita las operaciones de red del arranque: un arranque colgado ya paró una prueba.
+export HOME="$home" DO_NOT_TRACK=1 PI_SKIP_VERSION_CHECK=1 NO_UPDATE_NOTIFIER=1 PI_OFFLINE=1
 export BUN_INSTALL_CACHE_DIR="/Users/samu/.bun/install/cache"
 
 launch() {
@@ -135,7 +136,7 @@ for message in "${messages[@]}"; do
   if [[ "$arm" == C ]]; then
     (launch "$message") > "$log/events-$turn.jsonl" 2> "$log/stderr-$turn.txt" &
   else
-    (launch "$message" ${extra[@]+"${extra[@]}"}) > "$log/events-$turn.jsonl" 2> "$log/stderr-$turn.txt" &
+    (launch "$message" ${extra[@]+"${extra[@]}"}) < /dev/null > "$log/events-$turn.jsonl" 2> "$log/stderr-$turn.txt" &
   fi
   pid=$!
   if [[ -n "${STOP_AFTER_SECONDS:-}" ]]; then

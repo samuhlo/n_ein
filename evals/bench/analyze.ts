@@ -34,6 +34,7 @@ function files(dir: string, out: string[] = []): string[] {
 }
 
 const total = zero(), parent = zero(), children = zero();
+let childUsd = 0, childUsdMissing = false;
 const tools: Record<string, number> = {};
 const childRoles: Record<string, number> = {};
 const sessions: string[] = [];
@@ -90,6 +91,9 @@ if (meta.arm === "C") {
       // Hijos sin sesión propia (n_ein): su uso vuelve en el resultado de la herramienta.
       if (m.role === "toolResult" && m.details?.usage && typeof m.details.usage.input === "number") {
         add(children, m.details.usage);
+        // El hijo trae su propia estimación de catálogo con la tarifa de su modelo (Luna no cuesta como Sol).
+        if (typeof m.details.usage.catalogEstimateUsd === "number") childUsd += m.details.usage.catalogEstimateUsd;
+        else childUsdMissing = true;
         const role = m.details.role ?? m.toolName ?? "child";
         childRoles[role] = (childRoles[role] ?? 0) + 1;
       }
@@ -120,7 +124,7 @@ const stat = git("diff", "--shortstat", baseRev);
 
 const metrics = {
   ...meta,
-  usage: { total, parent, children, usd: Number(usd(total).toFixed(4)) },
+  usage: { total, parent, children, usd: Number((childUsdMissing || childUsd === 0 ? usd(total) : usd(parent) + childUsd).toFixed(4)), usdAllSol: Number(usd(total).toFixed(4)) },
   assistantTurns, toolCalls: toolIndex, tools, childRoles, models: [...models],
   firstCodegraph, firstLook, sessions: sessions.length,
   git: { branches, commits: commits.length, pushed, coauthor, dirty: status.length, changedFiles: changed.length + untracked.length, shortstat: stat },
