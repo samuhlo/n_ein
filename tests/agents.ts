@@ -1,10 +1,11 @@
 import { strict as assert } from "node:assert";
 import { execFileSync } from "node:child_process";
-import { chmodSync, existsSync, mkdirSync, mkdtempSync, rmSync, writeFileSync } from "node:fs";
+import { chmodSync, existsSync, mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
-import { join } from "node:path";
+import { join, resolve } from "node:path";
 import registerAgents, { insideSurfaces, validSurface } from "../pi-package/extensions/agents.ts";
 
+const piVersion = JSON.parse(readFileSync(resolve(import.meta.dir, "../runtime.json"), "utf8")).pi.version;
 const testDir = mkdtempSync(join(tmpdir(), "n-ein-agents-"));
 const saved = { ...process.env };
 process.env.N_EIN_AGENT_DIR = join(testDir, "empty-agent-home");
@@ -20,7 +21,7 @@ const run = (name: string, params: object, cwd = testDir) => tools[name].execute
 const fakePi = join(testDir, "fake-pi");
 writeFileSync(fakePi, [
   "#!/usr/bin/env bash",
-  "if [[ \"${1:-}\" == \"--version\" ]]; then printf '0.87.1\\n'; exit 0; fi",
+  `if [[ "\${1:-}" == "--version" ]]; then printf '${piVersion}\\n'; exit 0; fi`,
   "for file in ${N_EIN_FAKE_WRITES:-}; do mkdir -p \"$(dirname \"$file\")\"; printf x > \"$file\"; done",
   "model=\"${N_EIN_FAKE_MODEL:-gpt-6-luna}\"",
   "printf '%s\\n' \"{\\\"type\\\":\\\"message_end\\\",\\\"message\\\":{\\\"role\\\":\\\"assistant\\\",\\\"provider\\\":\\\"openai-codex\\\",\\\"model\\\":\\\"$model\\\",\\\"stopReason\\\":\\\"${N_EIN_FAKE_STOP:-stop}\\\",\\\"errorMessage\\\":\\\"${N_EIN_FAKE_ERROR:-}\\\",\\\"content\\\":[{\\\"type\\\":\\\"text\\\",\\\"text\\\":\\\"hecho\\\"}]}}\"",

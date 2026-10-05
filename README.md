@@ -1,6 +1,6 @@
 # n_ein
 
-n_ein es el nuevo entorno personal de programación de Samu. La versión de desarrollo arranca Pi 0.87.1 con hogar aislado, tema de Ein, voz docente, las skills `intent`, `comment-style` y `logging-style`, y un trabajador configurable (Luna high por defecto). El relevo Pi↔Claude, un instalador local y el launcher de cinco vistas en Go ya tienen recorridos verificados.
+n_ein es el nuevo entorno personal de programación de Samu. La versión de desarrollo arranca Pi 1.0.2 con hogar aislado, tema de Ein, voz docente, las skills `intent`, `comment-style` y `logging-style`, y un trabajador configurable (Luna high por defecto). El relevo Pi↔Claude, un instalador local y el launcher de cinco vistas en Go ya tienen recorridos verificados.
 
 ## Arrancar
 
@@ -66,7 +66,7 @@ Desde `0.1.0-preview.2`, un candidato extraído se instala completo con un solo 
 nein
 ```
 
-Instala Pi 0.87.1 en `~/.n_ein/runtimes/pi/0.87.1`, CodeGraph 1.6.1 en `~/.n_ein/runtimes/codegraph/1.6.1`, el código en `~/.n_ein/installations/<canal>` y enlaza `~/.local/bin/nein`. El `pi` global y Ein legado no se modifican; la autenticación no se copia. Repetirlo no reinstala lo que ya está bien. La [estructura del hogar](docs/05-despliegue.md#hogar-gestionado-y-entrada-nein) detalla cada pieza.
+Instala Pi 1.0.2 en `~/.n_ein/runtimes/pi/1.0.2`, CodeGraph 1.6.1 en `~/.n_ein/runtimes/codegraph/1.6.1`, el código en `~/.n_ein/installations/<canal>` y enlaza `~/.local/bin/nein`. El `pi` global y Ein legado no se modifican; la autenticación no se copia. Repetirlo no reinstala lo que ya está bien. La [estructura del hogar](docs/05-despliegue.md#hogar-gestionado-y-entrada-nein) detalla cada pieza.
 
 ### Flujo, skills e idioma
 

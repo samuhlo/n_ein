@@ -32,9 +32,11 @@ N_EIN_HOME="$test_dir" N_EIN_LINK_DIR="$test_dir/local-bin" \
 N_EIN_HOME="$test_dir" N_EIN_CHANNEL=dev "$test_dir/local-bin/nein" --project "$project" --view configuracion --once > "$test_dir/nein-view"
 rg -q 'preview' "$test_dir/nein-view"
 
+pi_version="$(bun -e 'console.log((await Bun.file(process.argv[1]).json()).pi.version)' "$target/runtime.json")"
+export N_EIN_TEST_PI_VERSION="$pi_version"
 cat > "$test_dir/pi" <<'FAKE_PI'
 #!/usr/bin/env bash
-if [[ "${1:-}" == "--version" ]]; then printf '0.87.1\n'; exit 0; fi
+if [[ "${1:-}" == "--version" ]]; then printf '%s\n' "$N_EIN_TEST_PI_VERSION"; exit 0; fi
 {
   printf 'cwd=%s\n' "$PWD"
   printf 'home=%s\n' "$PI_CODING_AGENT_DIR"
@@ -60,6 +62,6 @@ printf '#!/bin/sh\nprintf "%s\\n"\n' "$codegraph_version" > "$test_dir/codegraph
 chmod +x "$test_dir/codegraph"
 N_EIN_PI_BIN="$test_dir/pi" N_EIN_CODEGRAPH_BIN="$test_dir/codegraph" "$target/bin/n-ein-install" doctor --target "$target" --runtime > "$test_dir/runtime-doctor"
 rg -q 'CODEGRAPH · ' "$test_dir/runtime-doctor"
-rg -q 'Pi 0.87.1 · Bun disponible · autenticación no comprobada' "$test_dir/runtime-doctor"
+rg -q "Pi $pi_version · Bun disponible · autenticación no comprobada" "$test_dir/runtime-doctor"
 
 printf 'paquete instalado: OK\n'

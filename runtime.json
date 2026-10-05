@@ -1,7 +1,7 @@
 {
   "schema": 1,
   "pi": {
-    "version": "0.87.1",
+    "version": "1.0.2",
     "model": "openai-codex/gpt-6-sol",
     "thinking": "high"
   },

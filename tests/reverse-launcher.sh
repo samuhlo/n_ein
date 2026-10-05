@@ -4,6 +4,8 @@ set -euo pipefail
 repo_dir="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd -P)"
 test_dir="$(mktemp -d)"
 trap 'rm -rf "$test_dir"' EXIT
+# La versión de Pi la marca runtime.json: el Pi falso la repite para no tocar los tests en cada subida.
+export N_EIN_TEST_PI_VERSION="$(bun -e 'console.log((await Bun.file(process.argv[1]).json()).pi.version)' "$repo_dir/runtime.json")"
 
 cat > "$test_dir/claude" <<'FAKE_CLAUDE'
 #!/usr/bin/env bash
@@ -12,7 +14,7 @@ printf 'claude finished\n' > "$N_EIN_TEST_DONE"
 FAKE_CLAUDE
 cat > "$test_dir/pi" <<'FAKE_PI'
 #!/usr/bin/env bash
-if [[ "${1:-}" == "--version" ]]; then printf '0.87.1\n'; exit 0; fi
+if [[ "${1:-}" == "--version" ]]; then printf '%s\n' "$N_EIN_TEST_PI_VERSION"; exit 0; fi
 test -f "$N_EIN_TEST_DONE" || exit 1
 printf '%s\n' "$PI_CODING_AGENT_DIR" > "$N_EIN_TEST_ENV"
 printf '%s\n' "$@" > "$N_EIN_TEST_ARGS"

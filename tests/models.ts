@@ -8,6 +8,7 @@ import { visible } from "../pi-package/extensions/brand.ts";
 import registerAgents from "../pi-package/extensions/agents.ts";
 
 const root = resolve(import.meta.dir, "..");
+const piVersion = JSON.parse(readFileSync(join(root, "runtime.json"), "utf8")).pi.version;
 const temp = mkdtempSync(join(tmpdir(), "n-ein-models-"));
 const modelsFile = join(temp, "models.json");
 const previous = {
@@ -95,7 +96,7 @@ try {
   const fakePi = join(temp, "pi");
   writeFileSync(fakePi, [
     "#!/usr/bin/env bash",
-    "if [[ \"${1:-}\" == \"--version\" ]]; then printf '0.87.1\\n'; exit 0; fi",
+    `if [[ "\${1:-}" == "--version" ]]; then printf '${piVersion}\\n'; exit 0; fi`,
     "printf '%s\\n' \"$@\" > \"$N_EIN_CAPTURE\"",
     "printf '%s\\n' '{\"type\":\"message_end\",\"message\":{\"role\":\"assistant\",\"provider\":\"openai-codex\",\"model\":\"gpt-6-sol\",\"stopReason\":\"stop\",\"content\":[{\"type\":\"text\",\"text\":\"hecho\"}]}}'",
   ].join("\n") + "\n");

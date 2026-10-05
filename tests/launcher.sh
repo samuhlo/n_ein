@@ -4,11 +4,13 @@ set -euo pipefail
 repo_dir="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd -P)"
 test_dir="$(mktemp -d)"
 trap 'rm -rf "$test_dir"' EXIT
+# La versión de Pi la marca runtime.json: el Pi falso la repite para no tocar los tests en cada subida.
+export N_EIN_TEST_PI_VERSION="$(bun -e 'console.log((await Bun.file(process.argv[1]).json()).pi.version)' "$repo_dir/runtime.json")"
 
 cat > "$test_dir/pi" <<'FAKE_PI'
 #!/usr/bin/env bash
 if [[ "${1:-}" == "--version" ]]; then
-  printf '%s\n' "${N_EIN_FAKE_VERSION:-0.87.1}"
+  printf '%s\n' "${N_EIN_FAKE_VERSION:-$N_EIN_TEST_PI_VERSION}"
   exit 0
 fi
 {
@@ -104,7 +106,7 @@ if "$repo_dir/bin/n-ein-dev" > "$test_dir/out" 2> "$test_dir/err"; then
   printf 'Versiones incompatibles deben fallar.\n' >&2
   exit 1
 fi
-rg -q 'PI_VERSION :: expected: 0.87.1' "$test_dir/err"
+rg -q "PI_VERSION :: expected: $N_EIN_TEST_PI_VERSION" "$test_dir/err"
 
 unset N_EIN_FAKE_VERSION
 export N_EIN_AGENT_DIR="$HOME/.pi-ein/agent"
