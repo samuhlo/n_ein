@@ -68,12 +68,17 @@ fi
 # [FLOW] CodeGraph obligatorio también en Claude: MCP para consultar y hook que adelanta contexto
 # en cada petición. La barra de estado enseña el TODO de WORK.md, como el widget de Pi. Todo viaja
 # por argumentos, así que ~/.claude y su MCP global no se tocan.
+# Los commits y PR del flujo son trabajo del usuario: sin la coautoría que Claude Code añade por
+# defecto. Se usa la forma de objeto porque versiones antiguas rechazan `false`.
 "$repo_dir/bin/n-ein-codegraph"
 codegraph_bin="$("$repo_dir/bin/n-ein-codegraph" --bin 2>/dev/null)"
 export DO_NOT_TRACK=1
 { IFS= read -r mcp_config && IFS= read -r claude_settings; } < <(bun -e '
   const [todo, bin] = process.argv.slice(1);
-  const settings = { statusLine: { type: "command", command: JSON.stringify(todo) + " --statusline", padding: 0 } };
+  const settings = {
+    statusLine: { type: "command", command: JSON.stringify(todo) + " --statusline", padding: 0 },
+    attribution: { commit: "", pr: "" },
+  };
   let mcp = "";
   if (bin) {
     mcp = JSON.stringify({ mcpServers: { codegraph: { type: "stdio", command: bin, args: ["serve", "--mcp"], env: { DO_NOT_TRACK: "1" } } } });

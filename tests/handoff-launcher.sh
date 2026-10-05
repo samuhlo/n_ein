@@ -64,6 +64,7 @@ bun -e '
   const hook = settings.hooks.UserPromptSubmit[0].hooks[0].command;
   if (args[args.indexOf("--effort") + 1] !== "xhigh") throw new Error("Claude no recibió el esfuerzo de models.json");
   if (!settings.statusLine.command.endsWith("bin/n-ein-todo\" --statusline")) throw new Error("Claude sin barra de TODO: " + settings.statusLine.command);
+  if (settings.attribution?.commit !== "" || settings.attribution?.pr !== "") throw new Error("Claude firmaría commits y PR como coautor: " + JSON.stringify(settings.attribution));
   if (mcp.command !== bin || mcp.args.join(" ") !== "serve --mcp" || mcp.env.DO_NOT_TRACK !== "1") throw new Error("MCP de CodeGraph mal declarado");
   if (hook !== JSON.stringify(bin) + " prompt-hook") throw new Error("hook de CodeGraph mal declarado: " + hook);
 ' "$N_EIN_TEST_ARGS" "$N_EIN_CODEGRAPH_BIN"
