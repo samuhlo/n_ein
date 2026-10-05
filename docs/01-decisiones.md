@@ -57,6 +57,13 @@ El 2 de octubre pidió que n_ein sea de verdad **una mezcla de Matt y Gentle She
 
 Ese mismo día pidió **un producto más personal y no una copia**: tres roles con nombre propio y modelo asignable (`nein-scout`, `nein-worker`, `nein-reviewer`; por defecto Luna low, Luna high y Sol medium), sin volver a los agentes por fase de Ein; skills y flujo reescritos como propios, sin referencias a Gentle ni a Matt fuera de `NOTICE.md`, con nombres de n_ein (`diagnose`, `review`, `design`, `glossary`, `agent-docs`, `spec`, `tasks`, `tell-again`, `comments`, `logs`, `to-pi`); y **todo lo que lee el agente en inglés**, con las respuestas y los artefactos en el idioma elegido.
 
+El 5 de octubre, a la vista del [banco de modelos de trabajo](../evals/results/2026-10-05-modelos-de-trabajo.md), aprobó un **cambio de rumbo** ([detalle](09-rumbo.md)):
+- **Se retira la delegación económica.** Delegar en un modelo más barato salió más caro y falló más; se elige **un modelo por encargo completo** según su riesgo y complejidad (Luna para lo mecánico, Sol high para datos, usuarios, permisos o contratos), de forma automática, visible y anulable.
+- **Sin subagentes en el recorrido ordinario.**
+- **La calidad del código y la facilidad de revisión pesan tanto como el coste:** ahorrar no justifica código que él daría por bueno sin serlo. Se conservan en línea las prácticas que el banco validó (TDD, alcance y documentación, `WORK.md` con commit por tarea), y el cierre dice dónde mirar y cómo comprobarlo.
+- **El modelo local queda descartado.**
+- **El agente hace también las pruebas** que sustentan cada paso.
+
 ## Recomendaciones de diseño, revisables
 
 - Pi como runtime inicial; n_ein como capa pequeña: un paquete Pi (skills, extensiones mínimas, prompts, tema) más un launcher que fija el hogar aislado. Pi ya ofrece el aislamiento (`PI_CODING_AGENT_DIR`) y la carga de paquetes (`pi install`, `pi -e`).

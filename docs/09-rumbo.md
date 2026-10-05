@@ -1,6 +1,6 @@
 # Rumbo: n_ein ligero con un modelo por encargo
 
-Propuesta del 5 de octubre de 2026, tras el [banco de modelos de trabajo](../evals/results/2026-10-05-modelos-de-trabajo.md). **Pendiente de aprobar por Samu.** Hasta entonces no sustituye ninguna decisión de [01-decisiones](01-decisiones.md).
+Aprobado por Samu el 5 de octubre de 2026, tras el [banco de modelos de trabajo](../evals/results/2026-10-05-modelos-de-trabajo.md). La decisión se registra en [01-decisiones](01-decisiones.md); este documento guarda el razonamiento y el plan.
 
 ## Por qué cambiar
 
@@ -71,27 +71,45 @@ El flujo se reescribe más corto y se queda con lo que dio resultado:
 
   Cubre los tres fallos repetidos del banco.
 
+### Calidad y revisión, al mismo nivel que el coste
+
+Samu lo pidió el 5 de octubre: no vale un código más barato que él daría por bueno sin serlo, y tiene que poder revisarlo y saber dónde falla. En la revisión a ciegas, cada práctica aportó esto:
+
+| Práctica | Qué mostró el banco | Se queda |
+|---|---|---|
+| TDD | Tests de 3,8–4,2 sobre 5 en n_ein, frente a 2,5 sin arnés; los de n_ein matan los dos mutantes. | Sí, en línea |
+| Alcance y documentación (reglas de Gentle) | Gentle: alcance 4,5, documentación 4,0 y cero bloqueantes. | Sí, en la lista de cierre |
+| `WORK.md`, rama y commit por tarea | Lo único que recupera el encargo al retomar, y lo que permite revisar paso a paso. | Sí |
+| Revisión delegada en cada tarea | La mitad del coste; aun así N2 y N3 cerraron con 4 tests en rojo. | No; se sustituye por la siguiente |
+| Revisión dirigida (Gentle tras su banco) | En su banco pasó de 0 a 8 de 9 defectos sembrados detectados. | Solo en riesgo alto, si la medición lo confirma |
+
+- **Facilidad de revisión.** El cierre de cada encargo dice dónde mirar y cómo comprobarlo: archivos, por qué y qué comando o test lo demuestra. Los commits son por tarea y con mensaje claro. Los logs siguen la skill `logs`, para que un fallo diga dónde ocurrió.
+- **El juez gana una dimensión, «revisabilidad»:** commits, mensajes, y si el cierre permite verificar el cambio en minutos.
+- **La revisión en riesgo alto** es una pasada en línea basada en el encargo, no en el diff, con severidad clara y una sola ronda de corrección. Antes de adoptarla se mide cuántos defectos sembrados detecta.
+
 ### 4. Lo que se conserva tal cual
 
 Persona y voz, estilo de comentarios y logs, idioma, `intent` y `research`, las demás skills bajo demanda, launcher, instalador, TODO, relevo Pi↔Claude y CodeGraph. El efecto de CodeGraph se mide en la fase 2; su obligatoriedad no cambia sin datos.
 
 ### Objetivo medible
 
-En S1–S3, frente a Pi sin arnés con Sol medium:
-- **coste:** como mucho 1,3 veces;
-- **aceptación oculta:** igual o mejor;
-- **revisión a ciegas:** igual o mejor;
-- **retomar en S4a:** 100 % del encargo recuperado.
+**Calidad**, frente a la mejor variante del banco en cada dimensión:
+- igual o mejor en corrección, tests, alcance, legibilidad y documentación;
+- la mejor nota de revisabilidad;
+- cero bloqueantes;
+- ningún cierre con la suite en rojo.
 
-Si el enrutado lleva lo mecánico a Luna, el coste debería quedar por debajo del de Pi sin arnés.
+**Continuidad:** en S4a, 100 % del encargo recuperado.
+
+**Coste:** como mucho 1,3 veces el de Pi sin arnés con Sol medium. Si ahorrar empeora la calidad, gana la calidad.
 
 ## Plan
 
 | Fase | Trabajo | Modelo | Criterio de salida |
 |---|---|---|---|
-| 1 · N0 | Construir n_ein ligero: flujo corto, roles fuera del recorrido, lista de cierre, `WORK.md` en el mismo commit. Tests del lanzador y de las skills al día. | Ninguno | `./scripts/check.sh` pasa. El prompt no lista los roles. |
-| 2 · ¿Dónde basta Luna? | N0 con Luna medium, Luna high, Sol medium y Sol high en S1, S2, S3 y dos escenarios nuevos con aceptación oculta: S5 (cambio de documentación) y S6 (cambio de interfaz sin diseño). Dos repeticiones, más N0 sin CodeGraph en S2. | ≈ 42 ejecuciones | Tabla de enrutado con datos: el modelo más barato que iguala la aceptación y la nota del juez en cada tipo. |
-| 3 · Enrutador | `nein/auto` con reglas y clasificación por Luna, `/nein:modo`, escalado y pie visible. Precisión medida sin ejecutar encargos, clasificando 20–30 peticiones reales etiquetadas por Samu. | Solo clasificaciones | Ningún encargo de riesgo alto enrutado a Luna; al menos un 80 % de acierto en el resto. |
+| 1 · N0 | Construir n_ein ligero: flujo corto, roles fuera del recorrido, lista de cierre con «dónde mirar y cómo comprobarlo», `WORK.md` en el mismo commit, revisión dirigida en riesgo alto. Tests del lanzador y de las skills al día. Juez con la dimensión de revisabilidad. | Ninguno | `./scripts/check.sh` pasa. El prompt no lista los roles. |
+| 2 · ¿Dónde basta Luna? | N0 con Luna medium, Luna high, Sol medium y Sol high en S1, S2, S3 y dos escenarios nuevos con aceptación oculta: S5 (cambio de documentación) y S6 (cambio de interfaz sin diseño). Dos repeticiones. Además: N0 sin CodeGraph en S2, N0 con y sin revisión dirigida en S2 y S3, y la detección de la revisión sobre diffs con defectos sembrados. | ≈ 50 ejecuciones | Tabla de enrutado con datos: el modelo más barato que iguala calidad y aceptación en cada tipo. Decisión sobre la revisión dirigida. |
+| 3 · Enrutador | `nein/auto` con reglas y clasificación por Luna, `/nein:modo`, escalado y pie visible. Precisión medida sin ejecutar encargos, con 20–30 peticiones reales sacadas por el agente del historial de los proyectos de Samu (solo lectura) y etiquetadas por él; Samu solo valida las etiquetas. | Solo clasificaciones | Ningún encargo de riesgo alto enrutado a Luna; al menos un 80 % de acierto en el resto. |
 | 4 · Banco final | N0 con enrutador frente a A, G, C y N1 en S1–S6 y S4a, con dos repeticiones. | ≈ 50 ejecuciones | Se cumple el objetivo medible, o se sabe por qué no. |
 | 5 · Entrega | Preview con el nuevo recorrido, decisión registrada en `01-decisiones` y retirada del código de roles si la fase 4 lo confirma. | Ninguno | Preview instalada y usada por Samu en un proyecto real. |
 
@@ -111,9 +129,9 @@ Si el enrutado lleva lo mecánico a Luna, el coste debería quedar por debajo de
 - **El juez varía unos ±4 puntos** entre tandas. Se mantienen los controles y se compara dentro de una misma tanda.
 - **La API de modelos virtuales de Pi es nueva.** Cuanto menos código, menos que rehacer cuando cambie.
 
-## Decisiones que necesita Samu
+## Decisiones de Samu (5 de octubre)
 
-1. **Aprobar el rumbo:** sin subagentes por defecto y un modelo por encargo. Cambia la decisión de «delegación económica» de `01-decisiones`.
-2. **Quién elige el modelo:** recomiendo elección automática con anulación visible (prefijo o `/nein:modo`). La alternativa es elegirlo siempre a mano en el launcher.
-3. **Claude:** recomiendo dejarlo como está y decidirlo tras la fase 4.
-4. **Peticiones reales para la fase 3:** 20–30 encargos tuyos recientes, de cualquier proyecto, para etiquetar como mecánico, ordinario, de riesgo o abierto.
+1. **Rumbo aprobado:** sin subagentes por defecto y un modelo por encargo, sin perder calidad ni facilidad de revisión.
+2. **Elección del modelo:** automática y visible, con anulación (recomendación aceptada con su «venga»).
+3. **Claude:** sigue como está hasta la fase 4.
+4. **El agente hace todas las pruebas**, incluidas las peticiones de la fase 3; Samu valida las etiquetas.
