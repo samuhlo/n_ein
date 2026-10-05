@@ -60,7 +60,7 @@ Ese mismo día pidió **un producto más personal y no una copia**: tres roles c
 ## Recomendaciones de diseño, revisables
 
 - Pi como runtime inicial; n_ein como capa pequeña: un paquete Pi (skills, extensiones mínimas, prompts, tema) más un launcher que fija el hogar aislado. Pi ya ofrece el aislamiento (`PI_CODING_AGENT_DIR`) y la carga de paquetes (`pi install`, `pi -e`).
-- Versión de Pi fijada y comprobada. Pi cambia su API de extensiones con frecuencia; se prefieren skills y configuración a código de extensión.
+- Pi al día y comprobado. El 5 de octubre Samu pidió no quedarse en una versión antigua: n_ein sube a cada versión nueva de Pi en cuanto sale y pasa sus comprobaciones. Cada versión de n_ein sigue declarando en `runtime.json` la versión de Pi con que se comprobó. Pi cambia su API de extensiones con frecuencia; se prefieren skills y configuración a código de extensión.
 - Formatos portables desde el primer día: `AGENTS.md`, skills en formato Agent Skills (`SKILL.md`), documento de trabajo en markdown y resumen de relevo en markdown. No se construyen adaptadores para Codex u OpenCode hasta que se usen.
 - Un documento de trabajo para esfuerzo prolongado; ninguno obligatorio para correcciones pequeñas.
 - Skills bajo demanda, un registro y una fuente por regla.
