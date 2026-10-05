@@ -31,5 +31,5 @@ When the shape of the interface itself is in question (how deep the module is, w
 
 - **Red before green.** Write the failing test and watch it fail, then write only the code that makes it pass. No speculative features, no tests for the future.
 - **One slice at a time.** One seam, one test, one minimal implementation per cycle.
-- **Refactor at review, not inside the loop.** It belongs to `review` (or `nein-reviewer`), after green.
+- **Refactor at review, not inside the loop.** It belongs to `review`, after green.
 - **No red possible** (docs, untestable change, no runner): say so and run the proportionate functional or structural check instead.

@@ -16,7 +16,7 @@ Start from the conversation and `WORK.md`; read in full any spec or reference th
 
 - Each slice cuts a narrow but **complete** path through every layer it needs (schema, API, UI, tests), never one horizontal layer.
 - A finished slice can be shown or verified on its own.
-- Each slice fits in one fresh context: a single `nein-worker` brief could carry it.
+- Each slice fits in one session and one work-unit commit.
 - Prefactoring goes first.
 
 Give each task its **blockers**: the tasks that must finish before it starts. No blockers means it can start now.

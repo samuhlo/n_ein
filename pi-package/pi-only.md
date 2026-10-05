@@ -1,1 +1,1 @@
-In Pi the three roles are the tools `nein_scout`, `nein_worker` and `nein_reviewer`. Each runs a fresh Pi process on its own model; the runtime enforces read-only for scout and reviewer and the surfaces for worker, and reports any file a role wrote where it should not.
+In Pi you work alone in this session. Run tests and builds yourself and keep their output short in your context: counts, `--stat`, `tail`, the failing test only.

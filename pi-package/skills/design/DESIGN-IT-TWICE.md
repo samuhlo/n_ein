@@ -8,7 +8,7 @@ Write for the user: the constraints any new interface must meet, the dependencie
 
 ## 2. Ask for radically different designs
 
-Send three or more `nein_scout` delegations at once (subagents in Claude), each with the technical brief (paths, coupling, dependency category, what sits behind the seam), the vocabulary of [SKILL.md](SKILL.md) and `GLOSSARY.md`, and a different constraint:
+Draft three or more designs yourself, one at a time and each from scratch, from the same technical brief (paths, coupling, dependency category, what sits behind the seam) and the vocabulary of [SKILL.md](SKILL.md) and `GLOSSARY.md`, each under a different constraint. Do not let a later design borrow from an earlier one:
 
 - "Minimise the interface: one to three entry points, maximum leverage each."
 - "Maximise flexibility: many use cases and extension."

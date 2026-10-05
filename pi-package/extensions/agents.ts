@@ -171,6 +171,9 @@ function guardChild(pi: ExtensionAPI): void {
 }
 
 export default function (pi: ExtensionAPI) {
+  // [FLOW] Fuera del recorrido desde el 5 de octubre: delegar salió más caro y no mejoró el resultado
+  // (evals/results/2026-10-05-modelos-de-trabajo.md). Se conservan tras N_EIN_ROLES=1 hasta cerrar el banco final.
+  if (process.env.N_EIN_ROLES !== "1") return;
   if (process.env.N_EIN_WORKER_CHILD === "1") {
     guardChild(pi);
     return;

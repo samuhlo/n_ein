@@ -36,4 +36,8 @@ for (const path of shipped) {
   }
 }
 
+// Desde el 5 de octubre el recorrido no delega: nada de lo que lee el modelo nombra los roles.
+for (const path of shipped.filter((p) => p.endsWith(".md") && !p.endsWith("NOTICE.md"))) {
+  assert.doesNotMatch(readFileSync(path, "utf8"), /\bnein[-_](scout|worker|reviewer)\b/, `${relative(root, path)} nombra un rol retirado del recorrido`);
+}
 console.log("skills: frontmatter válido, sin nombres propios ni de terceros y sin nombres retirados");

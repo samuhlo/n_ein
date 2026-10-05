@@ -105,6 +105,8 @@ try {
   process.env.N_EIN_AGENT_DIR = join(temp, "agent");
   process.env.N_EIN_CAPTURE = join(temp, "args");
   const tools: Record<string, any> = {};
+  // Los roles solo existen con N_EIN_ROLES=1; aquí se comprueba que heredan el modelo del panel.
+  process.env.N_EIN_ROLES = "1";
   registerAgents({ registerTool(value: any) { tools[value.name] = value; }, on() {} } as any);
   const result = await tools.nein_worker.execute("test-model", {
     task: "Lee", surfaces: ["src/**"], acceptance: "Respuesta",

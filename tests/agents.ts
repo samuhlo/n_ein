@@ -12,7 +12,14 @@ process.env.N_EIN_AGENT_DIR = join(testDir, "empty-agent-home");
 process.env.N_EIN_MODELS_FILE = join(testDir, "missing-models.json");
 process.env.N_EIN_CODEGRAPH_BIN = join(testDir, "no-codegraph");
 
+// Fuera del recorrido por defecto: sin N_EIN_ROLES=1 no se registra ningún rol.
+const sinRoles: Record<string, any> = {};
+delete process.env.N_EIN_ROLES;
+registerAgents({ registerTool(value: any) { sinRoles[value.name] = value; }, on() {} } as any);
+assert.deepEqual(Object.keys(sinRoles), [], "sin N_EIN_ROLES el modelo no recibe roles");
+
 const tools: Record<string, any> = {};
+process.env.N_EIN_ROLES = "1";
 registerAgents({ registerTool(value: any) { tools[value.name] = value; }, on() {} } as any);
 assert.deepEqual(Object.keys(tools).sort(), ["nein_reviewer", "nein_scout", "nein_worker"], "los tres roles se registran");
 const run = (name: string, params: object, cwd = testDir) => tools[name].execute("t", params, new AbortController().signal, undefined, { cwd });

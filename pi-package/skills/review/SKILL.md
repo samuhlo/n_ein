@@ -1,30 +1,31 @@
 ---
 name: review
-description: "Two-axis review of the changes since a fixed point: Standards (does the code follow the repo's documented standards?) and Spec (does it do what WORK.md agreed?). Use to review a branch, a PR, work in progress or a task's commit, when the user asks to review since X, and when closing a risky task."
+description: "Review the changes since a fixed point against what was asked (Spec) and the repo's standards (Standards), probing the behaviour instead of trusting the diff. Use to review a branch, a PR, work in progress or a task's commit, when the user asks to review since X, and before closing a high-risk change."
 ---
 
-Review the diff between `HEAD` and a fixed point along two axes:
-
-- **Standards**: does the code follow the repo's documented standards?
-- **Spec**: does it faithfully implement what was agreed?
-
-Each axis goes to its own **nein-reviewer**, with a fresh context so one axis cannot colour the other. Launch both at once; in Claude, two subagents. Then put their findings side by side.
+Review the diff between `HEAD` and a fixed point yourself, in two passes kept apart: **Spec** first (does it do what was asked?), then **Standards** (is it written the way this repo writes code?). A clean diff that builds the wrong thing fails Spec; the right thing written against the conventions fails Standards. Report them separately.
 
 ## 1. Pin the fixed point
 
-Use what the user says (a SHA, a branch, a tag, `main`, `HEAD~5`). Without one, use the start of the current task according to `WORK.md`; failing that, ask.
+Use what the user says (a SHA, a branch, a tag, `main`, `HEAD~5`). Without one, use the start of the current task according to `WORK.md`; failing that, ask. Fix the diff once: `git diff <point>...HEAD` plus `git log <point>..HEAD --oneline`, and check the diff is not empty.
 
-Fix the diff command once: `git diff <point>...HEAD` (three dots: against the merge-base), plus `git log <point>..HEAD --oneline`. Check that the point resolves (`git rev-parse <point>`) and the diff is not empty here, before any reviewer starts.
+## 2. Spec: probe what was asked
 
-## 2. Find the spec
+Find the asks: the user's request, quoted; `WORK.md` (goal, decisions, limits, criteria, the task under review); a path the user gave; a spec under `docs/` or `specs/` matching the branch. Without any, say "no spec" and review Standards only.
 
-In this order: the agreement in `WORK.md` (goal, decisions, limits, criteria and the task under review); a path the user gave; issue references in commit messages, if the project uses a tracker you can reach; a spec under `docs/` or `specs/` matching the branch. If none exists, the Spec reviewer is skipped and the report says "no spec".
+For **each ask**, derive one probe a careless change would fail, and run it here without editing source files: a focused test, a CLI call, a request against a test double, or a test you write in a scratch file and delete afterwards. Read the code paths the probe exercises; do not trust names, comments or the commit message. Cover:
 
-## 3. Gather the standards
+- the asked behaviour on its normal path and on its edge cases (empty input, missing record, the second entry path to the same rule);
+- what must **not** change: existing output, data and callers outside the ask;
+- failure paths: the error the user sees, and that nothing is half written.
 
-Whatever the repo documents about writing code: `CODING_STANDARDS.md`, `CONTRIBUTING.md`, `AGENTS.md`, linter config. If the project documents no style of its own, the `comments` and `logs` skills are its standard.
+Report per ask: done, partial, wrong or missing, with the probe and its result. Add anything the diff does that nobody asked for.
 
-On top of that, the Standards axis always carries this **smell baseline** (Fowler, _Refactoring_, ch. 3), under two rules: **the repo wins** (a documented standard that endorses something suppresses the smell) and **every smell is a judgement call**, never a hard violation. Skip anything tooling already enforces.
+## 3. Standards
+
+Whatever the repo documents about writing code: `CODING_STANDARDS.md`, `CONTRIBUTING.md`, `AGENTS.md`, linter config. If the project documents no style of its own, the `comments` and `logs` skills are its standard. Skip anything tooling already enforces.
+
+On top of that, check this **smell baseline** (Fowler, _Refactoring_, ch. 3), under two rules: **the repo wins** (a documented standard that endorses something suppresses the smell) and **every smell is a judgement call**, never a hard violation.
 
 - **Mysterious name**: a name that does not reveal what it does or holds → rename; if no honest name comes, the design is murky.
 - **Duplicated code**: the same logic shape in more than one hunk or file → extract it, call it from both.
@@ -36,19 +37,19 @@ On top of that, the Standards axis always carries this **smell baseline** (Fowle
 - **Divergent change**: one module edited for unrelated reasons → split it.
 - **Speculative generality**: abstractions, params or hooks the spec does not need → delete them.
 - **Message chains**: long `a.b().c().d()` walks → hide the walk behind one method.
-- **Middle man**: something that mostly delegates → call the real target.
+- **Middle man**: something that mostly forwards → call the real target.
 - **Refused bequest**: a subclass ignoring most of what it inherits → composition.
 
-## 4. Launch the two reviewers
+Also check that a reader can follow it: comments say why, logs and errors name where and what failed, and tests read as the behaviour they protect.
 
-**Standards** (`nein_reviewer`): target = the diff command and commit list; criteria = the standards files from step 3 **plus the smell baseline pasted in full** (the reviewer has no other access to it), with this brief: "Report per file/hunk (a) every breach of a documented standard, citing the file and rule, and (b) any baseline smell, naming it and quoting the hunk. Documented breaches can be blocking; smells are always judgement calls; the repo overrides the baseline. Skip what tooling enforces. Under 400 words."
+## 4. Severity
 
-**Spec** (`nein_reviewer`): target = the same diff; criteria = the spec, with this brief: "Report (a) requirements missing or partial, (b) behaviour nobody asked for, (c) requirements that look implemented but wrongly. Quote the spec line for each. Under 400 words."
+- **Blocker**: an ask missing or wrong; existing behaviour or data broken; an explicit option or input silently ignored; a failure that reports success; a security hole. Any input the program accepts counts as realistic.
+- **Important**: an edge case of an ask unhandled; a test that would still pass if the behaviour broke; stale documentation of the changed behaviour.
+- **Minor**: everything else, including every smell.
 
-Add the project's checks (`checks`) to one of them when the review should also prove the tests pass.
+## 5. Report and fix once
 
-## 5. Report
+Show `## Spec` and `## Standards` separately, each with its findings in severity order, `path:line` and the probe or quote behind it. Close with one line per axis: the count and the worst finding.
 
-Show both reports under `## Standards` and `## Spec`, verbatim or lightly cleaned. Each axis keeps its own findings and order: they are separate on purpose. Close with one line: findings per axis and the worst one _within each axis_. Picking a single winner across axes is exactly the reranking the separation prevents: clean code that builds the wrong thing passes Standards and fails Spec; the right thing built against the conventions does the opposite.
-
-Fixes that come out of the review go to `WORK.md` as tasks; the review itself changes nothing.
+When you are the one building: fix every blocker in one batch, re-run only the probes that failed, and stop. A probe that still fails after that round, or a new finding, goes to the user as "needs your decision"; never start a second full sweep. Important and minor findings go to `WORK.md` as tasks, or into the close report when there is no document.

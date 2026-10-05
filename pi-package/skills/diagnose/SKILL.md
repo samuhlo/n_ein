@@ -51,7 +51,7 @@ Then shrink it to the **smallest scenario that is still red**: cut inputs, calle
 
 ## 3. Locate and hypothesise
 
-Now use CodeGraph to locate: `codegraph_explore` on the symbols the repro exercises gives you their source and call paths in one call. For a wide area, send `nein_scout` with the repro in hand.
+Now use CodeGraph to locate: `codegraph_explore` on the symbols the repro exercises gives you their source and call paths in one call. For a wide area, query CodeGraph again from each caller the first answer names.
 
 Write **3–5 ranked hypotheses** before testing any; one hypothesis anchors on the first plausible idea. Each must be **falsifiable**: "If <X> is the cause, then <changing Y> makes the bug disappear / <changing Z> makes it worse." No prediction, no hypothesis.
 
