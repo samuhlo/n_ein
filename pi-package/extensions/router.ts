@@ -10,6 +10,7 @@ import { dirname, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import type { ExtensionAPI, ExtensionContext, ModelRouteRequest } from "@earendil-works/pi-coding-agent";
 import { Type } from "typebox";
+import { loadModels } from "../models.ts";
 import { CLASSES, classify, loadRouting, parseOverride, type Classification, type JobClass, type Route, type RoutingTable } from "../router.ts";
 
 const packageRoot = resolve(dirname(fileURLToPath(import.meta.url)), "../..");
@@ -46,7 +47,12 @@ function physical(ctx: ExtensionContext, route: Route) {
   return model;
 }
 
-export default function (pi: ExtensionAPI, table: RoutingTable = loadRouting(packageRoot)) {
+/** La tabla del canal, con los cambios hechos en /nein:models; sin ella, la del paquete. */
+function effectiveRouting(): RoutingTable {
+  try { return loadModels(packageRoot).routing; } catch { return loadRouting(packageRoot); }
+}
+
+export default function (pi: ExtensionAPI, table: RoutingTable = effectiveRouting()) {
   if (process.env.N_EIN_WORKER_CHILD === "1") return;
   // Pi corre una sesión por proceso: lo pendiente vale para la próxima petición de esta sesión.
   const pending: { escalate?: string; force?: JobClass } = {};

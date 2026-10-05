@@ -8,10 +8,12 @@ import { existsSync, mkdirSync, readFileSync, renameSync, rmSync, writeFileSync 
 import { homedir } from "node:os";
 import { dirname, join } from "node:path";
 import { randomUUID } from "node:crypto";
+import { CLASSES, DEFAULT_ROUTING, type JobClass } from "./router.ts";
 
-// El principal decide y los tres roles son delegaciones por coste: buscar, hacer, comprobar.
+// Los roles quedan tras N_EIN_ROLES=1; lo ordinario es un modelo por encargo según su clase.
 export const ROLES = ["principal", "scout", "worker", "reviewer"] as const;
 export type Role = (typeof ROLES)[number];
+export type Slot = Role | JobClass;
 export type ModelChoice = { model: string; thinking: string };
 // Claude usa el modelo de Claude Code; n_ein solo guarda su esfuerzo, y sin ajuste decide Claude Code.
 type Settings = { schema: 1; agents: Record<string, ModelChoice>; claude?: { effort: string } };
@@ -21,9 +23,10 @@ export type EffectiveModels = {
   scout: ModelChoice;
   worker: ModelChoice;
   reviewer: ModelChoice;
+  routing: Record<JobClass, ModelChoice>;
   claudeEffort: string | null;
   path: string;
-  overridden: Role[];
+  overridden: Slot[];
 };
 
 const THINKING = new Set(["off", "minimal", "low", "medium", "high", "xhigh", "max"]);
@@ -86,13 +89,15 @@ export function loadModels(packageRoot: string, requestedChannel?: string, optio
     scout: settings.agents.scout ?? { model: defaults.scout.model, thinking: defaults.scout.thinking },
     worker: settings.agents.worker ?? { model: defaults.worker.model, thinking: defaults.worker.thinking },
     reviewer: settings.agents.reviewer ?? { model: defaults.reviewer.model, thinking: defaults.reviewer.thinking },
+    routing: Object.fromEntries(CLASSES.map((clase) => [clase,
+      settings.agents[clase] ?? (validChoice(defaults.routing?.[clase]) ? defaults.routing[clase] : DEFAULT_ROUTING[clase])])) as Record<JobClass, ModelChoice>,
     claudeEffort: settings.claude?.effort ?? null,
     path,
-    overridden: ROLES.filter((role) => role in settings.agents),
+    overridden: [...ROLES, ...CLASSES].filter((slot) => slot in settings.agents),
   };
 }
 
-export function saveModelChoice(packageRoot: string, role: Role, choice: ModelChoice | null, requestedChannel?: string): string {
+export function saveModelChoice(packageRoot: string, role: Slot, choice: ModelChoice | null, requestedChannel?: string): string {
   if (choice !== null && !validChoice(choice)) throw new Error(`modelo o esfuerzo inválido: ${role}`);
   return updateSettings(packageRoot, requestedChannel, choice === null, (settings) => {
     if (choice === null) delete settings.agents[role];

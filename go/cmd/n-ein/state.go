@@ -55,6 +55,8 @@ type runtimeConfig struct {
 	Scout     modelSelection `json:"scout"`
 	Worker    modelSelection `json:"worker"`
 	Reviewer  modelSelection `json:"reviewer"`
+	// Un modelo por encargo: modelo y esfuerzo de cada clase (mecánico, ordinario, riesgo, abierto).
+	Routing   map[string]modelSelection `json:"routing"`
 	CodeGraph struct {
 		Version string `json:"version"`
 	} `json:"codegraph"`
@@ -415,7 +417,7 @@ func loadState(root, project string) appState {
 	if claudeVersion == "desconocido" {
 		claudeAction, claudeLabel = "", "no disponible"
 	}
-	// Una fila por rol: el principal decide; los tres nein-* son delegaciones con su propio modelo.
+	// Una fila por uso: el principal (nein/auto elige por encargo) y el modelo de cada clase.
 	roleRow := func(label, key string, choice modelSelection) row {
 		if modelError != nil {
 			return row{label, modelError.Error(), "models.json", ""}
@@ -465,9 +467,10 @@ func loadState(root, project string) appState {
 		}},
 		{2, "CONFIGURACIÓN", append(append([]row{
 			roleRow("principal", "principal", principal),
-			roleRow("nein-scout", "scout", config.Scout),
-			roleRow("nein-worker", "worker", config.Worker),
-			roleRow("nein-reviewer", "reviewer", config.Reviewer),
+			roleRow("mecánico", "mecanico", config.Routing["mecanico"]),
+			roleRow("ordinario", "ordinario", config.Routing["ordinario"]),
+			roleRow("riesgo", "riesgo", config.Routing["riesgo"]),
+			roleRow("abierto", "abierto", config.Routing["abierto"]),
 			claudeRow(config.Claude.Effort, modelError),
 			{"editar", "abrir Pi y usar /nein:models", "Pi", piAction},
 		}, langRows(channel)...), row{"canal", channel, ".n-ein-channel", ""})},

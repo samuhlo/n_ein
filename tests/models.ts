@@ -58,18 +58,19 @@ try {
   } as any;
   const type = (text: string) => [...text];
 
-  // Principal: buscar luna y subir esfuerzo; scout: un paso más; worker: sol; claude: dos pasos (por defecto → low → medium).
-  sessions = [[KEYS.enter, ...type("luna"), KEYS.enter, "e", KEYS.down, "e", KEYS.down, KEYS.enter, ...type("sol"), KEYS.enter, KEYS.down, KEYS.down, "e", "e", KEYS["ctrl+s"]]];
+  // Principal: buscar luna y subir esfuerzo; mecánico: un paso más; ordinario: sol; claude: dos pasos (por defecto → low → medium).
+  sessions = [[KEYS.enter, ...type("luna"), KEYS.enter, "e", KEYS.down, "e", KEYS.down, KEYS.enter, ...type("sol"), KEYS.enter, KEYS.down, KEYS.down, KEYS.down, "e", "e", KEYS["ctrl+s"]]];
   await openModels(ctx, kit);
   let effective = loadModels(root);
   assert.deepEqual(effective.principal, { model: "openai-codex/gpt-6-luna", thinking: "high" });
-  assert.deepEqual(effective.scout, { model: "openai-codex/gpt-6-luna", thinking: "medium" });
-  assert.deepEqual(effective.worker, { model: "openai-codex/gpt-6-sol", thinking: "high" });
-  assert.deepEqual(effective.reviewer, { model: "openai-codex/gpt-6-sol", thinking: "medium" }, "el reviewer intacto conserva el valor del paquete");
+  assert.deepEqual(effective.routing.mecanico, { model: "openai-codex/gpt-6-luna", thinking: "high" });
+  assert.deepEqual(effective.routing.ordinario, { model: "openai-codex/gpt-6-sol", thinking: "medium" });
+  assert.deepEqual(effective.routing.riesgo, { model: "openai-codex/gpt-6-sol", thinking: "high" }, "la clase intacta conserva el valor del paquete");
   assert.equal(effective.claudeEffort, "medium");
   assert.equal(statSync(modelsFile).mode & 0o777, 0o600);
-  assert.ok(notices.some((item) => item.includes("reinicia Pi")) && notices.some((item) => item.includes("próximo encargo")) && notices.some((item) => item.includes("al abrir Claude")) && notices.some((item) => item.includes("nein-scout")));
-  assert.ok(renders.some((frame) => frame.includes("// 000  MODELOS") && frame.includes("nein-reviewer") && frame.includes("•")), "la tabla marca lo pendiente");
+  assert.ok(notices.some((item) => item.includes("reinicia Pi")) && notices.some((item) => item.includes("próximo encargo")) && notices.some((item) => item.includes("al abrir Claude")) && notices.some((item) => item.includes("mecánico")));
+  assert.ok(renders.some((frame) => frame.includes("// 000  MODELOS") && frame.includes("riesgo") && frame.includes("•")), "la tabla marca lo pendiente");
+  assert.ok(!renders.some((frame) => frame.includes("nein-scout")), "sin N_EIN_ROLES el panel no enseña roles");
   assert.ok(renders.some((frame) => frame.includes("// 001  MODELO") && frame.includes("buscar  luna")), "el buscador filtra lo tecleado");
   const cli = Bun.spawnSync(["bun", join(root, "pi-package/models.ts"), root, "dev"], { env: process.env }).stdout.toString().trim().split("\t");
   assert.equal(cli[5], "medium", "los lanzadores leen el esfuerzo de Claude como sexto campo");
@@ -82,10 +83,10 @@ try {
   // Id personalizado: el panel cierra, pregunta con el input de Pi y vuelve con el borrador.
   sessions = [[KEYS.down, KEYS.down, KEYS.enter, ...type("personalizado"), KEYS.enter], [KEYS["ctrl+s"]]];
   await openModels(ctx, kit);
-  assert.deepEqual(loadModels(root).worker, { model: "openai-codex/gpt-7-prueba", thinking: "high" });
+  assert.deepEqual(loadModels(root).routing.ordinario, { model: "openai-codex/gpt-7-prueba", thinking: "medium" });
 
   // r devuelve el principal al paquete y claude a su valor por defecto.
-  sessions = [["r", KEYS.down, KEYS.down, KEYS.down, KEYS.down, "r", KEYS["ctrl+s"]]];
+  sessions = [["r", KEYS.down, KEYS.down, KEYS.down, KEYS.down, KEYS.down, "r", KEYS["ctrl+s"]]];
   await openModels(ctx, kit);
   effective = loadModels(root);
   assert.deepEqual(effective.principal, { model: "nein/auto", thinking: "medium" });
@@ -120,7 +121,7 @@ try {
   assert.throws(() => saveModelChoice(root, "worker", { model: "bad model", thinking: "high" }));
   writeFileSync(modelsFile, '{"schema":1,"agents":{"worker":{"model":"bad model","thinking":"high"}}}');
   assert.throws(() => loadModels(root), /models.json inválido/);
-  console.log("models: panel /nein:models con los tres roles, persistencia, modelo delegado y esfuerzo de Claude");
+  console.log("models: panel /nein:models con el principal y la tabla de enrutado, persistencia, roles tras N_EIN_ROLES y esfuerzo de Claude");
 } finally {
   for (const [key, env] of [["N_EIN_MODELS_FILE", previous.file], ["N_EIN_CHANNEL", previous.channel],
     ["N_EIN_PI_BIN", previous.pi], ["N_EIN_AGENT_DIR", previous.home], ["N_EIN_CAPTURE", previous.capture]] as const) {

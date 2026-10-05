@@ -1,6 +1,6 @@
 // =============================================================================
 // [UI] PANEL DE MODELOS — /nein:models
-// Tabla de roles con modelo y esfuerzo, como el panel de Ein: `e` cicla el
+// Tabla de usos con modelo y esfuerzo, como el panel de Ein: `e` cicla el
 // esfuerzo en la fila, enter abre el buscador de modelos y nada se escribe
 // hasta guardar. Claude solo tiene esfuerzo: su modelo es el de Claude Code.
 // Módulo puro: recibe las utilidades de pi-tui para poder probarse sin Pi.
@@ -14,11 +14,13 @@ export type PanelKit = {
   visibleWidth(text: string): number;
 };
 
-export type ModelRole = "principal" | "scout" | "worker" | "reviewer";
+// Cada fila con modelo es un uso: el principal, una clase de encargo o, con N_EIN_ROLES=1, un rol.
+export type ModelRole = string;
 export type Role = ModelRole | "claude";
+export type PanelSlot = { key: ModelRole; label: string };
 export type ModelChoice = { model: string; thinking: string };
 /** null en un rol = valor del paquete (o de Claude Code); lo que se guarda al final. */
-export type Draft = Record<ModelRole, ModelChoice | null> & { claude: string | null };
+export type Draft = { [slot: string]: ModelChoice | string | null; claude: string | null };
 export type PanelResult =
   | { kind: "save"; draft: Draft }
   | { kind: "cancel" }
@@ -28,10 +30,6 @@ export const THINKING = ["off", "minimal", "low", "medium", "high", "xhigh", "ma
 export const CLAUDE_EFFORT = ["low", "medium", "high", "xhigh", "max"];
 export const CUSTOM_MODEL = "id de modelo personalizado…";
 
-const ROLES: Role[] = ["principal", "scout", "worker", "reviewer", "claude"];
-const LABEL: Record<Role, string> = { principal: "principal", scout: "nein-scout", worker: "nein-worker", reviewer: "nein-reviewer", claude: "claude" };
-const SAVE = ROLES.length;
-const CANCEL = ROLES.length + 1;
 const VISIBLE_MODELS = 10;
 
 export class ModelsPanel {
@@ -39,8 +37,13 @@ export class ModelsPanel {
   private picking: ModelRole | null = null;
   private query = "";
   private pickCursor = 0;
+  private readonly rows: Role[];
+  private readonly labels: Record<Role, string>;
+  private readonly SAVE: number;
+  private readonly CANCEL: number;
 
   constructor(
+    slots: PanelSlot[],
     private draft: Draft,
     private readonly defaults: Record<ModelRole, ModelChoice>,
     private readonly saved: Draft,
@@ -49,10 +52,16 @@ export class ModelsPanel {
     private readonly p: Painter,
     private readonly done: (result: PanelResult) => void,
     private readonly requestRender: () => void = () => {},
-  ) {}
+  ) {
+    this.rows = [...slots.map((slot) => slot.key), "claude"];
+    this.labels = Object.fromEntries([...slots.map((slot) => [slot.key, slot.label]), ["claude", "claude"]]);
+    this.SAVE = this.rows.length;
+    this.CANCEL = this.rows.length + 1;
+  }
 
   private effective(role: ModelRole): ModelChoice {
-    return this.draft[role] ?? this.defaults[role];
+    const value = this.draft[role];
+    return value && typeof value === "object" ? value : this.defaults[role]!;
   }
 
   private options(): string[] {
@@ -91,16 +100,16 @@ export class ModelsPanel {
       this.requestRender();
       return;
     }
-    const role = ROLES[this.cursor];
+    const role = this.rows[this.cursor];
     if (key("escape") || data === "q") { this.done({ kind: "cancel" }); return; }
     if (key("ctrl+s")) { this.done({ kind: "save", draft: this.draft }); return; }
     if (key("up") || data === "k") this.cursor = Math.max(0, this.cursor - 1);
-    else if (key("down") || data === "j") this.cursor = Math.min(CANCEL, this.cursor + 1);
+    else if (key("down") || data === "j") this.cursor = Math.min(this.CANCEL, this.cursor + 1);
     else if (data === "e" && role) this.cycleEffort(role);
     else if (data === "r" && role) this.draft = { ...this.draft, [role]: null };
     else if (key("enter")) {
-      if (this.cursor === SAVE) { this.done({ kind: "save", draft: this.draft }); return; }
-      if (this.cursor === CANCEL) { this.done({ kind: "cancel" }); return; }
+      if (this.cursor === this.SAVE) { this.done({ kind: "save", draft: this.draft }); return; }
+      if (this.cursor === this.CANCEL) { this.done({ kind: "cancel" }); return; }
       if (role === "claude") this.cycleEffort(role);
       else if (role) {
         this.picking = role;
@@ -126,13 +135,13 @@ export class ModelsPanel {
     const p = this.p;
     const modelWidth = Math.max(14, Math.min(34, width - 47));
     const lines = [
-      p.fg(COLORS.muted, `   ${"ROL".padEnd(15)}${"MODELO".padEnd(modelWidth + 2)}ESFUERZO`),
+      p.fg(COLORS.muted, `   ${"USO".padEnd(15)}${"MODELO".padEnd(modelWidth + 2)}ESFUERZO`),
       p.fg(COLORS.structure, `   ${"─".repeat(Math.max(10, width - 6))}`),
     ];
-    ROLES.forEach((role, index) => {
+    this.rows.forEach((role, index) => {
       const focus = index === this.cursor;
       const pointer = focus ? p.fg(COLORS.yellow, "▸") : " ";
-      const label = (focus ? p.bold(p.fg(COLORS.concrete, LABEL[role].padEnd(15))) : p.fg(COLORS.muted, LABEL[role].padEnd(15)));
+      const label = (focus ? p.bold(p.fg(COLORS.concrete, this.labels[role]!.padEnd(15))) : p.fg(COLORS.muted, this.labels[role]!.padEnd(15)));
       let model: string, effort: string, origin: string;
       if (role === "claude") {
         model = p.fg(COLORS.faint, "el de Claude Code".padEnd(modelWidth + 2));
@@ -149,10 +158,10 @@ export class ModelsPanel {
     });
     const button = (index: number, text: string) =>
       `${index === this.cursor ? p.fg(COLORS.yellow, "▸") : " "} ${index === this.cursor ? p.bold(p.fg(COLORS.concrete, text)) : p.fg(COLORS.muted, text)}`;
-    lines.push("", ` ${button(SAVE, "✓ guardar")}      ${button(CANCEL, "✗ cancelar")}`, "");
+    lines.push("", ` ${button(this.SAVE, "✓ guardar")}      ${button(this.CANCEL, "✗ cancelar")}`, "");
     lines.push(p.fg(COLORS.faint, " ↑↓ mover · enter modelo · e esfuerzo · r paquete · ctrl+s guardar · esc salir"));
-    const dirty = ROLES.some((role) => this.changed(role));
-    if (dirty) lines.push(p.fg(COLORS.faint, " • sin guardar: principal al reiniciar Pi, cada rol en su próxima delegación, claude al abrirlo"));
+    const dirty = this.rows.some((role) => this.changed(role));
+    if (dirty) lines.push(p.fg(COLORS.faint, " • sin guardar: principal al reiniciar Pi, cada clase en el próximo encargo, claude al abrirlo"));
     return lines;
   }
 
@@ -181,7 +190,7 @@ export class ModelsPanel {
   render(width: number): string[] {
     const p = this.p;
     const title = this.picking
-      ? `${heading(p, 1, "MODELO")}  ${p.fg(COLORS.muted, "para")} ${p.fg(COLORS.concrete, LABEL[this.picking])}`
+      ? `${heading(p, 1, "MODELO")}  ${p.fg(COLORS.muted, "para")} ${p.fg(COLORS.concrete, this.labels[this.picking]!)}`
       : heading(p, 0, "MODELOS");
     const rule = p.fg(COLORS.structure, "─".repeat(Math.max(0, width)));
     const body = this.picking ? this.pickerLines(width) : this.tableLines(width);

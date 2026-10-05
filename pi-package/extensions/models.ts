@@ -1,6 +1,7 @@
 // =============================================================================
 // [UI] SELECTOR DE MODELOS — /nein:models
-// Abre el panel de roles sobre la conversación. Pi aporta el catálogo real y
+// Abre el panel de modelos sobre la conversación: el principal, el modelo de
+// cada clase de encargo y el esfuerzo de Claude. Pi aporta el catálogo real y
 // lo elegido se guarda en models.json del canal, fuera del código instalado.
 // =============================================================================
 
@@ -9,15 +10,29 @@ import { dirname, resolve } from "node:path";
 import type { ExtensionAPI, ExtensionContext } from "@earendil-works/pi-coding-agent";
 import { loadModels, saveClaudeEffort, saveModelChoice } from "../models.ts";
 import { painter } from "./brand.ts";
-import { ModelsPanel, type Draft, type ModelChoice, type ModelRole, type PanelKit, type PanelResult } from "./models-panel.ts";
+import { ModelsPanel, type Draft, type ModelChoice, type ModelRole, type PanelKit, type PanelResult, type PanelSlot } from "./models-panel.ts";
 
-const MODEL_ROLES: ModelRole[] = ["principal", "scout", "worker", "reviewer"];
-const APPLIES: Record<ModelRole, string> = {
+// Los roles solo aparecen si están activos (N_EIN_ROLES=1); lo ordinario es la tabla de enrutado.
+const ROUTING_SLOTS: PanelSlot[] = [
+  { key: "principal", label: "principal" },
+  { key: "mecanico", label: "mecánico" },
+  { key: "ordinario", label: "ordinario" },
+  { key: "riesgo", label: "riesgo" },
+  { key: "abierto", label: "abierto" },
+];
+const ROLE_SLOTS: PanelSlot[] = [
+  { key: "scout", label: "nein-scout" },
+  { key: "worker", label: "nein-worker" },
+  { key: "reviewer", label: "nein-reviewer" },
+];
+const slots = (): PanelSlot[] => (process.env.N_EIN_ROLES === "1" ? [...ROUTING_SLOTS, ...ROLE_SLOTS] : ROUTING_SLOTS);
+const APPLIES: Record<string, string> = {
   principal: "reinicia Pi",
   scout: "próxima exploración",
   worker: "próximo encargo",
   reviewer: "próxima revisión",
 };
+const LABELS = Object.fromEntries([...ROUTING_SLOTS, ...ROLE_SLOTS].map((slot) => [slot.key, slot.label]));
 
 const packageRoot = resolve(dirname(fileURLToPath(import.meta.url)), "../..");
 
@@ -26,20 +41,22 @@ function savedDraft(): { saved: Draft; defaults: Record<ModelRole, ModelChoice> 
   const fromPackage = loadModels(packageRoot, undefined, { ignoreSettings: true });
   const saved = { claude: effective.claudeEffort } as Draft;
   const defaults = {} as Record<ModelRole, ModelChoice>;
-  for (const role of MODEL_ROLES) {
-    saved[role] = effective.overridden.includes(role) ? effective[role] : null;
-    defaults[role] = fromPackage[role];
+  // Una clase vive en la tabla de enrutado; el principal y los roles, en su propio campo.
+  const pick = (models: typeof effective, key: string): ModelChoice => (key in models.routing ? models.routing[key as never] : models[key as "principal"]);
+  for (const { key } of slots()) {
+    saved[key] = effective.overridden.includes(key as never) ? pick(effective, key) : null;
+    defaults[key] = pick(fromPackage, key);
   }
   return { saved, defaults };
 }
 
 function persist(saved: Draft, draft: Draft): string[] {
   const applied: string[] = [];
-  for (const role of MODEL_ROLES) {
+  for (const { key: role } of slots()) {
     if (JSON.stringify(saved[role]) === JSON.stringify(draft[role])) continue;
-    saveModelChoice(packageRoot, role, draft[role]);
+    saveModelChoice(packageRoot, role as never, draft[role] ?? null);
     const value = draft[role] ? `${draft[role]!.model} · ${draft[role]!.thinking}` : "valor del paquete";
-    applied.push(`${role === "principal" ? "principal" : `nein-${role}`}: ${value} (${APPLIES[role]})`);
+    applied.push(`${LABELS[role]}: ${value} (${APPLIES[role] ?? "próximo encargo"})`);
   }
   if (saved.claude !== draft.claude) {
     saveClaudeEffort(packageRoot, draft.claude);
@@ -69,7 +86,7 @@ export async function openModels(ctx: ExtensionContext, kit: PanelKit): Promise<
   // El id personalizado necesita el input nativo de Pi: el panel se cierra, se pregunta y se reabre con el borrador.
   while (true) {
     const result = await ctx.ui.custom<PanelResult>(
-      (tui, _theme, _keybindings, done) => new ModelsPanel(draft, state.defaults, state.saved, models, kit, painter(), done, () => tui.requestRender()),
+      (tui, _theme, _keybindings, done) => new ModelsPanel(slots(), draft, state.defaults, state.saved, models, kit, painter(), done, () => tui.requestRender()),
       { overlay: true, overlayOptions: { anchor: "center", width: "80%", minWidth: 70, maxHeight: "85%" } },
     );
     if (result.kind === "cancel") return;
@@ -96,7 +113,7 @@ export default function (pi: ExtensionAPI) {
   if (process.env.N_EIN_WORKER_CHILD === "1") return;
 
   pi.registerCommand("nein:models", {
-    description: "Modelo y esfuerzo del principal y de nein-scout, nein-worker y nein-reviewer; esfuerzo de Claude",
+    description: "Modelo y esfuerzo del principal y de cada clase de encargo (mecánico, ordinario, riesgo, abierto); esfuerzo de Claude",
     handler: async (_args, ctx) => {
       const { matchesKey, truncateToWidth, visibleWidth } = await import("@earendil-works/pi-tui");
       await openModels(ctx, { matchesKey: (data, key) => matchesKey(data, key as never), truncateToWidth, visibleWidth });

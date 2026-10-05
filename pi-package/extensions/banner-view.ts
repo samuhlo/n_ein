@@ -17,7 +17,8 @@ export type BannerData = {
   git?: { branch: string; changes: string };
   index: string;
   todo?: { current?: string; done: number; total: number };
-  models: { principal: string; scout: string; worker: string; reviewer: string; claude: string };
+  /** El principal y el modelo de cada clase de encargo; abierto solo si difiere de riesgo. */
+  models: { principal: string; mecanico: string; ordinario: string; riesgo: string; abierto?: string; claude: string };
 };
 
 const BLOCK = 58;
@@ -50,9 +51,10 @@ function statusRows(p: Painter, data: BannerData, room: number, compact = false)
   }
   rows.push(...gap, heading(p, data.todo ? 3 : 2, "MODELOS"), ...gap);
   rows.push(field("principal", data.models.principal));
-  rows.push(field("nein-scout", data.models.scout));
-  rows.push(field("nein-worker", data.models.worker));
-  rows.push(field("nein-reviewer", data.models.reviewer));
+  rows.push(field("mecánico", data.models.mecanico));
+  rows.push(field("ordinario", data.models.ordinario));
+  rows.push(field("riesgo", data.models.riesgo));
+  if (data.models.abierto) rows.push(field("abierto", data.models.abierto));
   rows.push(field("claude", data.models.claude));
   rows.push(...gap, p.fg(COLORS.faint, clip("/nein:models · /todo · /handoff claude · /skill:intent", room)));
   return rows;

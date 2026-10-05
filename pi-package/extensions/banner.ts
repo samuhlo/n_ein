@@ -38,14 +38,16 @@ function initialData(cwd: string): BannerData {
   const channel = readText(join(packageRoot, ".n-ein-channel")) || "dev";
   let version = "desarrollo";
   try { version = JSON.parse(readFileSync(join(packageRoot, "install.json"), "utf8")).version ?? version; } catch { /* checkout de desarrollo */ }
-  let models = { principal: "desconocido", scout: "desconocido", worker: "desconocido", reviewer: "desconocido", claude: "modelo de Claude Code" };
+  let models: BannerData["models"] = { principal: "desconocido", mecanico: "desconocido", ordinario: "desconocido", riesgo: "desconocido", claude: "modelo de Claude Code" };
   try {
     const effective = loadModels(packageRoot);
     models = {
       principal: shortModel(effective.principal.model, effective.principal.thinking),
-      scout: shortModel(effective.scout.model, effective.scout.thinking),
-      worker: shortModel(effective.worker.model, effective.worker.thinking),
-      reviewer: shortModel(effective.reviewer.model, effective.reviewer.thinking),
+      mecanico: shortModel(effective.routing.mecanico.model, effective.routing.mecanico.thinking),
+      ordinario: shortModel(effective.routing.ordinario.model, effective.routing.ordinario.thinking),
+      riesgo: shortModel(effective.routing.riesgo.model, effective.routing.riesgo.thinking),
+      ...(JSON.stringify(effective.routing.abierto) === JSON.stringify(effective.routing.riesgo)
+        ? {} : { abierto: shortModel(effective.routing.abierto.model, effective.routing.abierto.thinking) }),
       claude: `modelo de Claude Code · ${effective.claudeEffort ?? "esfuerzo por defecto"}`,
     };
   } catch (error) {
