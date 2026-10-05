@@ -1,0 +1,390 @@
+diff --git a/app/components/AnexoIIIPreview.vue b/app/components/AnexoIIIPreview.vue
+index 293bbb6..8f2cc1c 100644
+--- a/app/components/AnexoIIIPreview.vue
++++ b/app/components/AnexoIIIPreview.vue
+@@ -149,10 +149,7 @@ async function descargarFormato(format: 'docx' | 'pdf'): Promise<void> {
+   try {
+     // GUARD -> sin curso activo el servidor acepta el cuerpo igual (D7); la
+     // clave se añade solo si hay curso para no mandar `cursoId: null`.
+-    const body = {
+-      ...props.planificacion,
+-      ...(cursoActivoId.value ? { cursoId: cursoActivoId.value } : {}),
+-    }
++    const body = cursoActivoId.value ? { cursoId: cursoActivoId.value } : { ...props.planificacion }
+     const response = await $fetch(`/api/export/${format}`, {
+       method: 'POST',
+       body,
+diff --git a/app/components/CursoPanelDocumentos.vue b/app/components/CursoPanelDocumentos.vue
+index 082a663..9ae7949 100644
+--- a/app/components/CursoPanelDocumentos.vue
++++ b/app/components/CursoPanelDocumentos.vue
+@@ -54,7 +54,7 @@ const consultandoIII = ref(false)
+ async function descargarAnexo3(format: 'docx' | 'pdf'): Promise<void> {
+   const response = await $fetch(`/api/export/${format}`, {
+     method: 'POST',
+-    body: { ...props.planificacion, ...(cursoActivoId.value ? { cursoId: cursoActivoId.value } : {}) },
++    body: cursoActivoId.value ? { cursoId: cursoActivoId.value } : { ...props.planificacion },
+     responseType: 'blob',
+   })
+   const sanitized = props.planificacion.certificado.codigo.replace(/[^a-zA-Z0-9]/g, '_')
+diff --git a/docs/anexo-iii-exportacion-oficial.md b/docs/anexo-iii-exportacion-oficial.md
+index cbaf010..8a58727 100644
+--- a/docs/anexo-iii-exportacion-oficial.md
++++ b/docs/anexo-iii-exportacion-oficial.md
+@@ -47,7 +47,7 @@ El Anexo III ya no se renderiza desde una plantilla DOCX con placeholders. Ahora
+ 
+ `app/components/AnexoIIIPreview.vue` centraliza el botón unificado y la decisión de formato. La función `download()`:
+ 
+-1. Hace `POST` con la `planificacion` completa (mismo cuerpo para DOCX y PDF).
++1. Hace `POST` con la `planificacion` completa (mismo cuerpo para DOCX y PDF). Si llega `cursoId`, el servidor ignora esa planificación y exporta la guardada del curso (`config.planningSnapshot.resultado`, ver `server/utils/export/planificacion-anexo3.ts`); si el curso no tiene una válida responde 409. Sin `cursoId` (asistente sin curso guardado) se usa el cuerpo.
+ 2. Normaliza la respuesta a `Blob` (`responseToBlob` cubre `Buffer`, `ArrayBuffer`, `Blob`).
+ 3. Construye un anchor invisible, dispara el click, y revoca el `URL.createObjectURL` después.
+ 4. Sanitiza el `certificado.codigo` con `.replace(/[^a-zA-Z0-9]/g, '_')` para el filename.
+diff --git a/server/api/export/docx.post.ts b/server/api/export/docx.post.ts
+index f5c7a66..95bf938 100644
+--- a/server/api/export/docx.post.ts
++++ b/server/api/export/docx.post.ts
+@@ -3,12 +3,12 @@
+ // Genera el documento por código con la librería docx (ver buildAnexo3Docx).
+ 
+ import { Packer } from 'docx'
+-import type { ResultadoPlanificacion } from '~/types'
+ import { buildAnexo3Docx } from '../../utils/docx/buildAnexo3Docx'
+ import { anexo3DocumentBodySchema } from '../../utils/schemas/anexo3-export-body-schema'
+ import { requireRuntimeAnexo3Export } from '../../utils/official-curriculum/projection-runtime'
+ import { requireVerifiedUser } from '../../utils/session'
+ import { resolverContextoExportacionOpcional } from '../../utils/export/contexto'
++import { planificacionAnexo3 } from '../../utils/export/planificacion-anexo3'
+ 
+ export default defineEventHandler(async (event) => {
+   // Sesión antes que nada (mismo orden que json.post.ts, sección C.6 del diseño).
+@@ -30,9 +30,10 @@ export default defineEventHandler(async (event) => {
+   // Curso (404) → papel (403). Sin recorte por módulo (decisión 7 del diseño).
+   // D7 -> se pide sin curso guardado (asistente): el envoltorio opcional
+   // resuelve solo cuando llega `cursoId`, sin tocar el resolutor estricto.
+-  await resolverContextoExportacionOpcional(user, { cursoId: parsed.data.cursoId })
++  const contexto = await resolverContextoExportacionOpcional(user, { cursoId: parsed.data.cursoId })
+ 
+-  const plan = await requireRuntimeAnexo3Export(parsed.data as unknown as ResultadoPlanificacion)
++  // Con curso se pinta la planificación guardada, no el cuerpo.
++  const plan = await requireRuntimeAnexo3Export(planificacionAnexo3(contexto, parsed.data))
+   try {
+     const doc = buildAnexo3Docx(plan)
+     const buffer = await Packer.toBuffer(doc)
+diff --git a/server/api/export/json.post.ts b/server/api/export/json.post.ts
+index 2a4c136..ec16341 100644
+--- a/server/api/export/json.post.ts
++++ b/server/api/export/json.post.ts
+@@ -5,10 +5,10 @@
+ // testearla sin arrastrar globals de Nitro.
+ 
+ import { anexo3JsonBodySchema } from '../../utils/schemas/anexo3-export-body-schema'
+-import type { ResultadoPlanificacion } from '~/types'
+ import { requireRuntimeAnexo3Export } from '../../utils/official-curriculum/projection-runtime'
+ import { requireVerifiedUser } from '../../utils/session'
+ import { resolverContextoExportacionOpcional } from '../../utils/export/contexto'
++import { planificacionAnexo3 } from '../../utils/export/planificacion-anexo3'
+ 
+ export default defineEventHandler(async (event) => {
+   // 1. Sesión antes que nada: un anónimo no debe provocar lectura de body ni
+@@ -31,12 +31,13 @@ export default defineEventHandler(async (event) => {
+   }
+ 
+   // 4. Curso (404) → papel (403). Anexo III: solo autorización, sin recorte
+-  // por módulo (decisión 7 del diseño): se sigue pintando el cuerpo del cliente.
++  // por módulo (decisión 7 del diseño).
+   // D7 -> se pide sin curso guardado (asistente): el envoltorio opcional
+   // resuelve solo cuando llega `cursoId`, sin tocar el resolutor estricto.
+-  await resolverContextoExportacionOpcional(user, { cursoId: parsed.data.cursoId })
++  const contexto = await resolverContextoExportacionOpcional(user, { cursoId: parsed.data.cursoId })
+ 
+-  const plan = await requireRuntimeAnexo3Export(parsed.data as unknown as ResultadoPlanificacion)
++  // Con curso se exporta la planificación guardada; sin curso, el cuerpo.
++  const plan = await requireRuntimeAnexo3Export(planificacionAnexo3(contexto, parsed.data))
+ 
+   // 3. Sanitizar filename basado en certificado.codigo si existe
+   let filename = 'planificacion.json'
+diff --git a/server/api/export/pdf.post.ts b/server/api/export/pdf.post.ts
+index 919ece2..6d29561 100644
+--- a/server/api/export/pdf.post.ts
++++ b/server/api/export/pdf.post.ts
+@@ -21,6 +21,7 @@ import { anexo3DocumentBodySchema } from '../../utils/schemas/anexo3-export-body
+ import { requireRuntimeAnexo3Export } from '../../utils/official-curriculum/projection-runtime'
+ import { requireVerifiedUser } from '../../utils/session'
+ import { resolverContextoExportacionOpcional } from '../../utils/export/contexto'
++import { planificacionAnexo3 } from '../../utils/export/planificacion-anexo3'
+ 
+ // Configurar fuentes y políticas de acceso una sola vez al cargar el módulo
+ pdfmake.setFonts(helveticaFonts)
+@@ -54,9 +55,10 @@ export default defineEventHandler(async (event) => {
+   // Curso (404) → papel (403). Sin recorte por módulo (decisión 7 del diseño).
+   // D7 -> se pide sin curso guardado (asistente): el envoltorio opcional
+   // resuelve solo cuando llega `cursoId`, sin tocar el resolutor estricto.
+-  await resolverContextoExportacionOpcional(user, { cursoId: parsed.data.cursoId })
++  const contexto = await resolverContextoExportacionOpcional(user, { cursoId: parsed.data.cursoId })
+ 
+-  const plan = await requireRuntimeAnexo3Export(parsed.data as unknown as ResultadoPlanificacion)
++  // Con curso se pinta la planificación guardada, no el cuerpo.
++  const plan = await requireRuntimeAnexo3Export(planificacionAnexo3(contexto, parsed.data))
+   try {
+     const docDefinition = buildPdfDefinition(plan)
+     // @ts-ignore — pdfmake Node.js: createPdf() → OutputDocumentServer; getBuffer() → Promise<Buffer>
+diff --git a/server/utils/export/planificacion-anexo3.ts b/server/utils/export/planificacion-anexo3.ts
+new file mode 100644
+index 0000000..5cbf65a
+--- /dev/null
++++ b/server/utils/export/planificacion-anexo3.ts
+@@ -0,0 +1,26 @@
++// Origen de la planificación que pintan las tres rutas del Anexo III.
++// Con curso resuelto manda la planificación guardada (`config.planningSnapshot
++// .resultado`): el cuerpo del cliente no puede alterar lo que se exporta de
++// un curso. Sin curso (asistente, D7) no hay nada guardado y se usa el cuerpo.
++
++import type { ResultadoPlanificacion } from '~/types'
++import { anexo3DocumentBodySchema } from '../schemas/anexo3-export-body-schema'
++import type { ContextoExportacion } from './contexto'
++
++const SIN_PLANIFICACION_GUARDADA = { statusCode: 409, message: 'El curso no tiene una planificación guardada válida' } as const
++
++export function planificacionAnexo3(
++  contexto: Pick<ContextoExportacion, 'curso'> | null,
++  cuerpo: unknown,
++): ResultadoPlanificacion {
++  if (!contexto) return cuerpo as ResultadoPlanificacion
++
++  const config = contexto.curso.config as { planningSnapshot?: { resultado?: unknown } } | null | undefined
++  // GUARD -> un curso sin planificación válida falla; caer al cuerpo
++  // reabriría la puerta que esta función cierra.
++  const parsed = anexo3DocumentBodySchema.safeParse(config?.planningSnapshot?.resultado)
++  if (!parsed.success) {
++    throw createError(SIN_PLANIFICACION_GUARDADA)
++  }
++  return parsed.data as unknown as ResultadoPlanificacion
++}
+diff --git a/server/utils/schemas/anexo3-export-body-schema.ts b/server/utils/schemas/anexo3-export-body-schema.ts
+index adc268c..e0ffb3a 100644
+--- a/server/utils/schemas/anexo3-export-body-schema.ts
++++ b/server/utils/schemas/anexo3-export-body-schema.ts
+@@ -32,8 +32,11 @@ export const anexo3DocumentBodySchema = z.object({
+   certificado: z.object({
+     codigo: z.string().min(1, 'certificado.codigo requerido'),
+     nombre: z.string().min(1, 'certificado.nombre requerido'),
+-  }).passthrough(),
+-}).passthrough()
++  }).passthrough().optional(),
++}).passthrough().refine(
++  body => body.cursoId !== undefined || body.certificado !== undefined,
++  { message: 'certificado requerido sin curso', path: ['certificado'] },
++)
+ 
+ export type Anexo3DocumentBody = z.infer<typeof anexo3DocumentBodySchema>
+ 
+diff --git a/tests/api/export/docx.test.ts b/tests/api/export/docx.test.ts
+index 41f4d1c..26e977a 100644
+--- a/tests/api/export/docx.test.ts
++++ b/tests/api/export/docx.test.ts
+@@ -54,6 +54,8 @@ const handler = handlerModule.default as (event: unknown) => Promise<unknown>
+ const FAKE_EVENT = {}
+ const CURSO_ID = '3fa85f64-5717-4562-b3fc-2c963f66afa6'
+ const USER = { id: 'user-1', emailVerified: true }
++const PLAN_GUARDADO = { certificado: { codigo: 'IFCD0110', nombre: 'DAW guardado' }, modulos: [{ code: 'MF0950_2' }] }
++const CURSO_GUARDADO = { id: 'curso-1', config: { planningSnapshot: { resultado: PLAN_GUARDADO } } }
+ 
+ function bodyValido() {
+   return { cursoId: CURSO_ID, certificado: { codigo: 'IFCD0110', nombre: 'DAW' } }
+@@ -99,17 +101,36 @@ describe('/api/export/docx — frontera de autorización (7.1)', () => {
+   it('docente con un módulo asignado → buildAnexo3Docx recibe el plan completo del cuerpo', async () => {
+     mocks.requireVerifiedUser.mockResolvedValue(USER)
+     readBodyMock.mockResolvedValue(bodyValido())
+-    mocks.resolverContextoExportacionOpcional.mockResolvedValue({ curso: { id: 'curso-1' }, papel: 'docente' })
++    mocks.resolverContextoExportacionOpcional.mockResolvedValue({ curso: CURSO_GUARDADO, papel: 'docente' })
+ 
+     await handler(FAKE_EVENT)
+ 
+     expect(mocks.buildAnexo3Docx).toHaveBeenCalledWith({ certificado: { codigo: 'IFCD0110', nombre: 'DAW' } })
+   })
+ 
++  it('con cursoId → exporta la planificación guardada, no la del cuerpo', async () => {
++    mocks.requireVerifiedUser.mockResolvedValue(USER)
++    readBodyMock.mockResolvedValue({ ...bodyValido(), modulos: [{ code: 'MANIPULADO' }] })
++    mocks.resolverContextoExportacionOpcional.mockResolvedValue({ curso: CURSO_GUARDADO, papel: 'dueño' })
++
++    await handler(FAKE_EVENT)
++
++    expect(mocks.requireRuntimeAnexo3Export).toHaveBeenCalledWith(PLAN_GUARDADO)
++  })
++
++  it('con cursoId y curso sin planificación guardada → 409 sin generar DOCX', async () => {
++    mocks.requireVerifiedUser.mockResolvedValue(USER)
++    readBodyMock.mockResolvedValue(bodyValido())
++    mocks.resolverContextoExportacionOpcional.mockResolvedValue({ curso: { id: 'curso-1', config: {} }, papel: 'dueño' })
++
++    await expect(handler(FAKE_EVENT)).rejects.toMatchObject({ statusCode: 409 })
++    expect(mocks.packerToBuffer).not.toHaveBeenCalled()
++  })
++
+   it('TRIANGULATE: dueño con cuerpo válido → produce el mismo DOCX', async () => {
+     mocks.requireVerifiedUser.mockResolvedValue(USER)
+     readBodyMock.mockResolvedValue(bodyValido())
+-    mocks.resolverContextoExportacionOpcional.mockResolvedValue({ curso: { id: 'curso-1' }, papel: 'dueño' })
++    mocks.resolverContextoExportacionOpcional.mockResolvedValue({ curso: CURSO_GUARDADO, papel: 'dueño' })
+ 
+     const resultado = await handler(FAKE_EVENT)
+     expect(resultado).toBeInstanceOf(Buffer)
+diff --git a/tests/api/export/json.test.ts b/tests/api/export/json.test.ts
+index f227f3e..a86b2ff 100644
+--- a/tests/api/export/json.test.ts
++++ b/tests/api/export/json.test.ts
+@@ -45,6 +45,8 @@ const handler = handlerModule.default as (event: unknown) => Promise<unknown>
+ const FAKE_EVENT = {}
+ const CURSO_ID = '3fa85f64-5717-4562-b3fc-2c963f66afa6'
+ const USER = { id: 'user-1', emailVerified: true }
++const PLAN_GUARDADO = { certificado: { codigo: 'IFCD0110', nombre: 'DAW guardado' }, modulos: [{ code: 'MF0950_2' }] }
++const CURSO_GUARDADO = { id: 'curso-1', config: { planningSnapshot: { resultado: PLAN_GUARDADO } } }
+ 
+ function bodyValido(extra: Record<string, unknown> = {}) {
+   return { cursoId: CURSO_ID, certificado: { codigo: 'IFCD0110', nombre: 'DAW' }, ...extra }
+@@ -75,7 +77,7 @@ describe('/api/export/json — sesión antes que cuerpo (6.2)', () => {
+   it('TRIANGULATE: sesión verificada deja pasar y el handler sigue su curso', async () => {
+     mocks.requireVerifiedUser.mockResolvedValue(USER)
+     readBodyMock.mockResolvedValue(bodyValido())
+-    mocks.resolverContextoExportacionOpcional.mockResolvedValue({ curso: { id: 'curso-1' }, papel: 'dueño' })
++    mocks.resolverContextoExportacionOpcional.mockResolvedValue({ curso: CURSO_GUARDADO, papel: 'dueño' })
+     mocks.requireRuntimeAnexo3Export.mockResolvedValue({ certificado: { codigo: 'IFCD0110' } })
+ 
+     await handler(FAKE_EVENT)
+@@ -99,6 +101,17 @@ describe('/api/export/json — Anexo III completo (6.3)', () => {
+     expect(mocks.requireRuntimeAnexo3Export).toHaveBeenCalledTimes(1)
+   })
+ 
++  it('con cursoId → exporta la planificación guardada, no la del cuerpo', async () => {
++    readBodyMock.mockResolvedValue(bodyValido({ modulos: [{ code: 'MANIPULADO' }] }))
++    mocks.resolverContextoExportacionOpcional.mockResolvedValue({ curso: CURSO_GUARDADO, papel: 'dueño' })
++    mocks.requireRuntimeAnexo3Export.mockImplementation(async (plan: unknown) => plan)
++
++    const salida = await handler(FAKE_EVENT)
++
++    expect(mocks.requireRuntimeAnexo3Export).toHaveBeenCalledWith(PLAN_GUARDADO)
++    expect(salida).toEqual(PLAN_GUARDADO)
++  })
++
+   it('cursoId de un curso sin papel → 404', async () => {
+     readBodyMock.mockResolvedValue(bodyValido())
+     mocks.resolverContextoExportacionOpcional.mockRejectedValue(createErrorMock({ statusCode: 404, message: 'Curso no encontrado' }))
+@@ -112,13 +125,13 @@ describe('/api/export/json — Anexo III completo (6.3)', () => {
+     const planCompleto = { certificado: { codigo: 'IFCD0110' }, modulos: body.modulos }
+ 
+     readBodyMock.mockResolvedValue(body)
+-    mocks.resolverContextoExportacionOpcional.mockResolvedValue({ curso: { id: 'curso-1' }, papel: 'docente' })
++    mocks.resolverContextoExportacionOpcional.mockResolvedValue({ curso: CURSO_GUARDADO, papel: 'docente' })
+     mocks.requireRuntimeAnexo3Export.mockResolvedValue(planCompleto)
+     const salidaDocente = await handler(FAKE_EVENT)
+ 
+     expect(mocks.resolverContextoExportacionOpcional).toHaveBeenCalledWith(USER, { cursoId: CURSO_ID })
+ 
+-    mocks.resolverContextoExportacionOpcional.mockResolvedValue({ curso: { id: 'curso-1' }, papel: 'administración' })
++    mocks.resolverContextoExportacionOpcional.mockResolvedValue({ curso: CURSO_GUARDADO, papel: 'administración' })
+     const salidaAdmin = await handler(FAKE_EVENT)
+ 
+     expect(salidaDocente).toEqual(salidaAdmin)
+diff --git a/tests/api/export/pdf.test.ts b/tests/api/export/pdf.test.ts
+index 3c52a07..6c3238b 100644
+--- a/tests/api/export/pdf.test.ts
++++ b/tests/api/export/pdf.test.ts
+@@ -57,6 +57,13 @@ const handler = handlerModule.default as (event: unknown) => Promise<unknown>
+ const FAKE_EVENT = {}
+ const CURSO_ID = '3fa85f64-5717-4562-b3fc-2c963f66afa6'
+ const USER = { id: 'user-1', emailVerified: true }
++const PLAN_GUARDADO = {
++  certificado: { codigo: 'IFCD0110', nombre: 'DAW guardado' },
++  modulos: [],
++  modulosEmpresa: [],
++  modulosComplementarios: [],
++}
++const CURSO_GUARDADO = { id: 'curso-1', config: { planningSnapshot: { resultado: PLAN_GUARDADO } } }
+ 
+ function bodyValido() {
+   return {
+@@ -109,10 +116,20 @@ describe('/api/export/pdf — frontera de autorización (7.2)', () => {
+   it('TRIANGULATE: administración con cuerpo válido → produce el mismo PDF de hoy', async () => {
+     mocks.requireVerifiedUser.mockResolvedValue(USER)
+     readBodyMock.mockResolvedValue(bodyValido())
+-    mocks.resolverContextoExportacionOpcional.mockResolvedValue({ curso: { id: 'curso-1' }, papel: 'administración' })
++    mocks.resolverContextoExportacionOpcional.mockResolvedValue({ curso: CURSO_GUARDADO, papel: 'administración' })
+ 
+     const resultado = await handler(FAKE_EVENT)
+     expect(resultado).toBeInstanceOf(Buffer)
+     expect(mocks.createPdf).toHaveBeenCalledTimes(1)
+   })
++
++  it('con cursoId → exporta la planificación guardada, no la del cuerpo', async () => {
++    mocks.requireVerifiedUser.mockResolvedValue(USER)
++    readBodyMock.mockResolvedValue({ ...bodyValido(), certificado: { codigo: 'IFCD0110', nombre: 'MANIPULADO' } })
++    mocks.resolverContextoExportacionOpcional.mockResolvedValue({ curso: CURSO_GUARDADO, papel: 'dueño' })
++
++    await handler(FAKE_EVENT)
++
++    expect(mocks.requireRuntimeAnexo3Export).toHaveBeenCalledWith(PLAN_GUARDADO)
++  })
+ })
+diff --git a/tests/server/export/planificacion-anexo3.test.ts b/tests/server/export/planificacion-anexo3.test.ts
+new file mode 100644
+index 0000000..b8034a8
+--- /dev/null
++++ b/tests/server/export/planificacion-anexo3.test.ts
+@@ -0,0 +1,42 @@
++/**
++ * Anexo III — origen de la planificación que se exporta.
++ * Con curso resuelto manda lo guardado en el servidor; sin curso (asistente,
++ * D7) no hay nada guardado y se usa el cuerpo.
++ */
++
++import { describe, it, expect, vi } from 'vitest'
++
++;(globalThis as Record<string, unknown>).createError = vi.fn((opts: { statusCode: number; message: string }) => {
++  const err = new Error(opts.message) as Error & { statusCode: number }
++  err.statusCode = opts.statusCode
++  return err
++})
++
++const { planificacionAnexo3 } = await import('../../../server/utils/export/planificacion-anexo3')
++
++const CUERPO = { certificado: { codigo: 'MANIPULADO', nombre: 'Del cliente' }, modulos: [{ code: 'X' }] }
++const GUARDADA = { certificado: { codigo: 'IFCD0110', nombre: 'DAW' }, modulos: [{ code: 'MF0950_2' }] }
++
++function contextoCon(config: Record<string, unknown>) {
++  return { curso: { config } } as unknown as Parameters<typeof planificacionAnexo3>[0]
++}
++
++describe('planificacionAnexo3', () => {
++  it('con curso → devuelve la planificación guardada e ignora el cuerpo', () => {
++    const plan = planificacionAnexo3(contextoCon({ planningSnapshot: { resultado: GUARDADA } }), CUERPO)
++    expect(plan).toEqual(GUARDADA)
++  })
++
++  it('sin curso → devuelve el cuerpo', () => {
++    expect(planificacionAnexo3(null, CUERPO)).toEqual(CUERPO)
++  })
++
++  it('curso sin planificación guardada → 409, nunca cae al cuerpo', () => {
++    expect(() => planificacionAnexo3(contextoCon({}), CUERPO)).toThrow(expect.objectContaining({ statusCode: 409 }))
++  })
++
++  it('planificación guardada sin certificado.codigo → 409', () => {
++    const config = { planningSnapshot: { resultado: { certificado: { nombre: 'DAW' } } } }
++    expect(() => planificacionAnexo3(contextoCon(config), CUERPO)).toThrow(expect.objectContaining({ statusCode: 409 }))
++  })
++})
+diff --git a/tests/server/utils/anexo3-publication-gate.test.ts b/tests/server/utils/anexo3-publication-gate.test.ts
+index 8e3d501..62dd0f5 100644
+--- a/tests/server/utils/anexo3-publication-gate.test.ts
++++ b/tests/server/utils/anexo3-publication-gate.test.ts
+@@ -228,7 +228,7 @@ describe('Anexo III export route wiring', () => {
+   beforeEach(() => {
+     vi.clearAllMocks()
+     routeBoundaries.requireVerifiedUser.mockResolvedValue({ id: 'user-1', emailVerified: true })
+-    routeBoundaries.resolverContextoExportacionOpcional.mockResolvedValue({ curso: { id: 'curso-1' }, papel: 'dueño' })
++    routeBoundaries.resolverContextoExportacionOpcional.mockResolvedValue({ curso: { id: 'curso-1', config: { planningSnapshot: { resultado: plan() } } }, papel: 'dueño' })
+     readBody.mockResolvedValue(bodyConCursoId())
+     routeBoundaries.guard.mockImplementation(async (value: ResultadoPlanificacion) => value)
+   })
