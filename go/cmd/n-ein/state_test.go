@@ -38,7 +38,7 @@ func TestFiveViewsUseObservedSources(t *testing.T) {
 	t.Setenv("N_EIN_AGENT_DIR", filepath.Join(root, "pi-agent"))
 	t.Setenv("N_EIN_CLAUDE_DIR", filepath.Join(root, "claude"))
 	t.Setenv("N_EIN_MODELS_FILE", filepath.Join(root, "no-models.json"))
-	write(t, filepath.Join(root, "runtime.json"), `{"pi":{"model":"openai-codex/gpt-6-sol","thinking":"high"},"worker":{"model":"openai-codex/gpt-6-luna","thinking":"high"}}`)
+	write(t, filepath.Join(root, "runtime.json"), `{"pi":{"model":"openai-codex/gpt-6-sol","thinking":"high"}}`)
 	write(t, filepath.Join(root, "brand.json"), `{"colors":{"yellow":"#FFCA40","concrete":"#FAF3F0","structure":"#737373"}}`)
 	write(t, filepath.Join(project, "WORK.md"), "# Encargo\n\n## Objetivo\nCorregir el puerto.\n\n## Tareas\n- [x] Reproducir\n- [ ] Arreglar\n\n## Evidencia\nEl check pasó antes de editar.\n")
 	write(t, filepath.Join(project, "code.ts"), "export const port = 0\n")
@@ -143,7 +143,7 @@ func TestConfigViewShowsModelsFromChannelData(t *testing.T) {
 	t.Setenv("N_EIN_MODELS_FILE", settings)
 	t.Setenv("N_EIN_AGENT_DIR", filepath.Join(root, "pi-agent"))
 	t.Setenv("N_EIN_CLAUDE_DIR", filepath.Join(root, "claude-agent"))
-	write(t, filepath.Join(root, "runtime.json"), `{"schema":1,"pi":{"version":"0.87.1","model":"nein/auto","thinking":"medium"},"scout":{"model":"openai-codex/gpt-6-luna","thinking":"low"},"worker":{"model":"openai-codex/gpt-6-luna","thinking":"high"},"reviewer":{"model":"openai-codex/gpt-6-sol","thinking":"medium"},"routing":{"mecanico":{"model":"openai-codex/gpt-6-luna","thinking":"medium"},"ordinario":{"model":"openai-codex/gpt-6-sol","thinking":"medium"},"riesgo":{"model":"openai-codex/gpt-6-sol","thinking":"high"},"abierto":{"model":"openai-codex/gpt-6-sol","thinking":"high"}}}`)
+	write(t, filepath.Join(root, "runtime.json"), `{"schema":1,"pi":{"version":"0.87.1","model":"nein/auto","thinking":"medium"},"routing":{"mecanico":{"model":"openai-codex/gpt-6-luna","thinking":"medium"},"ordinario":{"model":"openai-codex/gpt-6-sol","thinking":"medium"},"riesgo":{"model":"openai-codex/gpt-6-sol","thinking":"high"},"abierto":{"model":"openai-codex/gpt-6-sol","thinking":"high"}}}`)
 	pi := filepath.Join(root, "pi")
 	write(t, pi, "#!/bin/sh\nprintf '0.87.1\\n'\n")
 	if err := os.Chmod(pi, 0o755); err != nil {

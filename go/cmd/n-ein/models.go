@@ -31,10 +31,9 @@ func validModelSelection(value modelSelection) bool {
 }
 
 // [DATA] Los ajustes del canal sobreviven al reemplazo del paquete instalado.
-// Devuelve la configuración efectiva y, por rol, si su valor viene de runtime.json o de models.json.
+// Devuelve la configuración efectiva y, por uso, si su valor viene de runtime.json o de models.json.
 func applyModelSelections(config runtimeConfig, channel string) (runtimeConfig, map[string]string, error) {
-	sources := map[string]string{"principal": "runtime.json", "scout": "runtime.json", "worker": "runtime.json", "reviewer": "runtime.json",
-		"mecanico": "runtime.json", "ordinario": "runtime.json", "riesgo": "runtime.json", "abierto": "runtime.json"}
+	sources := map[string]string{"principal": "runtime.json", "mecanico": "runtime.json", "ordinario": "runtime.json", "riesgo": "runtime.json", "abierto": "runtime.json"}
 	path := os.Getenv("N_EIN_MODELS_FILE")
 	if path == "" {
 		home, err := layout.Root()
@@ -74,7 +73,6 @@ func applyModelSelections(config runtimeConfig, channel string) (runtimeConfig, 
 			return config, sources, fmt.Errorf("models.json inválido: claude")
 		}
 	}
-	targets := map[string]*modelSelection{"scout": &config.Scout, "worker": &config.Worker, "reviewer": &config.Reviewer}
 	// La tabla se copia antes de tocarla: el mapa de runtime.json no debe cambiar por los ajustes del canal.
 	routing := make(map[string]modelSelection, len(config.Routing))
 	for class, value := range config.Routing {
@@ -84,8 +82,6 @@ func applyModelSelections(config runtimeConfig, channel string) (runtimeConfig, 
 	for role, value := range settings.Agents {
 		if role == "principal" {
 			config.Pi.Model, config.Pi.Thinking = value.Model, value.Thinking
-		} else if target, ok := targets[role]; ok {
-			*target = value
 		} else if _, ok := sources[role]; ok {
 			config.Routing[role] = value
 		} else {

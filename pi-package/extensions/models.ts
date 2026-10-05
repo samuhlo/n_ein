@@ -12,27 +12,15 @@ import { loadModels, saveClaudeEffort, saveModelChoice } from "../models.ts";
 import { painter } from "./brand.ts";
 import { ModelsPanel, type Draft, type ModelChoice, type ModelRole, type PanelKit, type PanelResult, type PanelSlot } from "./models-panel.ts";
 
-// Los roles solo aparecen si están activos (N_EIN_ROLES=1); lo ordinario es la tabla de enrutado.
-const ROUTING_SLOTS: PanelSlot[] = [
+const SLOTS: PanelSlot[] = [
   { key: "principal", label: "principal" },
   { key: "mecanico", label: "mecánico" },
   { key: "ordinario", label: "ordinario" },
   { key: "riesgo", label: "riesgo" },
   { key: "abierto", label: "abierto" },
 ];
-const ROLE_SLOTS: PanelSlot[] = [
-  { key: "scout", label: "nein-scout" },
-  { key: "worker", label: "nein-worker" },
-  { key: "reviewer", label: "nein-reviewer" },
-];
-const slots = (): PanelSlot[] => (process.env.N_EIN_ROLES === "1" ? [...ROUTING_SLOTS, ...ROLE_SLOTS] : ROUTING_SLOTS);
-const APPLIES: Record<string, string> = {
-  principal: "reinicia Pi",
-  scout: "próxima exploración",
-  worker: "próximo encargo",
-  reviewer: "próxima revisión",
-};
-const LABELS = Object.fromEntries([...ROUTING_SLOTS, ...ROLE_SLOTS].map((slot) => [slot.key, slot.label]));
+const slots = (): PanelSlot[] => SLOTS;
+const LABELS = Object.fromEntries(SLOTS.map((slot) => [slot.key, slot.label]));
 
 const packageRoot = resolve(dirname(fileURLToPath(import.meta.url)), "../..");
 
@@ -41,7 +29,7 @@ function savedDraft(): { saved: Draft; defaults: Record<ModelRole, ModelChoice> 
   const fromPackage = loadModels(packageRoot, undefined, { ignoreSettings: true });
   const saved = { claude: effective.claudeEffort } as Draft;
   const defaults = {} as Record<ModelRole, ModelChoice>;
-  // Una clase vive en la tabla de enrutado; el principal y los roles, en su propio campo.
+  // Una clase vive en la tabla de enrutado; el principal, en su propio campo.
   const pick = (models: typeof effective, key: string): ModelChoice => (key in models.routing ? models.routing[key as never] : models[key as "principal"]);
   for (const { key } of slots()) {
     saved[key] = effective.overridden.includes(key as never) ? pick(effective, key) : null;
@@ -56,7 +44,7 @@ function persist(saved: Draft, draft: Draft): string[] {
     if (JSON.stringify(saved[role]) === JSON.stringify(draft[role])) continue;
     saveModelChoice(packageRoot, role as never, draft[role] ?? null);
     const value = draft[role] ? `${draft[role]!.model} · ${draft[role]!.thinking}` : "valor del paquete";
-    applied.push(`${LABELS[role]}: ${value} (${APPLIES[role] ?? "próximo encargo"})`);
+    applied.push(`${LABELS[role]}: ${value} (${role === "principal" ? "reinicia Pi" : "próximo encargo"})`);
   }
   if (saved.claude !== draft.claude) {
     saveClaudeEffort(packageRoot, draft.claude);
@@ -110,7 +98,6 @@ export async function openModels(ctx: ExtensionContext, kit: PanelKit): Promise<
 }
 
 export default function (pi: ExtensionAPI) {
-  if (process.env.N_EIN_WORKER_CHILD === "1") return;
 
   pi.registerCommand("nein:models", {
     description: "Modelo y esfuerzo del principal y de cada clase de encargo (mecánico, ordinario, riesgo, abierto); esfuerzo de Claude",

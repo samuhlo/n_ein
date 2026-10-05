@@ -29,7 +29,7 @@ El contexto de origen y el plan están en [docs/START_HERE.md](docs/START_HERE.m
 El [primer caso de regresión](evals/results/2026-09-29-first-session.md) ya pasó con Sol high y, en una sesión directa separada, con Luna high.
 La [continuación SQLSTATE](evals/results/2026-09-29-sqlstate.md) probó TDD ya elegido, delegación a Luna, regresión roja y verde, y un arreglo posterior en sesión nueva sin repetir la entrevista.
 
-Hasta el 5 de octubre el agente delegaba en roles con otro modelo (`nein-scout`, `nein-worker`, `nein-reviewer`). El banco mostró que eran entre el 45 y el 63 % del coste sin mejorar el resultado, así que salieron del recorrido; siguen disponibles con `N_EIN_ROLES=1` hasta cerrar la comparación final.
+Hasta el 5 de octubre el agente delegaba en roles con otro modelo (`nein-scout`, `nein-worker`, `nein-reviewer`). El banco mostró que eran entre el 45 y el 63 % del coste sin mejorar el resultado, y se retiraron el 6 de octubre.
 
 La cancelación se comprobó con `bun run evals/cancel-smoke.ts`: al interrumpir una herramienta larga, el cambio previo permanece y el proceso hijo deja de escribir. Es una evaluación manual que usa la suscripción.
 

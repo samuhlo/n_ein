@@ -10,19 +10,14 @@ import { dirname, join } from "node:path";
 import { randomUUID } from "node:crypto";
 import { CLASSES, DEFAULT_ROUTING, type JobClass } from "./router.ts";
 
-// Los roles quedan tras N_EIN_ROLES=1; lo ordinario es un modelo por encargo según su clase.
-export const ROLES = ["principal", "scout", "worker", "reviewer"] as const;
-export type Role = (typeof ROLES)[number];
-export type Slot = Role | JobClass;
+// El principal (nein/auto por defecto) y el modelo de cada clase de encargo.
+export type Slot = "principal" | JobClass;
 export type ModelChoice = { model: string; thinking: string };
 // Claude usa el modelo de Claude Code; n_ein solo guarda su esfuerzo, y sin ajuste decide Claude Code.
 type Settings = { schema: 1; agents: Record<string, ModelChoice>; claude?: { effort: string } };
 export type EffectiveModels = {
   version: string;
   principal: ModelChoice;
-  scout: ModelChoice;
-  worker: ModelChoice;
-  reviewer: ModelChoice;
   routing: Record<JobClass, ModelChoice>;
   claudeEffort: string | null;
   path: string;
@@ -79,21 +74,18 @@ function readSettings(path: string): Settings {
 export function loadModels(packageRoot: string, requestedChannel?: string, options: { ignoreSettings?: boolean } = {}): EffectiveModels {
   const defaults = JSON.parse(readFileSync(join(packageRoot, "runtime.json"), "utf8"));
   if (defaults.schema !== 1 || !/^\d+\.\d+\.\d+$/.test(defaults.pi?.version)
-    || !ROLES.every((role) => validChoice(role === "principal" ? defaults.pi : defaults[role]))) throw new Error("runtime.json inválido");
+    || !validChoice(defaults.pi)) throw new Error("runtime.json inválido");
   const path = modelsPath(packageRoot, requestedChannel);
   // ignoreSettings da los valores del paquete: el panel los enseña como referencia al restablecer.
   const settings: Settings = options.ignoreSettings ? { schema: 1, agents: {} } : readSettings(path);
   return {
     version: defaults.pi.version,
     principal: settings.agents.principal ?? { model: defaults.pi.model, thinking: defaults.pi.thinking },
-    scout: settings.agents.scout ?? { model: defaults.scout.model, thinking: defaults.scout.thinking },
-    worker: settings.agents.worker ?? { model: defaults.worker.model, thinking: defaults.worker.thinking },
-    reviewer: settings.agents.reviewer ?? { model: defaults.reviewer.model, thinking: defaults.reviewer.thinking },
     routing: Object.fromEntries(CLASSES.map((clase) => [clase,
       settings.agents[clase] ?? (validChoice(defaults.routing?.[clase]) ? defaults.routing[clase] : DEFAULT_ROUTING[clase])])) as Record<JobClass, ModelChoice>,
     claudeEffort: settings.claude?.effort ?? null,
     path,
-    overridden: [...ROLES, ...CLASSES].filter((slot) => slot in settings.agents),
+    overridden: (["principal", ...CLASSES] as Slot[]).filter((slot) => slot in settings.agents),
   };
 }
 
@@ -133,8 +125,7 @@ if (import.meta.main) {
   try {
     const effective = loadModels(process.argv[2], process.argv[3]);
     // `-` marca el esfuerzo de Claude sin ajustar: los lanzadores leen campos fijos.
-    console.log([effective.version, effective.principal.model, effective.principal.thinking,
-      effective.worker.model, effective.worker.thinking, effective.claudeEffort ?? "-"].join("\t"));
+    console.log([effective.version, effective.principal.model, effective.principal.thinking, effective.claudeEffort ?? "-"].join("	"));
   } catch (error) {
     console.error(`[ERR] :: MODELS_BAD :: reason: ${error instanceof Error ? error.message : String(error)}`);
     process.exitCode = 64;

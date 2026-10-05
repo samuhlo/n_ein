@@ -70,7 +70,6 @@ function initialData(cwd: string): BannerData {
 }
 
 export default function (pi: ExtensionAPI) {
-  if (process.env.N_EIN_WORKER_CHILD === "1") return;
 
   pi.on("session_start", (_event, ctx) => {
     if (!ctx.hasUI || ctx.mode !== "tui") return;

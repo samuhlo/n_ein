@@ -119,7 +119,7 @@ if "$repo_dir/bin/n-ein-dev" > "$test_dir/out" 2> "$test_dir/err"; then
 fi
 rg -q 'HOME_INVALID' "$test_dir/err"
 
-# [FLOW] El índice se crea en la primera apertura, se sincroniza en la siguiente y no lo tocan los hijos.
+# [FLOW] El índice se crea en la primera apertura y se sincroniza en la siguiente.
 unset N_EIN_AGENT_DIR
 export N_EIN_AGENT_DIR="$test_dir/agent"
 git init -q "$test_dir/repo"
@@ -131,12 +131,6 @@ rg -q 'CODEGRAPH · creando índice' "$test_dir/err"
 test "$(< "$N_EIN_CAPTURE.codegraph")" == "$N_EIN_CODEGRAPH_BIN"
 N_EIN_CODEGRAPH_ALLOW_TEMP=1 "$repo_dir/bin/n-ein-dev" --print 'segunda'
 rg -q '^sync --quiet ' "$N_EIN_CODEGRAPH_LOG"
-rm -f "$N_EIN_CODEGRAPH_LOG"
-N_EIN_WORKER_CHILD=1 N_EIN_CODEGRAPH_ALLOW_TEMP=1 "$repo_dir/bin/n-ein-dev" --print 'hijo'
-test ! -e "$N_EIN_CODEGRAPH_LOG"
-# El hijo recibe su encargo acotado: ni el flujo del principal ni las instrucciones para delegar.
-if rg -q 'flow.md|pi-only.md' "$N_EIN_CAPTURE"; then printf 'Un trabajador hijo no debe recibir el flujo del principal.\n' >&2; exit 1; fi
-rg -Fxq "$repo_dir/pi-package/persona.md" "$N_EIN_CAPTURE"
 # Sin permiso explícito, un temporal no se indexa, pero Pi arranca igual.
 "$repo_dir/bin/n-ein-dev" --print 'temporal' 2> "$test_dir/err"
 rg -q 'CODEGRAPH_SKIP :: reason: no se indexan temporales' "$test_dir/err"

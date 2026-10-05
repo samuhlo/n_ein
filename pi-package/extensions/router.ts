@@ -53,7 +53,6 @@ function effectiveRouting(): RoutingTable {
 }
 
 export default function (pi: ExtensionAPI, table: RoutingTable = effectiveRouting()) {
-  if (process.env.N_EIN_WORKER_CHILD === "1") return;
   // Pi corre una sesión por proceso: lo pendiente vale para la próxima petición de esta sesión.
   const pending: { escalate?: string; force?: JobClass } = {};
 

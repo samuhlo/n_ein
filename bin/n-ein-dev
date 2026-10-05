@@ -13,11 +13,9 @@ if ! command -v bun >/dev/null 2>&1; then
   exit 69
 fi
 runtime_values="$(bun "$repo_dir/pi-package/models.ts" "$repo_dir" "$channel")" || exit 64
-IFS=$'\t' read -r expected_pi_version main_model main_thinking worker_model worker_thinking _claude_effort <<< "$runtime_values"
+IFS=$'\t' read -r expected_pi_version main_model main_thinking _claude_effort <<< "$runtime_values"
 lang_directive="$(bun "$repo_dir/pi-package/lang.ts" "$repo_dir" "$channel")" || exit 64
-# El flujo de trabajo es del agente principal; un trabajador hijo recibe solo su encargo acotado.
 flow_args=(--append-system-prompt "$repo_dir/pi-package/pi-only.md" --append-system-prompt "$repo_dir/pi-package/flow.md")
-if [[ "${N_EIN_WORKER_CHILD:-0}" == 1 ]]; then flow_args=(); fi
 n_ein_home="${N_EIN_HOME:-$HOME/.n_ein}"
 agent_dir="${N_EIN_AGENT_DIR:-$n_ein_home/$channel/pi-agent}"
 pi_bin="${N_EIN_PI_BIN:-$n_ein_home/runtimes/pi/$expected_pi_version/bin/pi}"
@@ -40,8 +38,8 @@ if [[ "$pi_version" != "$expected_pi_version" ]]; then
   exit 69
 fi
 
-# BLINDAJE -> El índice se prepara una vez por sesión; los trabajadores hijos reutilizan el del padre.
-if [[ "${N_EIN_WORKER_CHILD:-0}" != 1 ]]; then "$repo_dir/bin/n-ein-codegraph"; fi
+# BLINDAJE -> El índice se prepara una vez por sesión, antes de que el agente lo consulte.
+"$repo_dir/bin/n-ein-codegraph"
 N_EIN_CODEGRAPH_BIN="$("$repo_dir/bin/n-ein-codegraph" --bin 2>/dev/null)"
 if [[ -n "$N_EIN_CODEGRAPH_BIN" ]]; then export N_EIN_CODEGRAPH_BIN; else unset N_EIN_CODEGRAPH_BIN; fi
 export DO_NOT_TRACK=1
@@ -49,14 +47,14 @@ export DO_NOT_TRACK=1
 export PI_SKIP_VERSION_CHECK=1
 export PI_CODING_AGENT_DIR="$agent_dir"
 # BLINDAJE -> El banner de n_ein sustituye al listado de arranque de Pi; si el usuario fijó quietStartup, se respeta.
-if [[ "${N_EIN_WORKER_CHILD:-0}" != 1 ]]; then
+{
   bun -e '
     const path = process.argv[1];
     const file = Bun.file(path);
     const settings = (await file.exists()) ? await file.json() : {};
     if (!("quietStartup" in settings)) await Bun.write(path, JSON.stringify({ ...settings, quietStartup: true }, null, 2) + "\n");
   ' "$agent_dir/settings.json" 2>/dev/null || printf '[WARN] :: SETTINGS_SKIP :: path: %s\n' "$agent_dir/settings.json" >&2
-fi
+}
 export PI_CODING_AGENT_SESSION_DIR="$agent_dir/sessions"
 handoff_signal="$(mktemp "${TMPDIR:-/tmp}/n-ein-handoff.XXXXXX")"
 trap 'rm -f "$handoff_signal"' EXIT

@@ -14,7 +14,7 @@ export type PanelKit = {
   visibleWidth(text: string): number;
 };
 
-// Cada fila con modelo es un uso: el principal, una clase de encargo o, con N_EIN_ROLES=1, un rol.
+// Cada fila con modelo es un uso: el principal o una clase de encargo.
 export type ModelRole = string;
 export type Role = ModelRole | "claude";
 export type PanelSlot = { key: ModelRole; label: string };

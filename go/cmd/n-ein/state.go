@@ -52,9 +52,6 @@ type runtimeConfig struct {
 		Model    string `json:"model"`
 		Thinking string `json:"thinking"`
 	} `json:"pi"`
-	Scout     modelSelection `json:"scout"`
-	Worker    modelSelection `json:"worker"`
-	Reviewer  modelSelection `json:"reviewer"`
 	// Un modelo por encargo: modelo y esfuerzo de cada clase (mecánico, ordinario, riesgo, abierto).
 	Routing   map[string]modelSelection `json:"routing"`
 	CodeGraph struct {

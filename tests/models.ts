@@ -1,22 +1,17 @@
 import { strict as assert } from "node:assert";
-import { chmodSync, mkdtempSync, readFileSync, rmSync, statSync, writeFileSync } from "node:fs";
+import { mkdtempSync, rmSync, statSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join, resolve } from "node:path";
 import { loadModels, saveClaudeEffort, saveModelChoice } from "../pi-package/models.ts";
 import registerModels, { openModels } from "../pi-package/extensions/models.ts";
 import { visible } from "../pi-package/extensions/brand.ts";
-import registerAgents from "../pi-package/extensions/agents.ts";
 
 const root = resolve(import.meta.dir, "..");
-const piVersion = JSON.parse(readFileSync(join(root, "runtime.json"), "utf8")).pi.version;
 const temp = mkdtempSync(join(tmpdir(), "n-ein-models-"));
 const modelsFile = join(temp, "models.json");
 const previous = {
   file: process.env.N_EIN_MODELS_FILE,
   channel: process.env.N_EIN_CHANNEL,
-  pi: process.env.N_EIN_PI_BIN,
-  home: process.env.N_EIN_AGENT_DIR,
-  capture: process.env.N_EIN_CAPTURE,
 };
 process.env.N_EIN_MODELS_FILE = modelsFile;
 process.env.N_EIN_CHANNEL = "dev";
@@ -24,7 +19,7 @@ process.env.N_EIN_CHANNEL = "dev";
 try {
   const defaults = loadModels(root);
   assert.equal(defaults.principal.model, "nein/auto", "por defecto, un modelo por encargo");
-  assert.equal(defaults.worker.model, "openai-codex/gpt-6-luna");
+  assert.deepEqual(defaults.routing.mecanico, { model: "openai-codex/gpt-6-luna", thinking: "high" }, "lo mecánico va a Luna high");
   assert.equal(defaults.overridden.length, 0);
   assert.equal(defaults.claudeEffort, null, "Sin ajuste, el esfuerzo de Claude lo decide Claude Code");
 
@@ -70,10 +65,9 @@ try {
   assert.equal(statSync(modelsFile).mode & 0o777, 0o600);
   assert.ok(notices.some((item) => item.includes("reinicia Pi")) && notices.some((item) => item.includes("próximo encargo")) && notices.some((item) => item.includes("al abrir Claude")) && notices.some((item) => item.includes("mecánico")));
   assert.ok(renders.some((frame) => frame.includes("// 000  MODELOS") && frame.includes("riesgo") && frame.includes("•")), "la tabla marca lo pendiente");
-  assert.ok(!renders.some((frame) => frame.includes("nein-scout")), "sin N_EIN_ROLES el panel no enseña roles");
   assert.ok(renders.some((frame) => frame.includes("// 001  MODELO") && frame.includes("buscar  luna")), "el buscador filtra lo tecleado");
   const cli = Bun.spawnSync(["bun", join(root, "pi-package/models.ts"), root, "dev"], { env: process.env }).stdout.toString().trim().split("\t");
-  assert.equal(cli[5], "medium", "los lanzadores leen el esfuerzo de Claude como sexto campo");
+  assert.equal(cli[3], "medium", "los lanzadores leen el esfuerzo de Claude como cuarto campo");
 
   // Cancelar no escribe nada.
   sessions = [["e", KEYS.escape]];
@@ -92,39 +86,12 @@ try {
   assert.deepEqual(effective.principal, { model: "nein/auto", thinking: "medium" });
   assert.equal(effective.claudeEffort, null);
   assert.throws(() => saveClaudeEffort(root, "minimal"), /esfuerzo de Claude inválido/);
-  saveModelChoice(root, "worker", { model: "openai-codex/gpt-6-sol", thinking: "high" });
-
-  const fakePi = join(temp, "pi");
-  writeFileSync(fakePi, [
-    "#!/usr/bin/env bash",
-    `if [[ "\${1:-}" == "--version" ]]; then printf '${piVersion}\\n'; exit 0; fi`,
-    "printf '%s\\n' \"$@\" > \"$N_EIN_CAPTURE\"",
-    "printf '%s\\n' '{\"type\":\"message_end\",\"message\":{\"role\":\"assistant\",\"provider\":\"openai-codex\",\"model\":\"gpt-6-sol\",\"stopReason\":\"stop\",\"content\":[{\"type\":\"text\",\"text\":\"hecho\"}]}}'",
-  ].join("\n") + "\n");
-  chmodSync(fakePi, 0o755);
-  process.env.N_EIN_PI_BIN = fakePi;
-  process.env.N_EIN_AGENT_DIR = join(temp, "agent");
-  process.env.N_EIN_CAPTURE = join(temp, "args");
-  const tools: Record<string, any> = {};
-  // Los roles solo existen con N_EIN_ROLES=1; aquí se comprueba que heredan el modelo del panel.
-  process.env.N_EIN_ROLES = "1";
-  registerAgents({ registerTool(value: any) { tools[value.name] = value; }, on() {} } as any);
-  const result = await tools.nein_worker.execute("test-model", {
-    task: "Lee", surfaces: ["src/**"], acceptance: "Respuesta",
-  }, new AbortController().signal, undefined, { cwd: temp });
-  assert.equal(result.details.status, "completo");
-  assert.equal(result.details.model, "gpt-6-sol");
-  const args = readFileSync(join(temp, "args"), "utf8");
-  assert.match(args, /openai-codex\/gpt-6-sol/);
-  assert.ok(args.lastIndexOf("openai-codex/gpt-6-sol") > args.indexOf("openai-codex/gpt-6-luna"), "el modelo delegado debe prevalecer");
-
-  assert.throws(() => saveModelChoice(root, "worker", { model: "bad model", thinking: "high" }));
-  writeFileSync(modelsFile, '{"schema":1,"agents":{"worker":{"model":"bad model","thinking":"high"}}}');
+  assert.throws(() => saveModelChoice(root, "riesgo", { model: "bad model", thinking: "high" }));
+  writeFileSync(modelsFile, '{"schema":1,"agents":{"riesgo":{"model":"bad model","thinking":"high"}}}');
   assert.throws(() => loadModels(root), /models.json inválido/);
-  console.log("models: panel /nein:models con el principal y la tabla de enrutado, persistencia, roles tras N_EIN_ROLES y esfuerzo de Claude");
+  console.log("models: panel /nein:models con el principal y la tabla de enrutado, persistencia y esfuerzo de Claude");
 } finally {
-  for (const [key, env] of [["N_EIN_MODELS_FILE", previous.file], ["N_EIN_CHANNEL", previous.channel],
-    ["N_EIN_PI_BIN", previous.pi], ["N_EIN_AGENT_DIR", previous.home], ["N_EIN_CAPTURE", previous.capture]] as const) {
+  for (const [key, env] of [["N_EIN_MODELS_FILE", previous.file], ["N_EIN_CHANNEL", previous.channel]] as const) {
     if (env === undefined) delete process.env[key]; else process.env[key] = env;
   }
   rmSync(temp, { recursive: true, force: true });
