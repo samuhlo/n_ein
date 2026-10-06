@@ -98,6 +98,7 @@ func sourceFixture(t *testing.T) (source, self, target, data string) {
 	writeFixture(t, source, "pi-package/memory.ts", "export const memory = 'test'\n", 0o644)
 	writeFixture(t, source, "pi-package/router.ts", "export const router = 'test'\n", 0o644)
 	writeFixture(t, source, "pi-package/NOTICE.md", "avisos\n", 0o644)
+	writeFixture(t, source, "pi-package/agents/summary.ts", "export const marker = true\n", 0o644)
 	writeFixture(t, source, "pi-package/extensions/agents.ts", "export default () => {}\n", 0o644)
 	writeFixture(t, source, "pi-package/themes/ein.json", `{"name":"ein"}`, 0o644)
 	writeFixture(t, source, "pi-package/skills/intent/SKILL.md", "# Intent\n", 0o644)
@@ -112,6 +113,17 @@ func call(t *testing.T, self string, args ...string) (string, error) {
 	var output bytes.Buffer
 	err := run(args, &output, self)
 	return output.String(), err
+}
+
+func TestWorkerRuntimeIsPackaged(t *testing.T) {
+	source, self, target, _ := sourceFixture(t)
+	if _, err := call(t, self, "install", "--source", source, "--target", target); err != nil {
+		t.Fatal(err)
+	}
+	content, err := os.ReadFile(filepath.Join(target, "pi-package/agents/summary.ts"))
+	if err != nil || string(content) != "export const marker = true\n" {
+		t.Fatalf("worker dependency missing: %s %v", content, err)
+	}
 }
 
 func TestInstallerLifecycle(t *testing.T) {
