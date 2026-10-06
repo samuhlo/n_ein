@@ -107,7 +107,7 @@ Prolongado: un documento con objetivo, decisiones, alcance, criterios, checklist
 
 Al retomar, comprobar repo/cwd/revisión y contrastar documento con diff y comprobaciones actuales. Conservar lo terminado; reabrir solo lo invalidado.
 
-Glosario y ADR describen conocimiento duradero. El documento de trabajo conserva avance. Engram queda opcional y fuera del primer recorrido.
+Glosario y ADR describen conocimiento duradero. El documento de trabajo conserva avance. Al iniciar una sesión se leen las instrucciones del proyecto y se recuperan solo las decisiones pertinentes; los hechos fechados se contrastan con el código. Antes de reemplazar un encargo terminado se trasladan sus decisiones duraderas a esos documentos, con razón y fuente, sin duplicar tareas ni historiales. Las preferencias solicitadas por el usuario viven en `~/.n_ein/preferences.md` (o `N_EIN_PREFERENCES_FILE`), común a Pi y Claude y fuera de las instalaciones y canales reemplazables. Ambos lanzadores las añaden como valores por defecto, subordinados al encargo, idioma elegido y convenciones del proyecto; no importan instrucciones globales de otro runtime. Engram queda opcional y fuera del primer recorrido.
 
 ### Continuidad entre agentes
 

@@ -52,6 +52,7 @@ persona="$(< "$repo_dir/pi-package/persona.md")"
 # El idioma elegido en el launcher viaja junto a la persona: Claude recibe un solo texto añadido.
 lang_directive="$(bun "$repo_dir/pi-package/lang.ts" "$repo_dir" "$channel")" || exit 64
 persona+=$'\n\n'"$(< "$repo_dir/pi-package/flow.md")"$'\n\n'"$lang_directive"
+persona+=$'\n\n'"$(bun "$repo_dir/pi-package/memory.ts")"
 handoff_signal="$(mktemp "${TMPDIR:-/tmp}/n-ein-claude-handoff.XXXXXX")"
 trap 'rm -f "$handoff_signal"' EXIT
 export N_EIN_HANDOFF_SIGNAL="$handoff_signal"

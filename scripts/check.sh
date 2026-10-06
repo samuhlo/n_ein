@@ -36,6 +36,7 @@ tests/reverse-launcher.sh
 bun run tests/work-doc.ts
 bun run tests/handoff.ts
 bun run tests/models.ts
+bun run tests/memory.ts
 bun run tests/codegraph.ts
 bun run tests/brand.ts
 bun run tests/banner.ts

@@ -29,17 +29,18 @@
 - [x] T1 · Recorte seguro — instrucciones por shell, referencias de skills, errores y evidencia conservados; commits reales distinguidos de lecturas.
 - [x] T2 · Modelo por encargo — peticiones mixtas conservadoras y nuevo encargo explícito sin arrastrar el modelo caro.
 - [x] T3 · Relevo portable — títulos ingleses y españoles, criterios completos y cierre ordenado del origen.
-- [ ] T4 · Alcance y memoria — contrato por petición, conocimiento duradero selectivo y preferencias compartidas por Pi y Claude.
+- [x] T4 · Alcance y memoria — contrato por petición, conocimiento duradero selectivo y preferencias compartidas por Pi y Claude.
 - [ ] T5 · Evaluación — aceptación y mutantes visibles, coste hasta aceptación, ensayo de alcance y continuidad con modelos.
 - [ ] T6 · Preview — candidato comprobado, actualización local reversible y diagnóstico de la instalación efectiva.
 
 ## Evidencia
 
 - Base: `2e09886`; auditoría con `./scripts/check.sh` correcto y regresiones reproducidas.
+- T4: rojo observado en preferencias ausentes del relevo; ambos lanzadores entregan el mismo archivo. `tests/memory.ts` verifica lectura sin mutación, actualización entre sesiones y fuente explícita. El flujo conserva petición, consumidores y aceptación; evita límites inventados y manda preservar decisiones antes de reemplazar WORK.md. La efectividad con modelos se mide en T5. Suite completa correcta.
 - T3: rojo observado con WORK.md en inglés; `tests/handoff.ts` comprueba los criterios finales de un documento largo y las tareas pendientes junto al siguiente paso; ambos lanzadores prueban salida antes de destino. Escritores externos no supervisados quedan explícitos. Suite completa correcta.
 - T2: rojo observado en petición mixta y nuevo encargo; `tests/router.ts` comprueba las reglas, `/nein:nuevo`, compactación y ausencia de órdenes pendientes entre sesiones; suite completa correcta.
 - T1: rojo observado en instrucciones por shell y falso commit; `tests/context.ts` cubre conservación de errores, checks, comandos mixtos/dinámicos y scripts; suite completa y paquete instalado correctos.
 
 ## Siguiente paso
 
-T4: conservar el alcance original y recuperar conocimiento duradero.
+T5: evaluar aceptación completa, mutantes y relevo con modelos en copias aisladas.

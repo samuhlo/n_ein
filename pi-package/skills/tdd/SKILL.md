@@ -33,3 +33,4 @@ When the shape of the interface itself is in question (how deep the module is, w
 - **One slice at a time.** One seam, one test, one minimal implementation per cycle.
 - **Refactor at review, not inside the loop.** It belongs to `review`, after green.
 - **No red possible** (docs, untestable change, no runner): say so and run the proportionate functional or structural check instead.
+- **Replacing a test**: list its intended behaviours before changing its mechanics, carry them into the new assertions, and check that removing a relevant behaviour makes the replacement fail. Mounting a component alone proves nothing about its visible states or interactions.

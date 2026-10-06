@@ -4,7 +4,7 @@ Este proyecto comienza con un paquete de contexto, no con una implementación.
 
 Antes de trabajar, lee `docs/START_HERE.md` y `docs/01-decisiones.md`. Para implementar, continúa con `docs/03-plan.md` y las secciones pertinentes de pruebas y despliegue. No cargues todo el archivo histórico en el contexto.
 
-El objetivo es una herramienta personal de Samu: ejecutar trabajo de programación con calidad, poca fricción y coste total razonable. El agente puede implementar directamente y delegar encargos útiles a modelos baratos. Delegar no es obligatorio por número de archivos; el barato puede investigar y pensar dentro del alcance.
+El objetivo es una herramienta personal de Samu: ejecutar trabajo de programación con calidad, poca fricción y coste total razonable. Desde el rumbo aprobado el 5 de octubre, el agente trabaja directamente, sin subagentes en el recorrido ordinario, y elige un modelo para el encargo completo. Ahorrar no justifica omitir partes del encargo ni perder calidad o facilidad de revisión.
 
 `intent`, basado en `grill-me`/`grilling` y el canal de Ein, es una capacidad central desde la primera versión. Se activa cuando Samu lo pide o acepta la propuesta de usarlo; una petición clara o una duda puntual no requieren entrevista. El contrato vive en `docs/02-diseno.md`, sección «Intent: definir juntos el encargo». Acordar qué se quiere no autoriza por sí solo implementarlo.
 

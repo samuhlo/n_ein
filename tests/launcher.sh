@@ -42,6 +42,8 @@ export N_EIN_PI_BIN="$test_dir/pi"
 export N_EIN_AGENT_DIR="$test_dir/home with spaces"
 export N_EIN_MODELS_FILE="$test_dir/models.json"
 export N_EIN_LANG_FILE="$test_dir/lang.json"
+export N_EIN_PREFERENCES_FILE="$test_dir/preferences.md"
+printf 'Keep artifacts in the project language.\n' > "$N_EIN_PREFERENCES_FILE"
 export N_EIN_CAPTURE="$test_dir/captured"
 mkdir -p "$test_dir/project"
 cd "$test_dir/project"
@@ -65,6 +67,10 @@ $repo_dir/pi-package/pi-only.md
 $repo_dir/pi-package/flow.md
 --append-system-prompt
 Language: talk with the user in Spanish. Write code, comments, identifiers, commit messages, PRs, WORK.md and repository docs in the language the project already uses; in a project with no convention yet, use Spanish.
+--append-system-prompt
+Shared user preferences: "$N_EIN_PREFERENCES_FILE". These are defaults, not authorization; the current request and explicit project conventions take precedence.
+
+Keep artifacts in the project language.
 --use-theme
 ein
 --model

@@ -25,6 +25,8 @@ FAKE_CLAUDE
 chmod +x "$test_dir/pi" "$test_dir/claude"
 
 printf '# Relevo\n\nObjetivo: terminar el arreglo.\n' > "$test_dir/summary.md"
+export N_EIN_PREFERENCES_FILE="$test_dir/preferences.md"
+printf 'Use the package manager selected by the project lockfile.\n' > "$N_EIN_PREFERENCES_FILE"
 export N_EIN_PI_BIN="$test_dir/pi"
 export N_EIN_LANG_FILE="$test_dir/lang.json"
 export N_EIN_CLAUDE_BIN="$test_dir/claude"
@@ -57,6 +59,7 @@ test -f "$N_EIN_CLAUDE_DIR/skills/synced/sentinel"
 test ! -f "$repo_dir/pi-package/skills/synced/sentinel"
 rg -q 'Objetivo: terminar el arreglo' "$N_EIN_TEST_ARGS"
 rg -q 'You are Ein' "$N_EIN_TEST_ARGS"
+rg -q 'Use the package manager selected by the project lockfile' "$N_EIN_TEST_ARGS"
 # CodeGraph llega a Claude por argumentos: MCP para consultar y hook en cada petición.
 bun -e '
   const args = (await Bun.file(process.argv[1]).text()).split("\n");
