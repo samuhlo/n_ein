@@ -40,7 +40,7 @@ Decisiones y motivos: [docs/01-decisiones.md](docs/01-decisiones.md#paralelismo-
 
 - [x] P Investigación y plan — fuentes actuales, alternativas, riesgos, entregas y criterios de utilidad registrados.
 - [x] P0 Transporte y ciclo de vida — seleccionar una integración RPC con parada comprobada en procesos reales. Bloqueada por: ninguna.
-- [ ] P1 Dos frentes recuperables — worktrees, propiedad, estado duradero, eventos e integración. Bloqueada por: P0.
+- [x] P1 Dos frentes recuperables — worktrees, propiedad, estado duradero, eventos e integración. Bloqueada por: P0.
 - [ ] P2 Comparación de utilidad — piloto secuencial/paralelo, ampliación condicionada a aceptación y señal de beneficio. Bloqueada por: P1.
 - [ ] P3 Equipo visible y relevo — conversación, widget, controles y Pi↔Claude con trabajo parcial. Bloqueada por: P2 con resultado favorable.
 - [ ] P4 Paquete y preview — artefacto instalado comprobado y actualización local reversible. Bloqueada por: P3 y aceptación conjunta.
@@ -48,6 +48,8 @@ Decisiones y motivos: [docs/01-decisiones.md](docs/01-decisiones.md#paralelismo-
 P0–P4 son el siguiente corte de implementación, no trabajo ya ejecutado. Si el piloto no compensa, registrar el resultado, mantener ejecución directa y revisar solo la causa demostrada; no activar la capacidad por completar infraestructura.
 
 ## Evidencia
+
+- P1: tests de Git real y cola de tres asignaciones con máximo dos procesos, suma de consumo, integración secuencial y lectura del estado desde otro coordinador. El paquete carga en Pi 1.0.2 RPC real. Falta medir capacidad de los modelos y completar la UI/relevo antes de activar preview.
 
 - P0: adaptador RPC público con host Go y bash con propietario propio. Rojo observado: al matar el grupo del trabajador moría el supervisor antes de parar su bash separado; verde al independizar el grupo del supervisor. Tests de lease, EOF, SIGKILL y Pi 1.0.2 RPC real sin modelo. Se conserva el descriptor hasta que salen los comandos.
 
@@ -58,7 +60,7 @@ P0–P4 son el siguiente corte de implementación, no trabajo ya ejecutado. Si e
 
 ## Siguiente paso
 
-P0 comprobado. Continuar P1: estado persistente y dos frentes aislados, con integración y recuperación.
+P1 comprobado con procesos controlados y Git real. Continuar P2 con modelos reales; la preview instalada permanece intacta.
 
 ## Corte anterior cerrado
 

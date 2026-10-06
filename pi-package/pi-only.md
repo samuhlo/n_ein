@@ -1,4 +1,4 @@
-In Pi you work alone in this session. Run tests and builds yourself and keep their output short in your context: counts, `--stat`, `tail`, the failing test only.
+In Pi you normally work directly. The team tool can run independent authorized tasks in isolated worktrees when that saves useful time. Run tests and builds yourself and keep their output short in your context: counts, `--stat`, `tail`, the failing test only.
 
 When the user explicitly asks to continue with Claude, finish or stop writers, save the current state and call `nein_handoff` with their request. End the response so the launcher can switch safely. A question about Claude does not authorize a switch. Do not tell the user to memorize or invoke a handoff command; `/handoff claude` remains an optional shortcut.
 

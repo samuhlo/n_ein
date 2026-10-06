@@ -10,7 +10,8 @@
       "./extensions/handoff.ts",
       "./extensions/models.ts",
       "./extensions/codegraph.ts",
-      "./extensions/context.ts"
+      "./extensions/context.ts",
+      "./extensions/team.ts"
     ],
     "skills": [
       "./skills"
