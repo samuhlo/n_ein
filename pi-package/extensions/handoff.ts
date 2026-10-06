@@ -156,10 +156,10 @@ export default function (pi: ExtensionAPI) {
   // BLINDAJE -> agent_end puede preceder a un retry o una continuación.
   pi.on("agent_end", (event, ctx) => {
     const last = event.messages.findLast(message => message.role === "assistant");
-    if (ctx.signal?.aborted || last?.stopReason === "error" || last?.stopReason === "aborted" || ctx.hasPendingMessages?.()) pending = undefined;
+    if (ctx.signal?.aborted || last?.stopReason === "error" || last?.stopReason === "aborted") pending = undefined;
   });
   pi.on("agent_before_settle", async (event, ctx) => {
-    if (!pending || event.continue) return;
+    if (!pending || event.continue || ctx.hasPendingMessages?.()) return;
     const transfer = pending;
     pending = undefined;
     if (event.outcome !== "completed" || ctx.signal?.aborted || ctx.hasPendingMessages?.() || lastText(ctx.sessionManager.getBranch(), "user") !== transfer.request) return;
