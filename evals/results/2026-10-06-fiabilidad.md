@@ -32,6 +32,31 @@ Se repitió NR8 en S2 como control de la misma ventana: termina con 14/14. Las d
 
 Los importes son estimaciones de catálogo de Pi, no lo facturado por una suscripción. El informe muestra también las ejecuciones incompletas y su coste por resultado aceptado; no calcula un ahorro descartando los fallos. [Datos y hashes de la evidencia](2026-10-06-fiabilidad.json).
 
+### Revisión a ciegas
+
+Sin ejecuciones nuevas: `judge.ts` congelado (Claude Opus por `claude -p`, sin herramientas) sobre las copias existentes, una tanda por escenario con las propuestas barajadas y etiquetas neutras; en S2, también los dos controles. Solo se comparan notas de la misma tanda: entre tandas el juez varía unos ±4 puntos. La nota no sustituye la aceptación.
+
+| Caso | Variante | n | Juez /30, media (por repetición) | Alcance /5 | Revisabilidad /5 |
+|---|---|---:|---|---:|---:|
+| S1 | NR5 | 5 | 24,0 (24 · 25 · 25 · 23 · 23) | 4,0 | 3,8 |
+| S1 | NR8 | 2 | 23,0 (23 · 23) | 4,5 | 3,5 |
+| S1 | NR10 | 1 | 24 | 5 | 4 |
+| S2 | NR5 | 2 | 25,5 (25 · 26) | 4,5 | 4,0 |
+| S2 | NR8 | 3 | 22,3 (24 · 17 · 26) | 3,7 | 3,7 |
+| S2 | NR10 | 3 | **25,7** (25 · 26 · 26) | 4,7 | 4,0 |
+| S2 | Control de referencia | 1 | 15 | 3 | 2 |
+| S2 | Control con defecto | 1 | 12 | 3 | 2 |
+| S3 | NR5 | 2 | 18,5 (20 · 17) | 3,0 | 3,0 |
+| S3 | NR8 | 2 | 22,5 (24 · 21) | 4,5 | 3,0 |
+| S3 | NR10 | 3 | 22,3 (25 · 21 · 21) | 3,7 | 4,0 |
+
+- **NR10 no baja frente a NR5 ni NR8 en ninguna tanda.** En S2 tiene la media más alta y la menor dispersión; en S3 queda a la par de NR8 y por encima de NR5. Las seis ejecuciones NR10 de S2 y S3 y la de S1 reciben revisabilidad 4. Ninguna ejecución tiene defectos bloqueantes.
+- **El alcance recoge los fallos de encargo incompleto o ampliado.** S2 NR8 r2 (9/14) saca 17 con alcance 2: deja sin tocar la ruta JSON y el panel, y su mensaje final no lo advierte. En S3, NR10 r2 baja a alcance 3 por SQL crudo y retoques no pedidos de documentación y especificación; NR5 r2 baja a 2 por un middleware no pedido.
+- **El juez no ve todo lo que ve la aceptación:** S2 NR5 r1 suspende la aceptación (8/14) y recibe 25.
+- **Controles:** el defecto sembrado recibe 12 y el único bloqueante de la tanda (vuelve al cuerpo del cliente cuando no hay plan guardado); la referencia, 15. Los distingue por poco. Ninguno lleva commits ni mensaje final, y en la referencia el juez señala además una prueba de componente en rojo y documentación desfasada.
+
+Etiquetas, prompt, respuesta y veredicto en `n_ein-bench/judge/` (`s1-1791293910447`, `s2-1791293910673`, `s3-1791293910559`).
+
 ## Relevo entre runtimes
 
 El fixture tiene tres entregas y una decisión de proyecto que debe sobrevivir: el puerto 0 solicita asignación automática y nunca se convierte en un puerto por defecto. Pi implementó y comprobó T1 en 182 s, hizo su commit y conservó T2 y T3 pendientes. El generador real de `/handoff` produjo el resumen después de que ese proceso terminara.
