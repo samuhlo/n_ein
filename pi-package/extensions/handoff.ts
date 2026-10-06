@@ -117,9 +117,9 @@ function summary(cwd: string, branch: Array<any>): string {
   ].join("\n");
 }
 
-async function prepare(ctx: ExtensionContext): Promise<void> {
+async function prepare(ctx: ExtensionContext, pi: ExtensionAPI): Promise<void> {
   const request = lastText(ctx.sessionManager.getBranch(), "user");
-  await stopTeam(ctx.cwd);
+  await stopTeam(ctx.cwd, pi.events);
   if (ctx.signal?.aborted || ctx.hasPendingMessages?.() || lastText(ctx.sessionManager.getBranch(), "user") !== request) throw new Error("Nueva indicación durante la parada; se conserva este runtime.");
   const home = process.env.PI_CODING_AGENT_DIR;
   const dir = home ? join(home, "handoffs") : join(ctx.cwd, ".n_ein", "handoffs");
@@ -149,6 +149,9 @@ export default function (pi: ExtensionAPI) {
       const normalize = (text: string) => text.trim().replace(/\s+/g, " ").toLowerCase();
       if (!normalize(params.request) || !normalize(request).includes(normalize(params.request))) return { isError: true, content: [{ type: "text", text: "The quoted transfer request is not in the latest user message. Keep this runtime and inspect what the user asked." }], details: undefined };
       if (!process.env.N_EIN_HANDOFF_SIGNAL) return { isError: true, content: [{ type: "text", text: "This session has no n_ein launcher to perform the switch. Keep the work saved; explain that opening it through nein enables automatic handoff." }], details: undefined };
+      try { await stopTeam(ctx.cwd, pi.events); }
+      catch (error) { return { isError: true, content: [{type:"text",text:String(error)}], details: undefined }; }
+      if (ctx.signal?.aborted) return { isError:true, content:[{type:"text",text:"Transfer cancelled while stopping workers."}], details:undefined };
       pending = { request };
       return { content: [{ type: "text", text: "Handoff queued for the end of this response. Finish now; the launcher will open Claude after Pi exits. Preserve the current authorization and pending work." }], details: undefined };
     },
@@ -163,7 +166,7 @@ export default function (pi: ExtensionAPI) {
     const transfer = pending;
     pending = undefined;
     if (event.outcome !== "completed" || ctx.signal?.aborted || ctx.hasPendingMessages?.() || lastText(ctx.sessionManager.getBranch(), "user") !== transfer.request) return;
-    try { await prepare(ctx); }
+    try { await prepare(ctx, pi); }
     catch (error) { ctx.ui.notify(`El relevo no está listo: ${String(error)}. Conserva los árboles pendientes.`, "error"); }
   });
 
@@ -178,7 +181,7 @@ export default function (pi: ExtensionAPI) {
       // El comando manual conserva el mismo resumen y el mismo cierre que la conversación.
       await ctx.waitForIdle();
       pending = undefined;
-      await prepare(ctx);
+      await prepare(ctx, pi);
     },
   });
 }

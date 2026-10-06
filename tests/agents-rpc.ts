@@ -197,3 +197,20 @@ const failed = startWorker({
 });
 assert.equal((await failed.done).status, "failed");
 console.log("late output cannot mask recording failure: OK");
+// Un cierre sin prosa no descarta el código ni exige otro modelo para repetirlo.
+const quiet = join(root, "quiet.cjs");
+writeFileSync(
+  quiet,
+  `let b='';process.stdin.on('data',x=>{b+=x;let i;while((i=b.indexOf('\\n'))>=0){const c=JSON.parse(b.slice(0,i));b=b.slice(i+1);process.stdout.write(JSON.stringify({type:'response',id:c.id,success:true,data:{disposition:'started'}})+'\\n');if(c.type==='prompt')process.stdout.write('{"type":"agent_settled"}\\n')}});`,
+);
+const quietResult = await startWorker({
+  host: resolve("dist/n-ein"),
+  cwd: root,
+  binary: process.execPath,
+  args: [quiet],
+  prompt: "x",
+  env: { ...process.env },
+  onEvent: () => {},
+}).done;
+assert.equal(quietResult.status, "ready");
+assert.match(quietResult.text, /Inspect the preserved branch/);

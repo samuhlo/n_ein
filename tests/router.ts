@@ -1,4 +1,5 @@
 import { strict as assert } from "node:assert";
+import { execFileSync } from "node:child_process";
 import { mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join, resolve } from "node:path";
@@ -69,7 +70,11 @@ assert.equal(nextState({ reason: "continuation", state: risk, messages: user("Co
 // La extensión registra nein/auto, la herramienta de escalado y /nein:modo, y enruta al modelo físico de la clase.
 let virtual: any, tool: any, taskTool: any, command: any, newJob: any, sessionStart: any;
 const sent: string[] = [];
+const taskRoot = mkdtempSync(join(tmpdir(), "nein-router-team-"));
+execFileSync("git", ["init", "-q", taskRoot]);
+let stoppedTeams=0;
 registerRouter({
+  events: {emit(_name: string, request: any) { request.pending.push(Promise.resolve().then(()=>{stoppedTeams++;})); }},
   on(name: string, handler: unknown) { if (name === "session_start") sessionStart = handler; },
   sendUserMessage(message: string) { sent.push(message); },
   registerVirtualModel(v: unknown) { virtual = v; },
@@ -95,8 +100,9 @@ assert.equal(forced.model.id, "gpt-6-luna", "/nein:modo manda sobre la clase");
 assert.match(notes[0]!, /mecanico/);
 
 let idle = false;
-await newJob.handler("Cambia el color del botón", { waitForIdle: async () => { idle = true; }, ui: { notify: (m: string) => notes.push(m) } });
+await newJob.handler("Cambia el color del botón", { cwd: taskRoot, waitForIdle: async () => { idle = true; }, ui: { notify: (m: string) => notes.push(m) } });
 assert.ok(idle);
+assert.equal(stoppedTeams,1,"manual new job stops the previous team before returning");
 assert.deepEqual(sent, ["Cambia el color del botón"]);
 await virtual.route({ reason: "direct", messages: [], thinkingLevel: "medium" }, ctx);
 const fresh = await virtual.route({ reason: "user", state: escalated.state, messages: user(sent[0]!), thinkingLevel: "medium" }, ctx);
@@ -106,7 +112,7 @@ sessionStart();
 const resumed = await virtual.route({ reason: "continuation", state: escalated.state, messages: user("x"), thinkingLevel: "medium" }, ctx);
 assert.equal(resumed.model.id, "gpt-6-sol", "una orden pendiente de otra sesión no altera el estado restaurado");
 
-const taskContext = { model: { provider: "nein", id: "auto" }, sessionManager: { getBranch: () => [{ type: "message", message: { role: "user", content: "Vale, hazlo" } }] } };
+const taskContext = { cwd: taskRoot, model: { provider: "nein", id: "auto" }, sessionManager: { getBranch: () => [{ type: "message", message: { role: "user", content: "Vale, hazlo" } }] } };
 assert.equal((await taskTool.execute("t", { ...choice, request: "otra cosa" }, undefined, undefined, taskContext)).isError, true);
 assert.notEqual((await taskTool.execute("t", { ...choice, request: "Vale, hazlo" }, undefined, undefined, taskContext)).isError, true);
 const built = await virtual.route({ reason: "continuation", state: open, messages: user("Vale, hazlo") }, ctx);
@@ -137,3 +143,8 @@ try {
 }
 
 console.log("router: clasificación sin riesgo a modelos baratos, encargo pegajoso, escalado y /nein:modo");
+
+const explicitJob={...taskContext,model:{provider:"openai",id:"gpt-6-sol"},sessionManager:{getBranch:()=>[{type:"message",message:{role:"user",content:"Ahora otro encargo: documenta el CLI"}}]}};
+assert.notEqual((await taskTool.execute("new",{clase:"mecanico",transition:"new_job",request:"otro encargo",reason:"different goal"},undefined,undefined,explicitJob)).isError,true);
+assert.equal(stoppedTeams,2,"new jobs preserve a manual model but still stop previous workers");
+rmSync(taskRoot,{recursive:true,force:true});

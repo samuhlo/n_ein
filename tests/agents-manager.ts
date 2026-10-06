@@ -1,6 +1,6 @@
 import { strict as assert } from "node:assert";
 import { execFileSync } from "node:child_process";
-import { mkdtempSync, writeFileSync, readFileSync } from "node:fs";
+import { mkdtempSync, writeFileSync, readFileSync, existsSync } from "node:fs";
 import { join, resolve } from "node:path";
 import { tmpdir } from "node:os";
 import { TeamManager } from "../pi-package/agents/manager.ts";
@@ -123,3 +123,48 @@ assert.equal(restored.store.get(pending.id).model, "test/strong");
 assert.equal(restored.store.get(pending.id).thinking, "high");
 assert.equal(restored.store.get(pending.id).tokens, 14);
 console.log("explicit capability change preserves accumulated usage: OK");
+// La parada no depende de poder leer el registro: los procesos vivos siguen siendo propios.
+const silent = join(cwd, ".git", "silent");
+writeFileSync(
+  silent,
+  `#!/usr/bin/env bun
+import {writeFileSync,appendFileSync} from 'node:fs';writeFileSync('pid',String(process.pid));setInterval(()=>appendFileSync('ticks','x'),20);let b='';process.stdin.on('data',x=>{b+=x;let i;while((i=b.indexOf('\\n'))>=0){const c=JSON.parse(b.slice(0,i));b=b.slice(i+1);process.stdout.write(JSON.stringify({type:'response',id:c.id,success:true,data:{disposition:'started'}})+'\\n')}});
+`,
+  { mode: 0o755 },
+);
+const broken = new TeamManager({
+  root: resolve("."),
+  cwd,
+  owner: "broken",
+  env: { N_EIN_PI_BIN: silent, PI_CODING_AGENT_DIR: join(cwd, ".git", "home") },
+});
+const [corrupt] = broken.start([
+  {
+    taskId: "T5",
+    label: "record failure",
+    prompt: "x",
+    model: "test/model",
+    thinking: "medium",
+  },
+]);
+const waitUntil = Date.now() + 3000;
+while (!existsSync(join(corrupt!.cwd, "ticks")) && Date.now() < waitUntil)
+  await new Promise((r) => setTimeout(r, 20));
+writeFileSync(corrupt!.recordPath!, "{broken");
+try {
+  await broken.shutdown();
+  assert.ok(
+    broken.free(corrupt!.cwd),
+    "shutdown stops workers even with a malformed record",
+  );
+  assert.equal(readFileSync(corrupt!.recordPath!, "utf8"), "{broken");
+} finally {
+  if (!broken.free(corrupt!.cwd)) {
+    const pid = readFileSync(join(corrupt!.cwd, "pid"), "utf8");
+    const command = execFileSync("ps", ["-p", pid, "-o", "command="], {
+      encoding: "utf8",
+    });
+    if (command.includes(silent)) process.kill(Number(pid), "SIGTERM");
+  }
+}
+console.log("record failure cannot prevent owned shutdown: OK");

@@ -189,8 +189,10 @@ export class TeamStore {
     )
       throw new Error(`task already assigned: ${input.taskId}`);
     for (const dep of input.dependsOn ?? [])
-      if (!records.some((t) => t.taskId === dep && t.status === "integrated"))
-        throw new Error(`dependency not integrated: ${dep}`);
+      if (!records.some((t) => t.id === dep && t.status === "integrated"))
+        throw new Error(
+          `dependency assignment not integrated: ${dep}; use the returned assignment id`,
+        );
     // Vite niega servir archivos bajo .git. Solo el registro vive allí.
     const repositoryKey = createHash("sha256")
       .update(this.common)
@@ -290,6 +292,13 @@ export class TeamStore {
     if (t.head && t.head !== head)
       throw new Error("Worker HEAD changed since the recorded result.");
     git(t.cwd, "merge-base", "--is-ancestor", t.base, head);
+    try {
+      git(this.origin, "merge-base", "--is-ancestor", t.base, "HEAD");
+    } catch {
+      throw new Error(
+        "Coordinator left the assigned base; reconcile the preserved branch before integration.",
+      );
+    }
     // Solo el coordinador fusiona. Un conflicto queda visible, nunca se resetea.
     git(this.origin, "merge", "--no-edit", head);
     return this.update(id, { status: "integrated", head });

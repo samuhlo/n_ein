@@ -1,6 +1,9 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
+# El relevo vuelve al proyecto del coordinador aunque una herramienta cambie de cwd.
+export N_EIN_COORDINATOR_ROOT="$(git rev-parse --show-toplevel 2>/dev/null || pwd -P)"
+
 # [FLOW] ARRANQUE AISLADO
 # Pi conserva su configuración, autenticación y sesiones dentro de este hogar.
 repo_dir="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd -P)"

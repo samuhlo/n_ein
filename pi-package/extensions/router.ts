@@ -11,6 +11,7 @@ import { fileURLToPath } from "node:url";
 import type { ExtensionAPI, ExtensionContext, ModelRouteRequest } from "@earendil-works/pi-coding-agent";
 import { Type } from "typebox";
 import { loadModels } from "../models.ts";
+import { stopTeam } from "../agents/runtime.ts";
 import { CLASSES, classify, newJobText, parseOverride, type Classification, type JobClass, type Route, type RoutingTable } from "../router.ts";
 
 const packageRoot = resolve(dirname(fileURLToPath(import.meta.url)), "../..");
@@ -99,7 +100,7 @@ export default function (pi: ExtensionAPI, fixedTable?: RoutingTable) {
   pi.registerTool({
     name: "nein_set_task",
     label: "Elegir modelo del encargo",
-    description: "Adjust the model class when the understood task needs it. The first request and clear 'another task' prefixes are already routed: do not call just to announce or repeat that choice. With nein/auto, use this for another explicit job not already recognized, after an agreed design is authorized for implementation, when exploration changes the assessed risk, or when the user explicitly requests a different model. Quote their latest request. Mechanical means text/style without new logic; ordinary means bounded behaviour; risk means stored data, permissions, existing contracts or deployment; open means unresolved design. Reassessing ongoing work only raises capability. This never grants implementation permission or discards pending work.",
+    description: "Adjust the model class when the understood task needs it. The first request and clear 'another task' prefixes are already routed: do not call just to announce or repeat that choice. A new_job transition also stops previous workers while retaining a manual model. With nein/auto, use this for another explicit job not already recognized, after an agreed design is authorized for implementation, when exploration changes the assessed risk, or when the user explicitly requests a different model. Quote their latest request. Mechanical means text/style without new logic; ordinary means bounded behaviour; risk means stored data, permissions, existing contracts or deployment; open means unresolved design. Reassessing ongoing work only raises capability. This never grants implementation permission or discards pending work.",
     parameters: Type.Object({
       clase: Type.Union(CLASSES.map((value) => Type.Literal(value))),
       transition: Type.Union(["new_job", "start_implementation", "reassess", "user_choice"].map((value) => Type.Literal(value))),
@@ -107,13 +108,16 @@ export default function (pi: ExtensionAPI, fixedTable?: RoutingTable) {
       reason: Type.String({ description: "Why this capability fits the known scope" }),
     }),
     async execute(_id, params, _signal, _update, ctx) {
-      if (ctx.model?.provider !== "nein" || ctx.model?.id !== "auto") return { isError: true, content: [{ type: "text", text: "The session uses a manually selected model. Keep that explicit selection; automatic task routing is not active." }], details: undefined };
+      const automatic = ctx.model?.provider === "nein" && ctx.model?.id === "auto";
+      if (!automatic && params.transition !== "new_job") return { isError: true, content: [{ type: "text", text: "The session uses a manually selected model. Keep that explicit selection; automatic task routing is not active." }], details: undefined };
       const branch = ctx.sessionManager.getBranch();
       const last = branch.findLast((entry) => entry.type === "message" && entry.message.role === "user");
       const message = last?.type === "message" ? last.message : undefined;
       const text = message ? lastUserText([message] as Message[]) : "";
       const normalize = (value: string) => value.trim().replace(/\s+/g, " ").toLowerCase();
       if (!normalize(params.request) || !normalize(text).includes(normalize(params.request))) return { isError: true, content: [{ type: "text", text: "The quoted request is not in the latest user message. Keep the current task and inspect that message before choosing a transition." }], details: undefined };
+      if (params.transition === "new_job") await stopTeam(ctx.cwd, pi.events);
+      if (!automatic) { pending.newJob = true; return { content: [{type:"text",text:"New job recorded; previous workers stopped with their work preserved. Keep the manually selected model."}], details: undefined }; }
       pending.choice = { clase: params.clase, transition: params.transition, reason: params.reason.slice(0, 240) };
       return { content: [{ type: "text", text: `Task assessment recorded: ${params.clase} — ${pending.choice.reason}. It applies on the next request; an ongoing task can only move up unless the user explicitly changes the model. Keep its scope and pending work.` }], details: undefined };
     },
@@ -146,6 +150,7 @@ export default function (pi: ExtensionAPI, fixedTable?: RoutingTable) {
   pi.registerCommand("nein:nuevo", {
     description: "Comienza otro encargo y elige de nuevo su modelo: /nein:nuevo [petición]",
     handler: async (args, ctx) => {
+      await stopTeam(ctx.cwd, pi.events);
       await ctx.waitForIdle();
       delete pending.escalate; delete pending.force; delete pending.choice;
       pending.newJob = true;

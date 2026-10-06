@@ -1,5 +1,5 @@
 import { strict as assert } from "node:assert";
-import { teamLines } from "../pi-package/agents/view.ts";
+import { teamLines, resultLines } from "../pi-package/agents/view.ts";
 const tasks: any[] = [
   {
     label: "Calendario",
@@ -29,3 +29,20 @@ assert.ok(lines.every((l) => !/[\x00-\x1f]/.test(l)));
 assert.ok(lines.some((l) => l.includes("42")));
 assert.deepEqual(teamLines([], 50), []);
 console.log("team view: OK");
+
+const result = JSON.stringify([
+  {
+    label: "API",
+    status: "ready",
+    model: "provider/model",
+    branch: "feature",
+    result: "Resumen\nDetalle largo",
+    record: "/record.json",
+  },
+]);
+assert.ok(!resultLines(result, false, 50).join("\n").includes("Detalle largo"));
+assert.ok(resultLines(result, true, 50).join("\n").includes("Detalle largo"));
+assert.doesNotThrow(() =>
+  teamLines([{ ...tasks[0], label: undefined, cost: undefined }]),
+);
+assert.doesNotThrow(() => resultLines("invalid", true, 1));

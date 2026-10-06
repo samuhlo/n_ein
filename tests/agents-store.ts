@@ -1,6 +1,11 @@
 import { strict as assert } from "node:assert";
 import { execFileSync } from "node:child_process";
-import { mkdtempSync, readFileSync, writeFileSync, realpathSync } from "node:fs";
+import {
+  mkdtempSync,
+  readFileSync,
+  writeFileSync,
+  realpathSync,
+} from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { TeamStore } from "../pi-package/agents/store.ts";
@@ -132,3 +137,74 @@ try {
   else process.env.N_EIN_WORK_DOC = previousDoc;
 }
 console.log("configured work document: OK");
+// Los bloqueos se refieren a asignaciones únicas, no a un T1 de otro encargo.
+const assigned = new TeamStore(custom);
+const previous = assigned.list()[0]!;
+process.env.N_EIN_WORK_DOC = "PLAN.md";
+try {
+  assert.throws(
+    () =>
+      assigned.create({
+        taskId: "dependent",
+        label: "d",
+        prompt: "x",
+        model: "test/model",
+        thinking: "medium",
+        owner: "new",
+        dependsOn: [previous.id],
+      }),
+    /not integrated/,
+  );
+  assigned.update(previous.id, { status: "integrated" });
+  assert.throws(
+    () =>
+      assigned.create({
+        taskId: "dependent",
+        label: "d",
+        prompt: "x",
+        model: "test/model",
+        thinking: "medium",
+        owner: "new",
+        dependsOn: ["custom"],
+      }),
+    /assignment/,
+  );
+  const dependent = assigned.create({
+    taskId: "dependent",
+    label: "d",
+    prompt: "x",
+    model: "test/model",
+    thinking: "medium",
+    owner: "new",
+    dependsOn: [previous.id],
+  });
+  assert.deepEqual(dependent.dependsOn, [previous.id]);
+  const oldBase = customGit("rev-parse", "HEAD");
+  customGit("switch", "-qc", "feature-base");
+  writeFileSync(join(custom, "foundation.txt"), "foundation");
+  customGit("add", ".");
+  customGit("commit", "-qm", "foundation");
+  const move = assigned.create({
+    taskId: "moved",
+    label: "moved",
+    prompt: "x",
+    model: "test/model",
+    thinking: "medium",
+    owner: "test",
+  });
+  writeFileSync(join(move.cwd, "result.txt"), "result");
+  execFileSync("git", ["add", "."], { cwd: move.cwd });
+  execFileSync("git", ["commit", "-qm", "result"], { cwd: move.cwd });
+  assigned.snapshot(move.id);
+  assigned.update(move.id, { status: "ready" });
+  customGit("switch", "-qc", "another-base", oldBase);
+  assert.throws(() => assigned.integrate(move.id), /left the assigned base/);
+  assert.equal(
+    customGit("ls-files", "foundation.txt"),
+    "",
+    "integration must not resurrect the abandoned base",
+  );
+} finally {
+  if (previousDoc === undefined) delete process.env.N_EIN_WORK_DOC;
+  else process.env.N_EIN_WORK_DOC = previousDoc;
+}

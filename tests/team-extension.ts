@@ -3,13 +3,30 @@ import { execFileSync } from "node:child_process";
 import { mkdtempSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 import { tmpdir } from "node:os";
-import registerTeam from "../pi-package/extensions/team.ts";
+import { mock } from "bun:test";
+mock.module("@earendil-works/pi-tui", () => ({
+  truncateToWidth: (text: string, width: number) => {
+    const chars = [...text];
+    while (Bun.stringWidth(chars.join("")) > width) chars.pop();
+    return chars.join("");
+  },
+}));
+const { default: registerTeam } = await import(
+  "../pi-package/extensions/team.ts"
+);
 const cwd = mkdtempSync(join(tmpdir(), "nein-team-ui-"));
 execFileSync("git", ["init", "-q"], { cwd });
 const hooks: Record<string, any> = {},
   commands: Record<string, any> = {};
 let tool: any, shortcut: any;
 registerTeam({
+  events: {
+    on() {
+      return () => {};
+    },
+    emit() {},
+  },
+  registerMessageRenderer() {},
   on(name: string, fn: any) {
     hooks[name] = fn;
   },
@@ -27,6 +44,7 @@ registerTeam({
   },
 } as any);
 let menus = 0;
+let notices = 0;
 const ctx: any = {
   cwd,
   mode: "tui",
@@ -34,7 +52,9 @@ const ctx: any = {
   sessionManager: { getSessionId: () => "test", getBranch: () => [] },
   ui: {
     setWidget() {},
-    notify() {},
+    notify() {
+      notices++;
+    },
     async select() {
       menus++;
       return undefined;
@@ -44,10 +64,11 @@ const ctx: any = {
 };
 await hooks.session_start({}, ctx);
 await commands["nein:equipo"].handler("", ctx);
-assert.equal(menus, 1, "command opens the local menu");
+assert.equal(notices, 1, "command reports an empty team locally");
 await shortcut.handler(ctx);
-assert.equal(menus, 2);
+assert.equal(notices, 2);
 await tool.execute("view", { action: "view" }, undefined, undefined, ctx);
-assert.equal(menus, 3);
+assert.equal(notices, 3);
+assert.equal(menus, 0, "empty teams do not open a menu of irrelevant actions");
 await hooks.session_shutdown();
 console.log("team command, shortcut and conversational view: OK");

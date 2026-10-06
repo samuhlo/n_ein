@@ -11,23 +11,25 @@ if [[ ! -f "$N_EIN_HANDOFF_SIGNAL" ]]; then
 fi
 
 repo_dir="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd -P)"
-team_summary="$(bun "$repo_dir/pi-package/agents/summary.ts" "$PWD")" || exit 69
+project_dir="${N_EIN_COORDINATOR_ROOT:-$PWD}"
+team_summary="$(bun "$repo_dir/pi-package/agents/summary.ts" "$project_dir")" || exit 69
 note="$1"
 handoff_dir="$CLAUDE_CONFIG_DIR/handoffs"
 mkdir -p "$handoff_dir"
 summary_path="$(mktemp "$handoff_dir/handoff.XXXXXX")"
 
-if git_root="$(git rev-parse --show-toplevel 2>/dev/null)"; then
-  head="$(git rev-parse HEAD)"
-  status="$(git status --short)"
-  diff_stat="$(git diff --stat HEAD)"
+if git_root="$(git -C "$project_dir" rev-parse --show-toplevel 2>/dev/null)"; then
+  head="$(git -C "$git_root" rev-parse HEAD)"
+  status="$(git -C "$git_root" status --short)"
+  diff_stat="$(git -C "$git_root" diff --stat HEAD)"
 else
-  git_root="$PWD"
+  git_root="$project_dir"
   head="desconocido"
   status="desconocido"
   diff_stat="desconocido"
 fi
 work_doc="${N_EIN_WORK_DOC:-$git_root/WORK.md}"
+case "$work_doc" in /*) ;; *) work_doc="$git_root/$work_doc" ;; esac
 [[ -f "$work_doc" ]] || work_doc="ninguno"
 
 {

@@ -26,6 +26,8 @@ export default function (pi: ExtensionAPI) {
     streamSimple(model, context) {
       const stream = createAssistantMessageEventStream();
       const n = ++calls;
+      const resuming = process.env.N_EIN_TEST_RESUME === "1";
+      const handoff = process.env.N_EIN_TEST_ACTIVE_HANDOFF === "1";
       let content: any[],
         reason = "toolUse";
       const tool = (name: string, args: unknown, id = String(n)) => ({
@@ -49,11 +51,19 @@ export default function (pi: ExtensionAPI) {
         if (n === 1)
           content = [
             tool("bash", {
-              command: continuity
-                ? partial
-                  ? `printf 'partial-${process.env.N_EIN_TEST_MARKER}' > partial.txt; sleep 30`
-                  : `printf 'first-${process.env.N_EIN_TEST_MARKER}' > first.txt; git add first.txt; git commit -qm worker`
-                : `sleep 0.8; printf done > '${file}'; git add '${file}'; git commit -qm worker`,
+              command:
+                resuming &&
+                JSON.stringify(
+                  collapseSystemMessages(context).messages,
+                ).includes("Continuation:")
+                  ? `test -f '${file}'; printf resumed > resumed.txt; git add resumed.txt; git commit -qm resumed`
+                  : handoff
+                    ? "printf live > live.txt; sleep 30"
+                    : continuity
+                      ? partial
+                        ? `printf 'partial-${process.env.N_EIN_TEST_MARKER}' > partial.txt; sleep 30`
+                        : `printf 'first-${process.env.N_EIN_TEST_MARKER}' > first.txt; git add first.txt; git commit -qm worker`
+                      : `sleep 0.8; printf done > '${file}'; git add '${file}'; git commit -qm worker`,
             }),
           ];
         else {
@@ -72,6 +82,35 @@ export default function (pi: ExtensionAPI) {
             })),
           }),
         ];
+      } else if (handoff && n === 2) {
+        const dir = join(process.cwd(), ".git/n_ein/team");
+        const tasks = readdirSync(dir)
+          .filter((x) => x.endsWith(".json"))
+          .map((x) => JSON.parse(readFileSync(join(dir, x), "utf8")))
+          .filter((t) => t.status === "running");
+        content = [
+          tool("bash", {
+            command: tasks
+              .map(
+                (t) =>
+                  `while [ ! -f '${t.cwd}/live.txt' ]; do sleep 0.02; done`,
+              )
+              .join("; "),
+            timeout: 10,
+          }),
+        ];
+      } else if (handoff && n === 3) {
+        content = [
+          tool("nein_handoff", {
+            destination: "claude",
+            request: "continue with Claude",
+          }),
+        ];
+      } else if (handoff) {
+        content = [
+          { type: "text", text: "Transferring after stopping the workers." },
+        ];
+        reason = "stop";
       } else if (n === 2) {
         content = [
           tool("bash", {
@@ -82,7 +121,23 @@ export default function (pi: ExtensionAPI) {
       } else if (n === 3) {
         content = [{ type: "text", text: "Waiting for worker results." }];
         reason = "stop";
-      } else if (n === 4) {
+      } else if (resuming && n === 4) {
+        const dir = join(process.cwd(), ".git/n_ein/team");
+        const tasks = readdirSync(dir)
+          .filter((x) => x.endsWith(".json"))
+          .map((x) => JSON.parse(readFileSync(join(dir, x), "utf8")));
+        content = [
+          tool("nein_team", {
+            action: "resume",
+            id: tasks.find((t) => t.taskId === "T2").id,
+            message:
+              "Continue by adding resumed.txt while keeping the previous marker.",
+          }),
+        ];
+      } else if (resuming && n === 5) {
+        content = [{ type: "text", text: "Waiting for continuation." }];
+        reason = "stop";
+      } else if (n === 4 || (resuming && n === 6)) {
         const messages = JSON.stringify(
           collapseSystemMessages(context).messages,
         );

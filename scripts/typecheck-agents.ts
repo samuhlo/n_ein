@@ -63,6 +63,7 @@ try {
         join(root, "pi-package/agents/*.ts"),
         join(root, "pi-package/extensions/team.ts"),
         join(root, "pi-package/extensions/handoff.ts"),
+        join(root, "pi-package/extensions/router.ts"),
       ],
     }),
   );

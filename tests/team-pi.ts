@@ -7,12 +7,17 @@ import {
   readFileSync,
   readdirSync,
   statSync,
+  existsSync,
 } from "node:fs";
 import { tmpdir, homedir } from "node:os";
 import { join, resolve } from "node:path";
-const repo = resolve("."),
+const sourceRepo = resolve(".");
+const repo = process.env.N_EIN_PRODUCT_ROOT || sourceRepo,
   area = mkdtempSync(join(tmpdir(), "nein-team-pi-")),
   cwd = join(area, "project");
+const host = existsSync(join(repo, "bin/n-ein"))
+  ? join(repo, "bin/n-ein")
+  : join(repo, "dist/n-ein");
 mkdirSync(cwd);
 const git = (...args: string[]) =>
   execFileSync("git", args, { cwd, encoding: "utf8" }).trim();
@@ -30,7 +35,7 @@ const real =
   wrapper = join(area, "pi");
 writeFileSync(
   wrapper,
-  `#!/bin/sh\nexec ${quote(real)} "$@" -e ${quote(join(repo, "tests/fixtures/team-provider.ts"))}\n`,
+  `#!/bin/sh\nexec ${quote(real)} "$@" -e ${quote(join(sourceRepo, "tests/fixtures/team-provider.ts"))}\n`,
   { mode: 0o755 },
 );
 const models = join(area, "models.json");
@@ -51,10 +56,11 @@ const env = {
   N_EIN_MODELS_FILE: models,
   N_EIN_CODEGRAPH_BIN: index,
   N_EIN_TEAM: "1",
+  N_EIN_TEST_RESUME: "1",
   PI_SKIP_VERSION_CHECK: "1",
 };
 const child = spawn(
-  join(repo, "dist/n-ein"),
+  host,
   [
     "--root",
     repo,
@@ -95,6 +101,8 @@ const records = readdirSync(join(cwd, ".git/n_ein/team"))
   );
 assert.equal(records.length, 2);
 assert.ok(records.every((t) => t.status === "integrated"));
+assert.equal(records.find((t) => t.taskId === "T2").attempt, 2);
+assert.equal(readFileSync(join(cwd, "resumed.txt"), "utf8"), "resumed");
 const parentTime = statSync(join(cwd, "parent.txt")).mtimeMs;
 for (const t of records) {
   const file = `child-${t.id}.txt`;
@@ -107,3 +115,68 @@ for (const t of records) {
 console.log(
   "real Pi coordinator + two workers + automatic continuation + integration: OK",
 );
+// El comando de relevo debe detener también a los trabajadores todavía activos.
+const reached = join(area, "claude-reached"),
+  fakeClaude = join(area, "claude");
+writeFileSync(
+  fakeClaude,
+  `#!/usr/bin/env bun
+import {execFileSync} from 'node:child_process';import {readdirSync,readFileSync,writeFileSync} from 'node:fs';import {join} from 'node:path';
+const dir=join(process.cwd(),'.git/n_ein/team');const tasks=readdirSync(dir).filter(x=>x.endsWith('.json')).map(x=>JSON.parse(readFileSync(join(dir,x),'utf8'))).filter(t=>t.status!=='integrated');
+if(tasks.length!==2||tasks.some(t=>t.status!=='stopped'))process.exit(2);
+for(const t of tasks)execFileSync(${JSON.stringify(host)},['--worker-probe','--project',t.cwd]);
+execFileSync(${JSON.stringify(join(repo, "bin/n-ein-prepare-pi"))},['Preserve both fronts.'],{cwd:tasks[0].cwd,env:process.env});
+const handoffFile=readFileSync(process.env.N_EIN_HANDOFF_SIGNAL,'utf8').trim().split('\\n')[1];
+const note=readFileSync(handoffFile,'utf8');
+if(!note.includes('Proyecto: '+tasks[0].origin)||!note.includes(tasks[1].cwd))process.exit(3);
+writeFileSync(process.env.N_EIN_HANDOFF_SIGNAL,'');
+writeFileSync(${JSON.stringify(reached)},'workers stopped');
+`,
+  { mode: 0o755 },
+);
+const transfer = spawn(
+  host,
+  [
+    "--root",
+    repo,
+    "--project",
+    cwd,
+    "--runtime",
+    "pi",
+    "--",
+    "--mode",
+    "json",
+    "--print",
+    "Start both workers then continue with Claude.",
+  ],
+  {
+    cwd,
+    env: {
+      ...env,
+      N_EIN_TEST_ACTIVE_HANDOFF: "1",
+      N_EIN_CLAUDE_BIN: fakeClaude,
+      N_EIN_CLAUDE_DIR: join(area, "claude-home"),
+    },
+    stdio: ["ignore", "pipe", "pipe"],
+    detached: true,
+  },
+);
+let transferOut = "",
+  transferErr = "";
+transfer.stdout.on("data", (x) => (transferOut += x));
+transfer.stderr.on("data", (x) => (transferErr += x));
+const transferTimer = setTimeout(() => {
+  try {
+    process.kill(-transfer.pid!, "SIGTERM");
+  } catch {}
+}, 20000);
+const transferExit = await new Promise<number | null>((r, j) => {
+  transfer.once("close", r);
+  transfer.once("error", j);
+});
+clearTimeout(transferTimer);
+writeFileSync(join(area, "handoff-events.jsonl"), transferOut);
+writeFileSync(join(area, "handoff-stderr"), transferErr);
+assert.equal(transferExit, 0, transferErr);
+assert.equal(readFileSync(reached, "utf8"), "workers stopped");
+console.log("native handoff waits for both active workers: OK");

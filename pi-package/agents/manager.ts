@@ -350,12 +350,23 @@ export class TeamManager {
     await run.steer(message);
   }
   async stop(id?: string) {
-    const tasks = this.store
-      .list()
-      .filter((t) => (!id || t.id === id) && t.owner === this.options.owner);
-    for (const t of tasks)
-      if (t.status === "queued") this.store.update(t.id, { status: "stopped" });
-    await Promise.all(tasks.map((t) => this.live.get(t.id)?.stop()));
+    // El registro puede fallar; la propiedad de procesos vive en memoria y
+    // siempre permite detener los hijos que este coordinador abrió.
+    const active = id ? [id] : [...this.live.keys()];
+    try {
+      for (const task of this.store.list())
+        if (
+          (!id || task.id === id) &&
+          task.owner === this.options.owner &&
+          task.status === "queued"
+        )
+          this.store.update(task.id, { status: "stopped" });
+    } catch {
+      console.error(
+        "[WARN] :: TEAM_STATE :: record unavailable; stopping owned processes",
+      );
+    }
+    await Promise.all(active.map((key) => this.live.get(key)?.stop()));
     this.changed();
   }
   async setLimit(limit: number) {

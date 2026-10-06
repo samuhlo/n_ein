@@ -3,9 +3,10 @@ import { existsSync } from "node:fs";
 import { execFileSync } from "node:child_process";
 import { resolve, dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
-import { TeamManager } from "./manager.ts";
+import type { ExtensionAPI } from "@earendil-works/pi-coding-agent";
 import { TeamStore, type TaskRecord } from "./store.ts";
-export const teams = new Map<string, TeamManager>();
+export const STOP_TEAM = "n_ein:stop-team";
+export type StopTeamRequest = { origin: string; pending: Promise<void>[] };
 export function storedTeam(cwd: string): TaskRecord[] {
   let store: TeamStore;
   try {
@@ -15,14 +16,16 @@ export function storedTeam(cwd: string): TaskRecord[] {
   }
   return store.list().filter((t) => t.status !== "integrated");
 }
-export async function stopTeam(cwd: string) {
+export async function stopTeam(cwd: string, events?: ExtensionAPI["events"]) {
   let store: TeamStore;
   try {
     store = new TeamStore(cwd);
   } catch {
     return;
   }
-  await teams.get(store.origin)?.shutdown();
+  const request: StopTeamRequest = { origin: store.origin, pending: [] };
+  events?.emit(STOP_TEAM, request);
+  await Promise.all(request.pending);
   const root = resolve(dirname(fileURLToPath(import.meta.url)), "../..");
   const host = existsSync(join(root, "bin/n-ein"))
     ? join(root, "bin/n-ein")

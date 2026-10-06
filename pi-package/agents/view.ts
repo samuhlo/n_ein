@@ -12,7 +12,9 @@ const labels: Record<string, string> = {
   integrated: "integrado",
 };
 const clean = (value: string) =>
-  value.replace(/\x1b\[[0-9;]*[A-Za-z]/g, "").replace(/[\x00-\x1f\x7f]/g, " ");
+  String(value ?? "desconocido")
+    .replace(/\x1b\[[0-9;]*[A-Za-z]/g, "")
+    .replace(/[\x00-\x1f\x7f]/g, " ");
 export function teamLines(
   tasks: (TaskRecord & { activeHere?: boolean })[],
   width = 100,
@@ -42,17 +44,19 @@ export function teamLines(
             1000,
         ),
       );
-      const usage = t.usageKnown
-        ? `${t.tokens} tok · $${t.cost.toFixed(3)}`
-        : "consumo pendiente";
+      const usage =
+        t.usageKnown && Number.isFinite(t.tokens) && Number.isFinite(t.cost)
+          ? `${t.tokens} tok · $${t.cost.toFixed(3)}`
+          : "consumo pendiente";
       const state =
         t.status === "running" && t.activeHere === false
           ? "estado por comprobar"
           : labels[t.status];
       const time =
-        (t.status === "interrupted" ||
+        ((t.status === "interrupted" ||
           (t.status === "running" && t.activeHere === false)) &&
-        !t.ended
+          !t.ended) ||
+        !Number.isFinite(seconds)
           ? "tiempo desconocido"
           : `${seconds}s`;
       const title = `${clean(t.label)} · ${state}`;
@@ -85,4 +89,52 @@ export function taskDetail(t: TaskRecord): string {
   ]
     .filter(Boolean)
     .join("\n\n");
+}
+
+/** La TUI muestra una tarjeta breve; el modelo conserva el resultado estructurado. */
+export function resultLines(
+  content: unknown,
+  expanded = false,
+  width = 100,
+): string[] {
+  let tasks: any[];
+  try {
+    const parsed =
+      typeof content === "string" ? JSON.parse(content) : undefined;
+    tasks = Array.isArray(parsed) ? parsed : [];
+  } catch {
+    tasks = [];
+  }
+  const lines = ["// 005 RESULTADO DEL EQUIPO"];
+  for (const task of tasks) {
+    lines.push(
+      `${clean(task.label)} · ${labels[task.status] ?? "estado desconocido"}`,
+    );
+    if (expanded) {
+      lines.push(`${clean(task.model)} · ${clean(task.branch)}`);
+      for (const line of String(task.result ?? task.error ?? "").split("\n"))
+        lines.push(clean(line));
+      if (task.record) lines.push(`Detalle: ${clean(task.record)}`);
+    } else {
+      const first = String(task.result ?? task.error ?? "")
+        .split("\n")
+        .find((l) => l.trim());
+      if (first) lines.push(clean(first));
+    }
+  }
+  if (!tasks.length)
+    lines.push("Consulta el equipo para recuperar el resultado.");
+  const columns = Math.max(1, width);
+  return lines.flatMap((line) =>
+    expanded
+      ? Array.from(
+          { length: Math.max(1, Math.ceil(line.length / columns)) },
+          (_, i) => line.slice(i * columns, (i + 1) * columns),
+        )
+      : [
+          line.length > columns
+            ? line.slice(0, Math.max(0, columns - 1)) + "…"
+            : line,
+        ],
+  );
 }

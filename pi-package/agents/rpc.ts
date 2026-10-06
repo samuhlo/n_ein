@@ -155,7 +155,9 @@ export function startWorker(options: WorkerOptions) {
     }
     if (event.type === "agent_settled") {
       settled = true;
-      if (!text && !error) error = "worker settled without a report";
+      if (!text && !error)
+        text =
+          "Worker settled without a text report. Inspect the preserved branch and session tool evidence before integration.";
       stopProcess();
     }
     if (

@@ -7,14 +7,15 @@ import type {
   ExtensionContext,
 } from "@earendil-works/pi-coding-agent";
 import { Type } from "typebox";
+import { truncateToWidth } from "@earendil-works/pi-tui";
 import { resolve, dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 import { TeamManager } from "../agents/manager.ts";
 import { type TaskRecord } from "../agents/store.ts";
 import { loadModels } from "../models.ts";
 import { newJobText } from "../router.ts";
-import { teams } from "../agents/runtime.ts";
-import { teamLines, taskDetail } from "../agents/view.ts";
+import { STOP_TEAM, type StopTeamRequest } from "../agents/runtime.ts";
+import { teamLines, taskDetail, resultLines } from "../agents/view.ts";
 
 const root = resolve(dirname(fileURLToPath(import.meta.url)), "../..");
 export function teamReport(tasks: TaskRecord[], detailed = true) {
@@ -55,23 +56,34 @@ export default function (pi: ExtensionAPI) {
     paintTimer = setTimeout(() => {
       paintTimer = undefined;
       try {
+        const rows = team?.list() ?? [];
         ctx?.ui.setWidget(
           "n-ein-team",
-          team?.list().length
+          rows.length
             ? () => ({
-                render: (width: number) => teamLines(team?.list() ?? [], width),
+                render: (width: number) =>
+                  teamLines(rows, width).map((line) =>
+                    truncateToWidth(line, width),
+                  ),
                 invalidate() {},
               })
             : undefined,
           { placement: "aboveEditor" },
         );
-      } catch {}
+      } catch {
+        try {
+          ctx?.ui.setWidget(
+            "n-ein-team",
+            ["// 005 EQUIPO · estado no disponible"],
+            { placement: "aboveEditor" },
+          );
+        } catch {}
+      }
     }, 150);
   };
   const initialize = async (next: ExtensionContext) => {
     suspended = true;
     if (team) await team.shutdown();
-    if (team) teams.delete(team.store.origin);
     ctx = next;
     recoveryNotice = false;
     pendingResults.clear();
@@ -89,6 +101,7 @@ export default function (pi: ExtensionAPI) {
             return;
           const key = `${task.id}:${task.attempt}`;
           if (!background) {
+            if (task.status === "stopped") return;
             pendingResults.set(key, task);
             return;
           }
@@ -108,13 +121,12 @@ export default function (pi: ExtensionAPI) {
                 display: true,
                 details: { key },
               },
-              { deliverAs: "steer", triggerTurn: true },
+              { deliverAs: "steer", triggerTurn: task.status !== "stopped" },
             );
           team!.store.update(task.id, { delivered: true });
         },
       });
       team.recover();
-      teams.set(team.store.origin, team);
       suspended = false;
     } catch (error) {
       if (team)
@@ -125,13 +137,41 @@ export default function (pi: ExtensionAPI) {
       team = undefined;
     }
   };
+  // Pi carga extensiones con moduleCache:false. El bus nativo comparte la
+  // petición y sus promesas; un Map importado por dos extensiones no lo hace.
+  pi.registerMessageRenderer("nein.team.result", (message, options) => ({
+    render(width) {
+      return resultLines(message.content, options.expanded, width).map((line) =>
+        truncateToWidth(line, width),
+      );
+    },
+    invalidate() {},
+  }));
+  pi.events.on(STOP_TEAM, (value) => {
+    const request = value as StopTeamRequest;
+    if (
+      !team ||
+      request.origin !== team.store.origin ||
+      !Array.isArray(request.pending)
+    )
+      return;
+    suspended = true;
+    pendingResults.clear();
+    request.pending.push(team.shutdown());
+  });
   pi.on("session_start", async (_event, next) => {
     await initialize(next);
     if (clock) clearInterval(clock);
-    clock = setInterval(() => {
-      if (team?.list().some((t) => t.status === "running")) repaint();
-    }, 1000);
-    clock.unref();
+    if (next.mode === "tui") {
+      clock = setInterval(() => {
+        try {
+          if (team?.list().some((t) => t.status === "running")) repaint();
+        } catch {
+          repaint();
+        }
+      }, 1000);
+      clock.unref();
+    }
   });
   pi.on("agent_before_settle", async (event, next) => {
     if (!team || background || suspended || team.isClosing || event.continue)
@@ -185,7 +225,6 @@ export default function (pi: ExtensionAPI) {
     if (clock) clearInterval(clock);
     suspended = true;
     await team?.shutdown();
-    if (team) teams.delete(team.store.origin);
   });
   pi.on("session_before_switch", async () => {
     suspended = true;
@@ -205,6 +244,13 @@ export default function (pi: ExtensionAPI) {
   const showTeam = async (next: ExtensionContext) => {
     if (!team || !next.hasUI) return;
     const tasks = team.list();
+    if (!tasks.length) {
+      next.ui.notify(
+        "No hay trabajadores en este proyecto; el agente principal trabaja directamente.",
+        "info",
+      );
+      return;
+    }
     const choices = tasks.map((t) => `${t.label} · ${t.status}`);
     const chosen = await next.ui.select(
       "Equipo · selecciona para ver o detener",
@@ -223,7 +269,7 @@ export default function (pi: ExtensionAPI) {
         ]);
         if (action === "Detener") await team.stop(t.id);
         if (action === "Ver detalle")
-          await next.ui.editor(t.label, taskDetail(t));
+          await next.ui.editor(`${t.label} · consulta`, taskDetail(t));
       }
     }
     repaint();
@@ -290,7 +336,12 @@ export default function (pi: ExtensionAPI) {
                 (x) => Type.Literal(x),
               ),
             ),
-            dependsOn: Type.Optional(Type.Array(Type.String())),
+            dependsOn: Type.Optional(
+              Type.Array(Type.String(), {
+                description:
+                  "Completed assignment UUIDs returned by this tool, not reusable WORK.md labels.",
+              }),
+            ),
           }),
         ),
       ),

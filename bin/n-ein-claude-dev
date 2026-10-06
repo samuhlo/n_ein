@@ -1,6 +1,9 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
+# El relevo vuelve al proyecto del coordinador aunque una herramienta cambie de cwd.
+export N_EIN_COORDINATOR_ROOT="$(git rev-parse --show-toplevel 2>/dev/null || pwd -P)"
+
 repo_dir="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd -P)"
 channel="dev"
 if [[ -f "$repo_dir/.n-ein-channel" ]]; then IFS= read -r channel < "$repo_dir/.n-ein-channel"; fi
