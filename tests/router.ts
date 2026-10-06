@@ -56,15 +56,23 @@ assert.equal(nextState({ reason: "continuation", state: mech, messages: user("x"
 assert.equal(nextState({ reason: "continuation", state: risk, messages: user("x") }, { force: "mecanico" }).clase, "mecanico");
 assert.equal(nextState({ reason: "user", state: risk, messages: user("Cambia el color del botón") }, { newJob: true }).clase, "mecanico", "un nuevo encargo no arrastra el riesgo anterior");
 assert.equal(nextState({ reason: "continuation", state: risk, messages: user("Cambia el color del botón") }, { newJob: true }), risk, "la frontera espera a una petición del usuario");
+assert.equal(nextState({ reason: "user", state: risk, messages: user("Otra cosa: corrige una errata del README") }, {}).clase, "mecanico", "otro encargo en lenguaje normal puede elegir un modelo más barato");
+assert.equal(nextState({ reason: "user", state: risk, messages: user("Otra cosa del mismo encargo: corrige el texto") }, {}), risk, "una corrección del encargo conserva la clase");
+assert.equal(nextState({ reason: "user", state: risk, messages: user("New task: fix a typo in README") }, {}).clase, "mecanico");
+assert.equal(classify("Ayúdame a diseñar esta idea").clase, "abierto");
+const open: RouterState = { clase: "abierto", motivo: "diseño", fuente: "regla" };
+const choice = { clase: "ordinario" as const, transition: "start_implementation" as const, reason: "el alcance está acordado" };
+assert.equal(nextState({ reason: "continuation", state: open, messages: user("Vale, hazlo") }, { choice }).clase, "ordinario", "diseño acordado permite elegir la capacidad para construir");
+assert.equal(nextState({ reason: "continuation", state: risk, messages: user("Continúa") }, { choice }), risk, "aclarar no rebaja un trabajo de riesgo que ya se ejecuta");
 
 // La extensión registra nein/auto, la herramienta de escalado y /nein:modo, y enruta al modelo físico de la clase.
-let virtual: any, tool: any, command: any, newJob: any, sessionStart: any;
+let virtual: any, tool: any, taskTool: any, command: any, newJob: any, sessionStart: any;
 const sent: string[] = [];
 registerRouter({
   on(name: string, handler: unknown) { if (name === "session_start") sessionStart = handler; },
   sendUserMessage(message: string) { sent.push(message); },
   registerVirtualModel(v: unknown) { virtual = v; },
-  registerTool(t: unknown) { tool = t; },
+  registerTool(t: any) { if (t.name === "nein_escalate") tool = t; else if (t.name === "nein_set_task") taskTool = t; },
   registerCommand(name: string, c: unknown) { if (name === "nein:modo") command = c; if (name === "nein:nuevo") newJob = c; },
 } as never);
 assert.equal(`${virtual.provider}/${virtual.id}`, "nein/auto");
@@ -96,5 +104,13 @@ await command.handler("luna", { ui: { notify() {} } });
 sessionStart();
 const resumed = await virtual.route({ reason: "continuation", state: escalated.state, messages: user("x"), thinkingLevel: "medium" }, ctx);
 assert.equal(resumed.model.id, "gpt-6-sol", "una orden pendiente de otra sesión no altera el estado restaurado");
+
+const taskContext = { model: { provider: "nein", id: "auto" }, sessionManager: { getBranch: () => [{ type: "message", message: { role: "user", content: "Vale, hazlo" } }] } };
+assert.equal((await taskTool.execute("t", { ...choice, request: "otra cosa" }, undefined, undefined, taskContext)).isError, true);
+assert.notEqual((await taskTool.execute("t", { ...choice, request: "Vale, hazlo" }, undefined, undefined, taskContext)).isError, true);
+const built = await virtual.route({ reason: "continuation", state: open, messages: user("Vale, hazlo") }, ctx);
+assert.deepEqual([built.model.id, built.thinkingLevel, built.state.clase], ["gpt-6-sol", "medium", "ordinario"]);
+assert.equal((await taskTool.execute("t", { ...choice, request: "Vale, hazlo" }, undefined, undefined, { ...taskContext, model: { provider: "openai", id: "gpt-6-sol" } })).isError, true, "no promete cambiar un modelo manual con un estado virtual inactivo");
+assert.equal((await tool.execute("t", { reason: "risk" }, undefined, undefined, { model: { provider: "openai", id: "gpt-6-sol" } })).isError, true);
 
 console.log("router: clasificación sin riesgo a modelos baratos, encargo pegajoso, escalado y /nein:modo");

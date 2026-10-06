@@ -41,7 +41,7 @@ const IMPLEMENTATION = /\b(implement\w*|anad\w*|crea|creat\w*|constru\w*|desarro
 /** Clasifica la primera petición de un encargo. Sin señal clara, ordinario: ni el más caro ni el más arriesgado. */
 export function classify(text: string): Classification {
   const t = fold(text);
-  if (OPEN.test(t)) return { clase: "abierto", motivo: "propuesta o decisión abierta", fuente: "regla" };
+  if (OPEN.test(t) || /\b(ayudame a (pensar|definir|disenar)|disenemos|pensemos|help me (think|design|define)|let'?s (design|think))\b/.test(t)) return { clase: "abierto", motivo: "propuesta o decisión abierta", fuente: "regla" };
   if (DOCS_ONLY.test(t) && !MIXED_WRITE.test(t)) return { clase: "mecanico", motivo: "solo documentación", fuente: "regla" };
   const risk = RISK.exec(t);
   if (risk) return { clase: "riesgo", motivo: `toca ${risk[0]}`, fuente: "regla" };
@@ -49,6 +49,12 @@ export function classify(text: string): Classification {
   const mech = MECHANICAL.exec(t);
   if (mech) return { clase: "mecanico", motivo: `cambio de ${mech[0]}`, fuente: "regla" };
   return { clase: "ordinario", motivo: "sin señales de riesgo ni de cambio mecánico", fuente: "defecto" };
+}
+
+/** Solo señales explícitas de otro encargo; «otra cosa del mismo encargo» no lo es. */
+export function newJobText(text: string): string | undefined {
+  const match = /^\s*(?:otra cosa|otro encargo|nuevo encargo|nueva tarea|cambiando de tema|new task|new job|unrelated task)\s*[:.\u2014]\s*(\S[\s\S]*)$/i.exec(text);
+  return match?.[1];
 }
 
 // [luna] [sol] [sol high] o el nombre de la clase entre corchetes al principio de la petición.

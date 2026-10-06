@@ -36,15 +36,16 @@ Implementar, probar y hacer commits de este corte. Actualizar la preview local c
 ## Tareas
 
 - [x] F1 · Método conversacional — intent, guía y tareas automáticas, checks proporcionales y cierre breve.
-- [ ] F2 · Modelo por encargo — nuevo objetivo y selección según alcance conocido, con anuncios y atajos existentes.
+- [x] F2 · Modelo por encargo — nuevo objetivo y selección según alcance conocido, con anuncios y atajos existentes.
 - [ ] F3 · Relevo conversacional — Pi y Claude reciben la petición natural y usan el mecanismo existente con cierre ordenado.
 - [ ] F4 · Evaluación y preview — seis recorridos reales, evidencia y paquete actualizado reversible.
 
 ## Evidencia
 
+- F2: rojo observado en «Otra cosa» y paso de diseño a implementación; tests del modelo virtual comprueban conservación de riesgo, cita real del usuario y respeto de selección manual. `./scripts/check.sh` correcto.
 - F1: `tests/skills.ts` valida las instrucciones entregadas y el catálogo; la efectividad conversacional se comprobará en F4 con modelos.
 - Base limpia: 7e18da8. El trabajo anterior y sus decisiones se conservan en Git, docs/01-decisiones.md y evals/results/2026-10-06-fiabilidad.md.
 
 ## Siguiente paso
 
-F2: elección del modelo según el encargo y su alcance aclarado.
+F3: relevo pedido en lenguaje natural, cerrado en el límite seguro del runtime.

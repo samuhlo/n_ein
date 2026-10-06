@@ -11,13 +11,14 @@ import { fileURLToPath } from "node:url";
 import type { ExtensionAPI, ExtensionContext, ModelRouteRequest } from "@earendil-works/pi-coding-agent";
 import { Type } from "typebox";
 import { loadModels } from "../models.ts";
-import { CLASSES, classify, loadRouting, parseOverride, type Classification, type JobClass, type Route, type RoutingTable } from "../router.ts";
+import { CLASSES, classify, loadRouting, newJobText, parseOverride, type Classification, type JobClass, type Route, type RoutingTable } from "../router.ts";
 
 const packageRoot = resolve(dirname(fileURLToPath(import.meta.url)), "../..");
 const RANK: Record<JobClass, number> = { mecanico: 0, ordinario: 1, riesgo: 2, abierto: 2 };
 
 export type RouterState = Classification;
-type PendingRoute = { escalate?: string; force?: JobClass; newJob?: boolean };
+type TaskChoice = { clase: JobClass; transition: "new_job" | "start_implementation" | "reassess" | "user_choice"; reason: string };
+type PendingRoute = { escalate?: string; force?: JobClass; newJob?: boolean; choice?: TaskChoice };
 type Message = ModelRouteRequest["messages"][number];
 
 function lastUserText(messages: readonly Message[]): string {
@@ -28,14 +29,21 @@ function lastUserText(messages: readonly Message[]): string {
 
 /** Decide la clase del encargo para esta petición. Pura: la extensión y los tests la comparten. */
 export function nextState(request: Pick<ModelRouteRequest<RouterState>, "reason" | "state" | "messages">, pending: PendingRoute): RouterState {
-  const current = request.reason === "user" && pending.newJob ? undefined : request.state;
+  const text = lastUserText(request.messages);
+  const fresh = request.reason === "user" ? newJobText(text) : undefined;
+  const current = request.reason === "user" && (pending.newJob || fresh) ? undefined : request.state;
   if (pending.force) return { clase: pending.force, motivo: "elegido con /nein:modo", fuente: "usuario" };
   if (pending.escalate) return { clase: "riesgo", motivo: `escalado: ${pending.escalate}`, fuente: "regla" };
+  if (pending.choice) {
+    const { clase, transition, reason } = pending.choice;
+    const mayLower = transition === "new_job" || transition === "user_choice" || (transition === "start_implementation" && current?.clase === "abierto");
+    if (current && !mayLower && RANK[clase] < RANK[current.clase]) return current;
+    return { clase, motivo: `${transition}: ${reason}`, fuente: transition === "user_choice" ? "usuario" : "regla" };
+  }
   if (request.reason !== "user" && current) return current;
-  const text = lastUserText(request.messages);
-  const override = parseOverride(text);
+  const override = parseOverride(fresh ?? text);
   if (override.clase) return { clase: override.clase, motivo: "pedido en el mensaje", fuente: "usuario" };
-  const found = classify(text);
+  const found = classify(fresh ?? text);
   if (!current) return found;
   // Una petición nueva en el mismo encargo solo puede subir de clase.
   return RANK[found.clase] > RANK[current.clase] ? found : current;
@@ -56,7 +64,7 @@ function effectiveRouting(): RoutingTable {
 export default function (pi: ExtensionAPI, table: RoutingTable = effectiveRouting()) {
   // Pi corre una sesión por proceso: lo pendiente vale para la próxima petición de esta sesión.
   const pending: PendingRoute = {};
-  pi.on("session_start", () => { delete pending.escalate; delete pending.force; delete pending.newJob; });
+  pi.on("session_start", () => { delete pending.escalate; delete pending.force; delete pending.newJob; delete pending.choice; });
 
   pi.registerVirtualModel<RouterState>({
     provider: "nein",
@@ -69,20 +77,45 @@ export default function (pi: ExtensionAPI, table: RoutingTable = effectiveRoutin
       // Resúmenes de compactación y llamadas fuera del bucle: el modelo barato basta.
       if (request.reason === "direct") return { model: physical(ctx, table.mecanico), thinkingLevel: table.mecanico.thinking as never };
       const state = nextState(request, pending);
-      delete pending.escalate; delete pending.force;
+      delete pending.escalate; delete pending.force; delete pending.choice;
       if (request.reason === "user") delete pending.newJob;
       const route = table[state.clase];
       const changed = !request.state || request.state.clase !== state.clase || request.state.motivo !== state.motivo;
+      if (changed && ctx.hasUI) ctx.ui.notify(`${state.clase} → ${route.model} (${route.thinking}) · ${state.motivo}`, "info");
       return { model: physical(ctx, route), thinkingLevel: route.thinking as never, state: changed ? state : undefined };
+    },
+  });
+
+  pi.registerTool({
+    name: "nein_set_task",
+    label: "Elegir modelo del encargo",
+    description: "Choose the model class from the understood task, without asking the user for a command. With nein/auto, call once for an explicit new job, after an agreed design is authorized for implementation, when exploration changes the assessed risk, or when the user explicitly asks for another model. Quote the relevant words from the latest user message. Mechanical means text/style with no new logic; ordinary means bounded behaviour; risk means stored data, permissions, existing contracts or deployment; open means unresolved design. Reassessing ongoing work can only raise its class. A model choice never grants permission to implement or discards pending work.",
+    parameters: Type.Object({
+      clase: Type.Union(CLASSES.map((value) => Type.Literal(value))),
+      transition: Type.Union(["new_job", "start_implementation", "reassess", "user_choice"].map((value) => Type.Literal(value))),
+      request: Type.String({ description: "Exact relevant words from the latest user message" }),
+      reason: Type.String({ description: "Why this capability fits the known scope" }),
+    }),
+    async execute(_id, params, _signal, _update, ctx) {
+      if (ctx.model?.provider !== "nein" || ctx.model?.id !== "auto") return { isError: true, content: [{ type: "text", text: "The session uses a manually selected model. Keep that explicit selection; automatic task routing is not active." }], details: undefined };
+      const branch = ctx.sessionManager.getBranch();
+      const last = branch.findLast((entry) => entry.type === "message" && entry.message.role === "user");
+      const message = last?.type === "message" ? last.message : undefined;
+      const text = message ? lastUserText([message] as Message[]) : "";
+      const normalize = (value: string) => value.trim().replace(/\s+/g, " ").toLowerCase();
+      if (!normalize(params.request) || !normalize(text).includes(normalize(params.request))) return { isError: true, content: [{ type: "text", text: "The quoted request is not in the latest user message. Keep the current task and inspect that message before choosing a transition." }], details: undefined };
+      pending.choice = { clase: params.clase, transition: params.transition, reason: params.reason.slice(0, 240) };
+      return { content: [{ type: "text", text: `Task assessment recorded: ${params.clase} — ${pending.choice.reason}. It applies on the next request; an ongoing task can only move up unless the user explicitly changes the model. Keep its scope and pending work.` }], details: undefined };
     },
   });
 
   pi.registerTool({
     name: "nein_escalate",
     label: "Escalar el encargo",
-    description: "Pass the rest of this job to the high-risk model. Call it once, before the first write, when looking shows the change needs migrations or schema changes, changes or deletes data that already exists, touches users, permissions or authentication, changes a contract others consume, or touches concurrency or delivery. Saving the records a feature is meant to save, or adding an optional field, is not high risk. Harmless if the job already runs on that model.",
+    description: "Pass the rest of this job to the high-risk model. Call before writing further when exploration reveals migrations, changes to existing stored data, users, permissions, authentication, existing contracts, concurrency or delivery. Also use it when two corrective attempts brought no new evidence and model capability is the limit; expected red TDD tests do not count. Saving new records or adding an optional field alone is not high risk. Harmless if already on that model.",
     parameters: Type.Object({ reason: Type.String({ description: "What makes this change high risk, in a few words" }) }),
-    async execute(_toolCallId, params) {
+    async execute(_toolCallId, params, _signal, _update, ctx) {
+      if (ctx && (ctx.model?.provider !== "nein" || ctx.model?.id !== "auto")) return { isError: true, content: [{ type: "text", text: "Automatic task routing is not active; the session has a manually selected model. Keep that explicit choice." }], details: undefined };
       pending.escalate = String(params.reason).slice(0, 200);
       const route = table.riesgo;
       return { content: [{ type: "text", text: `El encargo sigue en ${route.model} (${route.thinking}) desde la próxima petición: ${pending.escalate}` }], details: undefined };
@@ -103,7 +136,7 @@ export default function (pi: ExtensionAPI, table: RoutingTable = effectiveRoutin
     description: "Comienza otro encargo y elige de nuevo su modelo: /nein:nuevo [petición]",
     handler: async (args, ctx) => {
       await ctx.waitForIdle();
-      delete pending.escalate; delete pending.force;
+      delete pending.escalate; delete pending.force; delete pending.choice;
       pending.newJob = true;
       const text = String(args ?? "").trim();
       if (text) pi.sendUserMessage(text);
