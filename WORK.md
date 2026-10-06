@@ -49,6 +49,9 @@ P0–P4 son el siguiente corte de implementación, no trabajo ya ejecutado. Si e
 
 ## Evidencia
 
+- `./scripts/check.sh` pasó en `0806ef5` (código previo al ajuste de modelo en resume): incluye pruebas Go/vet, paquete instalado, RPC, Pi real con proveedor determinista, Git, recuperación, vista y relevo. Se corrigió un empaquetado que omitía `pi-package/agents/`.
+- P2 autónomo completo: seis ejecuciones aceptadas; S6 4/4, S2 14/14, S3 3/3 y dos mutantes detectados, sin fallos de suite/tipos. Cero hijos en todas. No atribuir las diferencias observadas al paralelismo. El ensayo dirigido conserva el mismo encargo, declara su instrucción de reparto y registra su fuente aparte.
+
 - P3 en desarrollo: menú local y vista sin llamadas al modelo, resultados acotados con ruta al registro, parada antes del relevo y snapshots de todos los frentes. Tests rojos/verdes de quietud definitiva, vista desde comando y bloqueo del relevo con un escritor vivo. Falta el recorrido con modelos y paquete instalado.
 - P2 inicial: S6 candidato 4/4 y S2 candidato 14/14, suites y tipos correctos; ambos eligieron ejecución directa. S3 y comparación completa en marcha sobre productos congelados (`parallel-*-r1`, candidato `edb6968`, control `b619eaa`). Ninguno de estos dos casos demuestra todavía beneficio del paralelismo.
 
@@ -63,7 +66,7 @@ P0–P4 son el siguiente corte de implementación, no trabajo ya ejecutado. Si e
 
 ## Siguiente paso
 
-P1 comprobado con procesos controlados y Git real. Continuar P2 con modelos reales; la preview instalada permanece intacta.
+El piloto autónomo de seis ejecuciones pasa aceptación, suites y tipos, pero no lanzó trabajadores. Ensayo dirigido `parallel-s3-directed-r1` en marcha con dos trabajadores reales; completar comparación antes de activar preview. P3 y empaquetado implementados, pendientes de cierre con modelos y artefacto instalado.
 
 ## Corte anterior cerrado
 

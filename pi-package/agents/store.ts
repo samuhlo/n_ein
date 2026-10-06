@@ -130,6 +130,8 @@ export class TeamStore {
     change: Partial<
       Pick<
         TaskRecord,
+        | "model"
+        | "thinking"
         | "status"
         | "owner"
         | "attempt"

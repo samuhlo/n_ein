@@ -217,7 +217,7 @@ export default function (pi: ExtensionAPI) {
     name: "nein_team",
     label: "Equipo",
     description:
-      "Manage general-purpose Pi workers for an AUTHORIZED implementation. Delegate only substantial independent tasks with a committed common base and WORK.md. At most two workers run, each in a separate worktree. Prefer direct work for small/dependent tasks. Start takes taskId, label, full bounded assignment with acceptance and relevant context, and class. Results are ready for coordinator review and integration, NOT overall acceptance. status recovers results; resume preserves partial work; integrate merges only an owned clean ready branch into the work branch. stop preserves changes. limit=0 means work alone. No recursive workers, remote delivery or new authorization. In interactive sessions results arrive automatically; do not poll.",
+      "Manage general-purpose Pi workers for an AUTHORIZED implementation. Delegate only substantial independent tasks with a committed common base and WORK.md. At most two workers run, each in a separate worktree. Prefer direct work for small/dependent tasks. Start takes taskId, label, full bounded assignment with acceptance and relevant context, and class. Results are ready for coordinator review and integration, NOT overall acceptance. status recovers results; resume preserves partial work and its model; supply class only for a deliberate capability change; integrate merges only an owned clean ready branch into the work branch. stop preserves changes. limit=0 means work alone. No recursive workers, remote delivery or new authorization. In interactive sessions results arrive automatically; do not poll.",
     parameters: Type.Object({
       action: Type.Union(
         [
@@ -234,16 +234,23 @@ export default function (pi: ExtensionAPI) {
       tasks: Type.Optional(
         Type.Array(
           Type.Object({
-            taskId: Type.String(),
-            label: Type.String(),
-            prompt: Type.String(),
+            taskId: Type.String({ minLength: 1, maxLength: 120 }),
+            label: Type.String({ minLength: 1, maxLength: 120 }),
+            prompt: Type.String({ minLength: 1 }),
             class: Type.Union(
-              ["mecanico", "ordinario", "riesgo", "abierto"].map((x) =>
-                Type.Literal(x),
+              (["mecanico", "ordinario", "riesgo", "abierto"] as const).map(
+                (x) => Type.Literal(x),
               ),
             ),
             dependsOn: Type.Optional(Type.Array(Type.String())),
           }),
+        ),
+      ),
+      class: Type.Optional(
+        Type.Union(
+          (["mecanico", "ordinario", "riesgo", "abierto"] as const).map((x) =>
+            Type.Literal(x),
+          ),
         ),
       ),
       id: Type.Optional(Type.String()),
@@ -278,16 +285,18 @@ export default function (pi: ExtensionAPI) {
             signal?.removeEventListener("abort", stop);
           }
         };
+        const chooseModel = (
+          clase: "mecanico" | "ordinario" | "riesgo" | "abierto",
+        ) =>
+          next.model && next.model.provider !== "nein"
+            ? {
+                model: `${next.model.provider}/${next.model.id}`,
+                thinking: next.thinkingLevel ?? "medium",
+              }
+            : loadModels(root).routing[clase];
         if (params.action === "start") {
-          const config = loadModels(root);
           const tasks = (params.tasks ?? []).map((t) => {
-            const chosen =
-              next.model && next.model.provider !== "nein"
-                ? {
-                    model: `${next.model.provider}/${next.model.id}`,
-                    thinking: next.thinkingLevel ?? "medium",
-                  }
-                : config.routing[t.class];
+            const chosen = chooseModel(t.class);
             return {
               taskId: t.taskId,
               label: t.label,
@@ -315,6 +324,7 @@ export default function (pi: ExtensionAPI) {
             team.resume(
               params.id,
               params.message || "Continue the preserved assignment.",
+              params.class ? chooseModel(params.class) : undefined,
             );
             await waitForWorkers();
           }
@@ -336,9 +346,21 @@ export default function (pi: ExtensionAPI) {
           details: undefined,
         };
       } catch (e) {
+        let assignments: ReturnType<typeof teamReport> = [];
+        try {
+          assignments = teamReport(
+            team?.list().filter((t) => t.status !== "integrated") ?? [],
+            false,
+          );
+        } catch {}
         return {
           isError: true,
-          content: [{ type: "text", text: String(e) }],
+          content: [
+            {
+              type: "text",
+              text: JSON.stringify({ error: String(e), assignments }),
+            },
+          ],
           details: undefined,
         };
       }

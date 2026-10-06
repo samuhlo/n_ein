@@ -98,3 +98,8 @@ assert.throws(
   "uncommitted partial work cannot be silently dropped",
 );
 console.log("interrupted assignment and continuation: OK");
+assert.equal(restored.store.get(pending.id).model,'test/model','resume preserves its physical model');
+writeFileSync(fake,readFileSync(fake,'utf8').replace("writeFileSync(name+'.txt',name)","writeFileSync(name+'.txt',name+' again')"));
+restored.resume(pending.id,'Continue with higher capability',{model:'test/strong',thinking:'high'});await restored.wait();
+assert.equal(restored.store.get(pending.id).model,'test/strong');assert.equal(restored.store.get(pending.id).thinking,'high');assert.equal(restored.store.get(pending.id).tokens,14);
+console.log('explicit capability change preserves accumulated usage: OK');

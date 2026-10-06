@@ -130,7 +130,11 @@ export class TeamManager {
     }
     return created;
   }
-  resume(id: string, instruction: string) {
+  resume(
+    id: string,
+    instruction: string,
+    model?: { model: string; thinking: string },
+  ) {
     if (this.closing || this.limit === 0)
       throw new Error("Workers are disabled.");
     const t = this.store.get(id);
@@ -143,6 +147,7 @@ export class TeamManager {
     this.activity.set(id, instruction);
     this.store.update(id, {
       status: "queued",
+      ...(model ?? {}),
       owner: this.options.owner,
       error: undefined,
       delivered: false,
