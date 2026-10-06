@@ -100,13 +100,16 @@ while (!existsSync(orphanTicks)) {
   await new Promise((r) => setTimeout(r, 30));
 }
 process.kill(orphan.pid!, "SIGKILL");
+let rescued=false;
 const watchdog = setTimeout(() => {
+  rescued=true;
   try {
     process.kill(Number(readFileSync(orphanPid, "utf8")), "SIGKILL");
   } catch {}
 }, 4000);
 const orphanResult = await orphan.done;
 clearTimeout(watchdog);
+assert.equal(rescued,false,"Pi must close on EOF without the test watchdog killing it");
 assert.equal(orphanResult.status, "failed");
 const orphanBefore = readFileSync(orphanTicks, "utf8");
 await new Promise((r) => setTimeout(r, 120));

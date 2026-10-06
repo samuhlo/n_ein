@@ -27,15 +27,15 @@ export function ownedShell(host: string): BashOperations {
         let stopped = false;
         const stop = () => {
           stopped = true;
-          child.stdin.end();
+          child.stdin?.end();
         };
         const timer = options.timeout
           ? setTimeout(stop, options.timeout * 1000)
           : undefined;
         options.signal?.addEventListener("abort", stop, { once: true });
-        child.stdout.on("data", options.onData);
-        child.stderr.on("data", options.onData);
-        child.stdin.on("error", () => {});
+        child.stdout?.on("data", options.onData);
+        child.stderr?.on("data", options.onData);
+        child.stdin?.on("error", () => {});
         child.once("error", reject);
         child.once("close", (code) => {
           if (timer) clearTimeout(timer);

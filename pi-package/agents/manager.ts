@@ -175,7 +175,7 @@ export class TeamManager {
     this.store.validateTree(t);
     if (!this.free(t.cwd)) throw new Error("Worktree is already owned.");
     const { root } = this.options;
-    const env = {
+    const env: NodeJS.ProcessEnv = {
       ...process.env,
       ...this.options.env,
       N_EIN_WORKER_HOST: this.host,

@@ -35,11 +35,25 @@ export default function (pi: ExtensionAPI) {
         arguments: args,
       });
       if (process.env.N_EIN_CHILD === "1") {
-        const file = `child-${basename(process.cwd())}.txt`;
+        const continuity = process.env.N_EIN_TEST_CONTINUITY === "1";
+        const partial =
+          continuity &&
+          JSON.stringify(collapseSystemMessages(context).messages).includes(
+            "assignment T2:",
+          );
+        const file = continuity
+          ? partial
+            ? "partial.txt"
+            : "first.txt"
+          : `child-${basename(process.cwd())}.txt`;
         if (n === 1)
           content = [
             tool("bash", {
-              command: `sleep 0.8; printf done > '${file}'; git add '${file}'; git commit -qm worker`,
+              command: continuity
+                ? partial
+                  ? `printf 'partial-${process.env.N_EIN_TEST_MARKER}' > partial.txt; sleep 30`
+                  : `printf 'first-${process.env.N_EIN_TEST_MARKER}' > first.txt; git add first.txt; git commit -qm worker`
+                : `sleep 0.8; printf done > '${file}'; git add '${file}'; git commit -qm worker`,
             }),
           ];
         else {

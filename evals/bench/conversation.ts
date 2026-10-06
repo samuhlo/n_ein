@@ -11,16 +11,20 @@ import { randomUUID, createHash } from "node:crypto";
 import { cpSync, existsSync, mkdirSync, readFileSync, readdirSync, rmSync, writeFileSync } from "node:fs";
 import { homedir } from "node:os";
 import { join, resolve } from "node:path";
+import { TeamManager } from "../../pi-package/agents/manager.ts";
+import type { TaskRecord } from "../../pi-package/agents/store.ts";
 
-const repo = resolve(import.meta.dir, "../..");
-const scenario = process.argv[2];
+const repo = process.env.N_EIN_PRODUCT_ROOT || resolve(import.meta.dir, "../..");
+const sourceRepo = resolve(import.meta.dir, "../..");
+const withTeam = process.argv[2] === "handoff-team";
+const scenario = withTeam ? "handoff" : process.argv[2];
 assert.ok(["basic", "design", "handoff"].includes(scenario!), "elige basic, design o handoff");
 const id = process.argv[3] || `flow-${scenario}-${Date.now()}`;
 const bench = process.env.N_EIN_BENCH || resolve(repo, "../n_ein-bench");
 const root = join(bench, "conversation", id), project = join(root, "project"), logs = join(root, "logs");
 assert.ok(!existsSync(root), "el ensayo ya existe; usa otro identificador");
 mkdirSync(logs, { recursive: true });
-cpSync(join(repo, "evals/fixtures/continuity"), project, { recursive: true });
+cpSync(join(sourceRepo, "evals/fixtures/continuity"), project, { recursive: true });
 rmSync(join(project, "WORK.md"));
 writeFileSync(join(project, ".gitignore"), ".codegraph/\n");
 writeFileSync(join(project, "README.md"), "# Port lab\n\nA CLI port formatter.\n\nThe counnt is shown in the terminal.\n");
@@ -35,6 +39,28 @@ if (scenario === "handoff") {
 const git = (...args: string[]) => execFileSync("git", args, { cwd: project, encoding: "utf8" }).trim();
 git("init", "-b", "main"); git("config", "user.name", "n_ein evaluation"); git("config", "user.email", "eval@n-ein.invalid"); git("add", "."); git("commit", "-qm", "test: conversation base");
 const base = git("rev-parse", "HEAD");
+const marker=randomUUID();let seeded:TaskRecord[]=[];
+if(withTeam){
+  git("switch","-qc","feature/team-continuity");
+  process.env.N_EIN_WORKTREE_ROOT=join(root,"workspaces");
+  const realPi=join(homedir(),".n_ein/runtimes/pi/1.0.2/bin/pi"),wrapper=join(root,"seed-pi");
+  const quote=(value:string)=>"'"+value.replace(/'/g,"'\\''")+"'";
+  writeFileSync(wrapper,`#!/bin/sh\nexec ${quote(realPi)} "$@" -e ${quote(join(sourceRepo,"tests/fixtures/team-provider.ts"))}\n`,{mode:0o755});
+  let ready!:()=>void;const firstReady=new Promise<void>(r=>ready=r);
+  const manager=new TeamManager({root:repo,cwd:project,owner:"seed",env:{N_EIN_PI_BIN:wrapper,PI_CODING_AGENT_DIR:join(root,"seed-home"),N_EIN_TEST_CONTINUITY:"1",N_EIN_TEST_MARKER:marker},onResult:t=>{if(t.taskId==="T1"&&t.status==="ready")ready();}});
+  seeded=manager.start(["T1","T2"].map(taskId=>({taskId,label:taskId,prompt:"Prepare your marker fixture.",model:"nein-test/team",thinking:"off"})));
+  let deadline: ReturnType<typeof setTimeout>;
+  try { await Promise.race([firstReady,new Promise((_,reject)=>{deadline=setTimeout(()=>{void manager.shutdown();reject(new Error("Fixture worker did not finish"));},15000);})]); } finally { clearTimeout(deadline!); }
+  const partialDeadline=Date.now()+3000;
+  while(!existsSync(join(seeded[1]!.cwd,"partial.txt")) && Date.now()<partialDeadline)await new Promise(r=>setTimeout(r,20));
+  await manager.stop(seeded[1]!.id);await manager.shutdown();
+  assert.equal(manager.store.get(seeded[0]!.id).status,"ready");assert.equal(manager.store.get(seeded[1]!.id).status,"stopped");
+  assert.ok(existsSync(join(seeded[1]!.cwd,"partial.txt")));
+  writeFileSync(join(project,"WORK.md"),"## Goal\nInspect two preserved fronts and report their exact contents.\n\n## Authorization\nRead only. Do not edit, integrate or restart workers.\n\n## Tasks\n- [ ] T1 Inspect committed first.txt in its worker branch.\n- [ ] T2 Inspect uncommitted partial.txt in its stopped worktree.\n\n## Next step\nReview in Claude, then return to Pi with both literal values and the pending integration.\n");
+  git("add","WORK.md");git("commit","-qm","test: prepare read-only team handoff");
+}
+
+if(withTeam && process.env.N_EIN_FIXTURE_ONLY === "1"){console.log(JSON.stringify({fixture:project,tasks:seeded.map(t=>t.id)}));process.exit(0);}
 const models = { schema: 1, agents: { principal: { model: "nein/auto", thinking: "medium" }, mecanico: { model: "openai/gpt-6-luna", thinking: "high" }, ordinario: { model: "openai/gpt-6-sol", thinking: "medium" }, riesgo: { model: "openai/gpt-6-sol", thinking: "high" }, abierto: { model: "openai/gpt-6-sol", thinking: "high" } }, claude: { effort: "medium" } };
 writeFileSync(join(root, "models.json"), JSON.stringify(models));
 writeFileSync(join(root, "lang.json"), JSON.stringify({ chat: "es", artifacts: "en" }));
@@ -109,13 +135,14 @@ if (scenario === "basic") {
   await check("resume");
 } else {
   const before = fingerprint();
+  const workerBefore=seeded.map(t=>fingerprint(t.cwd));
   const quote = (s: string) => `'${s.replace(/'/g, "'\\''")}'`;
   const realPi = join(homedir(), ".n_ein/runtimes/pi", JSON.parse(readFileSync(join(repo, "runtime.json"), "utf8")).pi.version, "bin/pi");
   const realClaude = execFileSync("which", ["claude"], { encoding: "utf8" }).trim();
   const piWrapper = join(root, "pi-print"), claudeWrapper = join(root, "claude-print");
   writeFileSync(piWrapper, `#!/bin/bash\nif [[ "$1" == --version ]]; then exec ${quote(realPi)} --version; fi\nexec ${quote(realPi)} --print --mode json --session-dir ${quote(join(logs, "sessions"))} "$@" >> ${quote(join(logs, "pi-events.jsonl"))}\n`, { mode: 0o755 });
   writeFileSync(claudeWrapper, `#!/bin/bash\nexec ${quote(realClaude)} --print --output-format stream-json --verbose --permission-mode acceptEdits --allowedTools Read,Edit,Write,Bash,Grep,Glob,Skill "$@" >> ${quote(join(logs, "claude-events.jsonl"))}\n`, { mode: 0o755 });
-  await execute("roundtrip", join(repo, "bin/n-ein-dev"), ["Pásame a Claude. Allí quiero comprobar de solo lectura si el contrato del puerto 0 se conserva y cuál es su razón. Cuando termine esa revisión, sigamos con Pi para recibir el resultado. No cambies archivos del proyecto."], { N_EIN_PI_BIN: piWrapper, N_EIN_CLAUDE_BIN: claudeWrapper });
+  await execute("roundtrip", join(repo, "bin/n-ein-dev"), [withTeam ? "Pásame a Claude para revisar de solo lectura los dos frentes conservados: T1 tiene first.txt confirmado en su rama y T2 tiene partial.txt sin commit en su árbol detenido. Comprueba y conserva literalmente el contenido de ambos archivos, sus rutas y qué falta integrar. Después sigamos con Pi para que me devuelva esos dos valores exactos. No edites, no integres y no reinicies trabajadores." : "Pásame a Claude. Allí quiero comprobar de solo lectura si el contrato del puerto 0 se conserva y cuál es su razón. Cuando termine esa revisión, sigamos con Pi para recibir el resultado. No cambies archivos del proyecto."], { N_EIN_PI_BIN: piWrapper, N_EIN_CLAUDE_BIN: claudeWrapper });
   const p = summarize(join(logs, "pi-events.jsonl"));
   assert.equal(p.tools.filter((t: any) => t.name === "nein_handoff").length, 1, "un solo cambio a Claude, sin bucle de relevo");
   const c = events(join(logs, "claude-events.jsonl"));
@@ -123,7 +150,9 @@ if (scenario === "basic") {
   assert.ok(c.some((e) => e.type === "assistant" && e.message?.content?.some((t: any) => t.type === "tool_use" && t.name === "Bash" && t.input?.command?.includes("n-ein-prepare-pi"))), "Claude preparó el regreso por petición natural");
   assert.ok(events(join(logs, "pi-events.jsonl")).filter((e) => e.type === "session").length >= 2, "Pi volvió a abrirse");
   assert.equal(fingerprint(), before, "el relevo de lectura no cambia el proyecto");
+  for(let i=0;i<seeded.length;i++)assert.equal(fingerprint(seeded[i]!.cwd),workerBefore[i],"the handoff preserves every worker tree");
+  if(withTeam){assert.ok(p.text.includes(`first-${marker}`),"Pi recovered the committed worker value");assert.ok(p.text.includes(`partial-${marker}`),"Pi recovered the uncommitted worker value");}
   steps.push({ name: "pi-roundtrip-metrics", ...p });
 }
-writeFileSync(join(logs, "result.json"), JSON.stringify({ id, scenario, base, sourceCommit: execFileSync("git", ["rev-parse", "HEAD"], { cwd: repo, encoding: "utf8" }).trim(), accepted: true, steps, finalHead: git("rev-parse", "HEAD") }, null, 2));
+writeFileSync(join(logs, "result.json"), JSON.stringify({ id, scenario, withTeam, base, sourceCommit: execFileSync("git", ["rev-parse", "HEAD"], { cwd: sourceRepo, encoding: "utf8" }).trim(), accepted: true, steps, finalHead: git("rev-parse", "HEAD") }, null, 2));
 console.log(`accepted: ${join(logs, "result.json")}`);
