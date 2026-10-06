@@ -735,5 +735,100 @@
     "resumeUsd": 0.5327,
     "totalUsd": 1.1518
   },
-  "continuityStatus": "Pi T1 complete; Claude session quota; resume after indicated reset"
+  "continuityStatus": "complete: three deliveries, four independent tests, later ADR recovery without old WORK.md",
+  "continuity": {
+    "stages": [
+      {
+        "stage": "pi-first",
+        "exit": 0,
+        "wall_s": 182
+      },
+      {
+        "stage": "claude-and-return",
+        "exit": 1,
+        "wall_s": 4
+      },
+      {
+        "stage": "claude-and-return-attempt-2",
+        "exit": 0,
+        "wall_s": 54
+      },
+      {
+        "stage": "claude-to-pi",
+        "exit": 1,
+        "wall_s": 1
+      },
+      {
+        "stage": "claude-to-pi-attempt-2",
+        "exit": 0,
+        "wall_s": 235
+      },
+      {
+        "stage": "hidden",
+        "exit": 0,
+        "wall_s": 0
+      },
+      {
+        "stage": "suite",
+        "exit": 0,
+        "wall_s": 0
+      },
+      {
+        "stage": "types",
+        "exit": 0,
+        "wall_s": 0
+      },
+      {
+        "stage": "later-job",
+        "exit": 0,
+        "wall_s": 91
+      }
+    ],
+    "commits": "2987aff test: start another job after completing the first\n927b8c1 feat: label port configuration and document zero allocation\n983fa78 feat: format port zero as automatic allocation\n4637eba feat: validate configured ports including zero\n89215c7 test: continuity base",
+    "hidden": {
+      "passed": 4,
+      "total": 4,
+      "assertions": 20
+    },
+    "ownSuite": {
+      "passed": 10,
+      "failed": 0
+    },
+    "typecheck": true,
+    "laterJob": {
+      "decisionSource": "docs/adr/0001-port-zero-means-automatic-allocation.md",
+      "readPreviousWork": false,
+      "filesUnchangedExceptCodegraphIndex": true
+    },
+    "piModels": [
+      "gpt-6-sol"
+    ],
+    "piCatalogUsd": 0.369606,
+    "claudeCatalogUsd": 0.580223,
+    "claudeAccounting": "maximum accumulated cost per session, not sum of resumed totals",
+    "limitations": "Non-interactive runtimes; the Pi command handler generates its summary after the first process exits. External writers are not supervised.",
+    "driverSha256": "e60065415b9106f8f831146f26609597ecc33526df93b469f72cffd4b7e5abfe",
+    "resultSha256": "da0e2c916807b1adbe0739b15b96fce97ff02c95b69cdfec5cc14e8294322b4c"
+  },
+  "preview": {
+    "version": "0.1.0-preview.2+hotfix.8f94b1cb2d82",
+    "commit": "8f94b1cb2d8204795bef16caa1f34c4be13e2804",
+    "archiveSha256": "2e68f0fa5440cfe94e08e8f5a8bafd3ec56bbfdeccbc5c97ca98f83e922084b7",
+    "packageFiles": 61,
+    "doctorRuntime": true,
+    "pi": "1.0.2",
+    "codegraph": "1.6.1",
+    "bankSmoke": true,
+    "personalSmoke": {
+      "provider": "openai",
+      "luna": "PREVIEW_OK",
+      "sol": "TOOLS_OK via read",
+      "credentialSource": "same preview home, native ChatGPT subscription login",
+      "settings": "four explicit per-class overrides, models and efforts preserved",
+      "legacyDefault": "openai-codex, different OAuth flow; no silent fallback"
+    },
+    "modelsBackup": "/Users/samu/.n_ein/preview/hotfixes/models-before-8f94b1cb2d82.json",
+    "modelSelection": "package default, nein/auto",
+    "preferences": "/Users/samu/.n_ein/preferences.md"
+  }
 }

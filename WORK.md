@@ -40,18 +40,20 @@ Implementar y comprobar los arreglos de la auditoría en n_ein, hacer commits y 
 - [x] T3 · Relevo portable — títulos ingleses y españoles, criterios completos y cierre ordenado del origen.
 - [x] T4 · Alcance y memoria — contrato por petición, conocimiento duradero selectivo y preferencias compartidas por Pi y Claude.
 - [x] T5a · Banco revisable — aceptación completa, mutantes y coste de las ejecuciones incompletas visibles; runner y reanudación reproducibles.
-- [ ] T5b · Relevo real — tres entregas en Pi→Claude→Pi y recuperación en otro encargo sin WORK.md anterior.
+- [x] T5b · Relevo real — tres entregas en Pi→Claude→Pi y recuperación en otro encargo sin WORK.md anterior.
 - [x] T5 · Evaluación — aceptación y mutantes visibles, coste hasta aceptación, ensayo de alcance y continuidad con modelos.
-- [ ] T6 · Preview — candidato comprobado, actualización local reversible y diagnóstico de la instalación efectiva.
+- [x] T6 · Preview — candidato comprobado, actualización local reversible y diagnóstico de la instalación efectiva.
 
 ## Evidencia
 
 - Base: `2e09886`; auditoría con `./scripts/check.sh` correcto y regresiones reproducidas.
+- T6: candidato 0.1.0-preview.2+hotfix.8f94b1cb2d82 instalado con backup, doctor 61 archivos/Pi 1.0.2/CodeGraph 1.6.1 y pruebas de sesión instalada. El usuario renovó OpenAI (ChatGPT subscription); su tabla personal se adapta a openai con backup, sin mover credenciales. Luna responde y Sol usa read. Preferencias persistidas en ~/.n_ein/preferences.md. La tabla anterior del paquete usa el flujo distinto openai-codex; ambos quedan explícitos en README.
 - T5: NR10 S1 26/26; S2 14/14 en tres repeticiones; S3 3/3 y dos mutantes detectados en tres repeticiones; S5 16/16 sin tocar código. Suites y tipos correctos. S4a corta a 301 s y retoma por $0,5327, final 3/3 y dos mutantes. Costes estimados de catálogo; evidencia en evals/results/2026-10-06-fiabilidad.json.
 - T3c: rojo observado con Authorization de diseño y duplicación de la petición sin WORK.md; regresiones verdes y suite completa.
 - T2c: rojo observado con «Change permissions and update the README»; reglas bilingües y conjunto etiquetado correctos.
 - T6a: rojo observado al exigir nein/auto en el paquete limpio; se aísla su configuración y el smoke entrega auto/medium. El launcher rechaza --runtime junto a --once antes de cualquier escritura. Suite completa correcta.
-- T5b (primer tramo): Pi completó T1 en 182 s con la decisión duradera guardada. Claude devolvió límite de sesión (reinicio indicado a las 14:20); se conserva el intento y el runner permite `--resume` sin rehacer T1 ni sobrescribir los logs. El relevo completo sigue pendiente.
+- T5b (resultado): Claude completó T2, /to-pi invocado como mensaje real del usuario abrió Pi para T3; cuatro pruebas independientes, suite 10/10 y tipos correctos. La sesión posterior recuperó la ADR sin leer el trabajo anterior ni cambiar contenido del proyecto. Se conserva la cuota fallida y el error del arnés (invocación manual y --allowedTools); no se rehicieron tareas terminadas.
+- T5b (primer tramo): Pi completó T1 en 182 s con la decisión duradera guardada. Claude devolvió límite de sesión (reinicio indicado a las 14:20); se conserva el intento y el runner permite `--resume` sin rehacer T1 ni sobrescribir los logs. El relevo completo terminó tras el reinicio de cuota y la corrección del arnés.
 - T5b (preparación): fixture de tres entregas con contrato de puerto 0, pruebas reservadas y runner no interactivo. El runner conserva procesos, comandos y logs y usa el generador real de resumen tras la salida del primer Pi. Se comprobaron su compilación y la suite local; los resultados del ensayo siguen pendientes.
 - T3b: dos procesos independientes prueban que el segundo no llega a escribir, que matar al launcher no libera el bloqueo mientras sigue su runtime y que, tras terminar este, puede entrar otra sesión. Rojo observado antes del bloqueo y antes de heredar el descriptor; verde y suite completa correctos.
 - T2b: rojo observado con «Implementa el parser y escribe su documentación»; el enrutador conserva la clasificación ordinaria y las peticiones etiquetadas siguen pasando.
@@ -63,4 +65,4 @@ Implementar y comprobar los arreglos de la auditoría en n_ein, hacer commits y 
 
 ## Siguiente paso
 
-T5: evaluar aceptación completa, mutantes y relevo con modelos en copias aisladas.
+Trabajo terminado. Preview local instalada y probada; nueva sesión de Pi carga la tabla personal OpenAI autenticada. Publicación remota y promoción estable fuera del encargo.

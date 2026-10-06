@@ -5,6 +5,7 @@
 // =============================================================================
 
 import { spawn, execFileSync } from "node:child_process";
+import { createHash } from "node:crypto";
 import { cpSync, existsSync, mkdirSync, readFileSync, readdirSync, writeFileSync } from "node:fs";
 import { join, resolve } from "node:path";
 import registerHandoff from "../../pi-package/extensions/handoff.ts";
@@ -84,8 +85,16 @@ try {
   if (oldSignal === undefined) delete process.env.N_EIN_HANDOFF_SIGNAL; else process.env.N_EIN_HANDOFF_SIGNAL = oldSignal;
 }
 const summary = join(home, "pi-agent/handoffs", readdirSync(join(home, "pi-agent/handoffs"))[0]!);
-writeFileSync(summary, readFileSync(summary, "utf8") + "\nUser instruction for this stage: implement only T2, check and commit it. T3 stays pending. Then use the to-pi skill to prepare the return, stating that Pi is authorized to finish T3. Finish your response so this non-interactive process exits.\n");
+writeFileSync(summary, readFileSync(summary, "utf8") + "\nUser instruction for this stage: implement only T2, check and commit it. T3 stays pending. Finish your response so this non-interactive process exits. The user will invoke /to-pi next.\n");
 await execute("claude-and-return", join(repo, "bin/n-ein-claude-dev"), ["--handoff", summary, "--print", "--output-format", "stream-json", "--verbose", "--permission-mode", "acceptEdits", "--allowedTools", "Read,Edit,Write,Bash,Grep,Glob"], { N_EIN_CONTINUITY_PI_LOG: join(log, "pi-return-events.jsonl") });
+if (!existsSync(join(log, "pi-return-events.jsonl"))) {
+  const stage = stages.findLast((s) => s.stage.startsWith("claude-and-return") && s.exit === 0)!;
+  const events = readFileSync(join(log, `${stage.stage}.jsonl`), "utf8").split("\n").filter(Boolean).map((line) => JSON.parse(line));
+  const session = events.find((e) => e.type === "system" && e.subtype === "init")?.session_id;
+  if (typeof session !== "string" || !/^[0-9a-f-]{36}$/i.test(session)) throw new Error("Claude no devolvió un id de sesión válido");
+  // to-pi es manual: la invocación del usuario se envía como un turno, no como una instrucción al modelo.
+  await execute("claude-to-pi", join(repo, "bin/n-ein-claude-dev"), ["--resume", session, "--print", "--output-format", "stream-json", "--verbose", "--permission-mode", "acceptEdits", "--allowedTools", "Read,Edit,Write,Bash,Grep,Glob", "--", "/to-pi Pi está autorizado a terminar T3 de WORK.md; conserva el contrato del puerto 0."], { N_EIN_CONTINUITY_PI_LOG: join(log, "pi-return-events.jsonl") });
+}
 if (!existsSync(join(log, "pi-return-events.jsonl"))) throw new Error("Claude no preparó el relevo: Pi no arrancó");
 await execute("hidden", "bun", ["test", join(repo, "evals/reserved/continuity.test.ts")], { N_EIN_CONTINUITY_COPY: project });
 await execute("suite", "bun", ["run", "test"]);
@@ -95,7 +104,18 @@ if (/^- \[ \]/m.test(work)) throw new Error("Quedan tareas pendientes después d
 
 // Otro encargo ya no recibe WORK.md: tiene que recuperar la decisión duradera.
 if (existsSync(join(project, "WORK.md"))) { git("mv", "WORK.md", "completed-work.md"); git("commit", "-qm", "test: start another job after completing the first"); }
+function fingerprint(dir: string): string {
+  const hash = createHash("sha256");
+  for (const entry of readdirSync(dir, { withFileTypes: true }).sort((a, b) => a.name.localeCompare(b.name))) {
+    if ([".git", ".codegraph"].includes(entry.name)) continue;
+    const path = join(dir, entry.name);
+    hash.update(entry.name);
+    hash.update(entry.isDirectory() ? fingerprint(path) : readFileSync(path));
+  }
+  return hash.digest("hex");
+}
+const before = fingerprint(project);
 await execute("later-job", join(repo, "bin/n-ein-dev"), ["Otro encargo, solo lectura: antes de proponer cambios para la configuración de puertos, recupera las decisiones vigentes de este proyecto y explica su razón. No leas completed-work.md ni las sesiones anteriores. No cambies archivos. Cita la fuente y el comando con el que comprobarías el contrato."], { N_EIN_CONTINUITY_PI_LOG: join(log, "later-job-events.jsonl") });
-if (git("status", "--porcelain")) throw new Error("La consulta de memoria modificó el proyecto");
+if (fingerprint(project) !== before) throw new Error("La consulta de memoria modificó el proyecto fuera del índice generado de CodeGraph");
 writeFileSync(join(log, "result.json"), JSON.stringify({ run, stages, sourceCommit: execFileSync("git", ["rev-parse", "HEAD"], { cwd: repo, encoding: "utf8" }).trim(), head: git("rev-parse", "HEAD"), commits: git("log", "--oneline"), handoff: summary, limitation: "Non-interactive runtimes; the Pi command handler generates its summary after the first process exits. External writers are not supervised." }, null, 2));
 console.log(`continuity: ${join(log, "result.json")}`);
