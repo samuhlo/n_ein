@@ -17,6 +17,7 @@ assert.equal(classify("Actualiza el README; migra las cuentas existentes").clase
 assert.equal(classify("Document the change and fix authentication").clase, "riesgo");
 assert.equal(classify("Documenta los permisos existentes. Es solo documentación: no cambies código.").clase, "mecanico", "explicar un riesgo no lo modifica");
 assert.equal(classify("Cambia el color y añade validación al formulario").clase, "ordinario", "presentación y lógica no es un encargo mecánico");
+assert.equal(classify("Implementa el parser y escribe su documentación").clase, "ordinario", "documentar una implementación no la convierte en mecánica");
 
 // Peticiones reales etiquetadas: nunca un encargo de riesgo o abierto a un modelo barato.
 for (const [name, minimum] of [["peticiones.json", 1], ["peticiones-control.json", 0.8]] as const) {

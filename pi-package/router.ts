@@ -36,6 +36,7 @@ const MECHANICAL = /\b(readme|documentacion|docs?\b|textos?|errata|typo|renombra
 // Una segunda acción de implementación invalida «documenta...» como señal de solo texto.
 const MIXED_WRITE = /(?:\b(?:y|ademas|tambien|and|also|then)\b|[.;])\s*(?:arregl\w*|corrig\w*|cambi\w*|anad\w*|implement\w*|modific\w*|migr\w*|borr\w*|elimin\w*|fix|change|add|implement|modify|migrate|delete)\b/;
 const LOGIC = /\b(validacion|validat\w*|logica|logic|algoritm\w*|endpoint|calcula\w*)\b/;
+const IMPLEMENTATION = /\b(implement\w*|anad\w*|crea|creat\w*|constru\w*|desarroll\w*|refactor\w*)\b/;
 
 /** Clasifica la primera petición de un encargo. Sin señal clara, ordinario: ni el más caro ni el más arriesgado. */
 export function classify(text: string): Classification {
@@ -44,7 +45,7 @@ export function classify(text: string): Classification {
   if (DOCS_ONLY.test(t) && !MIXED_WRITE.test(t)) return { clase: "mecanico", motivo: "solo documentación", fuente: "regla" };
   const risk = RISK.exec(t);
   if (risk) return { clase: "riesgo", motivo: `toca ${risk[0]}`, fuente: "regla" };
-  if ((DOCS_ONLY.test(t) && MIXED_WRITE.test(t)) || LOGIC.test(t)) return { clase: "ordinario", motivo: "incluye implementación o lógica", fuente: "regla" };
+  if ((DOCS_ONLY.test(t) && MIXED_WRITE.test(t)) || LOGIC.test(t) || IMPLEMENTATION.test(t)) return { clase: "ordinario", motivo: "incluye implementación o lógica", fuente: "regla" };
   const mech = MECHANICAL.exec(t);
   if (mech) return { clase: "mecanico", motivo: `cambio de ${mech[0]}`, fuente: "regla" };
   return { clase: "ordinario", motivo: "sin señales de riesgo ni de cambio mecánico", fuente: "defecto" };

@@ -28,7 +28,7 @@
 
 - [x] T1 · Recorte seguro — instrucciones por shell, referencias de skills, errores y evidencia conservados; commits reales distinguidos de lecturas.
 - [x] T2 · Modelo por encargo — peticiones mixtas conservadoras y nuevo encargo explícito sin arrastrar el modelo caro.
-- [ ] T2b · Clasificación conservadora — implementar y documentar no equivale a trabajo mecánico.
+- [x] T2b · Clasificación conservadora — implementar y documentar no equivale a trabajo mecánico.
 - [x] T3b · Sesiones independientes — bloqueo por árbol desde el launcher, conservado por el runtime si muere el padre.
 - [x] T3 · Relevo portable — títulos ingleses y españoles, criterios completos y cierre ordenado del origen.
 - [x] T4 · Alcance y memoria — contrato por petición, conocimiento duradero selectivo y preferencias compartidas por Pi y Claude.
