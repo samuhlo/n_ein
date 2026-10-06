@@ -24,6 +24,8 @@ func main() {
 
 func run(args []string) error {
 	flags := flag.NewFlagSet("n-ein", flag.ContinueOnError)
+	worker := flags.Bool("worker-host", false, "ejecución interna con propietario")
+	probe := flags.Bool("worker-probe", false, "comprobar que el árbol está libre")
 	project := flags.String("project", ".", "proyecto que mostrar")
 	root := flags.String("root", "", "raíz del paquete (desarrollo)")
 	viewName := flags.String("view", "inicio", "inicio, estado, configuracion, sesiones o sistema")
@@ -32,6 +34,20 @@ func run(args []string) error {
 	runtime := flags.String("runtime", "", "abrir pi o claude directamente; sus argumentos van tras --")
 	if err := flags.Parse(args); err != nil {
 		return err
+	}
+	if *worker {
+		lease, err := workerLeaseFromEnv()
+		if err != nil {
+			return err
+		}
+		return runOwnedWorker(*project, flags.Args(), os.Stdin, os.Stdout, os.Stderr, lease)
+	}
+	if *probe {
+		lease, err := acquireProjectLease(*project)
+		if err != nil {
+			return err
+		}
+		return lease.Close()
 	}
 	if flags.NArg() != 0 && *runtime == "" {
 		return fmt.Errorf("argumentos inesperados: %v", flags.Args())

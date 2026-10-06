@@ -6,7 +6,7 @@
 
 ## Autorización
 
-Diseño confirmado con «Sí a las recomendaciones». Samu pidió después investigar, hacer pruebas e implementar si los resultados compensan, y concretó como siguiente entrega preparar el plan. Este corte entrega investigación y planificación; la autorización condicional para el siguiente tramo se conserva sin otra confirmación rutinaria. Sin publicación remota ni promoción estable. No cambiar la preview antes de superar las pruebas del plan.
+Diseño confirmado con «Sí a las recomendaciones». Samu pidió después investigar, hacer pruebas e implementar si los resultados compensan, y concretó como siguiente entrega preparar el plan. Samu ha autorizado ejecutar todo el plan, hacer pruebas y commits y dejar el resultado para su revisión. La activación sigue condicionada a la evidencia. Sin publicación remota ni promoción estable. No cambiar la preview antes de superar las pruebas del plan.
 
 ## Decisiones
 
@@ -39,7 +39,7 @@ Decisiones y motivos: [docs/01-decisiones.md](docs/01-decisiones.md#paralelismo-
 ## Tareas
 
 - [x] P Investigación y plan — fuentes actuales, alternativas, riesgos, entregas y criterios de utilidad registrados.
-- [ ] P0 Transporte y ciclo de vida — seleccionar una integración RPC con parada comprobada en procesos reales. Bloqueada por: ninguna.
+- [x] P0 Transporte y ciclo de vida — seleccionar una integración RPC con parada comprobada en procesos reales. Bloqueada por: ninguna.
 - [ ] P1 Dos frentes recuperables — worktrees, propiedad, estado duradero, eventos e integración. Bloqueada por: P0.
 - [ ] P2 Comparación de utilidad — piloto secuencial/paralelo, ampliación condicionada a aceptación y señal de beneficio. Bloqueada por: P1.
 - [ ] P3 Equipo visible y relevo — conversación, widget, controles y Pi↔Claude con trabajo parcial. Bloqueada por: P2 con resultado favorable.
@@ -49,6 +49,8 @@ P0–P4 son el siguiente corte de implementación, no trabajo ya ejecutado. Si e
 
 ## Evidencia
 
+- P0: adaptador RPC público con host Go y bash con propietario propio. Rojo observado: al matar el grupo del trabajador moría el supervisor antes de parar su bash separado; verde al independizar el grupo del supervisor. Tests de lease, EOF, SIGKILL y Pi 1.0.2 RPC real sin modelo. Se conserva el descriptor hasta que salen los comandos.
+
 - Investigación: Gentle `69c9b5a`, Matt `6fd9479`, Pi instalado `1.0.2`, base n_ein `febbbb5`. Se inspeccionaron código, documentación y casos de prueba; no se ejecutaron suites externas ni nuevas evaluaciones con modelos.
 - Gentle Agents completo está acoplado a otras superficies de Gentle. La base recomendada es RPC público de Pi; P0 determinará si basta su cliente exportado o conviene un adaptador acotado.
 - `RpcClient.stop()` no acredita por contrato la salida de todas las herramientas descendientes. El relevo actual solo resume el árbol principal. Son puntos de ensayo e implementación, no fallos reproducidos en este corte.
@@ -56,7 +58,7 @@ P0–P4 son el siguiente corte de implementación, no trabajo ya ejecutado. Si e
 
 ## Siguiente paso
 
-La entrega solicitada de investigación y plan está completa. P0 es el próximo tramo de la implementación condicional ya autorizada, en entorno aislado. No reabrir las decisiones confirmadas.
+P0 comprobado. Continuar P1: estado persistente y dos frentes aislados, con integración y recuperación.
 
 ## Corte anterior cerrado
 
