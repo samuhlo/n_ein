@@ -65,7 +65,7 @@ export class TeamManager {
     const models=loadModels(root);
     const agentHome=env.PI_CODING_AGENT_DIR||env.N_EIN_AGENT_DIR||join(env.N_EIN_HOME||join(homedir(),'.n_ein'),env.N_EIN_CHANNEL||'dev','pi-agent');
     env.PI_CODING_AGENT_DIR=agentHome;env.PI_SKIP_VERSION_CHECK='1';env.DO_NOT_TRACK='1';
-    const sessions=join(agentHome,'team-sessions');mkdirSync(sessions,{recursive:true,mode:0o700});
+    const sessions=env.N_EIN_TEAM_SESSION_DIR||join(agentHome,'team-sessions');mkdirSync(sessions,{recursive:true,mode:0o700});
     const session=t.session||join(sessions,`${t.id}.jsonl`);
     // Preparar el índice del árbol concreto; un fallo conserva la ruta directa.
     if(env.N_EIN_CODEGRAPH_BIN)try{execFileSync(join(root,'bin/n-ein-codegraph'),[],{cwd:t.cwd,env,stdio:'pipe',timeout:60_000});}catch{}
