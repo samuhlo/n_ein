@@ -343,5 +343,22 @@
     "One design and one roundtrip; two basic runs.",
     "First failed handoff harness run exited before any model call because its Pi path lacked a directory component.",
     "Interactive Claude still requires the host exit action, explained when needed."
-  ]
+  ],
+  "preview": {
+    "version": "0.1.0-preview.2+hotfix.3bc9b8006cc0",
+    "commit": "3bc9b8006cc0004e3380ae8610d33d88069eb5f1",
+    "archiveSha256": "455b96105d9bab22b133a3e22d99cc5f21b9b1d0737d5d8e3d438853e71bd523",
+    "doctor": {
+      "filesVerified": 61,
+      "pi": "1.0.2",
+      "codegraph": "1.6.1"
+    },
+    "installedSession": {
+      "provider": "openai",
+      "model": "gpt-6-sol",
+      "designQuestions": 1,
+      "filesUnchanged": true
+    },
+    "backupCreated": true
+  }
 }

@@ -39,10 +39,11 @@ Implementar, probar y hacer commits de este corte. Actualizar la preview local c
 - [x] F2 · Modelo por encargo — nuevo objetivo y selección según alcance conocido, con anuncios y atajos existentes.
 - [x] F3 · Relevo conversacional — Pi y Claude reciben la petición natural y usan el mecanismo existente con cierre ordenado.
 - [x] F2b · Ajustes y descubrimiento — tabla nueva en el siguiente encargo, modelo conservado al continuar y portada orientada a conversación.
-- [ ] F4 · Evaluación y preview — seis recorridos reales, evidencia y paquete actualizado reversible.
+- [x] F4 · Evaluación y preview — seis recorridos reales, evidencia y paquete actualizado reversible.
 
 ## Evidencia
 
+- F4 (entrega): candidato 0.1.0-preview.2+hotfix.3bc9b8006cc0, tarball y paquete comprobados; doctor correcto y sesión real instalada de diseño sin escrituras. build-preview.sh aísla ahora sus ajustes de smoke tras observar el fallo con la tabla personal.
 - F4 (modelos): seis recorridos aceptados, más control negativo de pregunta sobre Claude y segunda ejecución básica. Un único punto de decisión en diseño; ninguna pregunta en arreglo, autorización, nuevo encargo ni reanudación. Relevo hablado Pi→Claude→Pi con proyecto intacto. Evidencia en evals/results/2026-10-06-flujo-conversacional.md.
 - F2b: rojo observado al cambiar una clase y empezar otro encargo; verde al recargar ajustes y conservar la ruta física de la continuación. Una configuración inválida no provoca fallback.
 - F3: regresión roja de relevo desde herramienta; verde con señal escrita solo en agent_end, cancelación, nueva entrada y cambio de sesión. El comando y la conversación comparten prepare; Claude carga to-pi ante petición natural explícita. `./scripts/check.sh` correcto.
@@ -52,4 +53,4 @@ Implementar, probar y hacer commits de este corte. Actualizar la preview local c
 
 ## Siguiente paso
 
-F4: aplicar el candidato comprobado a la preview local y verificar su estado.
+Trabajo terminado. Preview local 0.1.0-preview.2+hotfix.3bc9b8006cc0 instalada y comprobada; no se publicó ni se promovió estable.

@@ -37,3 +37,8 @@ El primer montaje de relevo no llegó a llamar a un modelo: la ruta del Pi gesti
 Son fixtures pequeños de aceptación del flujo; complementan el banco de calidad anterior, no lo sustituyen ni prueban calidad universal en repositorios grandes. En Claude interactivo sigue haciendo falta salir del host: el agente muestra `/exit` cuando el relevo está listo. El ensayo no interactivo sale al terminar la respuesta y abre Pi automáticamente. No se añadió un supervisor ni se simularon respuestas de los modelos.
 
 Las regresiones locales comprueban selección y permanencia del modelo, ajustes entre encargos, errores de configuración visibles y relevo cancelado antes de habilitar el destino. `./scripts/check.sh` verifica además los lanzadores, Go, el catálogo y el paquete instalado. [Resultados y hashes](2026-10-06-flujo-conversacional.json).
+
+
+Instalada la preview local `0.1.0-preview.2+hotfix.3bc9b8006cc0`, con backup. Su candidato pasó el check completo, la instalación desde tarball y `doctor --runtime`: 61 archivos, Pi 1.0.2 y CodeGraph 1.6.1. La sesión del artefacto instalado respondió en `openai/gpt-6-sol` a una petición natural de diseño: leyó el código, planteó una decisión con recomendación y conservó intactos ambos archivos. La tabla y preferencias personales siguen fuera del paquete.
+
+La preparación del candidato encontró otra dependencia de ajustes personales en `build-preview.sh`: el smoke heredaba la tabla de modelos del usuario. Se aisló en archivos temporales; el candidato completo pasó después. Esto no cambió las selecciones del usuario.
