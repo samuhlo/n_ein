@@ -68,6 +68,14 @@ try {
   assert.match(fallback, /Copiar apuntes por fecha/);
   assert.match(fallback, /No mover originales/);
   assert.match(fallback, /Esperar autorización de código/);
+
+  writeFileSync(join(dir, "WORK.md"), `# Job\n\n## Goal\nKeep the full request.\n\n## Decisions\nPreserve the public interface.\n\n## Limits\nDo not publish.\n\n## Criteria\n${"Independent acceptance rule. ".repeat(100)}\nFINAL_CRITERION\n\n## Tasks\n- [x] Server\n- [ ] Client\n\n## Evidence\nTests passed before the last edit.\n\n## Next step\nCheck the client.\n`);
+  await command.handler("claude", ctx);
+  const [, englishFile] = readFileSync(signal, "utf8").trim().split("\n");
+  const english = readFileSync(englishFile, "utf8");
+  for (const text of ["Keep the full request.", "Preserve the public interface.", "Do not publish.", "FINAL_CRITERION", "Tests passed before the last edit.", "Check the client.", "- Client"]) {
+    assert.ok(english.includes(text), `el relevo conserva ${text}`);
+  }
   console.log("handoff: resumen, diff y cierre ordenado preparados");
 } finally {
   if (previousHome === undefined) delete process.env.PI_CODING_AGENT_DIR;

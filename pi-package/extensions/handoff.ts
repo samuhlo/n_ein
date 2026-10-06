@@ -36,18 +36,18 @@ function lastText(branch: Array<any>, role: "user" | "assistant"): string {
     const content = entry.message.content;
     const text = typeof content === "string" ? content : Array.isArray(content)
       ? content.filter((part: any) => part.type === "text").map((part: any) => part.text).join("\n") : "";
-    if (text.trim()) return text.trim().slice(0, 1800);
+    if (text.trim()) return text.trim();
   }
   return "desconocido";
 }
 
-function section(content: string, title: string): string {
+function section(content: string, ...titles: string[]): string {
   const lines = content.split(/\r?\n/);
-  const start = lines.findIndex((line) => line.trim().toLowerCase() === `## ${title.toLowerCase()}`);
+  const start = lines.findIndex((line) => titles.some((title) => line.trim().toLowerCase() === `## ${title.toLowerCase()}`));
   if (start < 0) return "";
   let end = start + 1;
   while (end < lines.length && !/^#{1,2}\s+/.test(lines[end])) end++;
-  return lines.slice(start + 1, end).join("\n").trim().slice(0, 1800);
+  return lines.slice(start + 1, end).join("\n").trim();
 }
 
 function summary(cwd: string, branch: Array<any>): string {
@@ -66,21 +66,22 @@ function summary(cwd: string, branch: Array<any>): string {
     `Documento de trabajo: ${document}`,
     "",
     "## Objetivo",
-    section(content, "Objetivo") || section(content, "Acuerdo confirmado") || lastText(branch, "user"),
+    section(content, "Objetivo", "Goal", "Acuerdo confirmado", "Confirmed agreement") || lastText(branch, "user"),
     "",
     "## Decisiones y límites",
-    section(content, "Decisiones") || section(content, "Acuerdo confirmado") || "No constan decisiones en el documento; revisa la conversación y el proyecto.",
-    section(content, "Límites"),
+    section(content, "Decisiones", "Decisions", "Acuerdo confirmado", "Confirmed agreement") || "No constan decisiones en el documento; revisa la conversación y el proyecto.",
+    section(content, "Límites", "Limits"),
     "",
     "## Hecho",
     done.length ? done.join("\n") : "No hay tareas marcadas como terminadas.",
     `Última respuesta del agente: ${lastText(branch, "assistant")}`,
     "",
     "## Pendiente y siguiente paso",
-    section(content, "Siguiente paso") || section(content, "Pendiente") || (pending.length ? pending.join("\n") : "Contrastar estado y acordar siguiente paso."),
+    section(content, "Siguiente paso", "Next step", "Pendiente", "Pending") || "Contrastar estado y acordar siguiente paso.",
+    pending.join("\n"),
     "",
     "## Criterios de aceptación",
-    section(content, "Criterios") || section(content, "Criterios observables") || "No constan en el documento; comprueba el encargo original.",
+    section(content, "Criterios", "Criteria", "Criterios observables", "Acceptance criteria") || "No constan en el documento; comprueba el encargo original.",
     "",
     "## Última petición del usuario",
     lastText(branch, "user"),
@@ -95,11 +96,11 @@ function summary(cwd: string, branch: Array<any>): string {
     "```",
     "",
     "## Comprobaciones",
-    section(content, "Evidencia") || "No constan comprobaciones en el documento.",
+    section(content, "Evidencia", "Evidence") || "No constan comprobaciones en el documento.",
     "Vigencia: desconocida hasta contrastar con el diff y el código actual. Los archivos nuevos también figuran en el estado Git. Conserva lo terminado; verifica solo lo que falte o haya quedado invalidado.",
     document === "ninguno" ? "No hay documento de trabajo; usa la petición reciente como punto de partida." : `Lee ${document} para el detalle vigente; este resumen es una instantánea.`,
     "",
-    "El origen terminó antes de abrir este destino. Este resumen no autoriza una implementación que el usuario solo hubiera pedido discutir.",
+    "El lanzador espera la salida del origen antes de abrir el destino. Detén cualquier escritor independiente antes del relevo; esperar el turno de Pi no acredita que un proceso externo haya terminado. Este resumen no autoriza una implementación que el usuario solo hubiera pedido discutir.",
     "",
   ].join("\n");
 }
