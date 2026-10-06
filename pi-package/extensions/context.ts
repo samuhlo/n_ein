@@ -8,9 +8,12 @@
 //   · commit entre tareas -> lecturas recuperables: Git, WORK.md y los archivos
 //                            guardan el estado vigente. Tras el último commit
 //                            queda poco por hacer y romper la caché no compensa.
+// El commit se reconoce porque HEAD se mueve durante el turno, no por el texto
+// del comando: así valen `type(scope): …`, heredocs, redirecciones y scripts.
 // Las instrucciones, los errores y las comprobaciones no se retiran.
 // =============================================================================
 
+import { execFileSync } from "node:child_process";
 import type { ExtensionAPI } from "@earendil-works/pi-coding-agent";
 import { readWorkDoc, resolveWorkDoc } from "./work-doc";
 
@@ -28,7 +31,6 @@ export type Retirement = { targetId: string; text: string };
 // La documentación puede contener decisiones o instrucciones, también fuera de SKILL.md.
 const KEEP_PATH = /\.md\b|(?:^|\/)skills\//i;
 const READ_ONLY_BASH = /^(rg|grep|find|ls|cat|head|tail|sed -n|wc|tree|pwd|git (status|log|show|diff|grep|ls-files|blame))\b/;
-const SHA = /\[[^\]\n]*?([0-9a-f]{7,40})\]/;
 
 const command = (call?: Call) => String(call?.arguments?.command ?? "");
 // Solo comandos simples y visibles. No evaluamos shell ni adivinamos variables o scripts.
@@ -45,16 +47,6 @@ function shellCommands(cmd: string): string[][] {
   return cmd.slice(end).trim() ? [] : groups.filter((group) => group.length);
 }
 const isWrite = (call?: Call) => call?.name === "edit" || call?.name === "write";
-const isCommit = (call?: Call) => call?.name === "bash" && shellCommands(command(call)).some((words) => {
-  if (words[0] !== "git" || words.includes("--dry-run")) return false;
-  let i = 1;
-  while (i < words.length && words[i]!.startsWith("-")) {
-    if (["-C", "-c", "--git-dir", "--work-tree"].includes(words[i]!)) i += 2;
-    else if (/^--(?:git-dir|work-tree)=/.test(words[i]!)) i++;
-    else return false;
-  }
-  return words[i] === "commit";
-});
 
 // `turn` es el mensaje del asistente que pidió la llamada: las fronteras se cuentan por turnos.
 type Item = { id: string; turn: number; call?: Call; nested: readonly Call[]; text: string; isError: boolean };
@@ -80,9 +72,8 @@ function items(entries: readonly Entry[]): Item[] {
   return out;
 }
 
-// Un script de codemode escribe o commitea a través de sus llamadas anidadas.
+// Un script de codemode escribe a través de sus llamadas anidadas.
 const wrote = (item: Item) => !item.isError && (isWrite(item.call) || item.nested.some((c) => c.status === "ok" && isWrite(c)));
-const committed = (item: Item) => !item.isError && (isCommit(item.call) || item.nested.some((c) => c.status === "ok" && isCommit(c)));
 
 // También un script que cargó una skill: retirarlo se llevaría sus instrucciones.
 function isInstruction(item: Item): boolean {
@@ -119,20 +110,19 @@ function note(item: Item, boundary: string): string {
  * Qué resultados retirar al acabar un turno. Solo los de turnos anteriores a
  * la frontera: lo del turno en curso el modelo aún no lo ha visto, y lo del
  * propio turno de la frontera espera a la siguiente. Así la caché se rompe una
- * sola vez por frontera. Un commit solo es frontera si quedan tareas.
+ * sola vez por frontera. `commit` es el HEAD nuevo cuando este turno commiteó
+ * y aún quedan tareas.
  */
-export function retirements(entries: readonly Entry[], currentTurn: ReadonlySet<string>, tasksPending = false): Retirement[] {
+export function retirements(entries: readonly Entry[], currentTurn: ReadonlySet<string>, commit?: string): Retirement[] {
   const all = items(entries);
   const firstWrite = all.find(wrote)?.turn ?? 0;
-  const commit = tasksPending ? all.findLast(committed) : undefined;
-  const sha = commit ? SHA.exec(commit.text)?.[1] : undefined;
   const out: Retirement[] = [];
   for (const item of all) {
     if (currentTurn.has(item.id) || item.isError || item.text.length < MIN_CHARS || item.text.startsWith(RETIRED_MARK) || isInstruction(item)) continue;
     // Los checks y las mutaciones no son lecturas: un commit no demuestra que su evidencia se haya guardado.
     const recoverable = item.call?.name === "read" || isExploration(item);
     if (!recoverable || /\.(?:log|jsonl)\b/.test(target(item.call))) continue;
-    if (commit && item.turn < commit.turn) out.push({ targetId: item.id, text: note(item, sha ? `commit ${sha.slice(0, 7)}` : "a commit") });
+    if (commit) out.push({ targetId: item.id, text: note(item, `commit ${commit.slice(0, 7)}`) });
     else if (item.turn < firstWrite && isExploration(item)) out.push({ targetId: item.id, text: note(item, "the first edit") });
   }
   return out;
@@ -143,11 +133,28 @@ function tasksPending(cwd: string): boolean {
   try { return path ? readWorkDoc(path).tasks.some((task) => !task.done) : false; } catch { return false; }
 }
 
+// Fuera de Git no hay HEAD. Nunca lanza: un fallo en `tool_call` bloquearía la herramienta.
+function head(cwd: string): string | undefined {
+  try {
+    return execFileSync("git", ["rev-parse", "HEAD"], { cwd, encoding: "utf8", stdio: ["ignore", "pipe", "ignore"], timeout: 5_000 }).trim() || undefined;
+  } catch {
+    return undefined;
+  }
+}
+
 export default function (pi: ExtensionAPI) {
+  // Pi espera a `tool_call` antes de ejecutar: el primero del turno ve HEAD antes de
+  // cualquier comando: un commit ajeno mientras el modelo genera no se toma por propio.
+  // null: el turno aún no ha ejecutado nada.
+  let before: string | undefined | null = null;
+  pi.on("turn_start", () => { before = null; });
+  pi.on("tool_call", (_event, ctx) => { if (before === null) before = head(ctx.cwd); });
   pi.on("turn_end", (event, ctx) => {
     // Un turno sin herramientas cierra la ejecución: no hay petición que abaratar.
     if (!event.toolResultEntryIds.length) return;
-    const retire = retirements(event.context.contextEntries, new Set(event.toolResultEntryIds), tasksPending(ctx.cwd));
+    const now = before ? head(ctx.cwd) : undefined;
+    const commit = now && now !== before && tasksPending(ctx.cwd) ? now : undefined;
+    const retire = retirements(event.context.contextEntries, new Set(event.toolResultEntryIds), commit);
     if (!retire.length) return;
     return {
       entries: retire.map(({ targetId, text }) => ({ type: "context_edit" as const, targetId, replacement: { content: [{ type: "text" as const, text }] } })),
