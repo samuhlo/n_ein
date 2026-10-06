@@ -13,7 +13,7 @@ Start from the conversation and `WORK.md`; read in full any spec or reference th
 
 ## 2. Draft vertical slices
 
-- Each slice cuts a narrow but **complete** path through every layer it needs (schema, API, UI, tests), never one horizontal layer.
+- Each slice delivers a narrow, **complete** behaviour across the layers it needs (schema, API, UI, tests). Inside a substantial slice, independent implementation assignments may separate API and UI once their contract is agreed; the coordinator still owns end-to-end acceptance.
 - A finished slice can be shown or verified on its own.
 - Each slice fits in one session and one work-unit commit.
 - Prefactoring goes first.
@@ -40,3 +40,7 @@ Add the tasks under the tasks section in dependency order, blockers first, with 
 ```
 
 Criteria are plain sub-bullets so the TODO counts only tasks. No file paths or snippets in tasks (they go stale), except a prototype snippet that pins a decision, trimmed and marked. The work then follows the **frontier**: any task whose blockers are done.
+
+## Independent assignments
+
+When two substantial pieces can progress independently, the coordinator may use the team tool. Keep the same WORK.md and stable task references; use distinct assignment IDs for each worker. Commit the agreed base first. Give each worker its acceptance, shared contract, relevant code paths and ownership boundaries. Keep shared files with one owner, and integrate results before checking off the enclosing delivery. Workers do not maintain another plan. If coordination or preparation is likely to outweigh the work, execute directly.

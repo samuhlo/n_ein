@@ -49,6 +49,9 @@ P0–P4 son el siguiente corte de implementación, no trabajo ya ejecutado. Si e
 
 ## Evidencia
 
+- P3 en desarrollo: menú local y vista sin llamadas al modelo, resultados acotados con ruta al registro, parada antes del relevo y snapshots de todos los frentes. Tests rojos/verdes de quietud definitiva, vista desde comando y bloqueo del relevo con un escritor vivo. Falta el recorrido con modelos y paquete instalado.
+- P2 inicial: S6 candidato 4/4 y S2 candidato 14/14, suites y tipos correctos; ambos eligieron ejecución directa. S3 y comparación completa en marcha sobre productos congelados (`parallel-*-r1`, candidato `edb6968`, control `b619eaa`). Ninguno de estos dos casos demuestra todavía beneficio del paralelismo.
+
 - P1: tests de Git real y cola de tres asignaciones con máximo dos procesos, suma de consumo, integración secuencial y lectura del estado desde otro coordinador. El paquete carga en Pi 1.0.2 RPC real. Falta medir capacidad de los modelos y completar la UI/relevo antes de activar preview.
 
 - P0: adaptador RPC público con host Go y bash con propietario propio. Rojo observado: al matar el grupo del trabajador moría el supervisor antes de parar su bash separado; verde al independizar el grupo del supervisor. Tests de lease, EOF, SIGKILL y Pi 1.0.2 RPC real sin modelo. Se conserva el descriptor hasta que salen los comandos.

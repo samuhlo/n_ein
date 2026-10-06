@@ -10,6 +10,8 @@ import { join } from "node:path";
 import type { ExtensionAPI, ExtensionContext } from "@earendil-works/pi-coding-agent";
 import { Type } from "typebox";
 import { readWorkDoc, resolveWorkDoc } from "./work-doc";
+import { stopTeam } from "../agents/runtime.ts";
+import { teamSummary } from "../agents/summary.ts";
 
 type GitState = { root: string; head: string; status: string; diffStat: string };
 
@@ -101,6 +103,10 @@ function summary(cwd: string, branch: Array<any>): string {
     git.diffStat,
     "```",
     "",
+    "## Frentes del equipo pendientes",
+    teamSummary(cwd),
+    "El destino puede continuar secuencialmente en estos árboles; conserva sus cambios y comprueba la integración antes de cerrar WORK.md.",
+    "",
     "## Comprobaciones",
     section(content, "Evidencia", "Evidence") || "No constan comprobaciones en el documento.",
     "Vigencia: desconocida hasta contrastar con el diff y el código actual. Los archivos nuevos también figuran en el estado Git. Conserva lo terminado; verifica solo lo que falte o haya quedado invalidado.",
@@ -111,7 +117,10 @@ function summary(cwd: string, branch: Array<any>): string {
   ].join("\n");
 }
 
-function prepare(ctx: ExtensionContext): void {
+async function prepare(ctx: ExtensionContext): Promise<void> {
+  const request = lastText(ctx.sessionManager.getBranch(), "user");
+  await stopTeam(ctx.cwd);
+  if (ctx.signal?.aborted || ctx.hasPendingMessages?.() || lastText(ctx.sessionManager.getBranch(), "user") !== request) throw new Error("Nueva indicación durante la parada; se conserva este runtime.");
   const home = process.env.PI_CODING_AGENT_DIR;
   const dir = home ? join(home, "handoffs") : join(ctx.cwd, ".n_ein", "handoffs");
   mkdirSync(dir, { recursive: true, mode: 0o700 });
@@ -133,7 +142,7 @@ export default function (pi: ExtensionAPI) {
   pi.registerTool({
     name: "nein_handoff",
     label: "Continuar con Claude",
-    description: "Prepare the existing Pi→Claude handoff ONLY when the user explicitly asks to switch or continue with Claude, including ordinary language. A question about Claude is not a transfer request. Finish or stop writers and update the current work document before calling. Quote the relevant words from the latest user message. After calling, finish the response without more tools; Pi will save the summary and shut down when this agent loop ends, then the launcher opens Claude. This does not grant implementation permission.",
+    description: "Prepare the existing Pi→Claude handoff ONLY when the user explicitly asks to switch or continue with Claude, including ordinary language. A question about Claude is not a transfer request. Finish or stop writers and update the current work document before calling. Quote the relevant words from the latest user message. After calling, finish the response without more tools; Pi will save the summary and shut down when this agent loop settles and workers have stopped, then the launcher opens Claude. This does not grant implementation permission.",
     parameters: Type.Object({ destination: Type.Literal("claude"), request: Type.String({ description: "Exact words of the user's request to continue with Claude" }) }),
     async execute(_id, params, _signal, _update, ctx) {
       const request = lastText(ctx.sessionManager.getBranch(), "user");
@@ -144,17 +153,18 @@ export default function (pi: ExtensionAPI) {
       return { content: [{ type: "text", text: "Handoff queued for the end of this response. Finish now; the launcher will open Claude after Pi exits. Preserve the current authorization and pending work." }], details: undefined };
     },
   });
-  // BLINDAJE -> Una herramienta no espera a su propio turno. El relevo se materializa al terminar el bucle.
+  // BLINDAJE -> agent_end puede preceder a un retry o una continuación.
   pi.on("agent_end", (event, ctx) => {
+    const last = event.messages.findLast(message => message.role === "assistant");
+    if (ctx.signal?.aborted || last?.stopReason === "error" || last?.stopReason === "aborted" || ctx.hasPendingMessages?.()) pending = undefined;
+  });
+  pi.on("agent_before_settle", async (event, ctx) => {
+    if (!pending || event.continue) return;
     const transfer = pending;
     pending = undefined;
-    if (!transfer) return;
-    const last = event.messages.findLast((message) => message.role === "assistant");
-    if (ctx.signal?.aborted || last?.stopReason === "error" || last?.stopReason === "aborted" || ctx.hasPendingMessages?.() || lastText(ctx.sessionManager.getBranch(), "user") !== transfer.request) {
-      ctx.ui.notify("El relevo queda cancelado para conservar la interrupción o atender la nueva indicación.", "info");
-      return;
-    }
-    prepare(ctx);
+    if (event.outcome !== "completed" || ctx.signal?.aborted || ctx.hasPendingMessages?.() || lastText(ctx.sessionManager.getBranch(), "user") !== transfer.request) return;
+    try { await prepare(ctx); }
+    catch (error) { ctx.ui.notify(`El relevo no está listo: ${String(error)}. Conserva los árboles pendientes.`, "error"); }
   });
 
   pi.registerCommand("handoff", {
@@ -168,7 +178,7 @@ export default function (pi: ExtensionAPI) {
       // El comando manual conserva el mismo resumen y el mismo cierre que la conversación.
       await ctx.waitForIdle();
       pending = undefined;
-      prepare(ctx);
+      await prepare(ctx);
     },
   });
 }

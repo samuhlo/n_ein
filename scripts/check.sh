@@ -34,7 +34,6 @@ tests/launcher.sh
 tests/handoff-launcher.sh
 tests/reverse-launcher.sh
 bun run tests/work-doc.ts
-bun run tests/handoff.ts
 bun run tests/models.ts
 bun run tests/memory.ts
 bun run tests/codegraph.ts
@@ -54,6 +53,13 @@ bun run tests/bench.ts
   GOTOOLCHAIN=local "$go_bin" build -o ../dist/n-ein-install ./cmd/n-ein-install
 )
 
+bun run tests/handoff.ts
+bun run tests/agents-rpc.ts
+bun run tests/agents-pi.ts
+bun run tests/agents-store.ts
+bun run tests/agents-manager.ts
+bun run tests/team-view.ts
+bun run tests/team-extension.ts
 scripts/smoke-package.sh
 
 printf 'checks locales: OK\n'

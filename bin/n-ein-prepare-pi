@@ -10,6 +10,8 @@ if [[ ! -f "$N_EIN_HANDOFF_SIGNAL" ]]; then
   exit 64
 fi
 
+repo_dir="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd -P)"
+team_summary="$(bun "$repo_dir/pi-package/agents/summary.ts" "$PWD")" || exit 69
 note="$1"
 handoff_dir="$CLAUDE_CONFIG_DIR/handoffs"
 mkdir -p "$handoff_dir"
@@ -34,6 +36,7 @@ work_doc="${N_EIN_WORK_DOC:-$git_root/WORK.md}"
   printf '## Resultado y decisiones de Claude\n%s\n\n' "$note"
   printf '## Estado Git al cerrar Claude\n```text\n%s\n```\n\n' "${status:-limpio}"
   printf 'Diff rastreado:\n```text\n%s\n```\n\n' "${diff_stat:-sin diff rastreado}"
+  printf '## Frentes del equipo pendientes\n%s\n\n' "$team_summary"
   printf '## Vigencia y siguiente paso\nLee el documento de trabajo si existe. Contrasta sus comprobaciones con el diff y los archivos actuales; su vigencia es desconocida hasta entonces. Conserva lo terminado y no infieras autorización de código de una conversación de diseño.\n'
 } > "$summary_path"
 

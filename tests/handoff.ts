@@ -1,8 +1,9 @@
 import { strict as assert } from "node:assert";
-import { execFileSync } from "node:child_process";
+import { execFileSync, spawn } from "node:child_process";
 import { existsSync, mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
-import { join } from "node:path";
+import { join, resolve } from "node:path";
+import { TeamStore } from "../pi-package/agents/store.ts";
 import registerHandoff from "../pi-package/extensions/handoff";
 
 const dir = mkdtempSync(join(tmpdir(), "n-ein-handoff-"));
@@ -91,6 +92,10 @@ try {
   assert.equal(readFileSync(signal, "utf8"), "", "pedir relevo dentro del turno no habilita al destino todavía");
   assert.equal(stopped, false);
   await hooks.agent_end({ messages: [{ role: "assistant", stopReason: "stop" }] }, ctx);
+  assert.equal(stopped, false, "agent_end no acredita quietud definitiva");
+  await hooks.agent_before_settle({ continue: true, outcome: "completed" }, ctx);
+  assert.equal(stopped, false);
+  await hooks.agent_before_settle({ continue: false, outcome: "completed" }, ctx);
   assert.ok(stopped);
   assert.match(readFileSync(signal, "utf8"), /^claude\n/);
 
@@ -108,6 +113,30 @@ try {
   hooks.session_start();
   await hooks.agent_end({ messages: [{ role: "assistant", stopReason: "stop" }] }, ctx);
   assert.equal(readFileSync(signal, "utf8"), "", "una petición pendiente no cruza a otra sesión");
+  writeFileSync(signal, ""); stopped = false;
+  await handoffTool.execute("h", {destination:"claude",request:"continuar con Claude"}, undefined, undefined, ctx);
+  await hooks.agent_end({messages:[{role:"assistant",stopReason:"stop"}]},ctx);
+  let pendingChecks=0;
+  await hooks.agent_before_settle({continue:false,outcome:"completed"},{...ctx,hasPendingMessages:()=>++pendingChecks>1});
+  assert.equal(readFileSync(signal,"utf8"),"","new input while stopping cancels transfer");
+  assert.equal(stopped,false);
+
+  // El relevo conserva todos los frentes y no habilita destino sobre un escritor vivo.
+  writeFileSync(join(dir,"WORK.md"),"## Goal\nTwo fronts\n## Tasks\n- [ ] T1 API\n");
+  git("add",".");git("commit","-qm","team base");git("switch","-qc","feature");
+  const teamStore=new TeamStore(dir);
+  const task=teamStore.create({taskId:"T1",label:"API pendiente",prompt:"implement",model:"test/model",thinking:"medium",owner:"previous"});
+  writeFileSync(join(task.cwd,"partial.ts"),"export const partial = true;");
+  teamStore.snapshot(task.id);teamStore.update(task.id,{status:"interrupted"});
+  await command.handler("claude",ctx);
+  const [,teamFile]=readFileSync(signal,"utf8").trim().split("\n");
+  const teamNote=readFileSync(teamFile,"utf8");
+  assert.ok(teamNote.includes(task.cwd));assert.ok(teamNote.includes(task.branch));assert.match(teamNote,/partial.ts/);
+  const live=spawn(resolve("dist/n-ein"),["--worker-host","--project",task.cwd,"--","/bin/sh","-c","sleep 30"],{stdio:["pipe","ignore","ignore"]});
+  const closed=new Promise<void>(r=>live.once("close",()=>r()));
+  await new Promise(r=>setTimeout(r,100));writeFileSync(signal,"");
+  try{await assert.rejects(command.handler("claude",ctx),/exit unconfirmed/);assert.equal(readFileSync(signal,"utf8"),"");}
+  finally{live.stdin.end();await closed;}
   console.log("handoff: resumen, diff y cierre ordenado preparados");
 } finally {
   if (previousHome === undefined) delete process.env.PI_CODING_AGENT_DIR;
