@@ -54,3 +54,28 @@ Implementar, probar y hacer commits de este corte. Actualizar la preview local c
 ## Siguiente paso
 
 Trabajo terminado. Preview local 0.1.0-preview.2+hotfix.3bc9b8006cc0 instalada y comprobada; no se publicó ni se promovió estable.
+
+## Siguiente encargo: paralelismo recuperable
+
+### Estado y autorización
+
+Investigación y diseño acordados el 6 de octubre tras «Sí a las recomendaciones». Implementación pendiente de autorización; la autorización del flujo conversacional anterior no se extiende por inferencia a este nuevo alcance. El corte cerrado y su evidencia se conservan arriba.
+
+### Objetivo y acuerdo
+
+Reducir la espera en encargos con partes independientes, conservando calidad, continuidad y coste total razonable. Una conversación y un coordinador responsable de la integración; hasta dos trabajadores generalistas simultáneos inicialmente. El coordinador puede programar y decide cuándo repartir el trabajo autorizado, anuncia el reparto y respeta «hazlo con uno».
+
+Decisiones y motivos en [docs/01-decisiones.md](docs/01-decisiones.md#paralelismo-acordado-el-6-de-octubre--pendiente-de-implementar). Contratos compartidos con responsable; escritores en worktrees distintos; comunicación acotada sobre resultados, cambios y bloqueos. Modelos por dificultad, sin delegación obligatoria para abaratar. Al cerrar se detienen los trabajadores; al volver se recupera el trabajo, incluso con agentes nuevos. Ejecutar con la aplicación cerrada queda aplazado.
+
+### Criterios observables para la implementación
+
+- Una tarea pequeña o dependiente puede completarse con un solo agente; una con dos frentes independientes puede avanzar simultáneamente, sin exigir comandos al usuario.
+- Cada frente conserva alcance, dependencias, responsable, rama/base/HEAD, cambios sin commit, decisiones, comprobaciones, bloqueo y siguiente paso. El coordinador mantiene el único checklist en `WORK.md`; el runtime conserva las referencias técnicas necesarias.
+- El resultado integrado satisface la aceptación del encargo. Haber pasado pruebas en cada rama no basta; cambios de contrato y de código invalidan la evidencia afectada.
+- Cierre normal, fallo de un trabajador e interrupción abrupta conservan cambios y permiten reconciliar el estado real al volver, sin declarar terminado trabajo parcial ni asumir que un registro representa un proceso vivo.
+- Reanudar o relevar Pi↔Claude no permite dos escritores sobre el mismo árbol. Si el destino no dispone de trabajadores, conserva las tareas y puede continuarlas secuencialmente.
+- Comparación secuencial/paralela con mismo encargo, base, aceptación y capacidad de modelos: medir calidad, duración hasta integración comprobada, consumo de todos los agentes, correcciones e intervención humana. Separar beneficio de paralelismo del cambio a modelos baratos; registrar límites y variabilidad.
+
+### Próximo tramo propuesto
+
+Tras autorización de implementación: elegir el mecanismo más pequeño compatible con Pi, demostrar dos frentes aislados y su integración, demostrar interrupción/reanudación y relevo, y comparar con ejecución secuencial antes de activar la capacidad en la preview personal. Detalles técnicos reversibles a cargo del agente; no reabrir las decisiones ya confirmadas.

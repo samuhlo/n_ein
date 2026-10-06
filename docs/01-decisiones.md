@@ -68,6 +68,23 @@ El 5 de octubre, a la vista del [banco de modelos de trabajo](../evals/results/2
 
 Tras revisar `220e60e` y `7e18da8`, Samu pidió priorizar fluidez, ayuda para diseñar, modelo adecuado, fiabilidad y coste y tiempo razonables, sin memorizar comandos; autorizó implementar los seis recorridos propuestos con «Hazlo». La conversación es la entrada ordinaria: una petición explícita de ayuda para pensar o diseñar activa intent; una petición clara va directa; «hazlo» usa el acuerdo sin reconfirmaciones rutinarias; otro encargo permite elegir modelo de nuevo; continuar recupera lo pendiente; pedir otro runtime prepara el relevo. Los comandos quedan como atajos. Spec y tareas las usa el agente cuando el encargo autorizado las necesita. Las comprobaciones y el cierre se ajustan al cambio y reutilizan evidencia vigente. Confirmar diseño sigue sin autorizar implementación por sí solo.
 
+### Paralelismo acordado el 6 de octubre — pendiente de implementar
+
+Tras investigar Gentle Shell y las skills de Matt, Samu confirmó las recomendaciones con «Sí a las recomendaciones». El acuerdo amplía el diseño del 5 de octubre: permite paralelismo útil, manteniendo retirada la delegación automática por precio. El banco anterior no aisló el beneficio de dos frentes independientes en worktrees frente a ejecución secuencial.
+
+- Una conversación con el coordinador, que puede programar y se responsabiliza de integrar y comprobar el resultado.
+- Hasta dos trabajadores simultáneos inicialmente, generalistas con encargos concretos y modelos adecuados a su dificultad. No roles permanentes ni trabajadores baratos obligatorios.
+- El agente decide cuándo paralelizar dentro del encargo ya autorizado, comunica brevemente el reparto y admite «hazlo con uno». No pide aprobación rutinaria para repartir; las decisiones de producto y ampliaciones de alcance conservan su autorización propia.
+- Separar por dependencias reales: front/back cuando haya un contrato suficiente, o funcionalidades completas cuando permitan avanzar con más independencia.
+- Un escritor por worktree, responsable de contratos compartidos y comprobación del resultado integrado. También coordinar recursos externos compartidos por las pruebas.
+- Al cerrar, detener los trabajadores y conservar su avance; al volver, reconciliar tareas y Git y continuar aunque haga falta otro agente. Antes de sustituir o relevar, comprobar que el origen y sus hijos han dejado de escribir.
+- `WORK.md` sigue siendo la guía común, actualizada por el coordinador. Estado técnico de ejecuciones asociado, sin otra lista de tareas competidora.
+- Comprobar la propuesta frente a ejecución secuencial por calidad, tiempo hasta la entrega integrada, consumo total, correcciones y recuperación tras interrupción. No prometer ahorro de tokens ni aceleración sin evidencia.
+
+Queda fuera del primer alcance trabajar con la aplicación cerrada. Esta conversación confirma diseño, no solicita todavía su implementación ni cambia el runtime instalado. El acuerdo y los criterios del siguiente tramo están en `WORK.md`.
+
+Fuentes inspeccionadas: [Gentle Shell, procesos, historial y continuación](https://github.com/Gentleman-Programming/gentle-shell/blob/69c9b5ae265a60ffaf1dc9e0efc1afdac966f300/docs/gentle-shell.md), [Matt, tareas paralelas e integración](https://github.com/mattpocock/skills/blob/6fd947921b935b7e1e69293a200400f0fdd5c15f/skills/engineering/implement-spec/SKILL.md), [Matt, entregas completas y dependencias](https://github.com/mattpocock/skills/blob/6fd947921b935b7e1e69293a200400f0fdd5c15f/skills/engineering/to-tickets/SKILL.md). Gentle conserva historial y permite continuar tareas, pero cerrar Pi detiene hijos activos; no se interpreta el historial como prueba de proceso vivo. La [documentación de equipos de Claude](https://code.claude.com/docs/en/agent-teams#limitations), consultada el 6 de octubre, también reconoce límites de reanudación. Se inspeccionaron fuentes; no se ejecutó un ensayo nuevo de estos sistemas.
+
 ## Recomendaciones de diseño, revisables
 
 - Pi como runtime inicial; n_ein como capa pequeña: un paquete Pi (skills, extensiones mínimas, prompts, tema) más un launcher que fija el hogar aislado. Pi ya ofrece el aislamiento (`PI_CODING_AGENT_DIR`) y la carga de paquetes (`pi install`, `pi -e`).
