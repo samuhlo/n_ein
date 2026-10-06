@@ -1,0 +1,739 @@
+{
+  "date": "2026-10-06",
+  "productCommit": "1fa9e336d383bd33f4d7fb98a25137b724a5695e",
+  "costKind": "catalog-estimate, not billed subscription cost",
+  "runtime": {
+    "pi": "1.0.2",
+    "codegraph": "1.6.1"
+  },
+  "runs": [
+    {
+      "run": "s1-NR10-r1",
+      "wall_s": 188,
+      "models": [
+        "openai-codex/gpt-6-sol"
+      ],
+      "usage": {
+        "total": {
+          "input": 100505,
+          "output": 5605,
+          "cacheRead": 640768,
+          "cacheWrite": 0,
+          "reasoning": 1263
+        },
+        "parent": {
+          "input": 100505,
+          "output": 5605,
+          "cacheRead": 640768,
+          "cacheWrite": 0,
+          "reasoning": 1263
+        },
+        "children": {
+          "input": 0,
+          "output": 0,
+          "cacheRead": 0,
+          "cacheWrite": 0,
+          "reasoning": 0
+        },
+        "usd": 0.3852,
+        "usdAllSol": 0.3852
+      },
+      "assistantTurns": 24,
+      "tools": {
+        "bash": 16,
+        "read": 14,
+        "codegraph_explore": 2,
+        "nein_escalate": 1,
+        "edit": 5
+      },
+      "git": {
+        "branches": [
+          "fix/anexo4-rechazos-previos-failed",
+          "main"
+        ],
+        "commits": 1,
+        "pushed": false,
+        "coauthor": false,
+        "dirty": 0,
+        "changedFiles": 4,
+        "shortstat": "4 files changed, 53 insertions(+), 27 deletions(-)"
+      },
+      "grade": {
+        "run": "s1-NR10-r1",
+        "hidden": "26/26",
+        "hiddenPass": 26,
+        "hiddenTotal": 26,
+        "suite": "2177/2177",
+        "suiteBadFiles": 0,
+        "suiteFailed": 0,
+        "typecheck": true,
+        "extra": {}
+      },
+      "evidenceSha256": {
+        "meta.json": "88c28a1fdbb739aec94a51617e8196f3880acd74f802cc05a68d084631f6071e",
+        "metrics.json": "9619fd9f86489756d9f3c07083caca4ec570784b33d0bbe52b0343b527aa5b43",
+        "grade.json": "bc74cd5198f0a2a4b607b88d04528b0cac8ff904068d7f5fc676c17b302b2b51"
+      }
+    },
+    {
+      "run": "s2-NR10-r1",
+      "wall_s": 645,
+      "models": [
+        "openai-codex/gpt-6-sol"
+      ],
+      "usage": {
+        "total": {
+          "input": 175033,
+          "output": 15718,
+          "cacheRead": 3463808,
+          "cacheWrite": 0,
+          "reasoning": 3140
+        },
+        "parent": {
+          "input": 175033,
+          "output": 15718,
+          "cacheRead": 3463808,
+          "cacheWrite": 0,
+          "reasoning": 3140
+        },
+        "children": {
+          "input": 0,
+          "output": 0,
+          "cacheRead": 0,
+          "cacheWrite": 0,
+          "reasoning": 0
+        },
+        "usd": 1.2,
+        "usdAllSol": 1.2
+      },
+      "assistantTurns": 76,
+      "tools": {
+        "codegraph_explore": 4,
+        "bash": 27,
+        "read": 37,
+        "nein_escalate": 1,
+        "write": 2,
+        "edit": 29
+      },
+      "git": {
+        "branches": [
+          "fix/anexo3-plan-guardado",
+          "main"
+        ],
+        "commits": 3,
+        "pushed": false,
+        "coauthor": false,
+        "dirty": 0,
+        "changedFiles": 16,
+        "shortstat": "16 files changed, 191 insertions(+), 64 deletions(-)"
+      },
+      "grade": {
+        "run": "s2-NR10-r1",
+        "hidden": "14/14",
+        "hiddenPass": 14,
+        "hiddenTotal": 14,
+        "suite": "3156/3160",
+        "suiteBadFiles": 0,
+        "suiteFailed": 0,
+        "typecheck": true,
+        "extra": {}
+      },
+      "evidenceSha256": {
+        "meta.json": "19ba1b6e1c34aaa7c17d212dcda08067f5b8eaf193444106bc5c6840f4914825",
+        "metrics.json": "94d6e32fbb1a998da9b790a96b0a75680623e671a00761ea4d6b92e2f752ecab",
+        "grade.json": "e97a56aeb6d4ac72ebac03b637d8b8cf2ab285a308f181b6847523b8e467b26a"
+      }
+    },
+    {
+      "run": "s2-NR10-r2",
+      "wall_s": 662,
+      "models": [
+        "openai-codex/gpt-6-sol"
+      ],
+      "usage": {
+        "total": {
+          "input": 196869,
+          "output": 18280,
+          "cacheRead": 3740800,
+          "cacheWrite": 0,
+          "reasoning": 3561
+        },
+        "parent": {
+          "input": 196869,
+          "output": 18280,
+          "cacheRead": 3740800,
+          "cacheWrite": 0,
+          "reasoning": 3561
+        },
+        "children": {
+          "input": 0,
+          "output": 0,
+          "cacheRead": 0,
+          "cacheWrite": 0,
+          "reasoning": 0
+        },
+        "usd": 1.3247,
+        "usdAllSol": 1.3247
+      },
+      "assistantTurns": 72,
+      "tools": {
+        "codegraph_explore": 3,
+        "bash": 26,
+        "read": 34,
+        "nein_escalate": 1,
+        "write": 2,
+        "edit": 34
+      },
+      "git": {
+        "branches": [
+          "fix/anexo3-plan-guardado",
+          "main"
+        ],
+        "commits": 3,
+        "pushed": false,
+        "coauthor": false,
+        "dirty": 0,
+        "changedFiles": 18,
+        "shortstat": "18 files changed, 209 insertions(+), 138 deletions(-)"
+      },
+      "grade": {
+        "run": "s2-NR10-r2",
+        "hidden": "14/14",
+        "hiddenPass": 14,
+        "hiddenTotal": 14,
+        "suite": "3157/3161",
+        "suiteBadFiles": 0,
+        "suiteFailed": 0,
+        "typecheck": true,
+        "extra": {}
+      },
+      "evidenceSha256": {
+        "meta.json": "5efef6e2226054e736ce408d179e54f627a3ec0bf41cd2267b29da58a43b32af",
+        "metrics.json": "d93d98edf10a9b3eeb3618f99e3dc66a6e65668c90cd55f214503f48957b265f",
+        "grade.json": "5a59cd7fd56d45d8eee25295fc9906d1e8b98ca59bd50d877619bfd7e45593dc"
+      }
+    },
+    {
+      "run": "s2-NR10-r3",
+      "wall_s": 730,
+      "models": [
+        "openai-codex/gpt-6-sol"
+      ],
+      "usage": {
+        "total": {
+          "input": 150114,
+          "output": 17818,
+          "cacheRead": 3784960,
+          "cacheWrite": 0,
+          "reasoning": 3908
+        },
+        "parent": {
+          "input": 150114,
+          "output": 17818,
+          "cacheRead": 3784960,
+          "cacheWrite": 0,
+          "reasoning": 3908
+        },
+        "children": {
+          "input": 0,
+          "output": 0,
+          "cacheRead": 0,
+          "cacheWrite": 0,
+          "reasoning": 0
+        },
+        "usd": 1.2354,
+        "usdAllSol": 1.2354
+      },
+      "assistantTurns": 67,
+      "tools": {
+        "codegraph_explore": 4,
+        "bash": 20,
+        "read": 31,
+        "nein_escalate": 1,
+        "write": 2,
+        "edit": 29
+      },
+      "git": {
+        "branches": [
+          "fix/anexo-iii-plan-guardado",
+          "main"
+        ],
+        "commits": 1,
+        "pushed": false,
+        "coauthor": false,
+        "dirty": 0,
+        "changedFiles": 18,
+        "shortstat": "18 files changed, 247 insertions(+), 91 deletions(-)"
+      },
+      "grade": {
+        "run": "s2-NR10-r3",
+        "hidden": "14/14",
+        "hiddenPass": 14,
+        "hiddenTotal": 14,
+        "suite": "3162/3166",
+        "suiteBadFiles": 0,
+        "suiteFailed": 0,
+        "typecheck": true,
+        "extra": {}
+      },
+      "evidenceSha256": {
+        "meta.json": "1406ca5c5d22dff661aaa5b8eee2e47be037e8d9c3a984f65c457e45921253b1",
+        "metrics.json": "fad0f29d4cb19b8e6d7a93bf1db81195a4c93eedde700b8ac1d4eb0bd5fce208",
+        "grade.json": "316f671c1f2473f0e83a9e72e3392ebf33878b65119241ca7187340330ad663e"
+      }
+    },
+    {
+      "run": "s3-NR10-r1",
+      "wall_s": 615,
+      "models": [
+        "openai-codex/gpt-6-sol"
+      ],
+      "usage": {
+        "total": {
+          "input": 254876,
+          "output": 16102,
+          "cacheRead": 3607680,
+          "cacheWrite": 0,
+          "reasoning": 2187
+        },
+        "parent": {
+          "input": 254876,
+          "output": 16102,
+          "cacheRead": 3607680,
+          "cacheWrite": 0,
+          "reasoning": 2187
+        },
+        "children": {
+          "input": 0,
+          "output": 0,
+          "cacheRead": 0,
+          "cacheWrite": 0,
+          "reasoning": 0
+        },
+        "usd": 1.3923,
+        "usdAllSol": 1.3923
+      },
+      "assistantTurns": 56,
+      "tools": {
+        "codegraph_explore": 3,
+        "bash": 24,
+        "read": 32,
+        "nein_escalate": 1,
+        "write": 2,
+        "edit": 23
+      },
+      "git": {
+        "branches": [
+          "fix/deudas-alpha-centro-anexo",
+          "main"
+        ],
+        "commits": 4,
+        "pushed": false,
+        "coauthor": false,
+        "dirty": 0,
+        "changedFiles": 13,
+        "shortstat": "13 files changed, 235 insertions(+), 127 deletions(-)"
+      },
+      "grade": {
+        "run": "s3-NR10-r1",
+        "hidden": "3/3",
+        "hiddenPass": 3,
+        "hiddenTotal": 3,
+        "suite": "3153/3157",
+        "suiteBadFiles": 0,
+        "suiteFailed": 0,
+        "typecheck": true,
+        "extra": {
+          "mount": {
+            "readsText": false,
+            "mounts": true,
+            "pass": "4/4",
+            "mutantsKilled": 2
+          },
+          "docFixed": true
+        }
+      },
+      "evidenceSha256": {
+        "meta.json": "059acba1c4c51c2ed474590b2a7bc8a89e88a010b1844a57b12f2f48c7ee914b",
+        "metrics.json": "84e827cf5a398ef2fbd1579153a4e80835cadcae8de4373cea6b1a04f747c5e0",
+        "grade.json": "7e1a805bf06124d2cdfb6df8915c71414695fb9c9b05ca171748238e99ccc0ef"
+      }
+    },
+    {
+      "run": "s3-NR10-r2",
+      "wall_s": 631,
+      "models": [
+        "openai-codex/gpt-6-sol"
+      ],
+      "usage": {
+        "total": {
+          "input": 216058,
+          "output": 16571,
+          "cacheRead": 3299584,
+          "cacheWrite": 0,
+          "reasoning": 3404
+        },
+        "parent": {
+          "input": 216058,
+          "output": 16571,
+          "cacheRead": 3299584,
+          "cacheWrite": 0,
+          "reasoning": 3404
+        },
+        "children": {
+          "input": 0,
+          "output": 0,
+          "cacheRead": 0,
+          "cacheWrite": 0,
+          "reasoning": 0
+        },
+        "usd": 1.2577,
+        "usdAllSol": 1.2577
+      },
+      "assistantTurns": 61,
+      "tools": {
+        "codegraph_explore": 2,
+        "bash": 25,
+        "read": 34,
+        "nein_escalate": 1,
+        "write": 2,
+        "edit": 22
+      },
+      "git": {
+        "branches": [
+          "fix/deudas-alpha-estado-actual",
+          "main"
+        ],
+        "commits": 5,
+        "pushed": false,
+        "coauthor": false,
+        "dirty": 0,
+        "changedFiles": 12,
+        "shortstat": "12 files changed, 243 insertions(+), 117 deletions(-)"
+      },
+      "grade": {
+        "run": "s3-NR10-r2",
+        "hidden": "3/3",
+        "hiddenPass": 3,
+        "hiddenTotal": 3,
+        "suite": "3152/3156",
+        "suiteBadFiles": 0,
+        "suiteFailed": 0,
+        "typecheck": true,
+        "extra": {
+          "mount": {
+            "readsText": false,
+            "mounts": true,
+            "pass": "6/6",
+            "mutantsKilled": 2
+          },
+          "docFixed": true
+        }
+      },
+      "evidenceSha256": {
+        "meta.json": "717b6a9316678dd8554d55208ee8ea4b7b9800e3229397af3e3a9f0e42058f53",
+        "metrics.json": "1ed527e48ab3795005a91977168941538acb748b1c999c7b3aa1de65e4fad60d",
+        "grade.json": "0848c2d246a6b8a0b1a50f1f8305db1cb2f7713824f891b2d33698c09716a601"
+      }
+    },
+    {
+      "run": "s3-NR10-r3",
+      "wall_s": 487,
+      "models": [
+        "openai-codex/gpt-6-sol"
+      ],
+      "usage": {
+        "total": {
+          "input": 210048,
+          "output": 12914,
+          "cacheRead": 2362496,
+          "cacheWrite": 0,
+          "reasoning": 1576
+        },
+        "parent": {
+          "input": 210048,
+          "output": 12914,
+          "cacheRead": 2362496,
+          "cacheWrite": 0,
+          "reasoning": 1576
+        },
+        "children": {
+          "input": 0,
+          "output": 0,
+          "cacheRead": 0,
+          "cacheWrite": 0,
+          "reasoning": 0
+        },
+        "usd": 1.0217,
+        "usdAllSol": 1.0217
+      },
+      "assistantTurns": 56,
+      "tools": {
+        "bash": 25,
+        "read": 27,
+        "codegraph_explore": 2,
+        "nein_escalate": 1,
+        "write": 2,
+        "edit": 20
+      },
+      "git": {
+        "branches": [
+          "fix/deudas-alpha-centro-anexo",
+          "main"
+        ],
+        "commits": 3,
+        "pushed": false,
+        "coauthor": false,
+        "dirty": 0,
+        "changedFiles": 12,
+        "shortstat": "12 files changed, 252 insertions(+), 128 deletions(-)"
+      },
+      "grade": {
+        "run": "s3-NR10-r3",
+        "hidden": "3/3",
+        "hiddenPass": 3,
+        "hiddenTotal": 3,
+        "suite": "3149/3153",
+        "suiteBadFiles": 0,
+        "suiteFailed": 0,
+        "typecheck": true,
+        "extra": {
+          "mount": {
+            "readsText": false,
+            "mounts": true,
+            "pass": "4/4",
+            "mutantsKilled": 2
+          },
+          "docFixed": true
+        }
+      },
+      "evidenceSha256": {
+        "meta.json": "19429bdd0967a08ec069faf1467c606fa9d44c6dfd2262dc725bc0bd90863499",
+        "metrics.json": "186913ac553eafd9051d819ad980b21a8307a41242fb653c14fc2b92adf2e1c8",
+        "grade.json": "f11db6485f93457ac3fdd8fd4f9a7526e31fae4f95aae730fc1d4442419baf83"
+      }
+    },
+    {
+      "run": "s5-NR10-r1",
+      "wall_s": 92,
+      "models": [
+        "openai-codex/gpt-6-luna"
+      ],
+      "usage": {
+        "total": {
+          "input": 56418,
+          "output": 3548,
+          "cacheRead": 190976,
+          "cacheWrite": 0,
+          "reasoning": 1155
+        },
+        "parent": {
+          "input": 56418,
+          "output": 3548,
+          "cacheRead": 190976,
+          "cacheWrite": 0,
+          "reasoning": 1155
+        },
+        "children": {
+          "input": 0,
+          "output": 0,
+          "cacheRead": 0,
+          "cacheWrite": 0,
+          "reasoning": 0
+        },
+        "usd": 0.0093,
+        "usdAllSol": 0.1865
+      },
+      "assistantTurns": 12,
+      "tools": {
+        "codegraph_explore": 3,
+        "bash": 7,
+        "read": 9,
+        "edit": 2
+      },
+      "git": {
+        "branches": [
+          "docs/readme-db-seed-scripts",
+          "main"
+        ],
+        "commits": 1,
+        "pushed": false,
+        "coauthor": false,
+        "dirty": 0,
+        "changedFiles": 1,
+        "shortstat": "1 file changed, 24 insertions(+), 4 deletions(-)"
+      },
+      "grade": {
+        "run": "s5-NR10-r1",
+        "hidden": "16/16",
+        "hiddenPass": 16,
+        "hiddenTotal": 16,
+        "suite": "3151/3155",
+        "suiteBadFiles": 0,
+        "suiteFailed": 0,
+        "typecheck": true,
+        "extra": {
+          "codeFilesTouched": 0
+        }
+      },
+      "evidenceSha256": {
+        "meta.json": "3b0ed81325f85a6a4adb8e3344b23006db33876fe6d03403eda63f43f96bd989",
+        "metrics.json": "ed8774e3fa7ccc1574dcda47c3d48bb7d15027fd5161d9328d7005fc685d12bb",
+        "grade.json": "fb599a1f85bba363823203fcf52f302c709bfa2443ac57636218bf0127117194"
+      }
+    },
+    {
+      "run": "s2-NR8-r3",
+      "wall_s": 577,
+      "models": [
+        "openai-codex/gpt-6-sol"
+      ],
+      "usage": {
+        "total": {
+          "input": 151798,
+          "output": 14398,
+          "cacheRead": 2621824,
+          "cacheWrite": 0,
+          "reasoning": 3037
+        },
+        "parent": {
+          "input": 151798,
+          "output": 14398,
+          "cacheRead": 2621824,
+          "cacheWrite": 0,
+          "reasoning": 3037
+        },
+        "children": {
+          "input": 0,
+          "output": 0,
+          "cacheRead": 0,
+          "cacheWrite": 0,
+          "reasoning": 0
+        },
+        "usd": 0.9719,
+        "usdAllSol": 0.9719
+      },
+      "assistantTurns": 74,
+      "tools": {
+        "codegraph_explore": 3,
+        "bash": 25,
+        "read": 38,
+        "nein_escalate": 1,
+        "write": 2,
+        "edit": 29
+      },
+      "git": {
+        "branches": [
+          "fix/anexo3-planificacion-guardada",
+          "main"
+        ],
+        "commits": 2,
+        "pushed": false,
+        "coauthor": false,
+        "dirty": 0,
+        "changedFiles": 16,
+        "shortstat": "16 files changed, 156 insertions(+), 86 deletions(-)"
+      },
+      "grade": {
+        "run": "s2-NR8-r3",
+        "hidden": "14/14",
+        "hiddenPass": 14,
+        "hiddenTotal": 14,
+        "suite": "3158/3162",
+        "suiteBadFiles": 0,
+        "suiteFailed": 0,
+        "typecheck": true,
+        "extra": {}
+      },
+      "evidenceSha256": {
+        "meta.json": "9ceb0351c0346f9592e287b343a47f32586f8dff380afbc81c14540634e80e3c",
+        "metrics.json": "fc74679adf97a6755ecebfb0aafb0c32781d1f0e4ff2f8edd64522627fd0be47",
+        "grade.json": "9760d0080c97b3e93c8cafeaf9b7fbe3bb2eeebd85094a9104217c3d63ad5523"
+      }
+    },
+    {
+      "run": "s3-NR10-r1-cut",
+      "wall_s": 301,
+      "models": [
+        "openai-codex/gpt-6-sol"
+      ],
+      "usage": {
+        "total": {
+          "input": 253093,
+          "output": 16191,
+          "cacheRead": 2418432,
+          "cacheWrite": 0,
+          "reasoning": 2315
+        },
+        "parent": {
+          "input": 253093,
+          "output": 16191,
+          "cacheRead": 2418432,
+          "cacheWrite": 0,
+          "reasoning": 2315
+        },
+        "children": {
+          "input": 0,
+          "output": 0,
+          "cacheRead": 0,
+          "cacheWrite": 0,
+          "reasoning": 0
+        },
+        "usd": 1.1518,
+        "usdAllSol": 1.1518
+      },
+      "assistantTurns": 70,
+      "tools": {
+        "bash": 35,
+        "read": 40,
+        "codegraph_explore": 5,
+        "edit": 18,
+        "nein_escalate": 1,
+        "write": 2
+      },
+      "git": {
+        "branches": [
+          "fix/deudas-alpha-centro-anexo",
+          "main"
+        ],
+        "commits": 4,
+        "pushed": false,
+        "coauthor": false,
+        "dirty": 0,
+        "changedFiles": 12,
+        "shortstat": "12 files changed, 245 insertions(+), 121 deletions(-)"
+      },
+      "grade": {
+        "run": "s3-NR10-r1-cut",
+        "hidden": "3/3",
+        "hiddenPass": 3,
+        "hiddenTotal": 3,
+        "suite": "3153/3157",
+        "suiteBadFiles": 0,
+        "suiteFailed": 0,
+        "typecheck": true,
+        "extra": {
+          "mount": {
+            "readsText": false,
+            "mounts": true,
+            "pass": "7/7",
+            "mutantsKilled": 2
+          },
+          "docFixed": true
+        }
+      },
+      "evidenceSha256": {
+        "meta.json": "ef18f14d8a37fe609f3c869a122c30849fce42f7da925473cc8fa18a3dc38ca6",
+        "metrics.json": "b6c0b809b1f36eeaa08a446887edb2a23e42f662f9ff933cf2b3c60b9e0fba08",
+        "grade.json": "e7834b5735b9a93fd0d7ccff67e57635f0afcf5204a32b788d626bb720b6a9e5"
+      }
+    }
+  ],
+  "resume": {
+    "cutAt_s": 301,
+    "resumeWall_s": 286,
+    "resumeUsd": 0.5327,
+    "totalUsd": 1.1518
+  },
+  "continuityStatus": "Pi T1 complete; Claude session quota; resume after indicated reset"
+}

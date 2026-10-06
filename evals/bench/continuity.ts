@@ -13,16 +13,20 @@ const repo = resolve(import.meta.dir, "../..");
 const bench = process.env.N_EIN_BENCH || resolve(repo, "../n_ein-bench");
 const run = process.env.N_EIN_CONTINUITY_RUN || "s4b-NR10-r1";
 const project = join(bench, "copies", run), home = join(bench, "homes", run), log = join(bench, "logs", run);
-if ([project, home, log].some(existsSync)) throw new Error(`Ya existe ${run}; elige otro N_EIN_CONTINUITY_RUN`);
+const resume = process.argv.includes("--resume");
+if (!resume && [project, home, log].some(existsSync)) throw new Error(`Ya existe ${run}; usa --resume o elige otro N_EIN_CONTINUITY_RUN`);
+if (resume && ![project, home, log].every(existsSync)) throw new Error(`No existe el ensayo completo ${run}`);
 mkdirSync(log, { recursive: true }); mkdirSync(join(home, "pi-agent"), { recursive: true });
+const git = (...args: string[]) => execFileSync("git", args, { cwd: project, encoding: "utf8" }).trim();
+if (!resume) {
 cpSync(join(repo, "evals/fixtures/continuity"), project, { recursive: true });
 cpSync(join(bench, "auth/pi-agent/auth.json"), join(home, "pi-agent/auth.json"));
-const git = (...args: string[]) => execFileSync("git", args, { cwd: project, encoding: "utf8" }).trim();
 git("init", "-b", "main"); git("config", "user.name", "n_ein evaluation"); git("config", "user.email", "eval@n-ein.invalid");
 git("add", "-A"); git("commit", "-qm", "test: continuity base");
 writeFileSync(join(home, "models.json"), JSON.stringify({ schema: 1, agents: { principal: { model: "nein/auto", thinking: "medium" } }, claude: { effort: "medium" } }));
 writeFileSync(join(home, "lang.json"), JSON.stringify({ chat: "es", artifacts: "en" }));
 writeFileSync(join(home, "preferences.md"), "When reporting checked work, put the exact command next to its observed result.\n");
+}
 const version = JSON.parse(readFileSync(join(repo, "runtime.json"), "utf8")).pi.version;
 const realPi = join(process.env.N_EIN_HOME || join(process.env.HOME!, ".n_ein"), "runtimes/pi", version, "bin/pi");
 const quote = (text: string) => `'${text.replace(/'/g, "'\\''")}'`;
@@ -35,8 +39,13 @@ const env = {
   N_EIN_CLAUDE_DIR: process.env.N_EIN_EVAL_CLAUDE_DIR || join(process.env.HOME!, ".n_ein/dev/claude"),
   N_EIN_CODEGRAPH_ALLOW_TEMP: "1", PI_OFFLINE: "1", DO_NOT_TRACK: "1",
 };
-const stages: { stage: string; exit: number | null; wall_s: number }[] = [];
+type Stage = { stage: string; exit: number | null; wall_s: number };
+const stages: Stage[] = resume ? JSON.parse(readFileSync(join(log, "stages.json"), "utf8")) : [];
+const succeeded = (stage: string) => stages.some((s) => (s.stage === stage || s.stage.startsWith(stage + "-attempt-")) && s.exit === 0);
 async function execute(stage: string, binary: string, args: string[], extra: Record<string, string> = {}) {
+  if (succeeded(stage)) return;
+  const attempt = stages.filter((s) => s.stage === stage || s.stage.startsWith(stage + "-attempt-")).length + 1;
+  if (attempt > 1) stage += `-attempt-${attempt}`;
   const start = Date.now();
   const stdout = Bun.file(join(log, `${stage}.jsonl`)).writer(), stderr = Bun.file(join(log, `${stage}.stderr`)).writer();
   const child = spawn(binary, args, { cwd: project, env: { ...env, ...extra }, stdio: ["ignore", "pipe", "pipe"], detached: true });
@@ -81,11 +90,11 @@ if (!existsSync(join(log, "pi-return-events.jsonl"))) throw new Error("Claude no
 await execute("hidden", "bun", ["test", join(repo, "evals/reserved/continuity.test.ts")], { N_EIN_CONTINUITY_COPY: project });
 await execute("suite", "bun", ["run", "test"]);
 await execute("types", "bun", ["run", "typecheck"]);
-const work = readFileSync(join(project, "WORK.md"), "utf8");
+const work = readFileSync(join(project, existsSync(join(project, "WORK.md")) ? "WORK.md" : "completed-work.md"), "utf8");
 if (/^- \[ \]/m.test(work)) throw new Error("Quedan tareas pendientes después del relevo");
 
 // Otro encargo ya no recibe WORK.md: tiene que recuperar la decisión duradera.
-git("mv", "WORK.md", "completed-work.md"); git("commit", "-qm", "test: start another job after completing the first");
+if (existsSync(join(project, "WORK.md"))) { git("mv", "WORK.md", "completed-work.md"); git("commit", "-qm", "test: start another job after completing the first"); }
 await execute("later-job", join(repo, "bin/n-ein-dev"), ["Otro encargo, solo lectura: antes de proponer cambios para la configuración de puertos, recupera las decisiones vigentes de este proyecto y explica su razón. No leas completed-work.md ni las sesiones anteriores. No cambies archivos. Cita la fuente y el comando con el que comprobarías el contrato."], { N_EIN_CONTINUITY_PI_LOG: join(log, "later-job-events.jsonl") });
 if (git("status", "--porcelain")) throw new Error("La consulta de memoria modificó el proyecto");
 writeFileSync(join(log, "result.json"), JSON.stringify({ run, stages, sourceCommit: execFileSync("git", ["rev-parse", "HEAD"], { cwd: repo, encoding: "utf8" }).trim(), head: git("rev-parse", "HEAD"), commits: git("log", "--oneline"), handoff: summary, limitation: "Non-interactive runtimes; the Pi command handler generates its summary after the first process exits. External writers are not supervised." }, null, 2));
