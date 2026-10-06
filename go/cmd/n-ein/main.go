@@ -29,10 +29,11 @@ func run(args []string) error {
 	viewName := flags.String("view", "inicio", "inicio, estado, configuracion, sesiones o sistema")
 	once := flags.Bool("once", false, "pintar una vez y salir")
 	noIntro := flags.Bool("no-intro", false, "omitir la introducción")
+	runtime := flags.String("runtime", "", "abrir pi o claude directamente; sus argumentos van tras --")
 	if err := flags.Parse(args); err != nil {
 		return err
 	}
-	if flags.NArg() != 0 {
+	if flags.NArg() != 0 && *runtime == "" {
 		return fmt.Errorf("argumentos inesperados: %v", flags.Args())
 	}
 	// CodeGraph y sus hijos heredan esto: sin telemetría ni avisos de versión, que la fija runtime.json.
@@ -48,6 +49,9 @@ func run(args []string) error {
 	packageRoot, err := findPackageRoot(*root)
 	if err != nil {
 		return err
+	}
+	if *runtime != "" {
+		return launchRuntime(packageRoot, absProject, *runtime, flags.Args())
 	}
 	state := loadState(packageRoot, absProject)
 	view := viewIndex(*viewName)
@@ -91,14 +95,7 @@ func run(args []string) error {
 			launchArgs = []string{"--resume", parts[1]}
 		}
 	}
-	launcher := filepath.Join(packageRoot, "bin", "n-ein-"+runtimeName+"-dev")
-	if runtimeName == "pi" {
-		launcher = filepath.Join(packageRoot, "bin", "n-ein-dev")
-	}
-	cmd := exec.Command(launcher, launchArgs...)
-	cmd.Dir = absProject
-	cmd.Stdin, cmd.Stdout, cmd.Stderr = os.Stdin, os.Stdout, os.Stderr
-	return cmd.Run()
+	return launchRuntime(packageRoot, absProject, runtimeName, launchArgs)
 }
 
 func findPackageRoot(explicit string) (string, error) {

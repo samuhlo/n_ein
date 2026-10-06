@@ -28,6 +28,8 @@
 
 - [x] T1 · Recorte seguro — instrucciones por shell, referencias de skills, errores y evidencia conservados; commits reales distinguidos de lecturas.
 - [x] T2 · Modelo por encargo — peticiones mixtas conservadoras y nuevo encargo explícito sin arrastrar el modelo caro.
+- [ ] T2b · Clasificación conservadora — implementar y documentar no equivale a trabajo mecánico.
+- [x] T3b · Sesiones independientes — bloqueo por árbol desde el launcher, conservado por el runtime si muere el padre.
 - [x] T3 · Relevo portable — títulos ingleses y españoles, criterios completos y cierre ordenado del origen.
 - [x] T4 · Alcance y memoria — contrato por petición, conocimiento duradero selectivo y preferencias compartidas por Pi y Claude.
 - [x] T5a · Banco revisable — aceptación completa, mutantes y coste de las ejecuciones incompletas visibles; runner y reanudación reproducibles.
@@ -37,6 +39,8 @@
 ## Evidencia
 
 - Base: `2e09886`; auditoría con `./scripts/check.sh` correcto y regresiones reproducidas.
+- T3b: dos procesos independientes prueban que el segundo no llega a escribir, que matar al launcher no libera el bloqueo mientras sigue su runtime y que, tras terminar este, puede entrar otra sesión. Rojo observado antes del bloqueo y antes de heredar el descriptor; verde y suite completa correctos.
+- T2b: rojo observado con «Implementa el parser y escribe su documentación»; el enrutador conserva la clasificación ordinaria y las peticiones etiquetadas siguen pasando.
 - T5a: `tests/bench.ts` comprueba que 9/14, un mutante superviviente, una suite rota o evidencia ausente no cuentan como aceptación completa. El informe recupera todas las repeticiones, expone mutantes y coste por aceptada; se corrigió la omisión del informe histórico. Suite completa correcta.
 - T4: rojo observado en preferencias ausentes del relevo; ambos lanzadores entregan el mismo archivo. `tests/memory.ts` verifica lectura sin mutación, actualización entre sesiones y fuente explícita. El flujo conserva petición, consumidores y aceptación; evita límites inventados y manda preservar decisiones antes de reemplazar WORK.md. La efectividad con modelos se mide en T5. Suite completa correcta.
 - T3: rojo observado con WORK.md en inglés; `tests/handoff.ts` comprueba los criterios finales de un documento largo y las tareas pendientes junto al siguiente paso; ambos lanzadores prueban salida antes de destino. Escritores externos no supervisados quedan explícitos. Suite completa correcta.
