@@ -6,6 +6,8 @@ import { join, resolve } from "node:path";
 import { TeamStore } from "../pi-package/agents/store.ts";
 import registerHandoff from "../pi-package/extensions/handoff";
 
+process.env.N_EIN_WORKTREE_ROOT = mkdtempSync(join(tmpdir(), "nein-workspaces-"));
+
 const dir = mkdtempSync(join(tmpdir(), "n-ein-handoff-"));
 const home = join(dir, "pi-home");
 const signal = join(dir, "signal");

@@ -4,6 +4,10 @@ import { mkdtempSync, writeFileSync, readFileSync } from "node:fs";
 import { join, resolve } from "node:path";
 import { tmpdir } from "node:os";
 import { TeamManager } from "../pi-package/agents/manager.ts";
+process.env.N_EIN_WORKTREE_ROOT = mkdtempSync(
+  join(tmpdir(), "nein-workspaces-"),
+);
+
 const cwd = mkdtempSync(join(tmpdir(), "nein-manager-"));
 const git = (...args: string[]) =>
   execFileSync("git", args, { cwd, encoding: "utf8" }).trim();
@@ -98,8 +102,24 @@ assert.throws(
   "uncommitted partial work cannot be silently dropped",
 );
 console.log("interrupted assignment and continuation: OK");
-assert.equal(restored.store.get(pending.id).model,'test/model','resume preserves its physical model');
-writeFileSync(fake,readFileSync(fake,'utf8').replace("writeFileSync(name+'.txt',name)","writeFileSync(name+'.txt',name+' again')"));
-restored.resume(pending.id,'Continue with higher capability',{model:'test/strong',thinking:'high'});await restored.wait();
-assert.equal(restored.store.get(pending.id).model,'test/strong');assert.equal(restored.store.get(pending.id).thinking,'high');assert.equal(restored.store.get(pending.id).tokens,14);
-console.log('explicit capability change preserves accumulated usage: OK');
+assert.equal(
+  restored.store.get(pending.id).model,
+  "test/model",
+  "resume preserves its physical model",
+);
+writeFileSync(
+  fake,
+  readFileSync(fake, "utf8").replace(
+    "writeFileSync(name+'.txt',name)",
+    "writeFileSync(name+'.txt',name+' again')",
+  ),
+);
+restored.resume(pending.id, "Continue with higher capability", {
+  model: "test/strong",
+  thinking: "high",
+});
+await restored.wait();
+assert.equal(restored.store.get(pending.id).model, "test/strong");
+assert.equal(restored.store.get(pending.id).thinking, "high");
+assert.equal(restored.store.get(pending.id).tokens, 14);
+console.log("explicit capability change preserves accumulated usage: OK");

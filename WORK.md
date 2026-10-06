@@ -49,6 +49,8 @@ P0–P4 son el siguiente corte de implementación, no trabajo ya ejecutado. Si e
 
 ## Evidencia
 
+- Ensayo dirigido r1 detenido por fallo reproducido de infraestructura: Vite/Vitest no resuelve tests bajo `.git`. Dos trabajadores reales conservados en estado detenido; aceptación incompleta, no cuenta como mejora. Los nuevos worktrees pasan al hogar n_ein (ruta aislada configurable para pruebas); el registro sigue en Git. Regresión real sin modelos: Vitest 4.1.8 con jsdom falla bajo `.git` y pasa fuera con los mismos archivos y dependencias; evidencia en `evals/results/2026-10-06-paralelismo-vite.json`. El caso mínimo en entorno node no reproduce el fallo; el de jsdom sí.
+
 - `./scripts/check.sh` pasó en `0806ef5` (código previo al ajuste de modelo en resume): incluye pruebas Go/vet, paquete instalado, RPC, Pi real con proveedor determinista, Git, recuperación, vista y relevo. Se corrigió un empaquetado que omitía `pi-package/agents/`.
 - P2 autónomo completo: seis ejecuciones aceptadas; S6 4/4, S2 14/14, S3 3/3 y dos mutantes detectados, sin fallos de suite/tipos. Cero hijos en todas. No atribuir las diferencias observadas al paralelismo. El ensayo dirigido conserva el mismo encargo, declara su instrucción de reparto y registra su fuente aparte.
 

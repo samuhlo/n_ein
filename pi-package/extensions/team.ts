@@ -32,7 +32,8 @@ export function teamReport(tasks: TaskRecord[], detailed = true) {
     attempt: t.attempt,
     tokens: t.usageKnown ? t.tokens : null,
     cost: t.usageKnown ? t.cost : null,
-    record: join(dirname(dirname(t.cwd)), "team", `${t.id}.json`),
+    record:
+      t.recordPath || join(dirname(dirname(t.cwd)), "team", `${t.id}.json`),
     result: t.result?.slice(0, detailed ? 12000 : 160),
     resultTruncated: (t.result?.length ?? 0) > (detailed ? 12000 : 160),
     error: t.error,

@@ -4,7 +4,7 @@
 // de ejecución, fuera del paquete y de los árboles que cambian los trabajadores.
 // =============================================================================
 import { execFileSync } from "node:child_process";
-import { randomUUID } from "node:crypto";
+import { randomUUID, createHash } from "node:crypto";
 import {
   existsSync,
   mkdirSync,
@@ -14,7 +14,8 @@ import {
   renameSync,
   writeFileSync,
 } from "node:fs";
-import { join, resolve } from "node:path";
+import { join, resolve, isAbsolute } from "node:path";
+import { homedir } from "node:os";
 
 export type TaskStatus =
   | "queued"
@@ -39,6 +40,8 @@ export type TaskRecord = Assignment & {
   id: string;
   origin: string;
   cwd: string;
+  workspaceRoot?: string;
+  recordPath?: string;
   branch: string;
   base: string;
   created: string;
@@ -96,7 +99,15 @@ export class TeamStore {
       record.schema !== 1 ||
       record.id !== id ||
       record.origin !== this.origin ||
-      record.cwd !== join(this.common, "n_ein", "worktrees", id) ||
+      (record.workspaceRoot !== undefined &&
+        (typeof record.workspaceRoot !== "string" ||
+          !isAbsolute(record.workspaceRoot))) ||
+      record.cwd !==
+        join(
+          record.workspaceRoot ?? join(this.common, "n_ein", "worktrees"),
+          id,
+        ) ||
+      record.cwd === this.origin ||
       record.branch !== `nein/task-${id}` ||
       typeof record.taskId !== "string" ||
       typeof record.base !== "string" ||
@@ -113,7 +124,7 @@ export class TeamStore {
       ].includes(record.status)
     )
       throw new Error(`invalid team record: ${id}; preserve it for recovery`);
-    return record;
+    return { ...record, recordPath: this.file(id) };
   }
   list(): TaskRecord[] {
     if (!existsSync(this.dir)) return [];
@@ -177,9 +188,28 @@ export class TeamStore {
     for (const dep of input.dependsOn ?? [])
       if (!records.some((t) => t.taskId === dep && t.status === "integrated"))
         throw new Error(`dependency not integrated: ${dep}`);
+    // Vite niega servir archivos bajo .git. Solo el registro vive allí.
+    const repositoryKey = createHash("sha256")
+      .update(this.common)
+      .digest("hex")
+      .slice(0, 16);
+    const storage = resolve(
+      process.env.N_EIN_WORKTREE_ROOT ||
+        join(
+          process.env.N_EIN_HOME || join(homedir(), ".n_ein"),
+          "worktrees",
+          repositoryKey,
+        ),
+    );
+    mkdirSync(storage, { recursive: true, mode: 0o700 });
+    const workspaceRoot = realpathSync(storage);
+    if (workspaceRoot.split(/[\\/]/).includes(".git"))
+      throw new Error(
+        "Worker storage must be outside .git for build-tool compatibility.",
+      );
     const id = randomUUID(),
       base = git(this.origin, "rev-parse", "HEAD"),
-      cwd = join(this.common, "n_ein", "worktrees", id),
+      cwd = join(workspaceRoot, id),
       branch = `nein/task-${id}`;
     mkdirSync(this.dir, { recursive: true, mode: 0o700 });
     const created = new Date().toISOString();
@@ -189,6 +219,8 @@ export class TeamStore {
       id,
       origin: this.origin,
       cwd,
+      workspaceRoot,
+      recordPath: this.file(id),
       branch,
       base,
       created,

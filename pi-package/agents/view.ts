@@ -49,7 +49,7 @@ export function taskDetail(t: TaskRecord): string {
     t.label,
     labels[t.status],
     `Asignación: ${t.taskId}`,
-    `Encargo y evidencia: ${join(dirname(dirname(t.cwd)), "team", `${t.id}.json`)}`,
+    `Encargo y evidencia: ${t.recordPath || join(dirname(dirname(t.cwd)), "team", `${t.id}.json`)}`,
     `Modelo: ${t.model} · ${t.thinking}`,
     `Intentos: ${t.attempt}. El consumo mostrado acumula todos los intentos.`,
     `Árbol: ${t.cwd}`,

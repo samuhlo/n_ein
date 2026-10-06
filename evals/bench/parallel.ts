@@ -95,6 +95,7 @@ const env = {
   N_EIN_MODELS_FILE: join(log, "models.json"),
   N_EIN_LANG_FILE: join(log, "lang.json"),
   N_EIN_TEAM_SESSION_DIR: join(log, "workers"),
+  N_EIN_WORKTREE_ROOT: join(bench, "worktrees", id),
   N_EIN_TEAM: arm === "team" ? "1" : "0",
   PI_OFFLINE: "1",
   DO_NOT_TRACK: "1",

@@ -4,6 +4,10 @@ import { mkdtempSync, readFileSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { TeamStore } from "../pi-package/agents/store.ts";
+process.env.N_EIN_WORKTREE_ROOT = mkdtempSync(
+  join(tmpdir(), "nein-workspaces-"),
+);
+
 const root = mkdtempSync(join(tmpdir(), "nein-team-"));
 const git = (...args: string[]) =>
   execFileSync("git", args, { cwd: root, encoding: "utf8" }).trim();
@@ -35,6 +39,10 @@ const b = store.create({
   owner: "one",
 });
 assert.notEqual(a.cwd, b.cwd);
+assert.ok(
+  !a.cwd.includes("/.git/"),
+  "Vite must be able to serve files from the worktree",
+);
 assert.equal(
   readFileSync(join(a.cwd, "WORK.md"), "utf8"),
   readFileSync(join(root, "WORK.md"), "utf8"),

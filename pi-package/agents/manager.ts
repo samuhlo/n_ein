@@ -244,6 +244,9 @@ export class TeamManager {
       t.prompt,
       `Your branch: ${t.branch}. Base: ${t.base}.`,
       `The coordinator owns WORK.md at ${join(t.origin, "WORK.md")}; read it for context, do not edit either copy.`,
+      existsSync(join(t.origin, "AGENTS.md"))
+        ? `Also read project instructions at ${join(t.origin, "AGENTS.md")}; preserve those conventions in your worktree.`
+        : "",
       "Implement only this assignment, check its behaviour and commit your own changes on this branch. Report changes, checks, remaining issues and the commit. Do not merge or publish. If blocked by a product decision, return BLOCKED: with the question; do not guess.",
       instruction ? `Continuation: ${instruction}` : "",
     ].join("\n\n");

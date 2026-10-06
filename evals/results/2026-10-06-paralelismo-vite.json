@@ -1,0 +1,11 @@
+{
+  "before": {
+    "exit": 1,
+    "output": "\n RUN  v4.1.8 /private/var/folders/57/45vy61qn2kqb5n80txw0b1tm0000gn/T/nein-vite-layout-VjQtwZ/project/.git/old-worker\n\n ❯ tests/behaviour.test.ts (0 test)\n\n Test Files  1 failed (1)\n      Tests  no tests\n   Start at  21:36:40\n   Duration  522ms (transform 0ms, setup 0ms, import 0ms, tests 0ms, environment 454ms)\n\n\n⎯⎯⎯⎯⎯⎯ Failed Suites 1 ⎯⎯⎯⎯⎯⎯⎯\n\n FAIL  tests/behaviour.test.ts [ tests/behaviour.test.ts ]\nError: Cannot find module '/tests/setup.ts'\n⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯\n\n"
+  },
+  "after": {
+    "exit": 0,
+    "output": "\n RUN  v4.1.8 /private/var/folders/57/45vy61qn2kqb5n80txw0b1tm0000gn/T/nein-vite-layout-VjQtwZ/workspaces/fed2f8ed-68b1-41a7-9225-751a7674beeb\n\n\n Test Files  1 passed (1)\n      Tests  1 passed (1)\n   Start at  21:36:41\n   Duration  266ms (transform 10ms, setup 9ms, import 5ms, tests 1ms, environment 197ms)\n\n"
+  },
+  "worktree": "/private/var/folders/57/45vy61qn2kqb5n80txw0b1tm0000gn/T/nein-vite-layout-VjQtwZ/workspaces/fed2f8ed-68b1-41a7-9225-751a7674beeb"
+}
