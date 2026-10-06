@@ -1,6 +1,6 @@
 import { strict as assert } from "node:assert";
 import { execFileSync } from "node:child_process";
-import { mkdtempSync, readFileSync, writeFileSync } from "node:fs";
+import { mkdtempSync, readFileSync, writeFileSync, realpathSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { TeamStore } from "../pi-package/agents/store.ts";
@@ -105,3 +105,30 @@ assert.throws(() => store.integrate(c.id));
 assert.match(git("status", "--porcelain"), /UU front.txt/);
 assert.equal(store.get(c.id).status, "ready");
 console.log("stale results and integration conflicts: OK");
+// El documento configurado sigue siendo la única guía; no exige crear otro WORK.md.
+const custom = mkdtempSync(join(tmpdir(), "nein-custom-doc-"));
+const customGit = (...args: string[]) =>
+  execFileSync("git", args, { cwd: custom, encoding: "utf8" }).trim();
+customGit("init", "-q");
+customGit("config", "user.name", "Test");
+customGit("config", "user.email", "test@local");
+writeFileSync(join(custom, "PLAN.md"), "# Plan\n- [ ] custom\n");
+customGit("add", ".");
+customGit("commit", "-qm", "base");
+const previousDoc = process.env.N_EIN_WORK_DOC;
+process.env.N_EIN_WORK_DOC = "PLAN.md";
+try {
+  const task = new TeamStore(custom).create({
+    taskId: "custom",
+    label: "custom",
+    prompt: "x",
+    model: "test/model",
+    thinking: "medium",
+    owner: "test",
+  });
+  assert.equal(task.workDoc, join(realpathSync(custom), "PLAN.md"));
+} finally {
+  if (previousDoc === undefined) delete process.env.N_EIN_WORK_DOC;
+  else process.env.N_EIN_WORK_DOC = previousDoc;
+}
+console.log("configured work document: OK");

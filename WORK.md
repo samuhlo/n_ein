@@ -49,6 +49,8 @@ P0–P4 son el siguiente corte de implementación, no trabajo ya ejecutado. Si e
 
 ## Evidencia
 
+- Dirigido r2: dos hijos integrados, 3/3 ocultas, test montado con dos mutantes detectados, suite y tipos correctos. 655,6 s de modelo frente a 558,5 s del control; 3,09 M tokens y $1,292 estimados. No supera el umbral de tiempo. En print el principal estaba bloqueado esperando hijos; el cierre nativo ahora drena resultados y permite avanzar al coordinador. Una prueba con Pi real, dos trabajadores y proveedor determinista demuestra avance del padre antes de que terminen, continuación automática e integración. Se repetirá el caso dirigido.
+
 - Ensayo dirigido r1 detenido por fallo reproducido de infraestructura: Vite/Vitest no resuelve tests bajo `.git`. Dos trabajadores reales conservados en estado detenido; aceptación incompleta, no cuenta como mejora. Los nuevos worktrees pasan al hogar n_ein (ruta aislada configurable para pruebas); el registro sigue en Git. Regresión real sin modelos: Vitest 4.1.8 con jsdom falla bajo `.git` y pasa fuera con los mismos archivos y dependencias; evidencia en `evals/results/2026-10-06-paralelismo-vite.json`. El caso mínimo en entorno node no reproduce el fallo; el de jsdom sí.
 
 - `./scripts/check.sh` pasó en `0806ef5` (código previo al ajuste de modelo en resume): incluye pruebas Go/vet, paquete instalado, RPC, Pi real con proveedor determinista, Git, recuperación, vista y relevo. Se corrigió un empaquetado que omitía `pi-package/agents/`.

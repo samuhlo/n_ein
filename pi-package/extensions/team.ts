@@ -47,6 +47,7 @@ export default function (pi: ExtensionAPI) {
     suspended = false,
     background = false;
   let recoveryNotice = false;
+  const pendingResults = new Map<string, TaskRecord>();
   let paintTimer: ReturnType<typeof setTimeout> | undefined;
   let clock: ReturnType<typeof setInterval> | undefined;
   const repaint = () => {
@@ -73,6 +74,7 @@ export default function (pi: ExtensionAPI) {
     if (team) teams.delete(team.store.origin);
     ctx = next;
     recoveryNotice = false;
+    pendingResults.clear();
     team = undefined;
     background = false;
     try {
@@ -83,14 +85,13 @@ export default function (pi: ExtensionAPI) {
         owner,
         onChange: repaint,
         onResult: (task) => {
-          if (
-            suspended ||
-            !background ||
-            !ctx ||
-            ctx.sessionManager.getSessionId() !== owner
-          )
+          if (suspended || !ctx || ctx.sessionManager.getSessionId() !== owner)
             return;
           const key = `${task.id}:${task.attempt}`;
+          if (!background) {
+            pendingResults.set(key, task);
+            return;
+          }
           const seen = ctx.sessionManager
             .getBranch()
             .some(
@@ -131,6 +132,52 @@ export default function (pi: ExtensionAPI) {
       if (team?.list().some((t) => t.status === "running")) repaint();
     }, 1000);
     clock.unref();
+  });
+  pi.on("agent_before_settle", async (event, next) => {
+    if (!team || background || suspended || team.isClosing || event.continue)
+      return;
+    const current = team;
+    if (event.outcome !== "completed" || next.signal?.aborted) {
+      await current.stop();
+      pendingResults.clear();
+      return;
+    }
+    const stop = () => {
+      void current.stop();
+    };
+    next.signal?.addEventListener("abort", stop, { once: true });
+    try {
+      await current.wait();
+    } finally {
+      next.signal?.removeEventListener("abort", stop);
+    }
+    if (
+      suspended ||
+      team !== current ||
+      current.isClosing ||
+      next.signal?.aborted
+    )
+      return;
+    const results = [...pendingResults.values()];
+    if (!results.length) return;
+    const keys = [...pendingResults.keys()];
+    pendingResults.clear();
+    for (const result of results)
+      try {
+        current.store.update(result.id, { delivered: true });
+      } catch {}
+    return {
+      entries: [
+        {
+          type: "custom_message" as const,
+          customType: "nein.team.result",
+          content: JSON.stringify(teamReport(results)),
+          display: true,
+          details: { keys },
+        },
+      ],
+      continue: true,
+    };
   });
   pi.on("session_shutdown", async () => {
     if (paintTimer) clearTimeout(paintTimer);
@@ -218,7 +265,7 @@ export default function (pi: ExtensionAPI) {
     name: "nein_team",
     label: "Equipo",
     description:
-      "Manage general-purpose Pi workers for an AUTHORIZED implementation. Delegate only substantial independent tasks with a committed common base and WORK.md. At most two workers run, each in a separate worktree. Prefer direct work for small/dependent tasks. Start takes taskId, label, full bounded assignment with acceptance and relevant context, and class. Results are ready for coordinator review and integration, NOT overall acceptance. status recovers results; resume preserves partial work and its model; supply class only for a deliberate capability change; integrate merges only an owned clean ready branch into the work branch. stop preserves changes. limit=0 means work alone. No recursive workers, remote delivery or new authorization. In interactive sessions results arrive automatically; do not poll.",
+      "Manage general-purpose Pi workers for an AUTHORIZED implementation. Delegate only substantial independent tasks with a committed common base and WORK.md. At most two workers run, each in a separate worktree. Prefer direct work for small/dependent tasks. Start takes taskId, label, full bounded assignment with acceptance and relevant context, and class. Results are ready for coordinator review and integration, NOT overall acceptance. status recovers results; resume preserves partial work and its model; supply class only for a deliberate capability change; integrate merges only an owned clean ready branch into the work branch. stop preserves changes. limit=0 means work alone. No recursive workers, remote delivery or new authorization. Results arrive automatically. You may do independent work while children run. If nothing independent remains, end your response; in single-shot mode the final boundary waits and continues with the results. Do not poll.",
     parameters: Type.Object({
       action: Type.Union(
         [
@@ -272,20 +319,6 @@ export default function (pi: ExtensionAPI) {
         let selected: string[] | undefined = params.id
           ? [params.id]
           : undefined;
-        const waitForWorkers = async () => {
-          if (background) return;
-          const current = team!;
-          const stop = () => {
-            void current.stop();
-          };
-          signal?.addEventListener("abort", stop, { once: true });
-          if (signal?.aborted) stop();
-          try {
-            await current.wait();
-          } finally {
-            signal?.removeEventListener("abort", stop);
-          }
-        };
         const chooseModel = (
           clase: "mecanico" | "ordinario" | "riesgo" | "abierto",
         ) =>
@@ -307,7 +340,6 @@ export default function (pi: ExtensionAPI) {
             };
           });
           selected = team.start(tasks).map((t) => t.id);
-          await waitForWorkers();
         } else if (params.action === "view") await showTeam(next);
         else if (params.action === "stop") await team.stop(params.id);
         else if (params.action === "limit")
@@ -327,7 +359,6 @@ export default function (pi: ExtensionAPI) {
               params.message || "Continue the preserved assignment.",
               params.class ? chooseModel(params.class) : undefined,
             );
-            await waitForWorkers();
           }
         }
         return {

@@ -3,7 +3,7 @@ import {
   type ExtensionAPI,
 } from "@earendil-works/pi-coding-agent";
 import { existsSync, realpathSync } from "node:fs";
-import { dirname, relative, resolve, basename } from "node:path";
+import { dirname, relative, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import { ownedShell } from "./shell.ts";
 
@@ -44,7 +44,14 @@ export default function (pi: ExtensionAPI) {
       ancestor = dirname(ancestor);
     const canonical = resolve(realpathSync(ancestor), relative(ancestor, path));
     const rel = relative(realpathSync(ctx.cwd), canonical);
-    if (rel === ".." || rel.startsWith("../") || basename(path) === "WORK.md")
+    if (
+      rel === ".." ||
+      rel.startsWith("../") ||
+      path ===
+        resolve(
+          process.env.N_EIN_WORKER_DOCUMENT || resolve(ctx.cwd, "WORK.md"),
+        )
+    )
       return {
         block: true,
         reason:

@@ -19,11 +19,21 @@ export function teamLines(
   now = Date.now(),
 ): string[] {
   if (!tasks.length) return [];
-  const pending = tasks.filter((t) => t.status !== "integrated");
+  const priority = (t: TaskRecord & { activeHere?: boolean }) =>
+    t.status === "running" && t.activeHere !== false
+      ? 0
+      : t.status === "queued"
+        ? 1
+        : t.status === "ready"
+          ? 2
+          : 3;
+  const pending = tasks
+    .filter((t) => t.status !== "integrated")
+    .sort((a, b) => priority(a) - priority(b));
   const shown = pending.length ? pending : tasks.slice(-2);
   const lines = [
-    "// Equipo · Ctrl+Shift+G para ver y detener",
-    ...shown.slice(0, 4).map((t) => {
+    "// 005 EQUIPO · Ctrl+Shift+G para ver y detener",
+    ...shown.slice(0, 4).flatMap((t) => {
       const seconds = Math.max(
         0,
         Math.floor(
@@ -35,7 +45,21 @@ export function teamLines(
       const usage = t.usageKnown
         ? `${t.tokens} tok · $${t.cost.toFixed(3)}`
         : "consumo pendiente";
-      return `${clean(t.label)} · ${t.status === "running" && t.activeHere === false ? "estado por comprobar" : labels[t.status]} · ${seconds}s · ${usage}`;
+      const state =
+        t.status === "running" && t.activeHere === false
+          ? "estado por comprobar"
+          : labels[t.status];
+      const time =
+        (t.status === "interrupted" ||
+          (t.status === "running" && t.activeHere === false)) &&
+        !t.ended
+          ? "tiempo desconocido"
+          : `${seconds}s`;
+      const title = `${clean(t.label)} · ${state}`;
+      const model = `${t.model} ${t.thinking}`;
+      return width < 90
+        ? [`${title} · ${time}`, `${usage} · ${model}`]
+        : [`${title} · ${model} · ${time} · ${usage}`];
     }),
   ];
   if (shown.length > 4)

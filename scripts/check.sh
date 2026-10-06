@@ -60,6 +60,7 @@ bun run tests/agents-store.ts
 bun run tests/agents-manager.ts
 bun run tests/team-view.ts
 bun run tests/team-extension.ts
+bun run tests/team-pi.ts
 scripts/smoke-package.sh
 
 printf 'checks locales: OK\n'

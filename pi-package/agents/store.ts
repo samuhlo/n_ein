@@ -16,6 +16,7 @@ import {
 } from "node:fs";
 import { join, resolve, isAbsolute } from "node:path";
 import { homedir } from "node:os";
+import { resolveWorkDoc } from "../extensions/work-doc.ts";
 
 export type TaskStatus =
   | "queued"
@@ -40,6 +41,7 @@ export type TaskRecord = Assignment & {
   id: string;
   origin: string;
   cwd: string;
+  workDoc?: string;
   workspaceRoot?: string;
   recordPath?: string;
   branch: string;
@@ -174,7 +176,8 @@ export class TeamStore {
       throw new Error(
         "Coordinator tree must be clean before assigning work; preserve existing changes and work directly until a committed base is available.",
       );
-    if (!existsSync(join(this.origin, "WORK.md")))
+    const workDoc = resolveWorkDoc(this.origin);
+    if (!workDoc)
       throw new Error(
         "Record the authorized tasks in WORK.md before delegating.",
       );
@@ -220,6 +223,7 @@ export class TeamStore {
       origin: this.origin,
       cwd,
       workspaceRoot,
+      workDoc,
       recordPath: this.file(id),
       branch,
       base,

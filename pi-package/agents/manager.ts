@@ -6,7 +6,7 @@
 import { execFileSync } from "node:child_process";
 import { existsSync, mkdirSync } from "node:fs";
 import { homedir } from "node:os";
-import { join } from "node:path";
+import { join, relative } from "node:path";
 import { memoryDirective } from "../memory.ts";
 import { langDirective, loadLang } from "../lang.ts";
 import { loadModels } from "../models.ts";
@@ -38,6 +38,9 @@ export class TeamManager {
       (existsSync(join(options.root, "bin/n-ein"))
         ? join(options.root, "bin/n-ein")
         : join(options.root, "dist/n-ein"));
+  }
+  get isClosing() {
+    return this.closing;
   }
   private changed() {
     try {
@@ -181,6 +184,12 @@ export class TeamManager {
     delete env.N_EIN_HANDOFF_SIGNAL;
     delete env.N_EIN_WORK_DOC;
     delete env.N_EIN_LEASE_FD;
+    const document = t.workDoc || join(t.origin, "WORK.md");
+    const documentRelative = relative(t.origin, document);
+    env.N_EIN_WORKER_DOCUMENT =
+      documentRelative === ".." || documentRelative.startsWith("../")
+        ? ""
+        : join(t.cwd, documentRelative);
     const models = loadModels(root);
     const agentHome =
       env.PI_CODING_AGENT_DIR ||
@@ -243,7 +252,7 @@ export class TeamManager {
       `Authorized assignment ${t.taskId}: ${t.label}`,
       t.prompt,
       `Your branch: ${t.branch}. Base: ${t.base}.`,
-      `The coordinator owns WORK.md at ${join(t.origin, "WORK.md")}; read it for context, do not edit either copy.`,
+      `The coordinator owns the active work document at ${document}; read it for context, do not edit either copy.`,
       existsSync(join(t.origin, "AGENTS.md"))
         ? `Also read project instructions at ${join(t.origin, "AGENTS.md")}; preserve those conventions in your worktree.`
         : "",
