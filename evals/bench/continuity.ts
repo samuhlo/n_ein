@@ -74,7 +74,7 @@ function sessionPaths(dir: string): void {
 sessionPaths(join(home, "pi-agent/sessions"));
 const branch = sessionFiles.flatMap((file) => readFileSync(file, "utf8").split("\n").filter(Boolean).map((line) => JSON.parse(line)));
 let handoff: any;
-registerHandoff({ registerCommand(_name: string, command: unknown) { handoff = command; } } as never);
+registerHandoff({ registerCommand(_name: string, command: unknown) { handoff = command; }, registerTool() {}, on() {} } as never);
 const oldHome = process.env.PI_CODING_AGENT_DIR, oldSignal = process.env.N_EIN_HANDOFF_SIGNAL;
 process.env.PI_CODING_AGENT_DIR = join(home, "pi-agent"); delete process.env.N_EIN_HANDOFF_SIGNAL;
 const notes: string[] = [];

@@ -7,7 +7,8 @@ import { execFileSync } from "node:child_process";
 import { randomUUID } from "node:crypto";
 import { existsSync, mkdirSync, readFileSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
-import type { ExtensionAPI } from "@earendil-works/pi-coding-agent";
+import type { ExtensionAPI, ExtensionContext } from "@earendil-works/pi-coding-agent";
+import { Type } from "typebox";
 import { readWorkDoc, resolveWorkDoc } from "./work-doc";
 
 type GitState = { root: string; head: string; status: string; diffStat: string };
@@ -110,7 +111,52 @@ function summary(cwd: string, branch: Array<any>): string {
   ].join("\n");
 }
 
+function prepare(ctx: ExtensionContext): void {
+  const home = process.env.PI_CODING_AGENT_DIR;
+  const dir = home ? join(home, "handoffs") : join(ctx.cwd, ".n_ein", "handoffs");
+  mkdirSync(dir, { recursive: true, mode: 0o700 });
+  const file = join(dir, `${randomUUID()}.md`);
+  writeFileSync(file, summary(ctx.cwd, ctx.sessionManager.getBranch()), { mode: 0o600 });
+  const signal = process.env.N_EIN_HANDOFF_SIGNAL;
+  if (signal) {
+    writeFileSync(signal, `claude\n${file}\n`, { mode: 0o600 });
+    ctx.ui.notify(`Relevo listo: ${file}. Cerrando Pi para abrir Claude.`, "info");
+    ctx.shutdown();
+  } else {
+    ctx.ui.notify(`Relevo listo en ${file}. Abre Claude después de cerrar Pi.`, "info");
+  }
+}
+
 export default function (pi: ExtensionAPI) {
+  let pending: { request: string } | undefined;
+  pi.on("session_start", () => { pending = undefined; });
+  pi.registerTool({
+    name: "nein_handoff",
+    label: "Continuar con Claude",
+    description: "Prepare the existing Pi→Claude handoff ONLY when the user explicitly asks to switch or continue with Claude, including ordinary language. A question about Claude is not a transfer request. Finish or stop writers and update the current work document before calling. Quote the relevant words from the latest user message. After calling, finish the response without more tools; Pi will save the summary and shut down when this agent loop ends, then the launcher opens Claude. This does not grant implementation permission.",
+    parameters: Type.Object({ destination: Type.Literal("claude"), request: Type.String({ description: "Exact words of the user's request to continue with Claude" }) }),
+    async execute(_id, params, _signal, _update, ctx) {
+      const request = lastText(ctx.sessionManager.getBranch(), "user");
+      const normalize = (text: string) => text.trim().replace(/\s+/g, " ").toLowerCase();
+      if (!normalize(params.request) || !normalize(request).includes(normalize(params.request))) return { isError: true, content: [{ type: "text", text: "The quoted transfer request is not in the latest user message. Keep this runtime and inspect what the user asked." }], details: undefined };
+      if (!process.env.N_EIN_HANDOFF_SIGNAL) return { isError: true, content: [{ type: "text", text: "This session has no n_ein launcher to perform the switch. Keep the work saved; explain that opening it through nein enables automatic handoff." }], details: undefined };
+      pending = { request };
+      return { content: [{ type: "text", text: "Handoff queued for the end of this response. Finish now; the launcher will open Claude after Pi exits. Preserve the current authorization and pending work." }], details: undefined };
+    },
+  });
+  // BLINDAJE -> Una herramienta no espera a su propio turno. El relevo se materializa al terminar el bucle.
+  pi.on("agent_end", (event, ctx) => {
+    const transfer = pending;
+    pending = undefined;
+    if (!transfer) return;
+    const last = event.messages.findLast((message) => message.role === "assistant");
+    if (ctx.signal?.aborted || last?.stopReason === "error" || last?.stopReason === "aborted" || ctx.hasPendingMessages?.() || lastText(ctx.sessionManager.getBranch(), "user") !== transfer.request) {
+      ctx.ui.notify("El relevo queda cancelado para conservar la interrupción o atender la nueva indicación.", "info");
+      return;
+    }
+    prepare(ctx);
+  });
+
   pi.registerCommand("handoff", {
     description: "Prepara el relevo a Claude: /handoff claude",
     handler: async (args, ctx) => {
@@ -119,22 +165,10 @@ export default function (pi: ExtensionAPI) {
         return;
       }
 
-      // BLINDAJE -> Ningún hijo debe seguir escribiendo cuando Claude reciba el relevo.
+      // El comando manual conserva el mismo resumen y el mismo cierre que la conversación.
       await ctx.waitForIdle();
-      const home = process.env.PI_CODING_AGENT_DIR;
-      const dir = home ? join(home, "handoffs") : join(ctx.cwd, ".n_ein", "handoffs");
-      mkdirSync(dir, { recursive: true, mode: 0o700 });
-      const file = join(dir, `${randomUUID()}.md`);
-      writeFileSync(file, summary(ctx.cwd, ctx.sessionManager.getBranch()), { mode: 0o600 });
-
-      const signal = process.env.N_EIN_HANDOFF_SIGNAL;
-      if (signal) {
-        writeFileSync(signal, `claude\n${file}\n`, { mode: 0o600 });
-        ctx.ui.notify(`Relevo listo: ${file}. Cerrando Pi para abrir Claude.`, "info");
-        ctx.shutdown();
-      } else {
-        ctx.ui.notify(`Relevo listo en ${file}. Abre Claude después de cerrar Pi.`, "info");
-      }
+      pending = undefined;
+      prepare(ctx);
     },
   });
 }

@@ -1,5 +1,7 @@
 In Pi you work alone in this session. Run tests and builds yourself and keep their output short in your context: counts, `--stat`, `tail`, the failing test only.
 
+When the user explicitly asks to continue with Claude, finish or stop writers, save the current state and call `nein_handoff` with their request. End the response so the launcher can switch safely. A question about Claude does not authorize a switch. Do not tell the user to memorize or invoke a handoff command; `/handoff claude` remains an optional shortcut.
+
 Once you start editing, and after each task commit while work remains, older recoverable searches and code reads may be replaced by a one-line note: the files, Git and `WORK.md` hold the current state. Instructions, Markdown documents, errors and check results stay in context. An output without a note is still in your context: use it as it is. Read a file or run a search again only when you need what a note replaced.
 
 The session runs on a model chosen for the job. Use `nein_set_task` when the user starts a different job in ordinary words, authorizes implementing a settled design, or explicitly asks for a different model; quote their relevant words and choose the class from the understood scope. The user never needs to invoke a routing command. Clear "another task" prefixes already reset routing before you respond. Do not call the tool routinely when the current choice fits; within an ongoing implementation, reassessment only raises capability. Keep unfinished work recorded when another job interrupts it.

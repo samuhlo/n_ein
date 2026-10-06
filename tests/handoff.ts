@@ -15,8 +15,9 @@ process.env.N_EIN_HANDOFF_SIGNAL = signal;
 mkdirSync(home);
 writeFileSync(signal, "");
 
-let command: any;
-registerHandoff({ registerCommand(_name: string, value: any) { command = value; } } as any);
+let command: any, handoffTool: any;
+const hooks: Record<string, any> = {};
+registerHandoff({ registerCommand(_name: string, value: any) { command = value; }, registerTool(value: any) { handoffTool = value; }, on(name: string, value: any) { hooks[name] = value; } } as any);
 
 const git = (...args: string[]) => execFileSync("git", args, { cwd: dir, stdio: "ignore" });
 git("init", "-b", "main");
@@ -83,6 +84,30 @@ try {
   const [, noDocFile] = readFileSync(signal, "utf8").trim().split("\n");
   const noDoc = readFileSync(noDocFile, "utf8");
   assert.equal(noDoc.split("UNIQUE_FINAL_LIMIT").length - 1, 1, "sin WORK.md se conserva la petición completa una sola vez");
+  writeFileSync(signal, ""); stopped = false;
+  ctx.sessionManager.getBranch = () => [{ type: "message", message: { role: "user", content: [{ type: "text", text: "Quiero continuar con Claude" }] } }];
+  const queued = await handoffTool.execute("h", { destination: "claude", request: "continuar con Claude" }, undefined, undefined, ctx);
+  assert.notEqual(queued.isError, true);
+  assert.equal(readFileSync(signal, "utf8"), "", "pedir relevo dentro del turno no habilita al destino todavía");
+  assert.equal(stopped, false);
+  await hooks.agent_end({ messages: [{ role: "assistant", stopReason: "stop" }] }, ctx);
+  assert.ok(stopped);
+  assert.match(readFileSync(signal, "utf8"), /^claude\n/);
+
+  writeFileSync(signal, ""); stopped = false;
+  assert.equal((await handoffTool.execute("h", { destination: "claude", request: "algo que el usuario no dijo" }, undefined, undefined, ctx)).isError, true);
+  await hooks.agent_end({ messages: [{ role: "assistant", stopReason: "stop" }] }, ctx);
+  assert.equal(readFileSync(signal, "utf8"), "");
+  await handoffTool.execute("h", { destination: "claude", request: "continuar con Claude" }, undefined, undefined, ctx);
+  await hooks.agent_end({ messages: [{ role: "assistant", stopReason: "aborted" }] }, ctx);
+  assert.equal(readFileSync(signal, "utf8"), "", "cancelar la respuesta no arranca otro runtime");
+  await handoffTool.execute("h", { destination: "claude", request: "continuar con Claude" }, undefined, undefined, ctx);
+  await hooks.agent_end({ messages: [{ role: "assistant", stopReason: "stop" }] }, { ...ctx, hasPendingMessages: () => true });
+  assert.equal(readFileSync(signal, "utf8"), "", "una indicación nueva se atiende antes de cambiar de runtime");
+  await handoffTool.execute("h", { destination: "claude", request: "continuar con Claude" }, undefined, undefined, ctx);
+  hooks.session_start();
+  await hooks.agent_end({ messages: [{ role: "assistant", stopReason: "stop" }] }, ctx);
+  assert.equal(readFileSync(signal, "utf8"), "", "una petición pendiente no cruza a otra sesión");
   console.log("handoff: resumen, diff y cierre ordenado preparados");
 } finally {
   if (previousHome === undefined) delete process.env.PI_CODING_AGENT_DIR;

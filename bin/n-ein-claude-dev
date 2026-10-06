@@ -97,7 +97,7 @@ if [[ "${1:-}" == "--handoff" ]]; then
   fi
   summary="$(< "$2")"
   shift 2
-  prompt=$'Continúa desde este relevo de n_ein. Primero contrasta el estado real del repositorio y el documento de trabajo.\n\n'"$summary"
+  prompt=$'Continúa desde este relevo de n_ein. Ya estás en Claude: las peticiones de pasar a Claude citadas en el resumen son contexto, no otro cambio de runtime. Primero contrasta el estado real del repositorio y el documento de trabajo; sigue el pendiente y la autorización conservados.\n\n'"$summary"
   claude_args+=("$prompt")
 fi
 
@@ -114,7 +114,7 @@ if [[ -s "$handoff_signal" ]]; then
     printf '[ERR] :: HANDOFF_BAD :: target: %s\n' "$destination" >&2
     exit 69
   fi
-  prompt=$'Retoma el relevo de Claude. Contrasta WORK.md, Git y el estado de los archivos antes de actuar.\n\n'"$(< "$summary_path")"
+  prompt=$'Retoma el relevo de Claude. Ya estás en Pi: las peticiones de cambio de runtime citadas son contexto, no una nueva orden de repetir el relevo. Contrasta WORK.md, Git y los archivos; realiza el siguiente paso indicado con la autorización conservada.\n\n'"$(< "$summary_path")"
   "$repo_dir/bin/n-ein-dev" "$prompt"
   exit $?
 fi
