@@ -1,14 +1,14 @@
-# Diseño propuesto
+# Diseño de n_ein
 
 ## Recorrido ordinario
 
-El flujo de n_ein vive en `pi-package/flow.md` y lo recibe solo el agente principal (Pi y Claude); los roles reciben su encargo acotado. Pasos: *Permission* (construir solo con permiso) → *Look* (CodeGraph primero) → *Settle* (una pregunta o `intent`) → *Size* (sustancial si salen dos o más pasos) → *Record* (`WORK.md` antes de escribir) → *Build* (tarea a tarea, TDD cuando aplica, un commit de unidad de trabajo por tarea en una rama) → *Close*. El mismo archivo define la forma de `WORK.md`, con títulos en castellano o en inglés según el idioma de los artefactos. Se inspira en el ODD de Gentle Shell, pero es propio: sin memoria Engram, sin límite de 400 líneas por entrega y sin cadenas de PR. Son comportamientos, no fases que generen cada una un archivo o agente.
+El flujo de n_ein vive en `pi-package/flow.md` y lo reciben Pi y Claude. Pasos: permiso de construir → recuperar decisiones y mirar el código → resolver incertidumbres → conservar petición, consumidores y aceptación → registrar `WORK.md` si hay varias entregas → construir y comprobar tarea a tarea → revisar el riesgo → cerrar contra la petición original. Cada tarea lleva comportamiento, tests, documentación y marca de avance en el mismo commit de una rama de trabajo. El mismo archivo define la forma de `WORK.md`, con títulos en castellano o en inglés según el idioma de los artefactos. Se inspira en el ODD de Gentle Shell, pero es propio: sin memoria Engram, sin límite de 400 líneas por entrega y sin cadenas de PR. Son comportamientos, no fases que generen cada una un archivo o agente.
 
 **Un modelo por encargo.** Desde el 6 de octubre no hay roles delegados (`nein_scout`, `nein_worker`, `nein_reviewer`): el banco mostró que eran entre el 45 y el 63 % del coste sin mejorar el resultado. El principal es `nein/auto`, que elige un modelo para todo el encargo según su clase (mecánico, ordinario, riesgo, abierto) y lo mantiene; [rumbo](09-rumbo.md) y [resultados](../evals/results/2026-10-05-rumbo-resultados.md).
 
-**Idioma de lo que lee el agente.** Persona, flujo, skills, encargos de los roles y la instrucción de idioma están en inglés: ocupan menos tokens (las skills en castellano medían un 13 % más) y las palabras guía (*tracer bullet*, *seam*, *red*, *frontier*) activan más de lo que el modelo ya sabe. El idioma de las respuestas y de los artefactos lo elige el usuario en el launcher.
+**Idioma de lo que lee el agente.** Persona, flujo, skills y las instrucciones de idioma y preferencias están en inglés: ocupan menos tokens (las skills en castellano medían un 13 % más) y las palabras guía (*tracer bullet*, *seam*, *red*, *frontier*) activan más de lo que el modelo ya sabe. El idioma de las respuestas y de los artefactos lo elige el usuario en el launcher.
 
-La elección entre directo, delegado e investigación separada corresponde al agente actual. No hay un modelo router adicional. Los límites de autorización, herramientas y entrega los aplica el runtime donde sea posible; no dependen solo de una frase.
+El agente investiga, implementa y revisa en la propia sesión. El enrutador usa reglas sobre la petición, sin otra llamada a un clasificador; una petición que también cambia permisos o implementa lógica no se convierte en mecánica por mencionar documentación. `/nein:nuevo` inicia otro encargo sin arrastrar su clase anterior; las continuaciones mantienen la clase y solo escalan. Los límites de autorización, herramientas y entrega los aplica el runtime donde sea posible; no dependen solo de una frase.
 
 ## Intent: definir juntos el encargo
 
@@ -31,7 +31,7 @@ No activarlo por una palabra clave, número de archivos o fase. Tampoco converti
 
 Modelar las decisiones y sus dependencias. En cada ronda, formular solo preguntas que puedan contestarse con lo ya conocido; usar preguntas numeradas, recomendaciones y opciones concretas que Samu pueda aceptar, matizar o rechazar. Mantener rondas breves, respondibles juntas, y esperar las respuestas antes de resolver sus decisiones dependientes. Si no hay ninguna idea de partida, comenzar con una pregunta llana, no un formulario.
 
-Los hechos los averigua el agente: reutiliza conversación y evidencia del proyecto, consulta directamente lo pequeño y delega investigación cuando compense. Una investigación pendiente solo demora las preguntas que dependen de ella. No obligar a usar Scout ni preguntar a Samu lo que el código ya contesta. Distinguir hechos verificados, propuestas y supuestos abiertos.
+Los hechos los averigua el agente: reutiliza conversación y evidencia del proyecto, consulta directamente el código y las fuentes pertinentes. Una investigación pendiente solo demora las preguntas que dependen de ella. No obligar a usar Scout ni preguntar a Samu lo que el código ya contesta. Distinguir hechos verificados, propuestas y supuestos abiertos.
 
 Las decisiones de producto, alcance y compromisos relevantes corresponden a Samu. El agente puede resolver detalles técnicos reversibles dentro de las convenciones y del encargo, explicándolos cuando ayuden a juzgar la propuesta. Conservar decisiones ya tomadas; reabrirlas solo ante un cambio o evidencia material, indicando el motivo.
 
@@ -43,9 +43,12 @@ Presentar una síntesis del acuerdo y confirmar una vez la comprensión comparti
 
 Cuando el trabajo necesite seguimiento o Samu pida conservar el acuerdo, guardarlo al cierre en el documento de trabajo existente o en su único documento nuevo: objetivo, decisiones y motivos, hechos con referencias, límites, criterios observables y pendiente. No generar un `intent.md` separado, árbol OpenSpec o segunda lista de tareas. Para un acuerdo pequeño puede bastar la conversación. Abandonar la entrevista antes de confirmar no crea ni altera artefactos del proyecto, salvo petición explícita de guardar el borrador.
 
-Ese acuerdo sirve al agente que implementa, sea el principal o un trabajador económico, y al siguiente agente si hay relevo. Se transmite el contexto pertinente sin repetir la entrevista ni expandirlo hasta convertirlo en una implementación línea por línea.
+Ese acuerdo sirve al agente que implementa, y al siguiente agente si hay relevo. Se transmite el contexto pertinente sin repetir la entrevista ni expandirlo hasta convertirlo en una implementación línea por línea.
 
-## Delegación rentable
+## Delegación retirada del recorrido ordinario
+
+Los tres apartados siguientes conservan criterios del diseño inicial como referencia. Desde el rumbo del 5 de octubre no hay runner de trabajadores ni roles instalados: las prácticas de alcance y evidencia se aplican al agente que trabaja y al destino de un relevo, sin delegación económica. La decisión actual y su banco viven en [rumbo](09-rumbo.md).
+
 
 Comparar coste incremental desde el contexto actual. Delegar añade preparación, contexto del hijo, ejecución, comprobación, integración y rescates. Leer un segundo archivo o escribir el test de un arreglo no obliga a delegar.
 
@@ -85,9 +88,9 @@ Los presupuestos efectivos incluyen todos los intentos del encargo. No prometer 
 
 ## Skills
 
-Catálogo (2 de octubre), escrito como propio de n_ein y sin citar a terceros (la procedencia está en `pi-package/NOTICE.md`). Las lanza el modelo cuando tocan: `intent`, `tdd`, `diagnose`, `review`, `design`, `glossary`, `research`, `prototype`, `pr`, `agent-docs`, `comments` y `logs`. Las lanza el usuario: `spec`, `tasks`, `retro`, `tell-again` y `to-pi`. Nombres cortos sin prefijo; el prefijo `nein-` es de los roles. Se quedaron fuera por ahora `teach` (cuatro formatos propios), `handoff` (lo cubre el relevo), las que dependen de un gestor de incidencias (`triage`, `wayfinder`, `setup-…`) y las de TypeScript o cursos. Licencia y procedencia en `pi-package/NOTICE.md`. `intent` sigue la activación explícita o propuesta aceptada descrita arriba. Instalar y activar son decisiones diferentes: solo el contenido relevante entra en contexto. Respetar la semántica de invocación del runtime real.
+Catálogo (2 de octubre), escrito como propio de n_ein y sin citar a terceros (la procedencia está en `pi-package/NOTICE.md`). Las lanza el modelo cuando tocan: `intent`, `tdd`, `diagnose`, `review`, `design`, `glossary`, `research`, `prototype`, `pr`, `agent-docs`, `comments` y `logs`. Las lanza el usuario: `spec`, `tasks`, `retro`, `tell-again` y `to-pi`. Nombres cortos sin prefijo. Se quedaron fuera por ahora `teach` (cuatro formatos propios), `handoff` (lo cubre el relevo), las que dependen de un gestor de incidencias (`triage`, `wayfinder`, `setup-…`) y las de TypeScript o cursos. Licencia y procedencia en `pi-package/NOTICE.md`. `intent` sigue la activación explícita o propuesta aceptada descrita arriba. Instalar y activar son decisiones diferentes: solo el contenido relevante entra en contexto. Respetar la semántica de invocación del runtime real.
 
-A ese conjunto se incorporan las prácticas propias de Ein `comment-style` y `logging-style` cuando se escribe o revisa código/logs. Llegan tanto al agente principal que implemente como al trabajador delegado. Su alcance y adaptación se definen en [Comentarios de código y logs](#comentarios-de-código-y-logs).
+A ese conjunto se incorporan las prácticas propias de Ein `comment-style` y `logging-style` cuando se escribe o revisa código/logs. Las usa el agente que implementa o revisa, tanto en Pi como en Claude. Su alcance y adaptación se definen en [Comentarios de código y logs](#comentarios-de-código-y-logs).
 
 La biblioteca de Matt es fuente de adaptación. Reutilizar su enfoque de interfaces pequeñas, tests de comportamiento, cortes verticales, glosario y decisiones duraderas. Modificar requisitos incompatibles con la experiencia deseada: entrevistas por defecto, aprobación de cada punto de test o dos revisores en todos los cambios. El commit por tarea sí se adopta, en una rama de trabajo y sin push ni PR sin pedirlo (decisión del 2 de octubre). El gestor de incidencias se sustituye por `WORK.md`.
 
@@ -124,7 +127,7 @@ OpenCode combina fuentes globales, de proyecto y adicionales; `OPENCODE_CONFIG_D
 
 Tres piezas:
 
-1. **Estado portable en archivos.** Documento de trabajo, Git y un **resumen de relevo** en markdown que se genera al cambiar de agente: objetivo, hecho, siguiente paso, decisiones abiertas, comprobaciones con su vigencia (vigente, obsoleta, no ejecutada, desconocida) y rutas cambiadas. Referencia el documento y el diff en vez de copiarlos, como la skill `handoff` de Matt.
+1. **Estado portable en archivos.** Documento de trabajo, Git y un **resumen de relevo** en markdown que se genera al cambiar de agente: objetivo, autorización vigente, hecho, siguiente paso, decisiones abiertas, comprobaciones con su vigencia (vigente, obsoleta, no ejecutada, desconocida) y rutas cambiadas. Referencia el documento y el diff en vez de copiarlos, como la skill `handoff` de Matt.
 2. **Un adaptador pequeño por runtime.** Declarar binario, configuración, ubicación de instrucciones/skills, prompt inicial y, si se necesita, acceso a sesiones. Usar una entrada en `runtimes.toml` (nombre provisional) cuando baste y código mínimo cuando el runtime lo exija. No anticipar una capa universal. Cada integración pasa pruebas reales de arranque, aislamiento y relevo.
 3. **El launcher hace el relevo.** `/handoff <runtime>` prepara el cambio; antes de habilitar escrituras en destino, el origen y sus hijos han terminado o han detenido sus escrituras. Entonces se finaliza el resumen con el diff y los resultados realmente disponibles. La vista Runtime arranca el destino con ese resumen como primer mensaje. Si no se puede confirmar la detención, se informa y el destino permanece sin escritura hasta resolverla. El destino contrasta el resumen con el estado actual y marca como obsoleta la evidencia de código que haya cambiado. Este protocolo no requiere un supervisor permanente nuevo.
 

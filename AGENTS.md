@@ -18,6 +18,6 @@ n_ein conserva de Ein su superficie de producto: launcher, instalador, estilo `/
 
 También conserva el estilo personal de comentarios de código y logs de Samu, tanto en n_ein como al trabajar en sus proyectos. Antes de escribir o revisar esas superficies, consulta `docs/02-diseno.md`, sección «Comentarios de código y logs». Las skills originales archivadas son referencias; la adaptación a Go y a cada proyecto respeta el lenguaje, los canales de salida y el alcance del cambio.
 
-Mantén un único recorrido ordinario, un catálogo de skills y un mecanismo de trabajadores. Usa capacidades nativas de Pi cuando resuelvan la necesidad. Conserva garantías reales de autorización, aislamiento y evidencia; los fallos de presentación o contabilidad no deben convertirse en vetos generales de trabajo.
+Mantén un único recorrido ordinario, un catálogo de skills y un modelo por encargo. Usa capacidades nativas de Pi cuando resuelvan la necesidad. Conserva garantías reales de autorización, aislamiento y evidencia; los fallos de presentación o contabilidad no deben convertirse en vetos generales de trabajo.
 
 Explica en español, con detalle proporcional. Distingue resultado observado, hipótesis y pendiente. El criterio de progreso es trabajo útil terminado, no volumen de infraestructura, documentos o tests.

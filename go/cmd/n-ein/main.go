@@ -36,6 +36,9 @@ func run(args []string) error {
 	if flags.NArg() != 0 && *runtime == "" {
 		return fmt.Errorf("argumentos inesperados: %v", flags.Args())
 	}
+	if *runtime != "" && *once {
+		return fmt.Errorf("--runtime y --once no se pueden combinar")
+	}
 	// CodeGraph y sus hijos heredan esto: sin telemetría ni avisos de versión, que la fija runtime.json.
 	_ = os.Setenv("DO_NOT_TRACK", "1")
 	absProject, err := filepath.Abs(*project)

@@ -18,6 +18,10 @@ assert.equal(classify("Document the change and fix authentication").clase, "ries
 assert.equal(classify("Documenta los permisos existentes. Es solo documentación: no cambies código.").clase, "mecanico", "explicar un riesgo no lo modifica");
 assert.equal(classify("Cambia el color y añade validación al formulario").clase, "ordinario", "presentación y lógica no es un encargo mecánico");
 assert.equal(classify("Implementa el parser y escribe su documentación").clase, "ordinario", "documentar una implementación no la convierte en mecánica");
+assert.equal(classify("Change permissions and update the README").clase, "riesgo", "el idioma inglés conserva el riesgo de los permisos");
+assert.equal(classify("Change the public contract and update the README").clase, "riesgo");
+assert.equal(classify("Document the permissions and update authentication").clase, "riesgo");
+assert.equal(classify("Document the database migrations. Do not change code.").clase, "mecanico", "documentación inglesa sin cambios de código sigue siendo mecánica");
 
 // Peticiones reales etiquetadas: nunca un encargo de riesgo o abierto a un modelo barato.
 for (const [name, minimum] of [["peticiones.json", 1], ["peticiones-control.json", 0.8]] as const) {

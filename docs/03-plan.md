@@ -2,7 +2,7 @@
 
 Este plan sustituye la parte de migración in situ del informe original. La investigación y los criterios siguen vigentes. Son entregas de producto, no un workflow que n_ein deba imponer a sus usuarios.
 
-**Estado:** este texto conserva la secuencia propuesta antes de implementar. Las entregas 1–4 tienen recorridos locales y una primera preview instalable; los resultados y límites están en el [README](../README.md) y [evals/results](../evals/results/). La entrega 5, sobre Qwen local, está aplazada por Samu hasta tener el hardware.
+**Estado:** este texto conserva la secuencia propuesta antes de implementar. Las entregas 1–4 tienen recorridos locales y una primera preview instalable; los resultados y límites están en el [README](../README.md) y [evals/results](../evals/results/). La entrega 5, sobre Qwen local, quedó descartada el 5 de octubre. Desde ese día el recorrido trabaja con un agente y un modelo por encargo; el plan vigente está en `docs/09-rumbo.md` y el corte actual en `WORK.md`. Las entregas y delegación de abajo conservan la propuesta inicial, no instrucciones para reintroducir roles.
 
 ## Preparación acotada
 

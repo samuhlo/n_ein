@@ -35,7 +35,7 @@ La cancelación se comprobó con `bun run evals/cancel-smoke.ts`: al interrumpir
 
 La [primera evaluación con código real](evals/results/2026-09-29-planificador.md) reprodujo y corrigió en una copia aislada una regresión histórica de `planificador-didactico`. El árbol habitual del proyecto no se tocó.
 
-Para un encargo prolongado, `WORK.md` en la raíz del proyecto conserva objetivo, decisiones, criterios, casillas bajo `## Tareas`, evidencia y siguiente paso. Si el proyecto ya tiene otro documento, `N_EIN_WORK_DOC` puede apuntar a él. Pi muestra la tarea actual debajo del editor; `/todo done N` y `/todo add texto` actualizan el mismo markdown. Sin documento, el TODO no aparece.
+Para un encargo prolongado, `WORK.md` en la raíz del proyecto conserva objetivo, autorización vigente, decisiones, criterios, casillas bajo `## Tareas`, evidencia y siguiente paso. Si el proyecto ya tiene otro documento, `N_EIN_WORK_DOC` puede apuntar a él. Pi muestra la tarea actual debajo del editor; `/todo done N` y `/todo add texto` actualizan el mismo markdown. Sin documento, el TODO no aparece.
 
 La memoria duradera del proyecto vive en su glosario, decisiones y referencias de `AGENTS.md`; al iniciar una sesión se recupera solo lo pertinente. Antes de sustituir un `WORK.md` terminado, el agente conserva las decisiones reutilizables con su razón y referencia al commit. Las preferencias que pides recordar viven en `~/.n_ein/preferences.md`, común a Pi y Claude y fuera de los canales reemplazables; `N_EIN_PREFERENCES_FILE` permite otro archivo explícito. No se importa la configuración global de otros agentes, no se crea el archivo al leerlo y las preferencias no autorizan operaciones. El idioma elegido y las convenciones explícitas del proyecto prevalecen.
 
@@ -64,7 +64,7 @@ El primer arranque de Pi en preview requiere `/login` en `~/.n_ein/preview/pi-ag
 
 ### Entrada `nein` con Pi gestionado
 
-Desde `0.1.0-preview.2`, un candidato extraído se instala completo con un solo comando, solo con Bun disponible:
+Un candidato extraído se instala completo con un solo comando, solo con Bun disponible:
 
 ```sh
 ./<candidato>/bin/nein-setup --dry-run
@@ -72,7 +72,7 @@ Desde `0.1.0-preview.2`, un candidato extraído se instala completo con un solo 
 nein
 ```
 
-Instala Pi 1.0.2 en `~/.n_ein/runtimes/pi/1.0.2`, CodeGraph 1.6.1 en `~/.n_ein/runtimes/codegraph/1.6.1`, el código en `~/.n_ein/installations/<canal>` y enlaza `~/.local/bin/nein`. El `pi` global y Ein legado no se modifican; la autenticación no se copia. Repetirlo no reinstala lo que ya está bien. La [estructura del hogar](docs/05-despliegue.md#hogar-gestionado-y-entrada-nein) detalla cada pieza.
+La versión de desarrollo y sus hotfixes locales instalan Pi 1.0.2 en `~/.n_ein/runtimes/pi/1.0.2`; la preview pública `0.1.0-preview.2` todavía fija Pi 0.87.1 y los roles anteriores. En ambos casos, `runtime.json` declara el Pi del candidato. También instalan CodeGraph 1.6.1 en `~/.n_ein/runtimes/codegraph/1.6.1`, el código en `~/.n_ein/installations/<canal>` y enlaza `~/.local/bin/nein`. El `pi` global y Ein legado no se modifican; la autenticación no se copia. Repetirlo no reinstala lo que ya está bien. La [estructura del hogar](docs/05-despliegue.md#hogar-gestionado-y-entrada-nein) detalla cada pieza.
 
 ### Flujo, skills e idioma
 

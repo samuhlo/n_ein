@@ -69,13 +69,20 @@ try {
   assert.match(fallback, /No mover originales/);
   assert.match(fallback, /Esperar autorización de código/);
 
-  writeFileSync(join(dir, "WORK.md"), `# Job\n\n## Goal\nKeep the full request.\n\n## Decisions\nPreserve the public interface.\n\n## Limits\nDo not publish.\n\n## Criteria\n${"Independent acceptance rule. ".repeat(100)}\nFINAL_CRITERION\n\n## Tasks\n- [x] Server\n- [ ] Client\n\n## Evidence\nTests passed before the last edit.\n\n## Next step\nCheck the client.\n`);
+  writeFileSync(join(dir, "WORK.md"), `# Job\n\n## Goal\nKeep the full request.\n\n## Authorization\nDesign only; implementation is not authorized.\n\n## Decisions\nPreserve the public interface.\n\n## Limits\nDo not publish.\n\n## Criteria\n${"Independent acceptance rule. ".repeat(100)}\nFINAL_CRITERION\n\n## Tasks\n- [x] Server\n- [ ] Client\n\n## Evidence\nTests passed before the last edit.\n\n## Next step\nCheck the client.\n`);
   await command.handler("claude", ctx);
   const [, englishFile] = readFileSync(signal, "utf8").trim().split("\n");
   const english = readFileSync(englishFile, "utf8");
-  for (const text of ["Keep the full request.", "Preserve the public interface.", "Do not publish.", "FINAL_CRITERION", "Tests passed before the last edit.", "Check the client.", "- Client"]) {
+  for (const text of ["Keep the full request.", "Design only; implementation is not authorized.", "Preserve the public interface.", "Do not publish.", "FINAL_CRITERION", "Tests passed before the last edit.", "Check the client.", "- Client"]) {
     assert.ok(english.includes(text), `el relevo conserva ${text}`);
   }
+  rmSync(join(dir, "WORK.md"));
+  const request = "Fix the boundary. " + "Keep this constraint. ".repeat(100) + "UNIQUE_FINAL_LIMIT";
+  ctx.sessionManager.getBranch = () => [{ type: "message", message: { role: "user", content: [{ type: "text", text: request }] } }];
+  await command.handler("claude", ctx);
+  const [, noDocFile] = readFileSync(signal, "utf8").trim().split("\n");
+  const noDoc = readFileSync(noDocFile, "utf8");
+  assert.equal(noDoc.split("UNIQUE_FINAL_LIMIT").length - 1, 1, "sin WORK.md se conserva la petición completa una sola vez");
   console.log("handoff: resumen, diff y cierre ordenado preparados");
 } finally {
   if (previousHome === undefined) delete process.env.PI_CODING_AGENT_DIR;

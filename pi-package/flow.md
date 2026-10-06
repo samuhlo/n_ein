@@ -26,6 +26,7 @@ Every request runs through this workflow without the user asking for it. Small w
 One file at the project root (or the project's own working document), written in the artifact language. Spanish and English headings both work:
 
 - `## Objetivo` / `## Goal`: the problem and the intended outcome, with the user's asks quoted.
+- `## Autorización` / `## Authorization`: what the user asked to do: read or design only, or implementation within the quoted scope. Record existing permission; do not ask again when it is already clear. An agreement about what to build is not permission to build it.
 - `## Decisiones` / `## Decisions`: each decision with its reason.
 - `## Límites` / `## Limits`: what is out of scope.
 - `## Criterios` / `## Criteria`: each quoted ask → its affected entry paths or consumers → an observable acceptance probe, and the agreed test seams.

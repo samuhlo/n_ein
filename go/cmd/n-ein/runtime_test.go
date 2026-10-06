@@ -35,6 +35,12 @@ func TestRuntimeLeaseAcrossProcesses(t *testing.T) {
 	if err := os.WriteFile(filepath.Join(root, "bin", "n-ein-dev"), []byte(script), 0o755); err != nil {
 		t.Fatal(err)
 	}
+	if err := run([]string{"--root", root, "--project", project, "--runtime", "pi", "--once"}); err == nil {
+		t.Fatal("--once no debe arrancar un runtime ni ignorarse")
+	}
+	if _, err := os.Stat(marker); err == nil {
+		t.Fatal("el runtime arrancó pese a --once")
+	}
 	child := func() *exec.Cmd {
 		cmd := exec.Command(os.Args[0], "-test.run=^TestRuntimeLeaseHelper$")
 		cmd.Env = append(os.Environ(), "N_EIN_TEST_RUNTIME_HELPER=1", "N_EIN_TEST_RUNTIME_ROOT="+root, "N_EIN_TEST_RUNTIME_PROJECT="+project)

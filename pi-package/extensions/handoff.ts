@@ -58,6 +58,8 @@ function summary(cwd: string, branch: Array<any>): string {
   const tasks = workDoc ? readWorkDoc(workDoc).tasks : [];
   const done = tasks.filter((task) => task.done).map((task) => `- ${task.text}`);
   const pending = tasks.filter((task) => !task.done).map((task) => `- ${task.text}`);
+  const request = lastText(branch, "user");
+  const goal = section(content, "Objetivo", "Goal", "Acuerdo confirmado", "Confirmed agreement") || request;
   return [
     "# Relevo n_ein → Claude",
     "",
@@ -66,7 +68,10 @@ function summary(cwd: string, branch: Array<any>): string {
     `Documento de trabajo: ${document}`,
     "",
     "## Objetivo",
-    section(content, "Objetivo", "Goal", "Acuerdo confirmado", "Confirmed agreement") || lastText(branch, "user"),
+    goal,
+    "",
+    "## Autorización",
+    section(content, "Autorización", "Authorization") || "Contrasta la petición original citada y la conversación: el acuerdo de diseño por sí solo no autoriza construir. Una autorización ya dada sigue vigente dentro de su alcance.",
     "",
     "## Decisiones y límites",
     section(content, "Decisiones", "Decisions", "Acuerdo confirmado", "Confirmed agreement") || "No constan decisiones en el documento; revisa la conversación y el proyecto.",
@@ -84,7 +89,7 @@ function summary(cwd: string, branch: Array<any>): string {
     section(content, "Criterios", "Criteria", "Criterios observables", "Acceptance criteria") || "No constan en el documento; comprueba el encargo original.",
     "",
     "## Última petición del usuario",
-    lastText(branch, "user"),
+    request === goal ? "Coincide con el objetivo anterior; se conserva allí íntegra." : request,
     "",
     "## Estado Git al cerrar Pi",
     "```text",

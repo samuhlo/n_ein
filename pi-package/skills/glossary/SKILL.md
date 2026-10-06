@@ -19,6 +19,8 @@ Most repos have one context: `GLOSSARY.md` at the root and decisions in `docs/ad
 - **Check against the code.** When the user says how something works, check whether the code agrees and surface contradictions: "The code cancels whole orders, but you just said partial cancellation exists. Which is right?"
 - **Write each term as it settles**, one at a time, in `GLOSSARY.md`. It holds language only: term definitions, no implementation details. Specs and decisions live in `WORK.md` and the ADRs.
 
+Respect the current permission to write documents. During an `intent` interview awaiting confirmation, keep proposed terms and ADRs in the conversation until the agreement is confirmed, unless the user explicitly asked you to save a draft.
+
 ## ADRs, sparingly
 
 Offer an ADR only when all three hold: **hard to reverse** (changing your mind later costs something real), **surprising without context** (a future reader would ask "why on earth?"), and **a real trade-off** (genuine alternatives, one picked for specific reasons). Missing any one, no ADR.
