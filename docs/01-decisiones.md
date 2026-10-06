@@ -64,6 +64,10 @@ El 5 de octubre, a la vista del [banco de modelos de trabajo](../evals/results/2
 - **El modelo local queda descartado.**
 - **El agente hace también las pruebas** que sustentan cada paso.
 
+### Flujo conversacional aprobado el 6 de octubre
+
+Tras revisar `220e60e` y `7e18da8`, Samu pidió priorizar fluidez, ayuda para diseñar, modelo adecuado, fiabilidad y coste y tiempo razonables, sin memorizar comandos; autorizó implementar los seis recorridos propuestos con «Hazlo». La conversación es la entrada ordinaria: una petición explícita de ayuda para pensar o diseñar activa intent; una petición clara va directa; «hazlo» usa el acuerdo sin reconfirmaciones rutinarias; otro encargo permite elegir modelo de nuevo; continuar recupera lo pendiente; pedir otro runtime prepara el relevo. Los comandos quedan como atajos. Spec y tareas las usa el agente cuando el encargo autorizado las necesita. Las comprobaciones y el cierre se ajustan al cambio y reutilizan evidencia vigente. Confirmar diseño sigue sin autorizar implementación por sí solo.
+
 ## Recomendaciones de diseño, revisables
 
 - Pi como runtime inicial; n_ein como capa pequeña: un paquete Pi (skills, extensiones mínimas, prompts, tema) más un launcher que fija el hogar aislado. Pi ya ofrece el aislamiento (`PI_CODING_AGENT_DIR`) y la carga de paquetes (`pi install`, `pi -e`).
