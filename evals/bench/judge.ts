@@ -17,13 +17,17 @@ for (let i = 0; i < rest.length; i++) {
   if (rest[i] === "--control") { const [n, p] = rest[++i]!.split("="); controls.push([n!, p!]); } else runs.push(rest[i]!);
 }
 
+// Sin el encargo literal el juez no puede puntuar alcance ni documentación: falta = error, no «undefined».
 const PROMPTS: Record<string, string> = {
+  s1: "Los certificados sin enlace normativo válido, o cuyo enlace no pasa la allowlist del BOE, se rechazan con 422 antes de importar, pero su estado se queda en `not_imported` y el poblador los reintenta en cada pasada. Arréglalo: deben quedar en `failed`, sin tocar la red ni pasar por `importing`. Un certificado inexistente sigue dando 404 sin mutar nada.",
   s2: "Haz que el Anexo III lea la planificación guardada del curso en el servidor en vez del cuerpo que manda el cliente, y que el cliente deje de mandarla cuando hay curso.",
   s5: "Documenta en el README todos los scripts de base de datos y de semillas de `package.json` (los `db:*` y `seed:*`): qué hace cada uno y sobre qué entorno actúa. Es solo documentación: no cambies código.",
   s6: "En el panel del centro, que el título «Los cursos del centro» muestre cuántos cursos hay, por ejemplo «Los cursos del centro (3)». Si no hay ninguno, el título se queda como está.",
   s3b: "Cierra las tres deudas que quedan en `docs/alpha-v1/estado-actual.md`.",
   s3: "Cierra las deudas de `docs/alpha-v1/estado-actual.md`: que al dar de alta un centro se rechace a quien ya tiene cursos propios o módulos asignados; que `tests/pages/anexo-iv-codigo.test.ts` monte el componente en vez de leerlo como texto; y corrige el documento, que todavía da en gris el botón «Crear un curso» del centro.",
 };
+
+if (!(scenario! in PROMPTS)) { console.error(`[ERR] :: JUDGE_SCENARIO :: sin encargo para ${scenario}`); process.exit(64); }
 
 // Los documentos de trabajo de cada variante delatarían su origen: se excluyen del diff.
 const EXCLUDE = [":(exclude)WORK.md", ":(exclude)work", ":(exclude)odd", ":(exclude).scratch", ":(exclude)AGENTS.md", ":(exclude)docs/agents"];
