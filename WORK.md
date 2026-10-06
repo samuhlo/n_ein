@@ -27,7 +27,7 @@
 ## Tareas
 
 - [x] T1 · Recorte seguro — instrucciones por shell, referencias de skills, errores y evidencia conservados; commits reales distinguidos de lecturas.
-- [ ] T2 · Modelo por encargo — peticiones mixtas conservadoras y nuevo encargo explícito sin arrastrar el modelo caro.
+- [x] T2 · Modelo por encargo — peticiones mixtas conservadoras y nuevo encargo explícito sin arrastrar el modelo caro.
 - [ ] T3 · Relevo portable — títulos ingleses y españoles, criterios completos y cierre ordenado del origen.
 - [ ] T4 · Alcance y memoria — contrato por petición, conocimiento duradero selectivo y preferencias compartidas por Pi y Claude.
 - [ ] T5 · Evaluación — aceptación y mutantes visibles, coste hasta aceptación, ensayo de alcance y continuidad con modelos.
@@ -36,8 +36,9 @@
 ## Evidencia
 
 - Base: `2e09886`; auditoría con `./scripts/check.sh` correcto y regresiones reproducidas.
+- T2: rojo observado en petición mixta y nuevo encargo; `tests/router.ts` comprueba las reglas, `/nein:nuevo`, compactación y ausencia de órdenes pendientes entre sesiones; suite completa correcta.
 - T1: rojo observado en instrucciones por shell y falso commit; `tests/context.ts` cubre conservación de errores, checks, comandos mixtos/dinámicos y scripts; suite completa y paquete instalado correctos.
 
 ## Siguiente paso
 
-T2: peticiones mixtas y delimitación del siguiente encargo.
+T3: relevo bilingüe y preservación de criterios.

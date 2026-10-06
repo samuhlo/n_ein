@@ -33,14 +33,18 @@ const DOCS_ONLY = /\b(solo (es )?documentacion|no cambies (el )?codigo|only docs
 const RISK = /\b(migraci\w*|base de datos|\bbd\b|esquema|tablas?|sql|drizzle|neon|produccion|deploy\w*|despliegue|release|publica[rd]?|\bci\b|e2e de release|instalador|actualizador|actualizacion|sube[^.]*version|ultima version|dependencia\w*|usuarios?|cuentas?|permisos?|da(r)? de alta|alta (de|manual)\w*|rechac\w*|lo que manda el cliente|cuerpo que manda|deje de mandar\w*|guardad[ao] del|en el servidor|roles? de|autentica\w*|\bauth\b|authentication|authorization|login|sesion(es)?|contrasena|token|credencial\w*|secretos?|seguridad|origen aceptado|cors|websocket|cifra\w*|pagos?|borra\w* (los |de )?datos|guarda[^.]*base de datos|persist\w*|contrato|api publica|formato de (la )?configuracion|de la configuracion|concurren\w*|verificada|solo se pueden?|no puede ser|database|migration|permission|users?|accounts?|security|deploy|production)\b/;
 // Cambios sin lógica ni diseño: texto, estilo, rutas de import, configuración de una línea.
 const MECHANICAL = /\b(readme|documentacion|docs?\b|textos?|errata|typo|renombra\w*|traduc\w*|comentarios?|estilo|formato|color(es)?|iconos?|titulos?|etiquetas?|label|gitignore|git ignore|importacion|import\b|alinea el test|el mismo formato|mismo boton|se vean|que se vea|mensaje nuevo)\b/;
+// Una segunda acción de implementación invalida «documenta...» como señal de solo texto.
+const MIXED_WRITE = /(?:\b(?:y|ademas|tambien|and|also|then)\b|[.;])\s*(?:arregl\w*|corrig\w*|cambi\w*|anad\w*|implement\w*|modific\w*|migr\w*|borr\w*|elimin\w*|fix|change|add|implement|modify|migrate|delete)\b/;
+const LOGIC = /\b(validacion|validat\w*|logica|logic|algoritm\w*|endpoint|calcula\w*)\b/;
 
 /** Clasifica la primera petición de un encargo. Sin señal clara, ordinario: ni el más caro ni el más arriesgado. */
 export function classify(text: string): Classification {
   const t = fold(text);
   if (OPEN.test(t)) return { clase: "abierto", motivo: "propuesta o decisión abierta", fuente: "regla" };
-  if (DOCS_ONLY.test(t)) return { clase: "mecanico", motivo: "solo documentación", fuente: "regla" };
+  if (DOCS_ONLY.test(t) && !MIXED_WRITE.test(t)) return { clase: "mecanico", motivo: "solo documentación", fuente: "regla" };
   const risk = RISK.exec(t);
   if (risk) return { clase: "riesgo", motivo: `toca ${risk[0]}`, fuente: "regla" };
+  if ((DOCS_ONLY.test(t) && MIXED_WRITE.test(t)) || LOGIC.test(t)) return { clase: "ordinario", motivo: "incluye implementación o lógica", fuente: "regla" };
   const mech = MECHANICAL.exec(t);
   if (mech) return { clase: "mecanico", motivo: `cambio de ${mech[0]}`, fuente: "regla" };
   return { clase: "ordinario", motivo: "sin señales de riesgo ni de cambio mecánico", fuente: "defecto" };

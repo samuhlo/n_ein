@@ -17,6 +17,7 @@ const packageRoot = resolve(dirname(fileURLToPath(import.meta.url)), "../..");
 const RANK: Record<JobClass, number> = { mecanico: 0, ordinario: 1, riesgo: 2, abierto: 2 };
 
 export type RouterState = Classification;
+type PendingRoute = { escalate?: string; force?: JobClass; newJob?: boolean };
 type Message = ModelRouteRequest["messages"][number];
 
 function lastUserText(messages: readonly Message[]): string {
@@ -26,8 +27,8 @@ function lastUserText(messages: readonly Message[]): string {
 }
 
 /** Decide la clase del encargo para esta petición. Pura: la extensión y los tests la comparten. */
-export function nextState(request: Pick<ModelRouteRequest<RouterState>, "reason" | "state" | "messages">, pending: { escalate?: string; force?: JobClass }): RouterState {
-  const current = request.state;
+export function nextState(request: Pick<ModelRouteRequest<RouterState>, "reason" | "state" | "messages">, pending: PendingRoute): RouterState {
+  const current = request.reason === "user" && pending.newJob ? undefined : request.state;
   if (pending.force) return { clase: pending.force, motivo: "elegido con /nein:modo", fuente: "usuario" };
   if (pending.escalate) return { clase: "riesgo", motivo: `escalado: ${pending.escalate}`, fuente: "regla" };
   if (request.reason !== "user" && current) return current;
@@ -54,7 +55,8 @@ function effectiveRouting(): RoutingTable {
 
 export default function (pi: ExtensionAPI, table: RoutingTable = effectiveRouting()) {
   // Pi corre una sesión por proceso: lo pendiente vale para la próxima petición de esta sesión.
-  const pending: { escalate?: string; force?: JobClass } = {};
+  const pending: PendingRoute = {};
+  pi.on("session_start", () => { delete pending.escalate; delete pending.force; delete pending.newJob; });
 
   pi.registerVirtualModel<RouterState>({
     provider: "nein",
@@ -68,6 +70,7 @@ export default function (pi: ExtensionAPI, table: RoutingTable = effectiveRoutin
       if (request.reason === "direct") return { model: physical(ctx, table.mecanico), thinkingLevel: table.mecanico.thinking as never };
       const state = nextState(request, pending);
       delete pending.escalate; delete pending.force;
+      if (request.reason === "user") delete pending.newJob;
       const route = table[state.clase];
       const changed = !request.state || request.state.clase !== state.clase || request.state.motivo !== state.motivo;
       return { model: physical(ctx, route), thinkingLevel: route.thinking as never, state: changed ? state : undefined };
@@ -93,6 +96,18 @@ export default function (pi: ExtensionAPI, table: RoutingTable = effectiveRoutin
       if (!clase) { ctx.ui.notify(`Clases: ${CLASSES.join(", ")} · atajos: luna, sol, sol high`, "warning"); return; }
       pending.force = clase;
       ctx.ui.notify(`El encargo pasa a ${clase} → ${table[clase].model} (${table[clase].thinking})`, "info");
+    },
+  });
+
+  pi.registerCommand("nein:nuevo", {
+    description: "Comienza otro encargo y elige de nuevo su modelo: /nein:nuevo [petición]",
+    handler: async (args, ctx) => {
+      await ctx.waitForIdle();
+      delete pending.escalate; delete pending.force;
+      pending.newJob = true;
+      const text = String(args ?? "").trim();
+      if (text) pi.sendUserMessage(text);
+      else ctx.ui.notify("La próxima petición comienza otro encargo; su modelo se elegirá de nuevo.", "info");
     },
   });
 }

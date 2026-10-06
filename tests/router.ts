@@ -12,6 +12,12 @@ const load = (name: string): Labeled[] => JSON.parse(readFileSync(join(root, "ev
 const cheap = (c: JobClass) => c === "mecanico" || c === "ordinario";
 const costly = (c: JobClass) => c === "riesgo" || c === "abierto";
 
+assert.equal(classify("Documenta el cambio y arregla los permisos").clase, "riesgo", "documentar no oculta una modificación de permisos");
+assert.equal(classify("Actualiza el README; migra las cuentas existentes").clase, "riesgo");
+assert.equal(classify("Document the change and fix authentication").clase, "riesgo");
+assert.equal(classify("Documenta los permisos existentes. Es solo documentación: no cambies código.").clase, "mecanico", "explicar un riesgo no lo modifica");
+assert.equal(classify("Cambia el color y añade validación al formulario").clase, "ordinario", "presentación y lógica no es un encargo mecánico");
+
 // Peticiones reales etiquetadas: nunca un encargo de riesgo o abierto a un modelo barato.
 for (const [name, minimum] of [["peticiones.json", 1], ["peticiones-control.json", 0.8]] as const) {
   const set = load(name);
@@ -43,13 +49,18 @@ const risk: RouterState = { clase: "riesgo", motivo: "x", fuente: "regla" };
 assert.equal(nextState({ reason: "user", state: risk, messages: user("corrige una errata del README") }, {}), risk, "nunca baja sola");
 assert.equal(nextState({ reason: "continuation", state: mech, messages: user("x") }, { escalate: "toca permisos" }).clase, "riesgo");
 assert.equal(nextState({ reason: "continuation", state: risk, messages: user("x") }, { force: "mecanico" }).clase, "mecanico");
+assert.equal(nextState({ reason: "user", state: risk, messages: user("Cambia el color del botón") }, { newJob: true }).clase, "mecanico", "un nuevo encargo no arrastra el riesgo anterior");
+assert.equal(nextState({ reason: "continuation", state: risk, messages: user("Cambia el color del botón") }, { newJob: true }), risk, "la frontera espera a una petición del usuario");
 
 // La extensión registra nein/auto, la herramienta de escalado y /nein:modo, y enruta al modelo físico de la clase.
-let virtual: any, tool: any, command: any;
+let virtual: any, tool: any, command: any, newJob: any, sessionStart: any;
+const sent: string[] = [];
 registerRouter({
+  on(name: string, handler: unknown) { if (name === "session_start") sessionStart = handler; },
+  sendUserMessage(message: string) { sent.push(message); },
   registerVirtualModel(v: unknown) { virtual = v; },
   registerTool(t: unknown) { tool = t; },
-  registerCommand(name: string, c: unknown) { if (name === "nein:modo") command = c; },
+  registerCommand(name: string, c: unknown) { if (name === "nein:modo") command = c; if (name === "nein:nuevo") newJob = c; },
 } as never);
 assert.equal(`${virtual.provider}/${virtual.id}`, "nein/auto");
 const ctx = { modelRegistry: { find: (provider: string, id: string) => ({ provider, id }) } } as never;
@@ -68,5 +79,17 @@ await command.handler("luna", { ui: { notify: (m: string) => notes.push(m) } });
 const forced = await virtual.route({ reason: "continuation", state: escalated.state, messages: user("x"), thinkingLevel: "medium" }, ctx);
 assert.equal(forced.model.id, "gpt-6-luna", "/nein:modo manda sobre la clase");
 assert.match(notes[0]!, /mecanico/);
+
+let idle = false;
+await newJob.handler("Cambia el color del botón", { waitForIdle: async () => { idle = true; }, ui: { notify: (m: string) => notes.push(m) } });
+assert.ok(idle);
+assert.deepEqual(sent, ["Cambia el color del botón"]);
+await virtual.route({ reason: "direct", messages: [], thinkingLevel: "medium" }, ctx);
+const fresh = await virtual.route({ reason: "user", state: escalated.state, messages: user(sent[0]!), thinkingLevel: "medium" }, ctx);
+assert.equal(fresh.model.id, "gpt-6-luna", "compactar no consume el comienzo del nuevo encargo");
+await command.handler("luna", { ui: { notify() {} } });
+sessionStart();
+const resumed = await virtual.route({ reason: "continuation", state: escalated.state, messages: user("x"), thinkingLevel: "medium" }, ctx);
+assert.equal(resumed.model.id, "gpt-6-sol", "una orden pendiente de otra sesión no altera el estado restaurado");
 
 console.log("router: clasificación sin riesgo a modelos baratos, encargo pegajoso, escalado y /nein:modo");
