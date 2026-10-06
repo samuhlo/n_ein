@@ -11,12 +11,12 @@ import { fileURLToPath } from "node:url";
 import type { ExtensionAPI, ExtensionContext, ModelRouteRequest } from "@earendil-works/pi-coding-agent";
 import { Type } from "typebox";
 import { loadModels } from "../models.ts";
-import { CLASSES, classify, loadRouting, newJobText, parseOverride, type Classification, type JobClass, type Route, type RoutingTable } from "../router.ts";
+import { CLASSES, classify, newJobText, parseOverride, type Classification, type JobClass, type Route, type RoutingTable } from "../router.ts";
 
 const packageRoot = resolve(dirname(fileURLToPath(import.meta.url)), "../..");
 const RANK: Record<JobClass, number> = { mecanico: 0, ordinario: 1, riesgo: 2, abierto: 2 };
 
-export type RouterState = Classification;
+export type RouterState = Classification & { route?: Route };
 type TaskChoice = { clase: JobClass; transition: "new_job" | "start_implementation" | "reassess" | "user_choice"; reason: string };
 type PendingRoute = { escalate?: string; force?: JobClass; newJob?: boolean; choice?: TaskChoice };
 type Message = ModelRouteRequest["messages"][number];
@@ -58,13 +58,18 @@ function physical(ctx: ExtensionContext, route: Route) {
 
 /** La tabla del canal, con los cambios hechos en /nein:models; sin ella, la del paquete. */
 function effectiveRouting(): RoutingTable {
-  try { return loadModels(packageRoot).routing; } catch { return loadRouting(packageRoot); }
+  return loadModels(packageRoot).routing;
 }
 
-export default function (pi: ExtensionAPI, table: RoutingTable = effectiveRouting()) {
+export default function (pi: ExtensionAPI, fixedTable?: RoutingTable) {
   // Pi corre una sesión por proceso: lo pendiente vale para la próxima petición de esta sesión.
   const pending: PendingRoute = {};
-  pi.on("session_start", () => { delete pending.escalate; delete pending.force; delete pending.newJob; delete pending.choice; });
+  let table = fixedTable;
+  const routing = (refresh = false): RoutingTable => {
+    if (!table || (refresh && !fixedTable)) table = fixedTable ?? effectiveRouting();
+    return table;
+  };
+  pi.on("session_start", () => { delete pending.escalate; delete pending.force; delete pending.newJob; delete pending.choice; table = fixedTable; });
 
   pi.registerVirtualModel<RouterState>({
     provider: "nein",
@@ -75,21 +80,26 @@ export default function (pi: ExtensionAPI, table: RoutingTable = effectiveRoutin
     maxTokens: 128_000,
     route(request, ctx) {
       // Resúmenes de compactación y llamadas fuera del bucle: el modelo barato basta.
-      if (request.reason === "direct") return { model: physical(ctx, table.mecanico), thinkingLevel: table.mecanico.thinking as never };
+      if (request.reason === "direct") return { model: physical(ctx, routing().mecanico), thinkingLevel: routing().mecanico.thinking as never };
+      const fresh = (request.reason === "user" && (pending.newJob || newJobText(lastUserText(request.messages)) !== undefined))
+        || Boolean(pending.force) || ["new_job", "start_implementation", "user_choice"].includes(pending.choice?.transition ?? "");
       const state = nextState(request, pending);
+      // El modelo físico se conserva al continuar o reanudar. La siguiente elección lee los ajustes nuevos.
+      const route = !fresh && request.state?.clase === state.clase && request.state.route ? request.state.route : routing(Boolean(fresh))[state.clase];
+      const model = physical(ctx, route);
       delete pending.escalate; delete pending.force; delete pending.choice;
       if (request.reason === "user") delete pending.newJob;
-      const route = table[state.clase];
-      const changed = !request.state || request.state.clase !== state.clase || request.state.motivo !== state.motivo;
+      const changed = !request.state || request.state.clase !== state.clase || request.state.motivo !== state.motivo
+        || request.state.route?.model !== route.model || request.state.route?.thinking !== route.thinking;
       if (changed && ctx.hasUI) ctx.ui.notify(`${state.clase} → ${route.model} (${route.thinking}) · ${state.motivo}`, "info");
-      return { model: physical(ctx, route), thinkingLevel: route.thinking as never, state: changed ? state : undefined };
+      return { model, thinkingLevel: route.thinking as never, state: changed ? { ...state, route } : undefined };
     },
   });
 
   pi.registerTool({
     name: "nein_set_task",
     label: "Elegir modelo del encargo",
-    description: "Choose the model class from the understood task, without asking the user for a command. With nein/auto, call once for an explicit new job, after an agreed design is authorized for implementation, when exploration changes the assessed risk, or when the user explicitly asks for another model. Quote the relevant words from the latest user message. Mechanical means text/style with no new logic; ordinary means bounded behaviour; risk means stored data, permissions, existing contracts or deployment; open means unresolved design. Reassessing ongoing work can only raise its class. A model choice never grants permission to implement or discards pending work.",
+    description: "Adjust the model class when the understood task needs it. The first request and clear 'another task' prefixes are already routed: do not call just to announce or repeat that choice. With nein/auto, use this for another explicit job not already recognized, after an agreed design is authorized for implementation, when exploration changes the assessed risk, or when the user explicitly requests a different model. Quote their latest request. Mechanical means text/style without new logic; ordinary means bounded behaviour; risk means stored data, permissions, existing contracts or deployment; open means unresolved design. Reassessing ongoing work only raises capability. This never grants implementation permission or discards pending work.",
     parameters: Type.Object({
       clase: Type.Union(CLASSES.map((value) => Type.Literal(value))),
       transition: Type.Union(["new_job", "start_implementation", "reassess", "user_choice"].map((value) => Type.Literal(value))),
@@ -117,7 +127,7 @@ export default function (pi: ExtensionAPI, table: RoutingTable = effectiveRoutin
     async execute(_toolCallId, params, _signal, _update, ctx) {
       if (ctx && (ctx.model?.provider !== "nein" || ctx.model?.id !== "auto")) return { isError: true, content: [{ type: "text", text: "Automatic task routing is not active; the session has a manually selected model. Keep that explicit choice." }], details: undefined };
       pending.escalate = String(params.reason).slice(0, 200);
-      const route = table.riesgo;
+      const route = routing().riesgo;
       return { content: [{ type: "text", text: `El encargo sigue en ${route.model} (${route.thinking}) desde la próxima petición: ${pending.escalate}` }], details: undefined };
     },
   });
@@ -128,7 +138,8 @@ export default function (pi: ExtensionAPI, table: RoutingTable = effectiveRoutin
       const { clase } = parseOverride(`[${String(args ?? "").trim()}]`);
       if (!clase) { ctx.ui.notify(`Clases: ${CLASSES.join(", ")} · atajos: luna, sol, sol high`, "warning"); return; }
       pending.force = clase;
-      ctx.ui.notify(`El encargo pasa a ${clase} → ${table[clase].model} (${table[clase].thinking})`, "info");
+      const route = routing(true)[clase];
+      ctx.ui.notify(`El encargo pasa a ${clase} → ${route.model} (${route.thinking})`, "info");
     },
   });
 

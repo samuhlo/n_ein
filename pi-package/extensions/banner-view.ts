@@ -56,7 +56,8 @@ function statusRows(p: Painter, data: BannerData, room: number, compact = false)
   rows.push(field("riesgo", data.models.riesgo));
   if (data.models.abierto) rows.push(field("abierto", data.models.abierto));
   rows.push(field("claude", data.models.claude));
-  rows.push(...gap, p.fg(COLORS.faint, clip("/nein:models · /todo · /handoff claude · /skill:intent", room)));
+  rows.push(...gap, p.fg(COLORS.concrete, clip("Cuéntame qué necesitas o di «ayúdame a pensarlo».", room)));
+  rows.push(p.fg(COLORS.faint, clip("Modelos y esfuerzo: /nein:models", room)));
   return rows;
 }
 

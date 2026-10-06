@@ -1,5 +1,6 @@
 import { strict as assert } from "node:assert";
-import { readFileSync } from "node:fs";
+import { mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs";
+import { tmpdir } from "node:os";
 import { join, resolve } from "node:path";
 import { classify, DEFAULT_ROUTING, loadRouting, parseOverride, type JobClass } from "../pi-package/router.ts";
 import registerRouter, { nextState, type RouterState } from "../pi-package/extensions/router.ts";
@@ -112,5 +113,27 @@ const built = await virtual.route({ reason: "continuation", state: open, message
 assert.deepEqual([built.model.id, built.thinkingLevel, built.state.clase], ["gpt-6-sol", "medium", "ordinario"]);
 assert.equal((await taskTool.execute("t", { ...choice, request: "Vale, hazlo" }, undefined, undefined, { ...taskContext, model: { provider: "openai", id: "gpt-6-sol" } })).isError, true, "no promete cambiar un modelo manual con un estado virtual inactivo");
 assert.equal((await tool.execute("t", { reason: "risk" }, undefined, undefined, { model: { provider: "openai", id: "gpt-6-sol" } })).isError, true);
+
+// El selector promete aplicar sus cambios al siguiente encargo, conservando el modelo del actual.
+const dir = mkdtempSync(join(tmpdir(), "nein-routing-settings-"));
+try {
+  process.env.N_EIN_MODELS_FILE = join(dir, "models.json");
+  writeFileSync(process.env.N_EIN_MODELS_FILE, JSON.stringify({ schema: 1, agents: {} }));
+  let live: any;
+  registerRouter({ on() {}, registerTool() {}, registerCommand() {}, registerVirtualModel(value: any) { live = value; } } as never);
+  const initial = await live.route({ reason: "user", messages: user("Documenta el README") }, ctx);
+  writeFileSync(process.env.N_EIN_MODELS_FILE, JSON.stringify({ schema: 1, agents: { mecanico: { model: "openai/gpt-6-sol", thinking: "medium" } } }));
+  const continuing = await live.route({ reason: "continuation", state: initial.state, messages: user("Continúa") }, ctx);
+  assert.equal(continuing.model.id, "gpt-6-luna");
+  const another = await live.route({ reason: "user", state: initial.state, messages: user("Otra cosa: documenta el README") }, ctx);
+  assert.equal(another.model.provider, "openai", "un encargo nuevo carga la tabla guardada sin reiniciar Pi");
+  assert.equal(another.model.id, "gpt-6-sol");
+  assert.equal((await live.route({ reason: "continuation", state: another.state, messages: user("Continúa") }, ctx)).model.id, "gpt-6-sol");
+  writeFileSync(process.env.N_EIN_MODELS_FILE, "{}");
+  assert.throws(() => live.route({ reason: "user", state: another.state, messages: user("Otra cosa: documenta el README") }, ctx), /models.json inválido/);
+} finally {
+  process.env.N_EIN_MODELS_FILE = join(root, "no-existe", "models.json");
+  rmSync(dir, { recursive: true, force: true });
+}
 
 console.log("router: clasificación sin riesgo a modelos baratos, encargo pegajoso, escalado y /nein:modo");

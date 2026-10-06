@@ -38,10 +38,12 @@ Implementar, probar y hacer commits de este corte. Actualizar la preview local c
 - [x] F1 · Método conversacional — intent, guía y tareas automáticas, checks proporcionales y cierre breve.
 - [x] F2 · Modelo por encargo — nuevo objetivo y selección según alcance conocido, con anuncios y atajos existentes.
 - [x] F3 · Relevo conversacional — Pi y Claude reciben la petición natural y usan el mecanismo existente con cierre ordenado.
+- [x] F2b · Ajustes y descubrimiento — tabla nueva en el siguiente encargo, modelo conservado al continuar y portada orientada a conversación.
 - [ ] F4 · Evaluación y preview — seis recorridos reales, evidencia y paquete actualizado reversible.
 
 ## Evidencia
 
+- F2b: rojo observado al cambiar una clase y empezar otro encargo; verde al recargar ajustes y conservar la ruta física de la continuación. Una configuración inválida no provoca fallback.
 - F3: regresión roja de relevo desde herramienta; verde con señal escrita solo en agent_end, cancelación, nueva entrada y cambio de sesión. El comando y la conversación comparten prepare; Claude carga to-pi ante petición natural explícita. `./scripts/check.sh` correcto.
 - F2: rojo observado en «Otra cosa» y paso de diseño a implementación; tests del modelo virtual comprueban conservación de riesgo, cita real del usuario y respeto de selección manual. `./scripts/check.sh` correcto.
 - F1: `tests/skills.ts` valida las instrucciones entregadas y el catálogo; la efectividad conversacional se comprobará en F4 con modelos.

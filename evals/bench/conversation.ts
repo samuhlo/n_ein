@@ -53,7 +53,9 @@ function summarize(path: string) {
   const messages = events(path).filter((e) => e.type === "message_end" && e.message?.role === "assistant").map((e) => e.message);
   const last = messages.at(-1);
   const text = (last?.content ?? []).filter((c: any) => c.type === "text").map((c: any) => c.text).join("\n");
-  return { text, questionMarks: (text.match(/\?/g) ?? []).length, models: [...new Set(messages.map((m) => `${m.provider}/${m.model}`))], catalogUsd: messages.reduce((n, m) => n + (m.usage?.cost?.total ?? 0), 0), tools: messages.flatMap((m) => m.content?.filter((c: any) => c.type === "toolCall").map((c: any) => ({ name: c.name, arguments: c.arguments })) ?? []), error: last?.stopReason === "error" ? last.errorMessage : undefined };
+  const questionMarks = (text.match(/\?/g) ?? []).length;
+  const decisionQuestions = (text.match(/\*\*Q\d+\b/g) ?? []).length || questionMarks;
+  return { text, questionMarks, decisionQuestions, models: [...new Set(messages.map((m) => `${m.provider}/${m.model}`))], catalogUsd: messages.reduce((n, m) => n + (m.usage?.cost?.total ?? 0), 0), tools: messages.flatMap((m) => m.content?.filter((c: any) => c.type === "toolCall").map((c: any) => ({ name: c.name, arguments: c.arguments })) ?? []), error: last?.stopReason === "error" ? last.errorMessage : undefined };
 }
 async function execute(name: string, binary: string, args: string[], additions: Record<string, string> = {}) {
   const out = Bun.file(join(logs, name + ".jsonl")).writer(), err = Bun.file(join(logs, name + ".stderr")).writer();
@@ -91,7 +93,7 @@ if (scenario === "basic") {
   const before = fingerprint();
   const design = await pi("design", "Quiero mejorar cómo esta pequeña CLI muestra el puerto configurado, porque el cero confunde a quien la usa. Ayúdame a pensar y diseñar la experiencia antes de construir; todavía no cambies archivos.");
   assert.equal(fingerprint(), before, "diseñar todavía no autoriza escrituras");
-  assert.ok(design.questionMarks > 0 && design.questionMarks <= 3, "primera ronda breve de decisiones");
+  assert.ok(design.decisionQuestions > 0 && design.decisionQuestions <= 3, "primera ronda breve de decisiones");
   assert.match(design.text, /recomiend|recomendaci|propongo|opci[oó]n/i);
   assert.doesNotMatch(design.text, /(?:ejecuta|invoca|usa)\s+[`\s]*\/(?:skill|intent)/i);
   const built = await pi("go-ahead", "El acuerdo es este: el cero se verá como Port: 0 (automatic), los otros valores válidos como Port: N. Conserva el parser y los errores actuales. Actualiza formatPort y documenta el significado del cero en README. Mantén inglés en los artefactos. Me encaja: hazlo y compruébalo.");
@@ -108,7 +110,7 @@ if (scenario === "basic") {
 } else {
   const before = fingerprint();
   const quote = (s: string) => `'${s.replace(/'/g, "'\\''")}'`;
-  const realPi = join(homedir(), ".n_ein/runtimes", JSON.parse(readFileSync(join(repo, "runtime.json"), "utf8")).pi.version, "bin/pi");
+  const realPi = join(homedir(), ".n_ein/runtimes/pi", JSON.parse(readFileSync(join(repo, "runtime.json"), "utf8")).pi.version, "bin/pi");
   const realClaude = execFileSync("which", ["claude"], { encoding: "utf8" }).trim();
   const piWrapper = join(root, "pi-print"), claudeWrapper = join(root, "claude-print");
   writeFileSync(piWrapper, `#!/bin/bash\nif [[ "$1" == --version ]]; then exec ${quote(realPi)} --version; fi\nexec ${quote(realPi)} --print --mode json --session-dir ${quote(join(logs, "sessions"))} "$@" >> ${quote(join(logs, "pi-events.jsonl"))}\n`, { mode: 0o755 });
