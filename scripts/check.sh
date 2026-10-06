@@ -43,6 +43,7 @@ bun run tests/banner.ts
 bun run tests/skills.ts
 bun run tests/router.ts
 bun run tests/context.ts
+bun run tests/bench.ts
 
 (
   cd go

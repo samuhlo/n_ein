@@ -30,12 +30,14 @@
 - [x] T2 · Modelo por encargo — peticiones mixtas conservadoras y nuevo encargo explícito sin arrastrar el modelo caro.
 - [x] T3 · Relevo portable — títulos ingleses y españoles, criterios completos y cierre ordenado del origen.
 - [x] T4 · Alcance y memoria — contrato por petición, conocimiento duradero selectivo y preferencias compartidas por Pi y Claude.
+- [x] T5a · Banco revisable — aceptación completa, mutantes y coste de las ejecuciones incompletas visibles; runner y reanudación reproducibles.
 - [ ] T5 · Evaluación — aceptación y mutantes visibles, coste hasta aceptación, ensayo de alcance y continuidad con modelos.
 - [ ] T6 · Preview — candidato comprobado, actualización local reversible y diagnóstico de la instalación efectiva.
 
 ## Evidencia
 
 - Base: `2e09886`; auditoría con `./scripts/check.sh` correcto y regresiones reproducidas.
+- T5a: `tests/bench.ts` comprueba que 9/14, un mutante superviviente, una suite rota o evidencia ausente no cuentan como aceptación completa. El informe recupera todas las repeticiones, expone mutantes y coste por aceptada; se corrigió la omisión del informe histórico. Suite completa correcta.
 - T4: rojo observado en preferencias ausentes del relevo; ambos lanzadores entregan el mismo archivo. `tests/memory.ts` verifica lectura sin mutación, actualización entre sesiones y fuente explícita. El flujo conserva petición, consumidores y aceptación; evita límites inventados y manda preservar decisiones antes de reemplazar WORK.md. La efectividad con modelos se mide en T5. Suite completa correcta.
 - T3: rojo observado con WORK.md en inglés; `tests/handoff.ts` comprueba los criterios finales de un documento largo y las tareas pendientes junto al siguiente paso; ambos lanzadores prueban salida antes de destino. Escritores externos no supervisados quedan explícitos. Suite completa correcta.
 - T2: rojo observado en petición mixta y nuevo encargo; `tests/router.ts` comprueba las reglas, `/nein:nuevo`, compactación y ausencia de órdenes pendientes entre sesiones; suite completa correcta.

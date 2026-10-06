@@ -12,6 +12,9 @@ set -uo pipefail
 bench="${N_EIN_BENCH:-/Users/samu/Documents/01_Proyectos/n_ein-bench}"
 repo="${N_EIN_REPO:-/Users/samu/Documents/01_Proyectos/n_ein}"
 scenario="$1"; arm="$2"; rep="$3"
+if [[ "$arm" == NR[0-9]* && ! "$arm" =~ ^NR[0-9]+$ ]]; then
+  printf '[ERR] :: BENCH_ARM :: %s\n' "$arm" >&2; exit 64
+fi
 run="${scenario}-${arm}-r${rep}${RUN_SUFFIX:-}"
 copy="$bench/copies/$run"; home="$bench/homes/$run"; log="$bench/logs/$run"
 model="${BENCH_MODEL:-gpt-6-sol}"; effort="${BENCH_EFFORT:-medium}"
@@ -77,7 +80,7 @@ case "$arm" in
 esac
 uniform="{\"model\":\"openai-codex/$model\",\"thinking\":\"$effort\"}"
 printf '{"schema":1,"agents":{"principal":%s,"scout":%s,"worker":%s,"reviewer":%s}}\n' "$uniform" "$uniform" "$uniform" "$uniform" > "$home/models.json"
-if [[ "$arm" == NR || "$arm" == NR[0-9] ]]; then
+if [[ "$arm" == NR || "$arm" == NR[0-9]* ]]; then
   printf '{"schema":1,"agents":{"principal":{"model":"nein/auto","thinking":"medium"}}}\n' > "$home/models.json"
 fi
 if [[ "$arm" == N1L ]]; then
@@ -96,8 +99,8 @@ launch() {
     A|AL)
       PI_CODING_AGENT_DIR="$home/pi-agent" "$pi_bin" -p "$1" --mode json --no-extensions --no-skills \
         --model "openai-codex/$model" --thinking "$effort" ;;
-    N0L|N0LH|N0S|N0SH|N0SNC|N0SNR|NR|NR[0-9])
-      local product="$bench/products/n0"; [[ "$arm" == N0SNR ]] && product="$bench/products/n0nr"; [[ "$arm" == NR ]] && product="$bench/products/nr"; [[ "$arm" == NR[0-9] ]] && product="$bench/products/$(tr '[:upper:]' '[:lower:]' <<< "$arm")"
+    N0L|N0LH|N0S|N0SH|N0SNC|N0SNR|NR|NR[0-9]*)
+      local product="$bench/products/n0"; [[ "$arm" == N0SNR ]] && product="$bench/products/n0nr"; [[ "$arm" == NR ]] && product="$bench/products/nr"; [[ "$arm" == NR[0-9]* ]] && product="$bench/products/$(tr '[:upper:]' '[:lower:]' <<< "$arm")"
       # Sin CodeGraph: un binario inexistente hace que el lanzador avise y siga, y la herramienta no se registra.
       local cg=(); [[ "$arm" == N0SNC ]] && cg=(N_EIN_CODEGRAPH_BIN=/nonexistent/codegraph)
       env ${cg[@]+"${cg[@]}"} N_EIN_HOME=/Users/samu/.n_ein N_EIN_AGENT_DIR="$home/pi-agent" N_EIN_MODELS_FILE="$home/models.json" \
