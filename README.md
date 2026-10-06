@@ -2,6 +2,21 @@
 
 n_ein es el nuevo entorno personal de programación de Samu. La versión de desarrollo arranca Pi 1.0.2 con hogar aislado, tema de Ein, voz docente, sus skills y un modelo por encargo (`nein/auto`): Luna para lo mecánico, Sol para lo ordinario y Sol high para lo arriesgado. El relevo Pi↔Claude, un instalador local y el launcher de cinco vistas en Go ya tienen recorridos verificados.
 
+## Usarlo conversando
+
+Abre `nein`, elige Pi o Claude y cuenta qué necesitas. El agente selecciona las skills, organiza el encargo, comprueba los cambios y conserva lo necesario para continuar.
+
+| Puedes decir | Qué ocurre |
+|---|---|
+| «Ayúdame a pensar esta idea» | Investiga y plantea las decisiones necesarias con recomendación. |
+| «Corrige este fallo» | Trabaja directamente si el encargo está claro. |
+| «Vale, hazlo» | Usa el acuerdo y construye dentro del alcance autorizado. |
+| «Otra cosa: …» | Inicia otro encargo y elige de nuevo el modelo. |
+| «Sigue donde lo dejamos» | Recupera decisiones, evidencia y pendiente antes de continuar. |
+| «Quiero continuar con Claude» / «Sigamos con Pi» | Prepara el relevo. Claude muestra la acción de salida que exige su interfaz. |
+
+Los comandos siguen como atajos; el recorrido ordinario no requiere conocer nombres de skills. El cierre de un cambio pequeño muestra resultado, comprobación y commit. Para un trabajo importante añade el detalle que permita revisarlo.
+
 ## Arrancar
 
 Con Bun y Go 1.27.1, instala una vez el Pi fijado dentro de `~/.n_ein` y arranca:
@@ -15,6 +30,8 @@ Con Bun y Go 1.27.1, instala una vez el Pi fijado dentro de `~/.n_ein` y arranca
 Para usar otro binario de Pi, define `N_EIN_PI_BIN`.
 
 El lanzador conserva el directorio de trabajo actual y pasa los argumentos a Pi. Usa `~/.n_ein/dev/pi-agent` para configuración, autenticación y sesiones. No copia credenciales de Pi normal, Codex CLI ni Ein legado. Si quieres probar con otro hogar aislado, define `N_EIN_AGENT_DIR` antes de arrancar.
+
+### Modelos y ajustes avanzados
 
 Por defecto el principal es `nein/auto`, un modelo virtual de Pi que elige el modelo con la primera petición de cada encargo y lo mantiene hasta el final, para no perder la caché: **mecánico** (documentación, textos, estilos, cambios de interfaz sin lógica) va a `gpt-6-luna` high; **ordinario**, a `gpt-6-sol` medium; **riesgo** (datos y migraciones, usuarios y permisos, contratos que otros usan, concurrencia, despliegue) y **abierto** (decisiones sin cerrar), a `gpt-6-sol` high. Dentro del encargo solo sube de clase, nunca baja sola. Para empezar otro puedes decir «Otra cosa: …» o «Nuevo encargo: …»; conserva la conversación y elige de nuevo el modelo. Una corrección del mismo encargo mantiene su clase. Al autorizar un diseño acordado, el agente puede ajustar la capacidad a la implementación concreta; los cambios de riesgo durante el trabajo solo suben de clase. `/nein:nuevo <petición>` sigue como atajo. Las peticiones mixtas que incluyen cambios de permisos o autenticación no se tratan como solo documentación. El pie de Pi enseña el modelo elegido. Para cambiarlo: un prefijo en el mensaje (`[luna]`, `[sol]`, `[sol high]` o el nombre de la clase), `/nein:modo <clase>` durante el encargo, o la herramienta `nein_escalate`, que el agente usa cuando descubre un riesgo. `/nein:models` abre el panel con el principal, el modelo de cada clase y el esfuerzo de Claude, como el de Ein: enter busca en el catálogo (o admite un id personalizado), `e` cicla el esfuerzo, `r` vuelve al valor del paquete y nada se escribe hasta guardar. Se guarda en `~/.n_ein/<canal>/models.json`, fuera del código gestionado. El siguiente encargo o elección explícita carga la tabla nueva; una continuación o reanudación conserva el modelo físico ya elegido. Una configuración inválida se informa al elegir, sin sustituirla silenciosamente por otra. Claude usa el modelo de Claude Code y recibe `--effort`. Configuración muestra el valor efectivo y su origen. Al abrir Pi, el banner enseña la marca Panel, la rama, el índice de CodeGraph, la tarea en curso de `WORK.md` y la tabla de modelos. Un modelo inaccesible da un error visible, sin cambiar de proveedor. Para usar la suscripción, inicia sesión en ese hogar en el proveedor que usa tu tabla: `/login openai-codex` para los valores de paquete. Pi 1.0 también ofrece `/login openai` (ChatGPT subscription): es otro flujo OAuth y no renueva el token de `openai-codex`; para usarlo, selecciona `openai/gpt-6-luna` y `openai/gpt-6-sol` en las clases de `/nein:models`. La elección queda visible y no se copian credenciales ni se cambia de proveedor como fallback. La elección se basa en el [banco del 5 de octubre](evals/results/2026-10-05-modelos-de-trabajo.md) y el [rumbo](docs/09-rumbo.md).
 

@@ -38,6 +38,12 @@ El producto funciona cuando termina trabajo autorizado con calidad y menos fricc
 
 No convertir esta tabla en un requisito de ejecutar todo para cada cambio. Cada corte selecciona casos pertinentes; smoke esencial para artefactos de release.
 
+## Recorrido conversacional
+
+`evals/bench/conversation.ts` prueba con procesos y modelos reales seis recorridos: ayuda para diseñar sin escribir, arreglo directo, autorización del acuerdo, otro encargo con nueva elección de modelo, pendiente recuperado en sesión nueva y Pi→Claude→Pi pedido en lenguaje normal. Añade un control negativo: preguntar qué conservaría otro runtime no debe ejecutar el relevo. Los prompts no contienen nombres de skills ni comandos de orquestación. Las copias y sesiones se guardan en el banco; las credenciales se usan desde sus hogares existentes, sin copiarlas.
+
+La aceptación reserva comprobaciones de comportamiento y de alcance: parser intacto cuando no se autorizó tocarlo, ningún archivo nuevo durante el diseño, ninguna reentrevista al retomar, ninguna reescritura del proyecto en el relevo de lectura. Se registran las preguntas, el modelo real, las herramientas, la estimación de catálogo y el tiempo. La demora del proveedor también cuenta para el usuario; un coste bajo no acredita fluidez por sí solo.
+
 ## Capas de comprobación propuestas
 
 1. **Deterministas rápidas:** lógica, parsing limitado, permisos/configuración, identidad de evidencia, cancelación y persistencia. Ejecutadas regularmente y en CI donde proceda.

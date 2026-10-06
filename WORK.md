@@ -43,6 +43,7 @@ Implementar, probar y hacer commits de este corte. Actualizar la preview local c
 
 ## Evidencia
 
+- F4 (modelos): seis recorridos aceptados, más control negativo de pregunta sobre Claude y segunda ejecución básica. Un único punto de decisión en diseño; ninguna pregunta en arreglo, autorización, nuevo encargo ni reanudación. Relevo hablado Pi→Claude→Pi con proyecto intacto. Evidencia en evals/results/2026-10-06-flujo-conversacional.md.
 - F2b: rojo observado al cambiar una clase y empezar otro encargo; verde al recargar ajustes y conservar la ruta física de la continuación. Una configuración inválida no provoca fallback.
 - F3: regresión roja de relevo desde herramienta; verde con señal escrita solo en agent_end, cancelación, nueva entrada y cambio de sesión. El comando y la conversación comparten prepare; Claude carga to-pi ante petición natural explícita. `./scripts/check.sh` correcto.
 - F2: rojo observado en «Otra cosa» y paso de diseño a implementación; tests del modelo virtual comprueban conservación de riesgo, cita real del usuario y respeto de selección manual. `./scripts/check.sh` correcto.
@@ -51,4 +52,4 @@ Implementar, probar y hacer commits de este corte. Actualizar la preview local c
 
 ## Siguiente paso
 
-F4: ejecutar los recorridos completos con modelos y medir resultado, preguntas, tiempo y coste.
+F4: aplicar el candidato comprobado a la preview local y verificar su estado.
