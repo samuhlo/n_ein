@@ -26,6 +26,18 @@ function apply(list: Retirement[]) {
 }
 const ids = (list: Retirement[]) => list.map((r) => r.targetId).sort();
 
+// Las instrucciones llegan también por shell y por referencias del catálogo.
+turn([
+  { name: "bash", arguments: { command: "cat pi-package/skills/tdd/SKILL.md" }, result: big("# TDD") },
+  { name: "read", arguments: { path: "/pkg/skills/tdd/tests.md" }, result: big("Test guidance") },
+  { name: "bash", arguments: { command: "cat AGENTS.md" }, result: big("Project instructions") },
+]);
+const [instructionBoundary] = turn([{ name: "write", arguments: { path: "WORK.md" }, result: "ok" }]);
+assert.deepEqual(retirements(entries, new Set([instructionBoundary!])), [], "la primera escritura conserva instrucciones leídas por shell");
+const [instructionCommit] = turn([{ name: "bash", arguments: { command: "git commit -m 'docs: plan'" }, result: "[main abc1234] docs: plan" }]);
+assert.deepEqual(retirements(entries, new Set([instructionCommit!]), true), [], "un commit conserva también las referencias de las skills");
+entries.length = 0; seq = 0;
+
 entries.push({ sourceEntry: { id: "u0", type: "message" }, messages: [{ role: "user", content: "Arregla el estado de los certificados" }] });
 const [graph] = turn([{ name: "codegraph_explore", arguments: { query: "importCertificate" }, result: big("Exploration") }]);
 const [search, file, skill, tiny] = turn([
@@ -48,21 +60,27 @@ assert.match(atWrite.find((r) => r.targetId === search)!.text, /bash cd \/repo &
 apply(atWrite);
 assert.deepEqual(retirements(entries, new Set()), [], "sin frontera nueva no se vuelve a romper la caché");
 
-// Pruebas y commit entre tareas: se retira todo lo anterior salvo las instrucciones.
+// El commit retira lecturas recuperables, conservando evidencia y fallos.
 const [suite] = turn([{ name: "bash", arguments: { command: "bunx vitest run > /tmp/t.log; tail -5 /tmp/t.log" }, result: big("Tests 12 passed") }]);
+const [failedTest] = turn([{ name: "bash", arguments: { command: "bun test" }, result: big("FAIL: unresolved permission check"), isError: true }]);
+const [gitLog] = turn([{ name: "bash", arguments: { command: "git log --grep=commit -1" }, result: "an old commit" }]);
+assert.deepEqual(retirements(entries, new Set([gitLog!]), true), [], "buscar commits no crea un commit ni retira evidencia");
+const [quotedCommit] = turn([{ name: "bash", arguments: { command: "echo 'example: git commit -m fix; git commit -m other'" }, result: "example" }]);
+assert.deepEqual(retirements(entries, new Set([quotedCommit!]), true), [], "un ejemplo entre comillas no crea un commit");
 const [failedCommit] = turn([{ name: "bash", arguments: { command: "git commit -m 'fix: x'" }, result: "nothing added to commit", isError: true }]);
 assert.deepEqual(retirements(entries, new Set([failedCommit!]), true), [], "un commit fallido no es frontera");
 const [commit] = turn([{ name: "bash", arguments: { command: "git add -A && git commit -m 'fix: estado failed'" }, result: "[fix/estado 3f9a2c1d] fix: estado failed\n 2 files changed" }]);
 assert.deepEqual(retirements(entries, new Set([commit!]), false), [], "tras el último commit no se rompe la caché por un cierre");
 const atCommit = retirements(entries, new Set([commit!]), true);
-assert.deepEqual(ids(atCommit), [file!, lateSearch!, suite!].sort(), "lo leído antes del commit se retira; la skill y lo ya retirado no");
+assert.deepEqual(ids(atCommit), [file!, lateSearch!].sort(), "solo lecturas: ni instrucciones, ni comprobaciones, ni errores");
+assert.ok(!ids(atCommit).includes(suite!) && !ids(atCommit).includes(failedTest!));
 assert.ok(atCommit.every((r) => r.text.includes("at commit 3f9a2c1:")));
 assert.ok(![...atWrite, ...atCommit].some((r) => r.targetId === skill || r.targetId === tiny), "la skill y lo pequeño no se retiran nunca");
 apply(atCommit);
 assert.deepEqual(retirements(entries, new Set(), true), []);
 
 // codemode: escribe y commitea a través de sus llamadas anidadas; si cargó una skill, se queda.
-const [script] = turn([{ name: "codemode", arguments: { code: "await tools.read({path:'b.ts'})" }, result: big("Script completed") }]);
+const [script] = turn([{ name: "codemode", arguments: { code: "await tools.read({path:'b.ts'})" }, result: big("Script completed"), nested: [{ name: "read", arguments: { path: "b.ts" }, status: "ok" }] }]);
 const [skillScript] = turn([{ name: "codemode", arguments: { code: "..." }, result: big("# TDD"), nested: [{ name: "read", arguments: { path: "/pkg/skills/tdd/SKILL.md" }, status: "ok" }] }]);
 const [scriptCommit] = turn([{
   name: "codemode", arguments: { code: "..." }, result: "Script completed in 3s\nok",
@@ -71,6 +89,20 @@ const [scriptCommit] = turn([{
 const atScriptCommit = ids(retirements(entries, new Set([scriptCommit!]), true));
 assert.deepEqual(atScriptCommit, [script!], "un commit dentro de un script también es frontera");
 assert.ok(!atScriptCommit.includes(skillScript!), "el script que cargó una skill se queda");
+
+entries.length = 0; seq = 0;
+const protectedOutputs = turn([
+  { name: "bash", arguments: { command: "rg x src && bun test" }, result: big("Tests 12 passed") },
+  { name: "bash", arguments: { command: "cat $skill" }, result: big("Instructions from a dynamic path") },
+  { name: "read", arguments: { path: "/tmp/check.log" }, result: big("Test evidence") },
+  { name: "write", arguments: { path: "a.ts" }, result: big("Mutation receipt") },
+  { name: "codemode", arguments: { code: "..." }, result: big("FAIL"), nested: [{ name: "bash", arguments: { command: "bun test" }, status: "error" }] },
+]);
+const [safeRead] = turn([{ name: "read", arguments: { path: "a.ts" }, result: big("Code") }]);
+const [scopedCommit] = turn([{ name: "bash", arguments: { command: "git -C '/repo with spaces' commit -qm 'T1'" }, result: "" }]);
+const scoped = ids(retirements(entries, new Set([scopedCommit!]), true));
+assert.deepEqual(scoped, [safeRead!], "git -C reconoce el commit; resultados mixtos, dinámicos, checks y mutaciones se conservan");
+assert.ok(protectedOutputs.every((id) => !scoped.includes(id)));
 
 // La extensión registra turn_end, lee las tareas pendientes de WORK.md y devuelve context_edit.
 type Proposal = { entries: { type: string; targetId: string; replacement: { content: { type: string; text: string }[] } }[] } | undefined;

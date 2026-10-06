@@ -5,10 +5,10 @@
 // En dos fronteras, esos resultados se sustituyen por una nota de una línea con
 // `context_edit` de Pi; el historial, la interfaz y la contabilidad no cambian.
 //   · primera escritura   -> CodeGraph y búsquedas: ya sirvieron para decidir.
-//   · commit entre tareas -> todo lo leído antes: Git, WORK.md y los archivos
+//   · commit entre tareas -> lecturas recuperables: Git, WORK.md y los archivos
 //                            guardan el estado vigente. Tras el último commit
 //                            queda poco por hacer y romper la caché no compensa.
-// Las instrucciones (skills, AGENTS.md, glosario) no se retiran nunca.
+// Las instrucciones, los errores y las comprobaciones no se retiran.
 // =============================================================================
 
 import type { ExtensionAPI } from "@earendil-works/pi-coding-agent";
@@ -25,16 +25,36 @@ type Message = { role: string; content?: string | readonly Block[]; toolCallId?:
 export type Entry = { sourceEntry: { id: string; type: string }; messages: readonly Message[] };
 export type Retirement = { targetId: string; text: string };
 
-const KEEP_PATH = /(^|\/)(SKILL\.md|AGENTS\.md|CLAUDE\.md|GLOSSARY\.md)$/;
+// La documentación puede contener decisiones o instrucciones, también fuera de SKILL.md.
+const KEEP_PATH = /\.md\b|(?:^|\/)skills\//i;
 const READ_ONLY_BASH = /^(rg|grep|find|ls|cat|head|tail|sed -n|wc|tree|pwd|git (status|log|show|diff|grep|ls-files|blame))\b/;
-const COMMIT = /\bgit\b[^\n]*\bcommit\b/;
 const SHA = /\[[^\]\n]*?([0-9a-f]{7,40})\]/;
 
 const command = (call?: Call) => String(call?.arguments?.command ?? "");
-// `cd x && rg ...` sigue siendo una búsqueda: se mira el primer programa tras los cd.
-const firstProgram = (cmd: string) => cmd.replace(/^\s*(cd\s+[^;&|]+\s*(&&|;)\s*)+/, "").trim();
+// Solo comandos simples y visibles. No evaluamos shell ni adivinamos variables o scripts.
+function shellCommands(cmd: string): string[][] {
+  if (/[$`\\(){}<>]/.test(cmd)) return [];
+  const groups: string[][] = [[]];
+  let end = 0;
+  for (const match of cmd.matchAll(/"[^"\n]*"|'[^'\n]*'|&&|\|\||[;|\n]|[^\s;&|'"\n]+/g)) {
+    if (cmd.slice(end, match.index).trim()) return [];
+    end = match.index! + match[0].length;
+    if (/^(?:&&|\|\||[;|\n])$/.test(match[0])) groups.push([]);
+    else groups.at(-1)!.push(match[0].replace(/^(['"])(.*)\1$/, "$2"));
+  }
+  return cmd.slice(end).trim() ? [] : groups.filter((group) => group.length);
+}
 const isWrite = (call?: Call) => call?.name === "edit" || call?.name === "write";
-const isCommit = (call?: Call) => call?.name === "bash" && COMMIT.test(command(call)) && !/--dry-run/.test(command(call));
+const isCommit = (call?: Call) => call?.name === "bash" && shellCommands(command(call)).some((words) => {
+  if (words[0] !== "git" || words.includes("--dry-run")) return false;
+  let i = 1;
+  while (i < words.length && words[i]!.startsWith("-")) {
+    if (["-C", "-c", "--git-dir", "--work-tree"].includes(words[i]!)) i += 2;
+    else if (/^--(?:git-dir|work-tree)=/.test(words[i]!)) i++;
+    else return false;
+  }
+  return words[i] === "commit";
+});
 
 // `turn` es el mensaje del asistente que pidió la llamada: las fronteras se cuentan por turnos.
 type Item = { id: string; turn: number; call?: Call; nested: readonly Call[]; text: string; isError: boolean };
@@ -66,15 +86,22 @@ const committed = (item: Item) => !item.isError && (isCommit(item.call) || item.
 
 // También un script que cargó una skill: retirarlo se llevaría sus instrucciones.
 function isInstruction(item: Item): boolean {
-  return [item.call, ...item.nested].some((call) => call?.name === "read" && KEEP_PATH.test(String(call.arguments?.path ?? "")));
+  return [item.call, ...item.nested].some((call) => {
+    const source = call?.name === "bash" ? command(call) : String(call?.arguments?.path ?? "");
+    return KEEP_PATH.test(source);
+  });
 }
 
 function isExploration(item: Item): boolean {
-  const name = item.call?.name;
+  return isExplorationCall(item.call) || (item.call?.name === "codemode" && item.nested.length > 0 && item.nested.every((call) => call.status === "ok" && (call.name === "read" || isExplorationCall(call))));
+}
+
+function isExplorationCall(call?: Call): boolean {
+  const name = call?.name;
   if (name === "codegraph_explore" || name === "grep" || name === "find" || name === "ls") return true;
-  if (name === "bash") return READ_ONLY_BASH.test(firstProgram(command(item.call)));
-  // Antes de la primera escritura, un script solo pudo mirar.
-  return name === "codemode";
+  if (name !== "bash") return false;
+  const commands = shellCommands(command(call));
+  return commands.length > 0 && commands.some((words) => words[0] !== "cd") && commands.every((words) => words[0] === "cd" || READ_ONLY_BASH.test(words.join(" ")));
 }
 
 function target(call?: Call): string {
@@ -101,7 +128,10 @@ export function retirements(entries: readonly Entry[], currentTurn: ReadonlySet<
   const sha = commit ? SHA.exec(commit.text)?.[1] : undefined;
   const out: Retirement[] = [];
   for (const item of all) {
-    if (currentTurn.has(item.id) || item.text.length < MIN_CHARS || item.text.startsWith(RETIRED_MARK) || isInstruction(item)) continue;
+    if (currentTurn.has(item.id) || item.isError || item.text.length < MIN_CHARS || item.text.startsWith(RETIRED_MARK) || isInstruction(item)) continue;
+    // Los checks y las mutaciones no son lecturas: un commit no demuestra que su evidencia se haya guardado.
+    const recoverable = item.call?.name === "read" || isExploration(item);
+    if (!recoverable || /\.(?:log|jsonl)\b/.test(target(item.call))) continue;
     if (commit && item.turn < commit.turn) out.push({ targetId: item.id, text: note(item, sha ? `commit ${sha.slice(0, 7)}` : "a commit") });
     else if (item.turn < firstWrite && isExploration(item)) out.push({ targetId: item.id, text: note(item, "the first edit") });
   }
