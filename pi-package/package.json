@@ -9,7 +9,8 @@
       "./extensions/todo.ts",
       "./extensions/handoff.ts",
       "./extensions/models.ts",
-      "./extensions/codegraph.ts"
+      "./extensions/codegraph.ts",
+      "./extensions/context.ts"
     ],
     "skills": [
       "./skills"

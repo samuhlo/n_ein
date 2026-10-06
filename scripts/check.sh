@@ -41,6 +41,7 @@ bun run tests/brand.ts
 bun run tests/banner.ts
 bun run tests/skills.ts
 bun run tests/router.ts
+bun run tests/context.ts
 
 (
   cd go
