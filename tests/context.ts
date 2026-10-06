@@ -68,8 +68,9 @@ const [scriptCommit] = turn([{
   name: "codemode", arguments: { code: "..." }, result: "Script completed in 3s\nok",
   nested: [{ name: "edit", arguments: { path: "b.ts" }, status: "ok" }, { name: "bash", arguments: { command: "git commit -qm 'feat: b'" }, status: "ok" }],
 }]);
-assert.deepEqual(ids(retirements(entries, new Set([scriptCommit!]), true)), [script!], "un commit dentro de un script también es frontera");
-assert.ok(skillScript);
+const atScriptCommit = ids(retirements(entries, new Set([scriptCommit!]), true));
+assert.deepEqual(atScriptCommit, [script!], "un commit dentro de un script también es frontera");
+assert.ok(!atScriptCommit.includes(skillScript!), "el script que cargó una skill se queda");
 
 // La extensión registra turn_end, lee las tareas pendientes de WORK.md y devuelve context_edit.
 type Proposal = { entries: { type: string; targetId: string; replacement: { content: { type: string; text: string }[] } }[] } | undefined;
