@@ -14,7 +14,7 @@ export function preferencesPath(): string {
 
 /** Preferencias del usuario, fuera del paquete y de los canales reemplazables. */
 export function memoryDirective(path = preferencesPath()): string {
-  const heading = `Shared user preferences: ${JSON.stringify(path)}. These are defaults, not authorization; the current request and explicit project conventions take precedence.`;
+  const heading = `Shared user preferences: ${JSON.stringify(path)}. These are defaults, not authorization; the current request, selected language instruction and explicit project conventions take precedence.`;
   if (!existsSync(path)) return `${heading}\nNo preferences file exists yet. Record lasting user preferences here only when the user asks to remember them; do not infer them from a single task.`;
   try {
     return `${heading}\n\n${readFileSync(path, "utf8").trim()}`;

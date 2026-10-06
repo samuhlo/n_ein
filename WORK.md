@@ -33,12 +33,14 @@
 - [x] T3 · Relevo portable — títulos ingleses y españoles, criterios completos y cierre ordenado del origen.
 - [x] T4 · Alcance y memoria — contrato por petición, conocimiento duradero selectivo y preferencias compartidas por Pi y Claude.
 - [x] T5a · Banco revisable — aceptación completa, mutantes y coste de las ejecuciones incompletas visibles; runner y reanudación reproducibles.
+- [ ] T5b · Relevo real — tres entregas en Pi→Claude→Pi y recuperación en otro encargo sin WORK.md anterior.
 - [ ] T5 · Evaluación — aceptación y mutantes visibles, coste hasta aceptación, ensayo de alcance y continuidad con modelos.
 - [ ] T6 · Preview — candidato comprobado, actualización local reversible y diagnóstico de la instalación efectiva.
 
 ## Evidencia
 
 - Base: `2e09886`; auditoría con `./scripts/check.sh` correcto y regresiones reproducidas.
+- T5b (preparación): fixture de tres entregas con contrato de puerto 0, pruebas reservadas y runner no interactivo. El runner conserva procesos, comandos y logs y usa el generador real de resumen tras la salida del primer Pi. Se comprobaron su compilación y la suite local; los resultados del ensayo siguen pendientes.
 - T3b: dos procesos independientes prueban que el segundo no llega a escribir, que matar al launcher no libera el bloqueo mientras sigue su runtime y que, tras terminar este, puede entrar otra sesión. Rojo observado antes del bloqueo y antes de heredar el descriptor; verde y suite completa correctos.
 - T2b: rojo observado con «Implementa el parser y escribe su documentación»; el enrutador conserva la clasificación ordinaria y las peticiones etiquetadas siguen pasando.
 - T5a: `tests/bench.ts` comprueba que 9/14, un mutante superviviente, una suite rota o evidencia ausente no cuentan como aceptación completa. El informe recupera todas las repeticiones, expone mutantes y coste por aceptada; se corrigió la omisión del informe histórico. Suite completa correcta.
