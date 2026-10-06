@@ -17,12 +17,20 @@ Abre `nein`, elige Pi o Claude y cuenta qué necesitas. El agente selecciona las
 
 Los comandos siguen como atajos; el recorrido ordinario no requiere conocer nombres de skills. El cierre de un cambio pequeño muestra resultado, comprobación y commit. Para un trabajo importante añade el detalle que permita revisarlo.
 
+## Equipo experimental
+
+La rama de desarrollo puede repartir un encargo autorizado entre hasta dos trabajadores generalistas, cada uno en su worktree. Puedes pedir «haz estos dos frentes en paralelo», «ver equipo», «detén el calendario» o «trabaja sin ayudantes». El principal conserva el acuerdo, puede avanzar mientras trabajan los hijos y comprueba el resultado integrado. La vista enseña estado, modelo, tiempo y consumo acumulado por tarea; `Ctrl+Shift+G` y `/nein:equipo` son atajos opcionales.
+
+Los resultados llegan por eventos, sin consultar al modelo para refrescar la pantalla. Al cerrar se detienen los procesos supervisados y quedan los cambios y las sesiones. El relevo conserva también ramas y archivos pendientes; «listo para integrar» no significa que el encargo esté aceptado. Se reutilizan las clases de modelos existentes y se respeta una selección manual.
+
+**Esta capacidad no se ha activado en la preview personal:** el [piloto](evals/results/2026-10-06-paralelismo.md) verifica entregas correctas con dos trabajadores, pero no demuestra una mejora de tiempo que compense el consumo añadido. El regreso completo con Claude real queda pendiente por cuota del proveedor. La implementación y el candidato se conservan para revisión.
+
 ## Arrancar
 
 Con Bun y Go 1.27.1, instala una vez el Pi fijado dentro de `~/.n_ein` y arranca:
 
 ```sh
-(cd go && go build -o ../dist/n-ein-install ./cmd/n-ein-install)
+(cd go && go build -o ../dist/n-ein-install ./cmd/n-ein-install && go build -o ../dist/n-ein ./cmd/n-ein)
 ./dist/n-ein-install runtime --source .
 ./bin/n-ein-dev
 ```
@@ -93,7 +101,7 @@ La versión de desarrollo y sus hotfixes locales instalan Pi 1.0.2 en `~/.n_ein/
 
 ### Flujo, skills e idioma
 
-El agente principal sigue el flujo de n_ein (`pi-package/flow.md`): pide permiso para construir, mira antes de tocar (CodeGraph primero), resuelve dudas con una pregunta o con `intent`, registra en `WORK.md` el trabajo sustancial, construye tarea a tarea con TDD cuando aplica y un commit por tarea en una rama, trabaja en la propia sesión, revisa en línea los cambios de riesgo alto y cierra con lo verificado petición por petición (petición original → consumidores afectados → prueba de aceptación), dónde mirar, cómo comprobarlo y una línea de riesgo. Las skills que usa el agente cuando tocan: `intent`, `tdd`, `diagnose`, `review`, `design`, `glossary`, `research`, `prototype`, `pr`, `agent-docs`, `comments` y `logs`; el agente también organiza la guía y las tareas con `spec` y `tasks` cuando hacen falta. `retro` y `tell-again` siguen siendo atajos manuales; el relevo se explica en su sección. Todo lo que lee el agente está en inglés; te responde en el idioma que elijas. `WORK.md` admite sus títulos en castellano o en inglés. En Configuración del launcher, Enter cambia el idioma de la conversación (español o inglés) y el de los artefactos (el del proyecto, español o inglés). [Detalle](docs/02-diseno.md#recorrido-ordinario).
+El agente principal sigue el flujo de n_ein (`pi-package/flow.md`): pide permiso para construir, mira antes de tocar (CodeGraph primero), resuelve dudas con una pregunta o con `intent`, registra en `WORK.md` el trabajo sustancial, construye tarea a tarea con TDD cuando aplica y un commit por tarea en una rama, trabaja directamente por defecto y puede repartir frentes independientes con la capacidad experimental, revisa en línea los cambios de riesgo alto y cierra con lo verificado petición por petición (petición original → consumidores afectados → prueba de aceptación), dónde mirar, cómo comprobarlo y una línea de riesgo. Las skills que usa el agente cuando tocan: `intent`, `tdd`, `diagnose`, `review`, `design`, `glossary`, `research`, `prototype`, `pr`, `agent-docs`, `comments` y `logs`; el agente también organiza la guía y las tareas con `spec` y `tasks` cuando hacen falta. `retro` y `tell-again` siguen siendo atajos manuales; el relevo se explica en su sección. Todo lo que lee el agente está en inglés; te responde en el idioma que elijas. `WORK.md` admite sus títulos en castellano o en inglés. En Configuración del launcher, Enter cambia el idioma de la conversación (español o inglés) y el de los artefactos (el del proyecto, español o inglés). [Detalle](docs/02-diseno.md#recorrido-ordinario).
 
 ### CodeGraph en cada proyecto
 
@@ -120,7 +128,7 @@ Con Go 1.27.1, construye el instalador separado y mira el plan antes de escribir
 ```sh
 mkdir -p dist
 (cd go && go build -o ../dist/n-ein ./cmd/n-ein)
-(cd go && go build -o ../dist/n-ein-install ./cmd/n-ein-install)
+(cd go && go build -o ../dist/n-ein-install ./cmd/n-ein-install && go build -o ../dist/n-ein ./cmd/n-ein)
 ./dist/n-ein-install install --source . --channel preview --dry-run
 ./dist/n-ein-install install --source . --channel preview
 ./dist/n-ein-install doctor --channel preview --runtime

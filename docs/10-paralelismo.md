@@ -1,6 +1,6 @@
 # Plan de agentes en paralelo para n_ein
 
-Fecha: 6 de octubre de 2026. Base local: `febbbb5`. Estado: investigación y plan; capacidad todavía no implementada ni evaluada en este corte.
+Fecha: 6 de octubre de 2026. Base local: `febbbb5`. Estado: implementación experimental y evaluación realizadas; adopción automática no acreditada. Resultado y validaciones pendientes en [la evaluación](../evals/results/2026-10-06-paralelismo.md).
 
 ## Recomendación
 
@@ -12,7 +12,7 @@ El beneficio esperado es menor espera en encargos separables. El ahorro de token
 
 ## Alcance y autorización
 
-Samu confirmó que el coordinador decida cuándo paralelizar el trabajo autorizado, informe del reparto y respete «hazlo con uno». Confirmó detener al cerrar y recuperar al volver. Después pidió investigar, hacer pruebas e implementar si los resultados compensan; su último encargo es preparar este plan antes de esa ejecución. Esa autorización condicional queda conservada, sin pedirla de nuevo por rutina. Este corte entrega documentación, sin cambiar la preview.
+Samu confirmó que el coordinador decida cuándo paralelizar el trabajo autorizado, informe del reparto y respete «hazlo con uno». Confirmó detener al cerrar y recuperar al volver. Después pidió investigar, hacer pruebas e implementar si los resultados compensan; después autorizó ejecutar el plan y hacer commits. La activación de la preview sigue condicionada al resultado del piloto; no se pide de nuevo permiso para el trabajo ya autorizado.
 
 Primer alcance: un proyecto Git, un coordinador Pi, hasta dos trabajadores Pi y continuidad Pi↔Claude. Claude debe poder recibir e integrar el pendiente secuencialmente; ejecutar un equipo dentro de Claude queda fuera de esta primera entrega. Sin equipos anidados, trabajo desatendido tras cerrar, conversaciones entre proyectos, nuevos runtimes ni publicación remota. macOS primero en procesos reales y Linux en CI; no declarar soporte Windows para esta capacidad sin implementarlo y comprobarlo.
 
@@ -76,7 +76,7 @@ El arranque hereda deliberadamente el hogar autenticado del canal y carga explí
 
 Máximo dos trabajadores activos; la capacidad sigue ocupada hasta confirmar su parada. El padre puede programar en su propio árbol y las operaciones pesadas de pruebas se serializan cuando comparten recursos. Sin delegación recursiva ni un agente adicional para cada fase.
 
-Resultados y bloqueos llegan por eventos al padre. Persistir resultado pendiente de entrega con identidad de tarea, intento y sesión del coordinador; al reanudar se reconcilia y se entrega de forma idempotente. Duplicados o resultados tardíos no reabren tareas ni modifican otro encargo. Usar el bucle nativo de Pi para despertar al padre y agrupar llegadas cercanas, sin polling del modelo ni un turno por fragmento de streaming. En print/json, esperar explícitamente el conjunto dentro de la ejecución; no dejar hijos cuyo padre ya terminó.
+Resultados y bloqueos llegan por eventos al padre. Persistir resultado pendiente de entrega con identidad de tarea, intento y sesión del coordinador; al reanudar se reconcilia y se entrega de forma idempotente. Duplicados o resultados tardíos no reabren tareas ni modifican otro encargo. Usar el bucle nativo de Pi para despertar al padre y agrupar llegadas cercanas, sin polling del modelo ni un turno por fragmento de streaming. En print/json, el principal puede avanzar mientras trabajan los hijos; la frontera de cierre espera el conjunto y continúa con sus resultados. No dejar hijos cuyo padre ya terminó.
 
 En la primera versión, los trabajadores comunican preguntas al coordinador. Las técnicas se resuelven ahí; las decisiones materiales se presentan al usuario una sola vez. Un bloqueo se guarda y el proceso puede detenerse hasta recibir respuesta; no mantener una llamada abierta esperando indefinidamente ni interpretar un timeout como consentimiento. Mensajes de otros agentes son información, nunca una autorización nueva del usuario.
 

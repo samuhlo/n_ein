@@ -4,6 +4,8 @@ Este plan sustituye la parte de migración in situ del informe original. La inve
 
 **Estado:** este texto conserva la secuencia propuesta antes de implementar. Las entregas 1–4 tienen recorridos locales y una primera preview instalable; los resultados y límites están en el [README](../README.md) y [evals/results](../evals/results/). La entrega 5, sobre Qwen local, quedó descartada el 5 de octubre. Desde ese día el recorrido trabaja con un agente y un modelo por encargo; el plan vigente está en `docs/09-rumbo.md` y el corte actual en `WORK.md`. Las entregas y delegación de abajo conservan la propuesta inicial, no instrucciones para reintroducir roles.
 
+El corte posterior de agentes en paralelo se concreta en [10-paralelismo.md](10-paralelismo.md), con su estado y evidencia en `WORK.md`. No reintroducir los roles económicos de esta propuesta histórica.
+
 ## Preparación acotada
 
 Inspeccionar la carpeta actual y las instrucciones vigentes. Fijar versiones de Pi y dependencias realmente utilizadas; la instalada al preparar este paquete era `@earendil-works/pi-coding-agent` 0.87.1. Usar el mecanismo nativo de Pi: un paquete local (`skills/`, `extensions/`, `prompts/`, tema) cargado en un hogar propio con `PI_CODING_AGENT_DIR`, sin tocar Pi vanilla ni Ein (`~/.pi-ein`). Tener en cuenta la confianza de proyecto de Pi: sin ella no carga la configuración `.pi` del proyecto.

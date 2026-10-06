@@ -2,76 +2,57 @@
 
 ## Objetivo
 
-«Investiga bien, y hazme un plan para incorporar esto a n_ein de la forma más óptima, y mejorarlo si se puede.» Incorporar la experiencia de trabajadores visibles de Gentle Agents al flujo conversacional, con calidad, recuperación y coste total razonable.
+«Implementa todo para que funcione perfecto y ve haciendo commits, cuando acabes lo reviso.» Incorporar trabajadores generalistas visibles y recuperables al flujo conversacional, con calidad y coste y tiempo razonables.
 
 ## Autorización
 
-Diseño confirmado con «Sí a las recomendaciones». Samu pidió después investigar, hacer pruebas e implementar si los resultados compensan, y concretó como siguiente entrega preparar el plan. Samu ha autorizado ejecutar todo el plan, hacer pruebas y commits y dejar el resultado para su revisión. La activación sigue condicionada a la evidencia. Sin publicación remota ni promoción estable. No cambiar la preview antes de superar las pruebas del plan.
+Implementación, pruebas y commits autorizados. Probar en copias e instalaciones aisladas; conservar el trabajo del usuario y Ein legado. Activar la preview solo si la evidencia del piloto lo justifica. Sin push, PR, publicación remota ni promoción estable.
 
 ## Decisiones
 
-- Una conversación y un coordinador que puede programar y se responsabiliza de integrar y comprobar.
-- Hasta dos trabajadores generalistas simultáneos inicialmente, con modelo adecuado a su encargo.
-- El coordinador decide cuándo repartir trabajo autorizado, anuncia el reparto y respeta «hazlo con uno».
-- Un escritor por worktree, contratos compartidos con responsable y aceptación sobre el resultado integrado.
-- Al cerrar se detiene; al volver se recupera el trabajo aunque haga falta otro agente.
-- `WORK.md` sigue siendo la guía común. Estado técnico y sesiones asociados sin otro checklist.
-- Comparar con ejecución secuencial antes de activar el paralelismo habitual.
+- Un coordinador, una conversación y hasta dos trabajadores Pi simultáneos. El coordinador puede programar y responde por la integración y la aceptación.
+- Un escritor por worktree, contratos compartidos con responsable y resultados por eventos. Un resultado de trabajador no completa el encargo por sí solo.
+- Modelos de las clases existentes; respetar selección manual y conservar el modelo al retomar, salvo cambio explícito.
+- `WORK.md` o el documento configurado conserva el acuerdo. Registro técnico en Git y sesiones persistentes de Pi; los worktrees viven fuera de `.git` para ser compatibles con Vite.
+- Cerrar detiene los procesos supervisados; reanudar conserva cambios y decisiones. El relevo lleva todos los frentes y vuelve al proyecto coordinador.
+- El piloto no acredita una mejora suficiente para activar automáticamente esta capacidad en la preview personal. Se entrega como experimento revisable.
 
-Decisiones y motivos: [docs/01-decisiones.md](docs/01-decisiones.md#paralelismo-acordado-el-6-de-octubre--pendiente-de-implementar). Investigación, alternativas, arquitectura y pruebas: [docs/10-paralelismo.md](docs/10-paralelismo.md).
+Diseño: [docs/10-paralelismo.md](docs/10-paralelismo.md). Evidencia y límites: [evals/results/2026-10-06-paralelismo.md](evals/results/2026-10-06-paralelismo.md).
 
 ## Límites
 
-- Primer alcance: un proyecto Git, coordinador y trabajadores Pi; Claude puede continuar el trabajo secuencialmente en el relevo.
-- Aplazar equipos anidados, agentes de varios proyectos, equipo nativo de Claude y ejecución con la aplicación cerrada.
-- Conservar cambios del usuario, Ein legado, credenciales y sesiones. Ensayos en copias aisladas.
-- El recorrido instalado sigue siendo de un agente; el diseño y el plan no acreditan implementación.
+Un proyecto Git y trabajadores Pi. Claude continúa secuencialmente. Sin equipos anidados, agentes de varios proyectos, servicios desatendidos ni cambios de cuenta para eludir límites de proveedor. Worktrees y control de procesos no son un sandbox para código hostil o procesos que escapen deliberadamente del control.
 
 ## Criterios
 
-- «Investiga bien» → Gentle Shell actual, Matt, Pi instalado y superficies reales de n_ein → fuentes fijadas y separación de hechos, propuesta y ensayo pendiente.
-- «Un plan para incorporar» → RPC, procesos, worktrees, modelos, memoria, UI, relevo y paquete → entregas con dependencias y aceptación comprobable.
-- «Mejorarlo si se puede» → estado previo al lanzamiento, entrega idempotente, cierre real y aceptación integrada → casos de interrupción y comparación de calidad, tiempo y consumo.
-- Una tarea pequeña conserva ejecución directa; dos frentes independientes pueden progresar simultáneamente sin exigir comandos.
-- Cada frente conserva alcance, dependencias, rama/base/HEAD, cambios sin commit, decisiones, comprobaciones, bloqueo y siguiente paso.
-- Recuperar o relevar Pi↔Claude preserva tareas y cambios y evita solapamiento de escritores en el mismo árbol.
+- Encargo pequeño → ejecución directa sin entrevista ni workers innecesarios.
+- Frentes independientes → dos procesos y worktrees, coordinación e integración comprobada, sin memorizar comandos.
+- Interrupción → conservar rama, base, cambios sin commit, modelo, sesión, evidencia y pendiente; no sustituir un escritor vivo.
+- Relevo → parar antes de habilitar destino, preservar todas las ramas y una nueva indicación del usuario.
+- Adopción → contar principal e hijos; aceptación funcional y de alcance primero, tiempo hasta el conjunto comprobado y consumo después.
 
 ## Tareas
 
-- [x] P Investigación y plan — fuentes actuales, alternativas, riesgos, entregas y criterios de utilidad registrados.
-- [x] P0 Transporte y ciclo de vida — seleccionar una integración RPC con parada comprobada en procesos reales. Bloqueada por: ninguna.
-- [x] P1 Dos frentes recuperables — worktrees, propiedad, estado duradero, eventos e integración. Bloqueada por: P0.
-- [ ] P2 Comparación de utilidad — piloto secuencial/paralelo, ampliación condicionada a aceptación y señal de beneficio. Bloqueada por: P1.
-- [ ] P3 Equipo visible y relevo — conversación, widget, controles y Pi↔Claude con trabajo parcial. Bloqueada por: P2 con resultado favorable.
-- [ ] P4 Paquete y preview — artefacto instalado comprobado y actualización local reversible. Bloqueada por: P3 y aceptación conjunta.
-
-P0–P4 son el siguiente corte de implementación, no trabajo ya ejecutado. Si el piloto no compensa, registrar el resultado, mantener ejecución directa y revisar solo la causa demostrada; no activar la capacidad por completar infraestructura.
+- [x] P Investigación y plan — fuentes y decisiones conservadas.
+- [x] P0 Transporte — RPC público, host Go, bash supervisado y pruebas de EOF/SIGKILL con Pi real.
+- [x] P1 Estado e integración — dos activos, cola, Git real, recuperación, continuidad de sesión, modelos y conflictos preservados.
+- [x] P2 Evaluación — nueve ensayos registrados; decisión de no adoptar automáticamente con la evidencia actual.
+- [x] P3 Controles y transporte — menú y conversación, resultados compactos, bus nativo para parada y relevo desde varios árboles.
+- [ ] P3 proveedor real — terminar Pi→Claude→Pi con ambos frentes. Bloqueado por `429 usage_limit_reached` de Claude; parada y transporte ya comprobados con destino controlado.
+- [ ] P4 Candidato — paquete instalado en hogar aislado y recorrido comprobado desde ese artefacto. No actualizar la preview personal al no pasar el criterio de adopción.
 
 ## Evidencia
 
-- Dirigido r2: dos hijos integrados, 3/3 ocultas, test montado con dos mutantes detectados, suite y tipos correctos. 655,6 s de modelo frente a 558,5 s del control; 3,09 M tokens y $1,292 estimados. No supera el umbral de tiempo. En print el principal estaba bloqueado esperando hijos; el cierre nativo ahora drena resultados y permite avanzar al coordinador. Una prueba con Pi real, dos trabajadores y proveedor determinista demuestra avance del padre antes de que terminen, continuación automática e integración. Se repetirá el caso dirigido.
-
-- Ensayo dirigido r1 detenido por fallo reproducido de infraestructura: Vite/Vitest no resuelve tests bajo `.git`. Dos trabajadores reales conservados en estado detenido; aceptación incompleta, no cuenta como mejora. Los nuevos worktrees pasan al hogar n_ein (ruta aislada configurable para pruebas); el registro sigue en Git. Regresión real sin modelos: Vitest 4.1.8 con jsdom falla bajo `.git` y pasa fuera con los mismos archivos y dependencias; evidencia en `evals/results/2026-10-06-paralelismo-vite.json`. El caso mínimo en entorno node no reproduce el fallo; el de jsdom sí.
-
-- `./scripts/check.sh` pasó en `0806ef5` (código previo al ajuste de modelo en resume): incluye pruebas Go/vet, paquete instalado, RPC, Pi real con proveedor determinista, Git, recuperación, vista y relevo. Se corrigió un empaquetado que omitía `pi-package/agents/`.
-- P2 autónomo completo: seis ejecuciones aceptadas; S6 4/4, S2 14/14, S3 3/3 y dos mutantes detectados, sin fallos de suite/tipos. Cero hijos en todas. No atribuir las diferencias observadas al paralelismo. El ensayo dirigido conserva el mismo encargo, declara su instrucción de reparto y registra su fuente aparte.
-
-- P3 en desarrollo: menú local y vista sin llamadas al modelo, resultados acotados con ruta al registro, parada antes del relevo y snapshots de todos los frentes. Tests rojos/verdes de quietud definitiva, vista desde comando y bloqueo del relevo con un escritor vivo. Falta el recorrido con modelos y paquete instalado.
-- P2 inicial: S6 candidato 4/4 y S2 candidato 14/14, suites y tipos correctos; ambos eligieron ejecución directa. S3 y comparación completa en marcha sobre productos congelados (`parallel-*-r1`, candidato `edb6968`, control `b619eaa`). Ninguno de estos dos casos demuestra todavía beneficio del paralelismo.
-
-- P1: tests de Git real y cola de tres asignaciones con máximo dos procesos, suma de consumo, integración secuencial y lectura del estado desde otro coordinador. El paquete carga en Pi 1.0.2 RPC real. Falta medir capacidad de los modelos y completar la UI/relevo antes de activar preview.
-
-- P0: adaptador RPC público con host Go y bash con propietario propio. Rojo observado: al matar el grupo del trabajador moría el supervisor antes de parar su bash separado; verde al independizar el grupo del supervisor. Tests de lease, EOF, SIGKILL y Pi 1.0.2 RPC real sin modelo. Se conserva el descriptor hasta que salen los comandos.
-
-- Investigación: Gentle `69c9b5a`, Matt `6fd9479`, Pi instalado `1.0.2`, base n_ein `febbbb5`. Se inspeccionaron código, documentación y casos de prueba; no se ejecutaron suites externas ni nuevas evaluaciones con modelos.
-- Gentle Agents completo está acoplado a otras superficies de Gentle. La base recomendada es RPC público de Pi; P0 determinará si basta su cliente exportado o conviene un adaptador acotado.
-- `RpcClient.stop()` no acredita por contrato la salida de todas las herramientas descendientes. El relevo actual solo resume el árbol principal. Son puntos de ensayo e implementación, no fallos reproducidos en este corte.
-- Plan contrastado con launcher, handoff, flujo, router, memoria, CodeGraph y banco existentes. Referencias documentales y formato comprobados; capacidad y rendimiento siguen pendientes.
+- Seis ensayos autónomos: aceptación, suites y tipos correctos; no lanzaron hijos. No atribuir sus diferencias al paralelismo.
+- Dirigido r1 detenido al descubrir la incompatibilidad de Vite bajo `.git`; datos preservados. Regresión sin modelos: rojo bajo `.git`, verde fuera con jsdom.
+- Dirigidos r2/r3: dos hijos integrados, S3 3/3 y ambos mutantes detectados. Último: 528 s frente a 559 s del control; +24 % tokens y +34 % estimación de catálogo. No se amplía el banco buscando un resultado favorable.
+- `scripts/check.sh` comprueba regresiones, procesos, Git, UI, relevo, paquete, Go/vet y tipos estrictos contra Pi 1.0.2. Los tests de Pi con proveedor determinista comprueban mecanismos, no capacidad de modelos alojados.
+- Pi real abrió Claude con el estado de ambos frentes, pero Claude no infirió por cuota. Su mensaje indica reinicio a las 00:20 de Europe/Madrid; no se cambió de cuenta ni facturación.
 
 ## Siguiente paso
 
-El piloto autónomo de seis ejecuciones pasa aceptación, suites y tipos, pero no lanzó trabajadores. Ensayo dirigido `parallel-s3-directed-r1` en marcha con dos trabajadores reales; completar comparación antes de activar preview. P3 y empaquetado implementados, pendientes de cierre con modelos y artefacto instalado.
+Cerrar el candidato aislado y su revisión. Conservar la preview `0.1.0-preview.2+hotfix.3bc9b8006cc0`. Cuando exista cuota, el único recorrido de proveedor pendiente es `bun evals/bench/conversation.ts handoff-team <id-nuevo>`; no repetir la entrevista ni el banco completo por rutina.
 
 ## Corte anterior cerrado
 
-El flujo conversacional quedó terminado e instalado en `0.1.0-preview.2+hotfix.3bc9b8006cc0`; documentación de cierre en `a82b00b`, acuerdo inicial de paralelismo en `febbbb5`. Evidencia del trabajo anterior: [flujo conversacional](evals/results/2026-10-06-flujo-conversacional.md) y [calidad y continuidad](evals/results/2026-10-06-fiabilidad.md). Sus decisiones duraderas se conservan en `docs/01-decisiones.md`. Sin publicación ni promoción estable.
+Flujo conversacional instalado: `0.1.0-preview.2+hotfix.3bc9b8006cc0`; cierre `a82b00b`. Acuerdo inicial de paralelismo `febbbb5`, plan `b619eaa`. Evidencia anterior en [flujo conversacional](evals/results/2026-10-06-flujo-conversacional.md) y [calidad y continuidad](evals/results/2026-10-06-fiabilidad.md).

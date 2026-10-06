@@ -1,5 +1,7 @@
 # Rumbo: n_ein ligero con un modelo por encargo
 
+Actualización del 6 de octubre: el recorrido directo de este corte sigue en la preview. La capacidad de paralelismo recuperable se desarrolló después como experimento; [su evaluación](../evals/results/2026-10-06-paralelismo.md) no justifica todavía activarla automáticamente. Este documento conserva el motivo del cambio del 5 de octubre.
+
 Aprobado por Samu el 5 de octubre de 2026 y ejecutado ese mismo día hasta la fase 4 ([resultados](../evals/results/2026-10-05-rumbo-resultados.md)), tras el [banco de modelos de trabajo](../evals/results/2026-10-05-modelos-de-trabajo.md). La decisión se registra en [01-decisiones](01-decisiones.md); este documento guarda el razonamiento y el plan.
 
 ## Por qué cambiar

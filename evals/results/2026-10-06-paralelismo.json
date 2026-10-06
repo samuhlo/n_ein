@@ -1,0 +1,355 @@
+{
+  "date": "2026-10-06",
+  "model": "openai/gpt-6-sol",
+  "thinking": "medium",
+  "runs": [
+    {
+      "id": "parallel-s6-serial-r1",
+      "scenario": "s6",
+      "arm": "serial",
+      "directed": null,
+      "revision": "b619eaa",
+      "exit": 0,
+      "modelSeconds": 102.588,
+      "secondsToAcceptedResult": 139.227,
+      "tokens": 245010,
+      "catalogUsd": 0.145428,
+      "childCount": 0,
+      "tasks": [],
+      "grade": {
+        "run": "parallel-s6-serial-r1",
+        "hidden": "4/4",
+        "hiddenPass": 4,
+        "hiddenTotal": 4,
+        "suite": "3151/3155",
+        "suiteBadFiles": 0,
+        "suiteFailed": 0,
+        "typecheck": true,
+        "extra": {}
+      },
+      "acceptance": {
+        "complete": true,
+        "reasons": []
+      }
+    },
+    {
+      "id": "parallel-s6-team-r1",
+      "scenario": "s6",
+      "arm": "team",
+      "directed": null,
+      "revision": "edb69684c839ec10b494f088916245ba8faa2c1c",
+      "exit": 0,
+      "modelSeconds": 109.483,
+      "secondsToAcceptedResult": 146.379,
+      "tokens": 217286,
+      "catalogUsd": 0.12336720000000001,
+      "childCount": 0,
+      "tasks": [],
+      "grade": {
+        "run": "parallel-s6-team-r1",
+        "hidden": "4/4",
+        "hiddenPass": 4,
+        "hiddenTotal": 4,
+        "suite": "3152/3156",
+        "suiteBadFiles": 0,
+        "suiteFailed": 0,
+        "typecheck": true,
+        "extra": {}
+      },
+      "acceptance": {
+        "complete": true,
+        "reasons": []
+      }
+    },
+    {
+      "id": "parallel-s2-serial-r1",
+      "scenario": "s2",
+      "arm": "serial",
+      "directed": null,
+      "revision": "b619eaa",
+      "exit": 0,
+      "modelSeconds": 630.556,
+      "secondsToAcceptedResult": 667.58,
+      "tokens": 2984668,
+      "catalogUsd": 1.0361024,
+      "childCount": 0,
+      "tasks": [],
+      "grade": {
+        "run": "parallel-s2-serial-r1",
+        "hidden": "14/14",
+        "hiddenPass": 14,
+        "hiddenTotal": 14,
+        "suite": "3153/3157",
+        "suiteBadFiles": 0,
+        "suiteFailed": 0,
+        "typecheck": true,
+        "extra": {}
+      },
+      "acceptance": {
+        "complete": true,
+        "reasons": []
+      }
+    },
+    {
+      "id": "parallel-s2-team-r1",
+      "scenario": "s2",
+      "arm": "team",
+      "directed": null,
+      "revision": "edb69684c839ec10b494f088916245ba8faa2c1c",
+      "exit": 0,
+      "modelSeconds": 468.447,
+      "secondsToAcceptedResult": 505.286,
+      "tokens": 2256990,
+      "catalogUsd": 0.7831271999999999,
+      "childCount": 0,
+      "tasks": [],
+      "grade": {
+        "run": "parallel-s2-team-r1",
+        "hidden": "14/14",
+        "hiddenPass": 14,
+        "hiddenTotal": 14,
+        "suite": "3158/3162",
+        "suiteBadFiles": 0,
+        "suiteFailed": 0,
+        "typecheck": true,
+        "extra": {}
+      },
+      "acceptance": {
+        "complete": true,
+        "reasons": []
+      }
+    },
+    {
+      "id": "parallel-s3-serial-r1",
+      "scenario": "s3",
+      "arm": "serial",
+      "directed": null,
+      "revision": "b619eaa",
+      "exit": 0,
+      "modelSeconds": 558.512,
+      "secondsToAcceptedResult": 596.978,
+      "tokens": 2844079,
+      "catalogUsd": 1.0195388,
+      "childCount": 0,
+      "tasks": [],
+      "grade": {
+        "run": "parallel-s3-serial-r1",
+        "hidden": "3/3",
+        "hiddenPass": 3,
+        "hiddenTotal": 3,
+        "suite": "3151/3155",
+        "suiteBadFiles": 0,
+        "suiteFailed": 0,
+        "typecheck": true,
+        "extra": {
+          "mount": {
+            "readsText": false,
+            "mounts": true,
+            "pass": "4/4",
+            "mutantsKilled": 2
+          },
+          "docFixed": true
+        }
+      },
+      "acceptance": {
+        "complete": true,
+        "reasons": []
+      }
+    },
+    {
+      "id": "parallel-s3-team-r1",
+      "scenario": "s3",
+      "arm": "team",
+      "directed": null,
+      "revision": "edb69684c839ec10b494f088916245ba8faa2c1c",
+      "exit": 0,
+      "modelSeconds": 449.099,
+      "secondsToAcceptedResult": 487.913,
+      "tokens": 2254127,
+      "catalogUsd": 0.8751532000000002,
+      "childCount": 0,
+      "tasks": [],
+      "grade": {
+        "run": "parallel-s3-team-r1",
+        "hidden": "3/3",
+        "hiddenPass": 3,
+        "hiddenTotal": 3,
+        "suite": "3152/3156",
+        "suiteBadFiles": 0,
+        "suiteFailed": 0,
+        "typecheck": true,
+        "extra": {
+          "mount": {
+            "readsText": false,
+            "mounts": true,
+            "pass": "6/6",
+            "mutantsKilled": 2
+          },
+          "docFixed": true
+        }
+      },
+      "acceptance": {
+        "complete": true,
+        "reasons": []
+      }
+    },
+    {
+      "id": "parallel-s3-directed-r1",
+      "scenario": "s3",
+      "arm": "team",
+      "directed": true,
+      "revision": "0806ef57aacf86f01f9cf7557f92ebe7d8bcf988",
+      "exit": null,
+      "modelSeconds": 377.061,
+      "secondsToAcceptedResult": 420.548,
+      "tokens": 2969659,
+      "catalogUsd": 1.1370124,
+      "childCount": 2,
+      "tasks": [
+        {
+          "id": "9b6ed13e-1a5a-40f3-8c4c-608e0cd6e8c4",
+          "status": "stopped"
+        },
+        {
+          "id": "afdcfb8c-7cca-484e-bb8d-cf2d8f9040ec",
+          "status": "stopped"
+        }
+      ],
+      "grade": {
+        "run": "parallel-s3-directed-r1",
+        "hidden": "1/3",
+        "hiddenPass": 1,
+        "hiddenTotal": 3,
+        "suite": "3151/3155",
+        "suiteBadFiles": 0,
+        "suiteFailed": 0,
+        "typecheck": true,
+        "extra": {
+          "mount": {
+            "readsText": true,
+            "mounts": false,
+            "pass": "11/11",
+            "mutantsKilled": 2
+          },
+          "docFixed": false
+        }
+      },
+      "acceptance": {
+        "complete": false,
+        "reasons": [
+          "hidden acceptance incomplete",
+          "behaviour test not mounted",
+          "documentation stale or unknown"
+        ]
+      }
+    },
+    {
+      "id": "parallel-s3-directed-r2",
+      "scenario": "s3",
+      "arm": "team",
+      "directed": true,
+      "revision": "f0ecfc7520400cb2e4f8ba300d838724cc50306c",
+      "exit": 0,
+      "modelSeconds": 655.577,
+      "secondsToAcceptedResult": 694.287,
+      "tokens": 3090156,
+      "catalogUsd": 1.2922960000000001,
+      "childCount": 2,
+      "tasks": [
+        {
+          "id": "1d8cec8b-781d-433a-9998-5bd1d3580fab",
+          "status": "integrated"
+        },
+        {
+          "id": "8687e66e-45a4-4c08-bd92-ec4f9a047f4c",
+          "status": "integrated"
+        }
+      ],
+      "grade": {
+        "run": "parallel-s3-directed-r2",
+        "hidden": "3/3",
+        "hiddenPass": 3,
+        "hiddenTotal": 3,
+        "suite": "3157/3161",
+        "suiteBadFiles": 0,
+        "suiteFailed": 0,
+        "typecheck": true,
+        "extra": {
+          "mount": {
+            "readsText": false,
+            "mounts": true,
+            "pass": "8/8",
+            "mutantsKilled": 2
+          },
+          "docFixed": true
+        }
+      },
+      "acceptance": {
+        "complete": true,
+        "reasons": []
+      }
+    },
+    {
+      "id": "parallel-s3-directed-r3",
+      "scenario": "s3",
+      "arm": "team",
+      "directed": true,
+      "revision": "f0d77f4708fa376f72b8afec877b52afda3c21fd",
+      "exit": 0,
+      "modelSeconds": 528.295,
+      "secondsToAcceptedResult": 567.826,
+      "tokens": 3525838,
+      "catalogUsd": 1.3615336,
+      "childCount": 2,
+      "tasks": [
+        {
+          "id": "f6871596-bbf6-4c92-9ee2-0aa183dbd996",
+          "status": "integrated"
+        },
+        {
+          "id": "4bd5ca5c-0a91-44ed-8d37-fb973df5de1c",
+          "status": "integrated"
+        }
+      ],
+      "grade": {
+        "run": "parallel-s3-directed-r3",
+        "hidden": "3/3",
+        "hiddenPass": 3,
+        "hiddenTotal": 3,
+        "suite": "3158/3162",
+        "suiteBadFiles": 0,
+        "suiteFailed": 0,
+        "typecheck": true,
+        "extra": {
+          "mount": {
+            "readsText": false,
+            "mounts": true,
+            "pass": "6/6",
+            "mutantsKilled": 2
+          },
+          "docFixed": true
+        }
+      },
+      "acceptance": {
+        "complete": true,
+        "reasons": []
+      }
+    }
+  ],
+  "handoff": {
+    "run": "team-handoff-r1",
+    "piCatalogUsd": 0.0376752,
+    "claudeError": "429 usage_limit_reached",
+    "resetReported": "12:20am Europe/Madrid",
+    "fullRoundtripVerified": false
+  },
+  "automaticAdoption": false,
+  "reason": "No measured case meets the provisional 20% latency improvement; autonomous runs used no workers.",
+  "catalogUsdObserved": 7.811234,
+  "limits": [
+    "Catalog estimate, not subscription invoice",
+    "Interrupted directed r1 may omit in-flight provider usage",
+    "One observation per source/arm; directed revisions are not statistical repetitions of the same treatment",
+    "Does not include this assistant conversation or local development compute"
+  ]
+}

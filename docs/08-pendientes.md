@@ -14,6 +14,9 @@
 
 ### Runner de trabajadores
 
+Actualización del 6 de octubre: el experimento usa RPC público de Pi y supervisión Go. La comparación y la decisión vigente están en [el plan](10-paralelismo.md) y [la evaluación](../evals/results/2026-10-06-paralelismo.md); los candidatos de abajo son investigación inicial, no mecanismos adicionales que instalar.
+
+
 Pi no trae subagentes en su núcleo. Antes de implementar el trabajador se consideraron estos candidatos, en orden de prueba:
 
 1. [Ejemplo oficial de Pi](sources/pi-installed/examples/extensions/subagent/README.md): proceso aislado por tarea, modelo por agente, coste por tarea y cancelación. Hipótesis: le faltarán tiempo de espera para herramientas largas y persistencia de resultados.

@@ -74,17 +74,17 @@ Antes de aceptar el resultado, el padre contrasta el encargo, el diff y la evide
 
 ## Trabajadores
 
-Tres capacidades iniciales: exploración de solo lectura, trabajo con escritura autorizada y revisión. Un mismo mecanismo las ejecuta con herramientas y contexto apropiados. Ninguna es un paso obligatorio de todo encargo.
+El corte experimental del 6 de octubre incorpora hasta dos trabajadores generalistas en Pi. El coordinador conserva la conversación, las decisiones, el documento de trabajo y la aceptación; puede programar y usa las clases de modelos existentes para cada encargo delegado. No hay roles permanentes ni delegación obligatoria para abaratar. La [evaluación](../evals/results/2026-10-06-paralelismo.md) no justifica todavía su activación automática en la preview personal.
 
-Un escritor por árbol compartido como configuración inicial. Si se necesita paralelismo de escritura, aislamiento explícito en worktrees y comprobación de la integración. No confundir que cada rama pase tests con que la combinación sea correcta.
+Un escritor por worktree. Los árboles nuevos viven en `~/.n_ein/worktrees/<repositorio>/<id>`; `N_EIN_WORKTREE_ROOT` permite un destino aislado para pruebas. El registro técnico está en el directorio Git común, bajo `n_ein/team/`, y las sesiones de hijos en el hogar Pi. `WORK.md` o el documento configurado sigue siendo la única guía. Se preservan datos ante un fallo y no se borran automáticamente árboles con trabajo pendiente. La ubicación fuera de `.git` evita la incompatibilidad observada con Vite/Vitest y jsdom.
 
-El runner debe cancelar, distinguir proceso vivo de salida final, gestionar herramientas largas y devolver resultados por eventos cuando lo soporte. No implementar polling del modelo para dibujar progreso. Su fallo no debe perder el diff.
+La extensión TypeScript habla el RPC público de Pi. El host Go mantiene el bloqueo del árbol; cada bash supervisado conserva su propio pipe de vida y el descriptor heredado. Se distingue `agent_end`, quietud definitiva y salida del proceso. Cerrar o perder al padre detiene los procesos controlados. No es un sandbox ni una garantía sobre escritores externos o procesos que escapen deliberadamente de ese control.
 
-Una revisión de solo lectura es un posible primer ensayo del transporte porque evita escrituras. Eso no demuestra que revisar sea fácil o barato: puede exigir requisitos, consumidores y contexto fuera del diff. La idea de menor presión de contexto en `retro` de Matt se trata como hipótesis. Evaluar al revisor por defectos detectados, omisiones y falsos positivos; evaluar ahorro de implementación con un encargo de escritura acotado. No promover una ruta por la apariencia convincente de su informe.
+La UI se actualiza con eventos locales. En TUI/RPC el principal recibe los resultados mientras puede continuar su trabajo; en print también puede avanzar y la frontera final espera y entrega los resultados antes de salir. El menú permite consultar y detener; la conversación usa el mismo mecanismo. Los resultados compactos apuntan al registro completo. La salida del trabajador deja una entrega lista para revisar; solo el coordinador integra y comprueba el conjunto antes de completar el documento.
 
-Pi no trae subagentes en su núcleo. Candidatos concretos para el runner y contrato que deben superar: ver [pendientes](08-pendientes.md#runner-de-trabajadores).
+Las sesiones y los cambios sin commit se conservan al interrumpir. Reanudar contrasta el estado con Git y la propiedad del árbol. El modelo físico se mantiene salvo cambio explícito de capacidad. Un fallo de presentación no veta trabajo; un registro ilegible no impide detener procesos propios. Los totales de evaluación incluyen principal, hijos e intentos; no se promete un límite de tokens que el runner no imponga.
 
-Los presupuestos efectivos incluyen todos los intentos del encargo. No prometer un límite de tokens o turnos que la versión del runner ignore. Un agotamiento deja estado parcial y devuelve control; no desencadena un finalizer que declare éxito.
+El relevo coordina la parada por el bus de eventos de Pi: las extensiones se cargan sin compartir caché de módulos. Solo prepara la señal tras la parada y una frontera sin continuación pendiente, conservando una nueva indicación del usuario. Ambos sentidos llevan los frentes pendientes. El proyecto coordinador se mantiene aunque una herramienta de Claude cambie de directorio. Pruebas, fuentes y límites en [el plan](10-paralelismo.md) y [su resultado](../evals/results/2026-10-06-paralelismo.md).
 
 ## Skills
 

@@ -99,9 +99,11 @@ La auditoría de calidad y continuidad quedó implementada en `fix/continuidad-c
 
 Después de ese corte, Samu autorizó el recorrido ordinario por conversación: pedir ayuda para diseñar, trabajar directamente en encargos claros, ejecutar el acuerdo con «hazlo», empezar otra tarea, recuperar lo pendiente y pedir el relevo sin memorizar skills. Está implementado y probado en [la evaluación del flujo](../evals/results/2026-10-06-flujo-conversacional.md). La preview personal vigente es `0.1.0-preview.2+hotfix.3bc9b8006cc0`. Los comandos siguen como atajos; el selector carga la tabla nueva al empezar otro encargo y conserva la ruta física al continuar. Las consultas no requieren suites; documentación y código reciben sus comprobaciones pertinentes. En Claude interactivo se explica la salida del host cuando el relevo está preparado. `WORK.md` recoge el trabajo cerrado de este corte.
 
-## Paralelismo: diseño acordado, implementación pendiente
+## Equipo experimental del 6 de octubre
 
-El 6 de octubre Samu confirmó la propuesta de paralelismo recuperable: un coordinador decide cuándo repartir el encargo autorizado entre hasta dos trabajadores generalistas, anuncia el reparto y sigue siendo responsable del resultado integrado. Al cerrar se detienen; al volver se conserva y reconcilia el trabajo. Decisiones en [01-decisiones.md](01-decisiones.md#paralelismo-acordado-el-6-de-octubre--pendiente-de-implementar), aceptación y checklist en `WORK.md`. Después autorizó pruebas e implementación condicionada a que compense y pidió preparar primero el [plan de incorporación](10-paralelismo.md). Este corte entrega ese plan; la preview continúa con el recorrido de un agente hasta implementar y comprobar la nueva capacidad.
+Implementado en la rama de trabajo: dos trabajadores Pi con worktrees separados, estado persistente, controles por conversación y menú, modelos por encargo, integración y relevo de todos los frentes. Las fuentes y el diseño están en [el plan](10-paralelismo.md); las pruebas, resultados y límites en [la evaluación](../evals/results/2026-10-06-paralelismo.md). `WORK.md` conserva el estado para continuar.
+
+La preview personal sigue en `0.1.0-preview.2+hotfix.3bc9b8006cc0`: el piloto no justifica activar automáticamente el paralelismo. La prueba completa con Claude real queda pendiente porque el proveedor devolvió `429 usage_limit_reached`; no sustituir esa reserva por una afirmación de éxito. El candidato aislado se prepara para revisión, sin publicación remota.
 
 ## Cómo leer sin agotar contexto
 
