@@ -85,6 +85,9 @@ bun -e 'const m = await Bun.file(process.argv[1]).json(); if (m.version !== proc
 }
 
 smoke_dir="$(mktemp -d)"
+export N_EIN_MODELS_FILE="$smoke_dir/models.json"
+export N_EIN_LANG_FILE="$smoke_dir/lang.json"
+export N_EIN_PREFERENCES_FILE="$smoke_dir/preferences.md"
 mkdir -p "$smoke_dir/project"
 "$candidate/bin/n-ein-install" install --source "$candidate" --target "$smoke_dir/preview" --channel preview > /dev/null
 "$smoke_dir/preview/bin/n-ein-install" doctor --target "$smoke_dir/preview" --runtime > /dev/null
