@@ -61,13 +61,15 @@ assert.ok(![...atWrite, ...atCommit].some((r) => r.targetId === skill || r.targe
 apply(atCommit);
 assert.deepEqual(retirements(entries, new Set(), true), []);
 
-// codemode: escribe y commitea a través de sus llamadas anidadas.
+// codemode: escribe y commitea a través de sus llamadas anidadas; si cargó una skill, se queda.
 const [script] = turn([{ name: "codemode", arguments: { code: "await tools.read({path:'b.ts'})" }, result: big("Script completed") }]);
+const [skillScript] = turn([{ name: "codemode", arguments: { code: "..." }, result: big("# TDD"), nested: [{ name: "read", arguments: { path: "/pkg/skills/tdd/SKILL.md" }, status: "ok" }] }]);
 const [scriptCommit] = turn([{
   name: "codemode", arguments: { code: "..." }, result: "Script completed in 3s\nok",
   nested: [{ name: "edit", arguments: { path: "b.ts" }, status: "ok" }, { name: "bash", arguments: { command: "git commit -qm 'feat: b'" }, status: "ok" }],
 }]);
 assert.deepEqual(ids(retirements(entries, new Set([scriptCommit!]), true)), [script!], "un commit dentro de un script también es frontera");
+assert.ok(skillScript);
 
 // La extensión registra turn_end, lee las tareas pendientes de WORK.md y devuelve context_edit.
 type Proposal = { entries: { type: string; targetId: string; replacement: { content: { type: string; text: string }[] } }[] } | undefined;

@@ -64,8 +64,9 @@ function items(entries: readonly Entry[]): Item[] {
 const wrote = (item: Item) => !item.isError && (isWrite(item.call) || item.nested.some((c) => c.status === "ok" && isWrite(c)));
 const committed = (item: Item) => !item.isError && (isCommit(item.call) || item.nested.some((c) => c.status === "ok" && isCommit(c)));
 
+// También un script que cargó una skill: retirarlo se llevaría sus instrucciones.
 function isInstruction(item: Item): boolean {
-  return item.call?.name === "read" && KEEP_PATH.test(String(item.call.arguments?.path ?? ""));
+  return [item.call, ...item.nested].some((call) => call?.name === "read" && KEEP_PATH.test(String(call.arguments?.path ?? "")));
 }
 
 function isExploration(item: Item): boolean {
