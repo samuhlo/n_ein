@@ -144,7 +144,7 @@ Ningún test de la suite queda en rojo y el typecheck pasa siempre.
 |---|---|---|---|---|---|
 | NR3 | Ninguna | 22,7 | 2,0 | 4,3 | $0,31 |
 | NR4 | Buscar con `rg` lo cambiado y reescribir lo afectado | 21,7 | 3,7 | 4,0 | $0,38 |
-| **NR5** (commit posterior a `2ca4036`) | Lo mismo, tocando solo esos pasajes | **25,4** | **4,8** | **4,4** | $0,37 |
+| **NR5** (`ffd6e56`) | Lo mismo, tocando solo esos pasajes | **25,4** | **4,8** | **4,4** | $0,37 |
 
 - NR4 se pasaba: reescribía secciones ajenas, y el alcance lo pagaba.
 - NR5 corrige eso. El cierre dice ahora qué pasajes de la documentación se tocaron.
