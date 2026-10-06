@@ -138,5 +138,17 @@ Ningún test de la suite queda en rojo y el typecheck pasa siempre.
   - Aceptación oculta del alta: 3/3.
 - **S2 con NR2:** 14/14, en Sol high desde la primera petición.
 
-**Pendiente:**
-- **Actualizar la documentación afectada solo ocurre en algo más de la mitad de las ejecuciones** (los cierres que no lo hacen se puntúan con 2 de 5 en documentación). Es la deducción más frecuente que queda.
+**Documentación afectada.** Era la deducción más frecuente: sin regla, el agente la actualizaba en algo más de la mitad de las ejecuciones. Se probaron dos reglas en S1, con cinco ejecuciones y en la misma tanda que NR3:
+
+| Variante | Regla | Media | Documentación | Alcance | Coste |
+|---|---|---|---|---|---|
+| NR3 | Ninguna | 22,7 | 2,0 | 4,3 | $0,31 |
+| NR4 | Buscar con `rg` lo cambiado y reescribir lo afectado | 21,7 | 3,7 | 4,0 | $0,38 |
+| **NR5** (commit posterior a `2ca4036`) | Lo mismo, tocando solo esos pasajes | **25,4** | **4,8** | **4,4** | $0,37 |
+
+- NR4 se pasaba: reescribía secciones ajenas, y el alcance lo pagaba.
+- NR5 corrige eso. El cierre dice ahora qué pasajes de la documentación se tocaron.
+- En S3, NR4 sacó 24 y 24, frente a 21 y 25 de NR y 21 y 20 de Pi sin arnés.
+- Esta tanda puntuó más bajo a todas las variantes que la anterior: solo vale comparar dentro de ella.
+
+**Comprobación de modelos.** Las métricas de todas las ejecuciones registran solo `openai-codex/gpt-6-sol` (115) y `openai-codex/gpt-6-luna` (33). Codex CLI corre con `gpt-6-sol` según su configuración. Ninguna usó GPT-5.6.
