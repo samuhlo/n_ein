@@ -351,5 +351,17 @@
     "Interrupted directed r1 may omit in-flight provider usage",
     "One observation per source/arm; directed revisions are not statistical repetitions of the same treatment",
     "Does not include this assistant conversation or local development compute"
-  ]
+  ],
+  "candidate": {
+    "version": "0.1.0-preview.2+hotfix.087eaa8835a9",
+    "sourceCommit": "087eaa8835a9032072267cbdc9479747fb1b723f",
+    "archive": "dist/releases/n-ein-0.1.0-preview.2+hotfix.087eaa8835a9-darwin-arm64.tar.gz",
+    "sha256": "baa193669a6875a1f72e760445c631595aa09156862581896b26f533d74da157",
+    "files": 69,
+    "installedFromArchive": "dist/parallel-review-087eaa8835a9/from-archive",
+    "nativeTeamTestPassed": true,
+    "providerForArtifactTest": "deterministic fixture, no hosted inference",
+    "personalPreview": "0.1.0-preview.2+hotfix.3bc9b8006cc0",
+    "personalPreviewUpdated": false
+  }
 }

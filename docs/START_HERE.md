@@ -103,7 +103,7 @@ Después de ese corte, Samu autorizó el recorrido ordinario por conversación: 
 
 Implementado en la rama de trabajo: dos trabajadores Pi con worktrees separados, estado persistente, controles por conversación y menú, modelos por encargo, integración y relevo de todos los frentes. Las fuentes y el diseño están en [el plan](10-paralelismo.md); las pruebas, resultados y límites en [la evaluación](../evals/results/2026-10-06-paralelismo.md). `WORK.md` conserva el estado para continuar.
 
-La preview personal sigue en `0.1.0-preview.2+hotfix.3bc9b8006cc0`: el piloto no justifica activar automáticamente el paralelismo. La prueba completa con Claude real queda pendiente porque el proveedor devolvió `429 usage_limit_reached`; no sustituir esa reserva por una afirmación de éxito. El candidato aislado se prepara para revisión, sin publicación remota.
+La preview personal sigue en `0.1.0-preview.2+hotfix.3bc9b8006cc0`: el piloto no justifica activar automáticamente el paralelismo. La prueba completa con Claude real queda pendiente porque el proveedor devolvió `429 usage_limit_reached`; no sustituir esa reserva por una afirmación de éxito. El candidato `0.1.0-preview.2+hotfix.087eaa8835a9` está instalado desde tarball y comprobado en un destino aislado (71 archivos), listo para revisión y sin publicación remota.
 
 ## Cómo leer sin agotar contexto
 

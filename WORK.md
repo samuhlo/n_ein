@@ -39,7 +39,7 @@ Un proyecto Git y trabajadores Pi. Claude continúa secuencialmente. Sin equipos
 - [x] P2 Evaluación — nueve ensayos registrados; decisión de no adoptar automáticamente con la evidencia actual.
 - [x] P3 Controles y transporte — menú y conversación, resultados compactos, bus nativo para parada y relevo desde varios árboles.
 - [ ] P3 proveedor real — terminar Pi→Claude→Pi con ambos frentes. Bloqueado por `429 usage_limit_reached` de Claude; parada y transporte ya comprobados con destino controlado.
-- [ ] P4 Candidato — paquete instalado en hogar aislado y recorrido comprobado desde ese artefacto. No actualizar la preview personal al no pasar el criterio de adopción.
+- [x] P4 Candidato — paquete instalado en hogar aislado y recorrido comprobado desde ese artefacto. No actualizar la preview personal al no pasar el criterio de adopción.
 
 ## Evidencia
 
@@ -51,7 +51,7 @@ Un proyecto Git y trabajadores Pi. Claude continúa secuencialmente. Sin equipos
 
 ## Siguiente paso
 
-Cerrar el candidato aislado y su revisión. Conservar la preview `0.1.0-preview.2+hotfix.3bc9b8006cc0`. Cuando exista cuota, el único recorrido de proveedor pendiente es `bun evals/bench/conversation.ts handoff-team <id-nuevo>`; no repetir la entrevista ni el banco completo por rutina.
+Candidato `0.1.0-preview.2+hotfix.087eaa8835a9` instalado desde tarball y comprobado (71 archivos; test nativo de equipo, reanudación y relevo controlado). Código y evidencia listos para revisión. Conservar la preview `0.1.0-preview.2+hotfix.3bc9b8006cc0`. Cuando exista cuota, el único recorrido de proveedor pendiente es `bun evals/bench/conversation.ts handoff-team <id-nuevo>`; no repetir la entrevista ni el banco completo por rutina.
 
 ## Corte anterior cerrado
 

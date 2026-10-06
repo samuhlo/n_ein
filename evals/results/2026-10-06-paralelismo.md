@@ -87,4 +87,10 @@ El aislamiento por worktree y el control de procesos son cooperativos, no un san
 
 ## Candidato para revisión
 
-Pendiente de empaquetar el último corte y ejecutar el recorrido desde la instalación aislada. La preview personal permanece en `0.1.0-preview.2+hotfix.3bc9b8006cc0`.
+Candidato `0.1.0-preview.2+hotfix.087eaa8835a9`, fuente `087eaa8835a9`, 71 archivos verificados. `scripts/check.sh` completo pasa sobre ese commit limpio. Se extrajo el tarball y se instaló en `dist/parallel-review-087eaa8835a9/from-archive`; desde allí pasaron Pi real con dos trabajadores, avance del principal, reanudación de sesión, integración, parada antes de Claude y regreso preparado desde otro cwd, con proveedor determinista. Doctor correcto.
+
+Archivo: `dist/releases/n-ein-0.1.0-preview.2+hotfix.087eaa8835a9-darwin-arm64.tar.gz`.
+
+SHA-256: `baa193669a6875a1f72e760445c631595aa09156862581896b26f533d74da157`.
+
+La preview personal se comprobó y permanece en `0.1.0-preview.2+hotfix.3bc9b8006cc0`. No se publicó ni se promovió el candidato. Los commits posteriores de cierre solo registran esta evidencia; no cambian sus bytes.
