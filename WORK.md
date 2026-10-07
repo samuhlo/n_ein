@@ -6,7 +6,7 @@
 
 ## Autorización
 
-Implementación, pruebas y commits autorizados. Sin push ni publicación. Trabajar en `fix/agente-unico-consolidado`, worktree `n_ein-single-agent`, desde `2b821ae`. Otro agente sigue trabajando en la interfaz y recibos del checkout original; preservar sus cambios y coordinar la integración al acabar. Paquete y pruebas en destinos aislados; no sustituir la instalación personal mientras se integra el trabajo concurrente.
+Implementación, pruebas y commits autorizados. El 7 de octubre Samu pidió «Vale, integra todo y saca nueva version»: integrar la consolidación y los recibos de interfaz, publicar `0.1.0-preview.3` y actualizar la preview personal con backup. Mantener el canal preview y preservar ajustes, autenticación, sesiones y Ein legado.
 
 ## Decisiones
 
@@ -44,8 +44,10 @@ Banco terminado sobre `993dc09`, automático: `single-agent-s3-r2` y `single-age
 
 El experimento anterior queda conservado en `evals/results/2026-10-07-coordinacion-contexto.md` y en Git, incluido su candidato `00dab7096225`. No repetir aquel banco. El relevo real con equipos queda aplazado junto con el experimento; el relevo ordinario Pi↔Claude ya tiene evidencia en `evals/results/2026-10-06-flujo-conversacional.md`.
 
-## Siguiente paso
+## Publicación de preview.3
 
-Entrega comprobada en este worktree y en dist/single-review-fd2699527ea0/preview. Candidato fuente fd2699527ea0, hash y resultados en evals/results/2026-10-07-agente-unico.md. La instalación personal sigue en 3bc9b8006cc0.
+Integrados los recibos del otro agente (`abf1a4d`) y la consolidación (`13a68a3`), conservando Ctrl+Shift+E, opt-in de equipo y ambos grupos de checks. La prueba con el componente real de Pi detectó desbordamiento en terminal estrecha; se corrige con el recorte nativo y se sanea la ruta visible. La evidencia del modelo se conserva intacta y el detalle se despliega completo.
 
-Cuando el agente de interfaz termine, integrar conservando su atajo Ctrl+Shift+E para el equipo y nuestros opt-in/instrucciones; combinar en typecheck las entradas de receipts/tools-view con codegraph y conservar ambos grupos de tests. No hacer stash, reset ni incluir su trabajo inacabado en nuestros commits. Se pidió confirmar el estado de esa integración; mientras siga trabajando se mantiene esta rama aislada. No repetir el banco: ambos casos pasan.
+La primera suite falló en la espera de arranque del coordinador del test de lectores (3 segundos); el caso aislado pasó. Se amplía el margen a 10 segundos y se asegura limpieza incluso si falla la espera. La repetición completa pasa: `/tmp/nein-preview3-check-final.log`, «checks locales: OK».
+
+Pendiente: paquete macOS instalado, CI Linux, tag/release y actualización transaccional de la preview personal. No repetir el banco alojado ya aceptado.

@@ -76,14 +76,14 @@ Para volver desde Claude, di «sigamos con Pi». El agente carga `to-pi` y conse
 
 ## Instalación local de prueba
 
-La [preview 0.1.0-preview.2](https://github.com/samuhlo/n_ein/releases/tag/v0.1.0-preview.2) distribuye un candidato para macOS arm64 y otro para Linux amd64. Solo hace falta Bun: `nein-setup` instala Pi y CodeGraph fijados dentro de `~/.n_ein`.
+La [preview 0.1.0-preview.3](https://github.com/samuhlo/n_ein/releases/tag/v0.1.0-preview.3) distribuye un candidato para macOS arm64 y otro para Linux amd64. Solo hace falta Bun: `nein-setup` instala Pi y CodeGraph fijados dentro de `~/.n_ein`.
 
 ```sh
-gh release download v0.1.0-preview.2 -R samuhlo/n_ein --pattern 'n-ein-0.1.0-preview.2-darwin-arm64.tar.gz*'
-shasum -a 256 -c n-ein-0.1.0-preview.2-darwin-arm64.tar.gz.sha256
-tar -xzf n-ein-0.1.0-preview.2-darwin-arm64.tar.gz
-./n-ein-0.1.0-preview.2-darwin-arm64/bin/nein-setup --dry-run
-./n-ein-0.1.0-preview.2-darwin-arm64/bin/nein-setup
+gh release download v0.1.0-preview.3 -R samuhlo/n_ein --pattern 'n-ein-0.1.0-preview.3-darwin-arm64.tar.gz*'
+shasum -a 256 -c n-ein-0.1.0-preview.3-darwin-arm64.tar.gz.sha256
+tar -xzf n-ein-0.1.0-preview.3-darwin-arm64.tar.gz
+./n-ein-0.1.0-preview.3-darwin-arm64/bin/nein-setup --dry-run
+./n-ein-0.1.0-preview.3-darwin-arm64/bin/nein-setup
 nein
 ```
 
@@ -99,7 +99,7 @@ Un candidato extraído se instala completo con un solo comando, solo con Bun dis
 nein
 ```
 
-La versión de desarrollo y sus hotfixes locales instalan Pi 1.0.2 en `~/.n_ein/runtimes/pi/1.0.2`; la preview pública `0.1.0-preview.2` todavía fija Pi 0.87.1 y los roles anteriores. En ambos casos, `runtime.json` declara el Pi del candidato. También instalan CodeGraph 1.6.1 en `~/.n_ein/runtimes/codegraph/1.6.1`, el código en `~/.n_ein/installations/<canal>` y enlaza `~/.local/bin/nein`. El `pi` global y Ein legado no se modifican; la autenticación no se copia. Repetirlo no reinstala lo que ya está bien. La [estructura del hogar](docs/05-despliegue.md#hogar-gestionado-y-entrada-nein) detalla cada pieza.
+La preview `0.1.0-preview.3` instala Pi 1.0.2 en `~/.n_ein/runtimes/pi/1.0.2` y usa un agente con selección de modelo por encargo. `runtime.json` declara las versiones del candidato. También instalan CodeGraph 1.6.1 en `~/.n_ein/runtimes/codegraph/1.6.1`, el código en `~/.n_ein/installations/<canal>` y enlaza `~/.local/bin/nein`. El `pi` global y Ein legado no se modifican; la autenticación no se copia. Repetirlo no reinstala lo que ya está bien. La [estructura del hogar](docs/05-despliegue.md#hogar-gestionado-y-entrada-nein) detalla cada pieza.
 
 ### Flujo, skills e idioma
 
@@ -145,6 +145,6 @@ La instalación directa desde `.` sirve para desarrollo. Para probar y promover 
 ./dist/candidato-1/bin/n-ein-install install --source dist/candidato-1 --channel stable
 ```
 
-El código va a `~/.n_ein/installations/<canal>`; Pi y Claude guardan credenciales y sesiones en `~/.n_ein/<canal>/`, fuera del árbol gestionado. `doctor` comprueba hashes y modos; con `--runtime` comprueba además que Bun está disponible y que el Pi gestionado (o `N_EIN_PI_BIN`) tiene la versión de `runtime.json`, sin probar la autenticación. La vista Sistema usa ese diagnóstico ampliado. `install` y `update` rechazan directorios existentes que no sean instalaciones n_ein; una instalación identificada se puede reparar aunque un archivo esté dañado. `update --source`, `restore` y `uninstall` crean o conservan backups del código sin borrar esos datos. El [ensayo del instalador](evals/results/2026-09-29-installer.md) verificó la promoción de un candidato en destinos temporales; todavía no hay releases remotas.
+El código va a `~/.n_ein/installations/<canal>`; Pi y Claude guardan credenciales y sesiones en `~/.n_ein/<canal>/`, fuera del árbol gestionado. `doctor` comprueba hashes y modos; con `--runtime` comprueba además que Bun está disponible y que el Pi gestionado (o `N_EIN_PI_BIN`) tiene la versión de `runtime.json`, sin probar la autenticación. La vista Sistema usa ese diagnóstico ampliado. `install` y `update` rechazan directorios existentes que no sean instalaciones n_ein; una instalación identificada se puede reparar aunque un archivo esté dañado. `update --source`, `restore` y `uninstall` crean o conservan backups del código sin borrar esos datos. El [ensayo del instalador](evals/results/2026-09-29-installer.md) verificó la promoción de un candidato en destinos temporales; las releases remotas se distribuyen en el canal preview.
 
 `nein` (o `n-ein`) abre la portada: la marca 004 Panel, el contexto del proyecto y el menú para abrir Pi (`p`), Claude Code (`c`), elegir una sesión (`s`) o ver el estado (`e`). `tab` recorre Estado, Configuración, Sesiones y Sistema; `j/k`, `g/G`, `f` o `/`, `enter` y `q` conservan los atajos de Ein; cualquier tecla salta la apertura y `--no-intro` la omite. `--once` o una salida sin TTY pintan una vez y salen con 0; `--view sesiones` permite inspeccionar otra vista en scripts. En la TUI, la portada abre Pi o Claude, Sesiones reanuda una sesión del proyecto y Sistema ejecuta `doctor --runtime` sobre el paquete instalado. La portada y Sistema respetan `N_EIN_PI_BIN` y `N_EIN_CLAUDE_BIN`; la portada no ofrece abrir Pi si su versión difiere de la fijada. La [prueba del launcher](evals/results/2026-09-29-launcher.md) incluye el binario instalado fuera del checkout y sesiones reales de Pi y Claude abiertas y reanudadas desde el binario Go de desarrollo. La edición de ajustes y las actualizaciones remotas aún no están conectadas a esas vistas.
