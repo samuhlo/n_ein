@@ -19,6 +19,8 @@ Implementación, pruebas y commits autorizados. Probar en copias e instalaciones
 
 Diseño: [docs/10-paralelismo.md](docs/10-paralelismo.md). Evidencia y límites: [evals/results/2026-10-06-paralelismo.md](evals/results/2026-10-06-paralelismo.md).
 
+Revisión del 7 de octubre: [auditoría frente a Gentle](evals/results/2026-10-07-auditoria-paralelismo.md). El piloto no compara productos ni evalúa sesiones largas; se identifica investigación solapada y se separa contención del contexto de aceleración. Propuesto mejorar el reparto y comparar de forma equivalente, sin declarar ahorro demostrado ni cambiar la preview. Investigación realizada con trazas existentes, sin nuevas ejecuciones de modelos.
+
 ## Límites
 
 Un proyecto Git y trabajadores Pi. Claude continúa secuencialmente. Sin equipos anidados, agentes de varios proyectos, servicios desatendidos ni cambios de cuenta para eludir límites de proveedor. Worktrees y control de procesos no son un sandbox para código hostil o procesos que escapen deliberadamente del control.
