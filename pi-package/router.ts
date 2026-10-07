@@ -53,7 +53,7 @@ export function classify(text: string): Classification {
 
 /** Solo señales explícitas de otro encargo; «otra cosa del mismo encargo» no lo es. */
 export function newJobText(text: string): string | undefined {
-  const match = /^\s*(?:otra cosa|otro encargo|nuevo encargo|nueva tarea|cambiando de tema|new task|new job|unrelated task)\s*[:.\u2014]\s*(\S[\s\S]*)$/i.exec(text);
+  const match = /^\s*(?:ahora\s+)?(?:otra cosa|otro encargo|nuevo encargo|nueva tarea|cambiando de tema|new task|new job|unrelated task)\s*[:,.\u2014]\s*(\S[\s\S]*)$/i.exec(text);
   return match?.[1];
 }
 

@@ -53,6 +53,7 @@ bun run tests/bench.ts
   GOTOOLCHAIN=local "$go_bin" build -o ../dist/n-ein-install ./cmd/n-ein-install
 )
 
+bun run tests/ordinary-pi.ts
 bun run tests/handoff.ts
 bun run tests/agents-rpc.ts
 bun run tests/agents-pi.ts

@@ -28,7 +28,7 @@ Implementación, pruebas y commits autorizados. Sin push ni publicación. Trabaj
 
 - [x] U1 Consolidar agente único — equipo solo con N_EIN_TEAM=1, instrucciones experimentales separadas, recuperación conservada y documentación vigente. Rojo/verde en registro de herramienta; launcher ordinario y experimental, catálogo y formato pasan.
 - [x] U2 Calidad y contexto — aceptación desde el rechazo real hasta mensaje/recuperación; CodeGraph con 3 archivos por defecto, amplitud explícita y salida íntegra recuperable. Rojo/verde de argumentos y conservación de fuente; consulta real con CodeGraph 1.6.1; aviso de sync fallido y fallback comprobados. Efecto sobre encargos alojados pendiente de U4.
-- [ ] U3 Acuerdo y modelo — intent/correcciones y casos de selección, continuidad y elección explícita.
+- [x] U3 Acuerdo y modelo — guía de correcciones sin reentrevista; clases explícitas conservadas ante riesgo, revaloración y llamadas auxiliares. Rojo/verde del defecto de elección manual y prefijos naturales; Pi real con proveedor determinista confirma escalado automático, elección manual y ausencia de equipo por defecto. Conversación real pendiente de U4.
 - [ ] U4 Validación real — dos encargos en copias de planificador: S3 completo y diseño/corrección de S6. Modelo automático real, máximo inicial 4 USD estimados; detener ampliación ante un fallo y conservar trazas. Tests deterministas antes de modelos.
 - [ ] U5 Revisión y preview — checks completos, paquete instalado, evidencia, integración compatible con el otro agente.
 

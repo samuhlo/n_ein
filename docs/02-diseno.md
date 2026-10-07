@@ -6,6 +6,8 @@ El flujo de n_ein vive en `pi-package/flow.md` y lo reciben Pi y Claude. Pasos: 
 
 **Un modelo por encargo.** Desde el 6 de octubre no hay roles delegados (`nein_scout`, `nein_worker`, `nein_reviewer`): el banco mostró que eran entre el 45 y el 63 % del coste sin mejorar el resultado. El principal es `nein/auto`, que elige un modelo para todo el encargo según su clase (mecánico, ordinario, riesgo, abierto) y lo mantiene; [rumbo](09-rumbo.md) y [resultados](../evals/results/2026-10-05-rumbo-resultados.md).
 
+La selección explícita de una clase mediante un prefijo o `/nein:modo` se conserva durante ese encargo, incluidas llamadas auxiliares; la reasignación automática y `nein_escalate` no la sustituyen. Una petición explícita de otro encargo permite seleccionar otra clase. El selector físico manual de Pi sigue teniendo prioridad. `Otra cosa, …` y `Ahora otra cosa: …` también marcan un encargo nuevo; «otra cosa del mismo encargo» conserva la continuidad.
+
 **Idioma de lo que lee el agente.** Persona, flujo, skills y las instrucciones de idioma y preferencias están en inglés: ocupan menos tokens (las skills en castellano medían un 13 % más) y las palabras guía (*tracer bullet*, *seam*, *red*, *frontier*) activan más de lo que el modelo ya sabe. El idioma de las respuestas y de los artefactos lo elige el usuario en el launcher.
 
 El agente investiga, implementa y revisa en la propia sesión. El enrutador usa reglas sobre la petición, sin otra llamada a un clasificador; una petición que también cambia permisos o implementa lógica no se convierte en mecánica por mencionar documentación. «Otra cosa: …» o «Nuevo encargo: …» inicia otro trabajo sin arrastrar la clase anterior; otras formulaciones claras se resuelven con la herramienta de selección según el alcance. Al pasar de un diseño acordado a una implementación autorizada, se puede elegir la capacidad para ese trabajo. Una corrección del encargo conserva su modelo; al cambiar el riesgo solo escala. La ruta física queda en el estado nativo de Pi para reanudarla, y el siguiente encargo lee la tabla guardada. `/nein:nuevo` permanece como atajo. Los límites de autorización, herramientas y entrega los aplica el runtime donde sea posible; no dependen solo de una frase.
@@ -34,6 +36,10 @@ Modelar las decisiones y sus dependencias. En cada ronda, formular solo pregunta
 Los hechos los averigua el agente: reutiliza conversación y evidencia del proyecto, consulta directamente el código y las fuentes pertinentes. Una investigación pendiente solo demora las preguntas que dependen de ella. No obligar a usar Scout ni preguntar a Samu lo que el código ya contesta. Distinguir hechos verificados, propuestas y supuestos abiertos.
 
 Las decisiones de producto, alcance y compromisos relevantes corresponden a Samu. El agente puede resolver detalles técnicos reversibles dentro de las convenciones y del encargo, explicándolos cuando ayuden a juzgar la propuesta. Conservar decisiones ya tomadas; reabrirlas solo ante un cambio o evidencia material, indicando el motivo.
+
+### Correcciones al acuerdo
+
+Una corrección conserva el encargo, lo ya aceptado y el trabajo válido. El agente identifica solo qué decisión y criterios cambian, actualiza la guía en ese lugar y pregunta únicamente por dependencias materiales que hayan quedado abiertas. Si ya se autorizó implementar y la corrección es clara y está dentro del alcance, continúa sin otra entrevista. La sesión siguiente recupera el acuerdo revisado y el estado real; no reconstruye la conversación de diseño desde cero.
 
 ### Cuándo se cierra y qué queda
 
