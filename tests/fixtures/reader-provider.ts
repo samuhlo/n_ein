@@ -1,5 +1,8 @@
 // Proveedor determinista: intenta herramientas ajenas al encargo de lectura.
-import { createAssistantMessageEventStream } from "@earendil-works/pi-ai";
+import {
+  createAssistantMessageEventStream,
+  collapseSystemMessages,
+} from "@earendil-works/pi-ai";
 import type { ExtensionAPI } from "@earendil-works/pi-coding-agent";
 export default function (pi: ExtensionAPI) {
   let calls = 0;
@@ -22,7 +25,7 @@ export default function (pi: ExtensionAPI) {
       const stream = createAssistantMessageEventStream();
       const tools = pi.getActiveTools();
       const n = calls++;
-      const content: any[] =
+      let content: any[] =
         n === 0
           ? [
               {
@@ -58,6 +61,42 @@ export default function (pi: ExtensionAPI) {
                   }),
                 },
               ];
+      if (process.env.N_EIN_CHILD !== "1") {
+        content =
+          n === 0
+            ? [
+                {
+                  type: "toolCall",
+                  id: "start-research",
+                  name: "nein_team",
+                  arguments: {
+                    action: "start",
+                    tasks: [
+                      {
+                        mode: "read",
+                        taskId: "R3",
+                        label: "Current evidence",
+                        class: "ordinario",
+                        prompt:
+                          "Read source.txt and report its current contents with evidence. Do not change anything.",
+                      },
+                    ],
+                  },
+                },
+              ]
+            : [
+                {
+                  type: "text",
+                  text:
+                    n === 1
+                      ? "Waiting for the research result."
+                      : "RESEARCH DELIVERED " +
+                        JSON.stringify(
+                          collapseSystemMessages(context).messages,
+                        ),
+                },
+              ];
+      }
       const message: any = {
         role: "assistant",
         api: model.api,
@@ -65,7 +104,9 @@ export default function (pi: ExtensionAPI) {
         model: model.id,
         timestamp: Date.now(),
         content,
-        stopReason: n < 2 ? "toolUse" : "stop",
+        stopReason: content.some((c) => c.type === "toolCall")
+          ? "toolUse"
+          : "stop",
         usage: {
           input: 10,
           output: 5,

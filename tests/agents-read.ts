@@ -121,3 +121,58 @@ try {
 console.log(
   "native read-only workers: permissions, dirty input, own leases, resume and usage: OK",
 );
+
+// La entrada conversacional atraviesa el schema y entrega el resultado en Pi real.
+const models = join(area, "models.json"),
+  index = join(area, "codegraph");
+writeFileSync(
+  models,
+  JSON.stringify({
+    schema: 1,
+    agents: { principal: { model: "nein-test/reader", thinking: "off" } },
+  }),
+);
+writeFileSync(index, '#!/bin/sh\nprintf "{}\\n"\n', { mode: 0o755 });
+const output = execFileSync(
+  host,
+  [
+    "--root",
+    root,
+    "--project",
+    cwd,
+    "--runtime",
+    "pi",
+    "--",
+    "--mode",
+    "json",
+    "--print",
+    "Investigate source.txt through a read-only helper.",
+  ],
+  {
+    cwd,
+    encoding: "utf8",
+    timeout: 20000,
+    maxBuffer: 4 * 1024 * 1024,
+    env: {
+      ...process.env,
+      N_EIN_PI_BIN: wrapper,
+      N_EIN_AGENT_DIR: join(area, "parent-home"),
+      N_EIN_MODELS_FILE: models,
+      N_EIN_CODEGRAPH_BIN: index,
+      N_EIN_TEAM: "1",
+      PI_SKIP_VERSION_CHECK: "1",
+    },
+    stdio: ["ignore", "pipe", "pipe"],
+  },
+);
+assert.match(output, /RESEARCH DELIVERED/);
+assert.match(output, /local user evidence/);
+assert.equal(manager.store.list().find((t) => t.taskId === "R3")?.mode, "read");
+assert.equal(
+  manager.store.list().find((t) => t.taskId === "R3")?.status,
+  "complete",
+);
+assert.equal(git("status", "--porcelain"), original);
+console.log(
+  "native coordinator tool schema, read-only child and automatic delivery: OK",
+);

@@ -25,6 +25,8 @@ if (
   !/^[a-zA-Z0-9_-]+$/.test(id)
 )
   throw new Error("scenario arm unique-id required");
+if (directed && !["s3", "context"].includes(scenario))
+  throw new Error("Directed mode is defined only for s3 or context");
 const bench = process.env.N_EIN_BENCH || resolve(repo, "../n_ein-bench");
 const project = join(bench, "copies", id),
   log = join(bench, "logs", id),
@@ -75,6 +77,17 @@ const prompt = {
   s2: "Haz que el Anexo III lea la planificación guardada del curso en el servidor en vez del cuerpo que manda el cliente, y que el cliente deje de mandarla cuando hay curso.",
   s3: "Cierra las deudas de docs/alpha-v1/estado-actual.md: que al dar de alta un centro se rechace a quien ya tiene cursos propios o módulos asignados; que tests/pages/anexo-iv-codigo.test.ts monte el componente en vez de leerlo como texto; y corrige el documento, que todavía da en gris el botón «Crear un curso» del centro.",
 }[scenario]!;
+const prompts = (scenario === "context" ? contextPrompts : [prompt]).map(
+  (value, index) => {
+    if (!directed || arm !== "team" || index !== 0) return value;
+    return (
+      value +
+      (scenario === "context"
+        ? " En este ensayo usa un ayudante de solo lectura para la investigación amplia. Tú sintetiza el resultado y responde las preguntas posteriores reutilizando sus hallazgos; reserva otro encargo de lectura para un ámbito distinto que requiera nueva investigación. No implementes ni crees documentos."
+        : " En este ensayo usa dos trabajadores en paralelo para T1 (alta de centro y sus consumidores) y T2 (test montado), tras fijar el contrato y dejar la base limpia; tú conserva WORK.md, la documentación, la integración y la comprobación del conjunto. No publiques.")
+    );
+  },
+);
 if (scenario === "context")
   writeFileSync(
     join(project, "notes-local.txt"),
@@ -116,7 +129,7 @@ writeFileSync(
     directed,
     base_rev: base,
     model,
-    prompts: scenario === "context" ? contextPrompts : [prompt],
+    prompts,
   }),
 );
 if (process.env.N_EIN_EVAL_PREPARE_ONLY === "1") {
@@ -144,9 +157,7 @@ const maxUsd = Number(process.env.N_EIN_EVAL_MAX_USD || "2.5");
 if (!Number.isFinite(maxUsd) || maxUsd <= 0) throw new Error("invalid budget");
 const turns: { prompt: string; seconds: number; exit: number | null }[] = [];
 let exit: number | null = null;
-for (const currentPrompt of scenario === "context"
-  ? contextPrompts
-  : [prompt]) {
+for (const currentPrompt of prompts) {
   const turnStarted = Date.now();
   const child = spawn(
     join(product, "dist/n-ein"),
@@ -165,10 +176,7 @@ for (const currentPrompt of scenario === "context"
       join(log, "sessions"),
       "--session-id",
       sessionId,
-      currentPrompt +
-        (directed && arm === "team"
-          ? " En este ensayo usa dos trabajadores en paralelo para T1 (alta de centro y sus consumidores) y T2 (test montado), tras fijar el contrato y dejar la base limpia; tú conserva WORK.md, la documentación, la integración y la comprobación del conjunto. No publiques."
-          : ""),
+      currentPrompt,
     ],
     { cwd: project, env, stdio: ["ignore", "pipe", "pipe"], detached: true },
   );
