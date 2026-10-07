@@ -6,7 +6,7 @@
 // =============================================================================
 
 import type { ExtensionAPI, Theme, ToolRenderers } from "@earendil-works/pi-coding-agent";
-import { Box, Container, Text, type Component } from "@earendil-works/pi-tui";
+import { Box, Container, Text, truncateToWidth, type Component } from "@earendil-works/pi-tui";
 import { outcomeFor, receiptFor, receiptLine, resultText, type Outcome, type Paint } from "./receipts.ts";
 
 type RowState = { neinOutcome?: Outcome; neinCall?: Component; neinResult?: Component };
@@ -39,7 +39,8 @@ function compact(tool: string, base: ToolRenderers | undefined): ToolRenderers {
       }
       // La fila se compone al pintar: para entonces renderResult ya ha dejado su resumen en el estado.
       return {
-        render: (width: number) => [receiptLine(receiptFor(tool, args, context.cwd), state.neinOutcome, width, painter(theme))],
+        // Pi exige anchura en columnas, también con Unicode y terminales muy estrechas.
+        render: (width: number) => [truncateToWidth(receiptLine(receiptFor(tool, args, context.cwd), state.neinOutcome, width, painter(theme)), width)],
         invalidate() {},
       };
     },

@@ -54,10 +54,12 @@ const coordinator = spawn(
   },
 );
 const closed = new Promise((r) => coordinator.once("close", r));
-const deadline = Date.now() + 3000;
-while (manager.free(cwd) && Date.now() < deadline) await Bun.sleep(20);
-assert.equal(manager.free(cwd), false);
 try {
+  // El primer arranque del binario recién compilado puede demorarse en macOS.
+  const deadline = Date.now() + 10000;
+  while (manager.free(cwd) && Date.now() < deadline && coordinator.exitCode === null)
+    await Bun.sleep(20);
+  assert.equal(manager.free(cwd), false, `coordinator did not acquire its lease (exit ${coordinator.exitCode})`);
   const tasks = manager.start(
     ["R1", "R2"].map((taskId) => ({
       mode: "read" as const,

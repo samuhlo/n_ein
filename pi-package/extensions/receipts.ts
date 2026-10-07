@@ -13,6 +13,7 @@
 
 import { homedir } from "node:os";
 import { basename, dirname, isAbsolute, relative } from "node:path";
+import { stripVTControlCharacters } from "node:util";
 
 export type Receipt = { label: string; target: string };
 export type Outcome = { meta: string; bad: boolean };
@@ -55,7 +56,7 @@ function str(value: unknown): string {
 
 /** Una sola línea imprimible: el recibo nunca rompe la fila ni arrastra escapes de terminal. */
 export function oneLine(text: string): string {
-  return text.replace(/\x1b\[[0-9;]*[A-Za-z]/g, "").replace(/[\x00-\x1f\x7f]+/g, " ").replace(/\s+/g, " ").trim();
+  return stripVTControlCharacters(text).replace(/[\x00-\x1f\x7f-\x9f]+/g, " ").replace(/\s+/g, " ").trim();
 }
 
 export function clip(text: string, room: number): string {
@@ -225,12 +226,12 @@ export function receiptLine(receipt: Receipt, outcome: Outcome | undefined, widt
   const glyph = !outcome
     ? paint("accent", GLYPH.running)
     : outcome.bad ? paint("error", GLYPH.failed) : paint("dim", GLYPH.done);
-  const label = receipt.label.padEnd(LABEL_WIDTH - 1);
-  const meta = outcome?.meta ? `  ${GLYPH.sep} ${outcome.meta}` : "";
+  const label = clip(oneLine(receipt.label), LABEL_WIDTH - 1).padEnd(LABEL_WIDTH - 1);
+  const meta = outcome?.meta ? `  ${GLYPH.sep} ${oneLine(outcome.meta)}` : "";
   const fixed = 1 + 2 + LABEL_WIDTH;
   const metaRoom = Math.max(0, Math.min([...meta].length, width - fixed - 12));
   const metaShown = clip(meta, metaRoom);
-  const target = clip(receipt.target, width - fixed - [...metaShown].length);
+  const target = clip(oneLine(receipt.target), width - fixed - [...metaShown].length);
   const tone = outcome?.bad ? "error" : "dim";
   return ` ${glyph} ${paint("text", label)} ${paint("muted", target)}${paint(tone, metaShown)}`;
 }
