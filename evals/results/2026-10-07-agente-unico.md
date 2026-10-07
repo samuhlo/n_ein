@@ -63,3 +63,13 @@ El arnés comprueba al menos 512 MiB libres antes de preparar y valida el identi
 Una observación por caso, sin juez independiente a ciegas ni comparación estadística. S3 usa Sol high; los ensayos anteriores con medium no son controles equivalentes de velocidad o coste. Se ha demostrado comportamiento en estos recorridos y corregido fallos concretos; no un porcentaje general de ahorro. El coste es de catálogo observado, no factura ni cuota de suscripción, y no incluye esta conversación de desarrollo.
 
 El relevo ordinario Pi↔Claude tiene [evidencia previa](2026-10-06-flujo-conversacional.md) y conserva sus regresiones locales. No se reabrió el ensayo de relevo con equipos aplazado.
+
+## Candidato para revisión
+
+`0.1.0-preview.2+hotfix.fd2699527ea0`, fuente `fd2699527ea0fa7a0b4a4966f79272b39c5a7c62`.
+
+[Tarball macOS arm64](../../dist/releases/n-ein-0.1.0-preview.2+hotfix.fd2699527ea0-darwin-arm64.tar.gz). SHA-256: `9d22c66c338c59836a0b18e02a8a7583ebade82f1abdc0ffd8875741cd92e426`.
+
+Instalado desde el tarball en `dist/single-review-fd2699527ea0/preview`. Pasan desde esa instalación el recorrido ordinario con selección automática y explícita, la recuperación del estado nativo y la regresión del equipo experimental/relevo controlado. Proveedor determinista, sin nuevas llamadas alojadas. Doctor verifica 73 archivos (71 entradas del manifiesto más metadatos). Check completo final: `/tmp/nein-single-agent-final-check.log`.
+
+La instalación personal conserva `0.1.0-preview.2+hotfix.3bc9b8006cc0`. La rama está preparada; la integración con interfaz y recibos queda pendiente mientras el otro agente mantiene cambios sin commit en el checkout original. No se ha publicado ni hecho push.

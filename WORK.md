@@ -30,7 +30,7 @@ Implementación, pruebas y commits autorizados. Sin push ni publicación. Trabaj
 - [x] U2 Calidad y contexto — aceptación desde el rechazo real hasta mensaje/recuperación; CodeGraph con 3 archivos por defecto, amplitud explícita y salida íntegra recuperable. Rojo/verde de argumentos y conservación de fuente; consulta real con CodeGraph 1.6.1; aviso de sync fallido y fallback comprobados. Efecto sobre encargos alojados pendiente de U4.
 - [x] U3 Acuerdo y modelo — guía de correcciones sin reentrevista; clases explícitas conservadas ante riesgo, revaloración y llamadas auxiliares. Rojo/verde del defecto de elección manual y prefijos naturales; Pi real con proveedor determinista confirma escalado automático, elección manual y ausencia de equipo por defecto. Conversación real pendiente de U4.
 - [x] U4 Validación real — S3 5/5, dos mutantes, suite y tipos; diseño sin cambios, implementación, corrección sin entrevista repetida y nueva errata en Luna sin tocar código. Ningún hijo. Coste observado 1,5452089 USD de catálogo, dentro de 4 USD. Producto congelado 993dc09; logs single-agent-s3-r2 y single-agent-intent-r1.
-- [ ] U5 Revisión y preview — checks completos, paquete instalado, evidencia, integración compatible con el otro agente.
+- [ ] U5 Integración final — revisión y paquete completados: candidato fd2699527ea0 instalado desde tarball, Pi ordinario y regresiones de equipo pasan, doctor verifica 73 archivos. Falta integrar cuando termine el agente de interfaz; se conserva la entrega en fix/agente-unico-consolidado.
 
 ## Evidencia
 
@@ -46,4 +46,6 @@ El experimento anterior queda conservado en `evals/results/2026-10-07-coordinaci
 
 ## Siguiente paso
 
-U5: revisar y empaquetar desde este worktree. Otro agente sigue con interfaz y recibos en el checkout original; se pidió confirmar el momento de integración y se conservan sus cambios. No repetir el banco: ambos casos pasan.
+Entrega comprobada en este worktree y en dist/single-review-fd2699527ea0/preview. Candidato fuente fd2699527ea0, hash y resultados en evals/results/2026-10-07-agente-unico.md. La instalación personal sigue en 3bc9b8006cc0.
+
+Cuando el agente de interfaz termine, integrar conservando su atajo Ctrl+Shift+E para el equipo y nuestros opt-in/instrucciones; combinar en typecheck las entradas de receipts/tools-view con codegraph y conservar ambos grupos de tests. No hacer stash, reset ni incluir su trabajo inacabado en nuestros commits. Se pidió confirmar el estado de esa integración; mientras siga trabajando se mantiene esta rama aislada. No repetir el banco: ambos casos pasan.

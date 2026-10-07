@@ -337,5 +337,22 @@
     "commit": "ff61bb2",
     "change": "Recover explicit class from the public native session entry before auxiliary calls after reopening",
     "verified": "Router regression, native recorded session data, ordinary Pi and strict SDK types; no new hosted run"
+  },
+  "artifact": {
+    "version": "0.1.0-preview.2+hotfix.fd2699527ea0",
+    "commit": "fd2699527ea0fa7a0b4a4966f79272b39c5a7c62",
+    "archive": "dist/releases/n-ein-0.1.0-preview.2+hotfix.fd2699527ea0-darwin-arm64.tar.gz",
+    "sha256": "9d22c66c338c59836a0b18e02a8a7583ebade82f1abdc0ffd8875741cd92e426",
+    "installedFromArchive": "dist/single-review-fd2699527ea0/preview",
+    "manifestEntries": 71,
+    "doctorVerifiedFiles": 73,
+    "ordinaryNativeTestsPassed": true,
+    "experimentalRecoveryRegressionPassed": true,
+    "personalInstallationUpdated": false
+  },
+  "integration": {
+    "status": "pending",
+    "reason": "User confirmed another agent is still working on uncommitted UI changes in the original checkout; isolated branch is ready",
+    "branch": "fix/agente-unico-consolidado"
   }
 }
