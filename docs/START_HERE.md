@@ -15,7 +15,7 @@ El experimento de equipo se conserva desactivado: `N_EIN_TEAM=1` lo habilita exp
 ## Estado y continuidad
 
 - Rama del proyecto: consultar Git y WORK.md; la conversación actual prevalece sobre propuestas anteriores.
-- Preview personal comprobada antes de esta consolidación: `0.1.0-preview.2+hotfix.3bc9b8006cc0`. Los candidatos experimentales posteriores se probaron en instalaciones aisladas; no equivalen a instalación personal.
+- Preview personal: `0.1.0-preview.3`, instalada el 7 de octubre desde el tarball verificado. Fuente `936e682`, Pi 1.0.2 y CodeGraph 1.6.1; backup anterior conservado. [Notas de versión](releases/0.1.0-preview.3.md).
 - Pi 1.0.2 y CodeGraph 1.6.1 fijados en `runtime.json`. No asumir que los binarios globales coinciden.
 - Preferencias y ajustes personales viven fuera del paquete, en `~/.n_ein`. Mantener credenciales en su hogar nativo; no copiarlas desde el banco.
 - `WORK.md` es la única guía del encargo; decisiones duraderas, glosario e instrucciones del proyecto aportan memoria selectiva.
