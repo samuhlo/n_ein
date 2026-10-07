@@ -1,8 +1,15 @@
 import { strict as assert } from "node:assert";
 import { execFileSync } from "node:child_process";
-import { mkdtempSync, writeFileSync, mkdirSync } from "node:fs";
+import {
+  mkdtempSync,
+  writeFileSync,
+  mkdirSync,
+  readFileSync,
+  readdirSync,
+} from "node:fs";
 import { tmpdir, homedir } from "node:os";
 import { join, resolve } from "node:path";
+import registerRouter from "../pi-package/extensions/router.ts";
 const source = resolve("."),
   root = process.env.N_EIN_PRODUCT_ROOT || source;
 const area = mkdtempSync(join(tmpdir(), "nein-ordinary-pi-")),
@@ -40,6 +47,7 @@ writeFileSync(
   }),
 );
 function run(prompt: string, team?: string) {
+  const sessionDir = mkdtempSync(join(area, "sessions-"));
   const env = {
     ...process.env,
     N_EIN_AGENT_DIR: join(area, "home"),
@@ -52,7 +60,7 @@ function run(prompt: string, team?: string) {
   if (team !== undefined) env.N_EIN_TEAM = team;
   const output = execFileSync(
     join(root, "bin/n-ein-dev"),
-    ["--mode", "json", "--print", prompt],
+    ["--mode", "json", "--print", "--session-dir", sessionDir, prompt],
     {
       cwd: project,
       env,
@@ -75,7 +83,14 @@ function run(prompt: string, team?: string) {
   const final = JSON.parse(
     messages.at(-1).content.find((c: any) => c.type === "text").text,
   );
-  return { models: messages.map((m) => m.model), ...final };
+  const sessionFile = readdirSync(sessionDir).find((f) =>
+    f.endsWith(".jsonl"),
+  )!;
+  const nativeBranch = readFileSync(join(sessionDir, sessionFile), "utf8")
+    .trim()
+    .split("\n")
+    .map((line) => JSON.parse(line));
+  return { models: messages.map((m) => m.model), nativeBranch, ...final };
 }
 const automatic = run("Corrige una errata del README");
 assert.deepEqual(
@@ -100,4 +115,29 @@ assert.ok(
 );
 console.log(
   "native ordinary session: default tools, automatic escalation and explicit class: OK",
+);
+
+// Las peticiones directas no traen state: restaurar desde las entradas de Pi,
+// con una instancia nueva de la extensión, no desde un estado fabricado.
+let restored: any;
+registerRouter({
+  on() {},
+  registerTool() {},
+  registerCommand() {},
+  registerVirtualModel(value: any) {
+    restored = value;
+  },
+} as any);
+const summarized = await restored.route(
+  { reason: "direct", messages: [] },
+  {
+    sessionManager: { getBranch: () => selected.nativeBranch },
+    modelRegistry: {
+      find: (provider: string, id: string) => ({ provider, id }),
+    },
+  },
+);
+assert.equal(summarized.model.id, "capable");
+console.log(
+  "native persisted model choice survives auxiliary routing after reload: OK",
 );

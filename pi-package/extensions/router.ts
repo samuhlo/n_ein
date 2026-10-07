@@ -133,6 +133,29 @@ function physical(ctx: ExtensionContext, route: Route) {
   return model;
 }
 
+// Pi no pasa state a las llamadas directas. Su entrada pública de sesión
+// conserva la elección incluso si se compacta justo después de reabrir.
+function storedState(ctx: ExtensionContext): RouterState | undefined {
+  const entry = ctx.sessionManager?.getBranch().findLast((entry) => {
+    if (
+      entry.type !== "custom" ||
+      entry.customType !== "pi.virtual-model-state"
+    )
+      return false;
+    const data = entry.data as
+      | { provider?: string; modelId?: string }
+      | undefined;
+    return data?.provider === "nein" && data.modelId === "auto";
+  });
+  if (entry?.type !== "custom") return undefined;
+  const state = (entry.data as { state?: RouterState } | undefined)?.state;
+  return state &&
+    CLASSES.includes(state.clase) &&
+    ["usuario", "regla", "defecto"].includes(state.fuente)
+    ? state
+    : undefined;
+}
+
 /** La tabla del canal, con los cambios hechos en /nein:models; sin ella, la del paquete. */
 function effectiveRouting(): RoutingTable {
   return loadModels(packageRoot).routing;
@@ -169,9 +192,16 @@ export default function (pi: ExtensionAPI, fixedTable?: RoutingTable) {
     route(request, ctx) {
       // La selección explícita también rige en las llamadas auxiliares.
       if (request.reason === "direct") {
-        const selected = request.state ?? lastState;
-        const route =
-          selected?.fuente === "usuario"
+        const selected =
+          request.state ?? (ctx.sessionManager ? storedState(ctx) : lastState);
+        const explicit =
+          pending.force ??
+          (pending.choice?.transition === "user_choice"
+            ? pending.choice.clase
+            : undefined);
+        const route = explicit
+          ? routing(true)[explicit]
+          : selected?.fuente === "usuario"
             ? (selected.route ?? routing()[selected.clase])
             : routing().mecanico;
         return {

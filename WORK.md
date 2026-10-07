@@ -29,13 +29,21 @@ Implementación, pruebas y commits autorizados. Sin push ni publicación. Trabaj
 - [x] U1 Consolidar agente único — equipo solo con N_EIN_TEAM=1, instrucciones experimentales separadas, recuperación conservada y documentación vigente. Rojo/verde en registro de herramienta; launcher ordinario y experimental, catálogo y formato pasan.
 - [x] U2 Calidad y contexto — aceptación desde el rechazo real hasta mensaje/recuperación; CodeGraph con 3 archivos por defecto, amplitud explícita y salida íntegra recuperable. Rojo/verde de argumentos y conservación de fuente; consulta real con CodeGraph 1.6.1; aviso de sync fallido y fallback comprobados. Efecto sobre encargos alojados pendiente de U4.
 - [x] U3 Acuerdo y modelo — guía de correcciones sin reentrevista; clases explícitas conservadas ante riesgo, revaloración y llamadas auxiliares. Rojo/verde del defecto de elección manual y prefijos naturales; Pi real con proveedor determinista confirma escalado automático, elección manual y ausencia de equipo por defecto. Conversación real pendiente de U4.
-- [ ] U4 Validación real — dos encargos en copias de planificador: S3 completo y diseño/corrección de S6. Modelo automático real, máximo inicial 4 USD estimados; detener ampliación ante un fallo y conservar trazas. Tests deterministas antes de modelos.
+- [x] U4 Validación real — S3 5/5, dos mutantes, suite y tipos; diseño sin cambios, implementación, corrección sin entrevista repetida y nueva errata en Luna sin tocar código. Ningún hijo. Coste observado 1,5452089 USD de catálogo, dentro de 4 USD. Producto congelado 993dc09; logs single-agent-s3-r2 y single-agent-intent-r1.
 - [ ] U5 Revisión y preview — checks completos, paquete instalado, evidencia, integración compatible con el otro agente.
 
 ## Evidencia
 
-Pendiente de este corte. El experimento anterior queda conservado en `evals/results/2026-10-07-coordinacion-contexto.md` y en Git, incluido su candidato `00dab7096225`. No repetir aquel banco. El relevo real con equipos queda aplazado junto con el experimento; el relevo ordinario Pi↔Claude ya tiene evidencia en `evals/results/2026-10-06-flujo-conversacional.md`.
+Revisión final: Pi omite `state` en peticiones auxiliares; se reprodujo en rojo la compactación inmediatamente después de reabrir una selección manual. Se recupera la elección desde la entrada pública de sesión de Pi y se verifica con datos de una sesión nativa y una instancia nueva del enrutador. La corrección posterior al banco tiene regresión local; no se repite la tanda alojada.
+
+Checks completos del recorrido consolidado pasan (`/tmp/nein-single-agent-check.log`), incluido Pi real con proveedor determinista y paquete.
+
+La preparación de U4 falló antes de inferir por disco lleno. Se conservaron diagnósticos y archivos congelados; se retiraron copias de preparación propias y dependencias regenerables de correcciones terminadas. Manifest de limpieza en `../n_ein-bench/logs/single-agent-storage-cleanup.json`. El arnés comprueba espacio antes de preparar y limpia solo dependencias de su copia de corrección. No se tocaron código, commits, sesiones ni resultados de los ensayos.
+
+Banco terminado sobre `993dc09`, automático: `single-agent-s3-r2` y `single-agent-intent-r1`. S3 eligió Sol high; intent eligió Sol high, la implementación pasó a Sol medium, la corrección lo conservó y la nueva errata eligió Luna high. Sin hijos. El intento single-agent-s3-r1 no llegó a llamar a modelos.
+
+El experimento anterior queda conservado en `evals/results/2026-10-07-coordinacion-contexto.md` y en Git, incluido su candidato `00dab7096225`. No repetir aquel banco. El relevo real con equipos queda aplazado junto con el experimento; el relevo ordinario Pi↔Claude ya tiene evidencia en `evals/results/2026-10-06-flujo-conversacional.md`.
 
 ## Siguiente paso
 
-U1: aislar la política experimental del recorrido ordinario y comprobar las dos entradas con Pi.
+U5: revisar y empaquetar desde este worktree. Otro agente sigue con interfaz y recibos en el checkout original; se pidió confirmar el momento de integración y se conservan sus cambios. No repetir el banco: ambos casos pasan.

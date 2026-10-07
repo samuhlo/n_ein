@@ -487,6 +487,28 @@ assert.equal(
   "auxiliary requests also respect an explicit model class",
 );
 
+sessionStart();
+const restoredDirect = await virtual.route(
+  { reason: "direct", messages: [] },
+  {
+    ...ctx,
+    sessionManager: {
+      getBranch: () => [
+        {
+          type: "custom",
+          customType: "pi.virtual-model-state",
+          data: { provider: "nein", modelId: "auto", state: explicitSol.state },
+        },
+      ],
+    },
+  },
+);
+assert.equal(
+  restoredDirect.model.id,
+  "gpt-6-sol",
+  "Pi direct requests omit state: recover the explicit choice from the native session after resume",
+);
+
 let idle = false;
 await newJob.handler("Cambia el color del botón", {
   cwd: taskRoot,
