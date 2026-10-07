@@ -34,14 +34,15 @@ if (existsSync(project) || existsSync(log) || existsSync(product))
 mkdirSync(log, { recursive: true });
 mkdirSync(product, { recursive: true });
 execFileSync("cp", ["-c", "-R", join(bench, "bases/4d66007"), project]);
-const revision =
-  process.env.N_EIN_EVAL_SOURCE ||
-  (arm === "serial"
-    ? "b619eaa"
-    : execFileSync("git", ["rev-parse", "HEAD"], {
-        cwd: repo,
-        encoding: "utf8",
-      }).trim());
+const revision = execFileSync(
+  "git",
+  [
+    "rev-parse",
+    "--verify",
+    `${process.env.N_EIN_EVAL_SOURCE || (arm === "serial" ? "b619eaa" : "HEAD")}^{commit}`,
+  ],
+  { cwd: repo, encoding: "utf8" },
+).trim();
 const archive = join(log, "product.tar");
 execFileSync(
   "git",
