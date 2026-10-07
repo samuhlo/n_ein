@@ -700,5 +700,18 @@
     "The new direct S3 run is not a quality-equivalent control for the parallel run: the supplementary feedback probe fails only in that direct run.",
     "Supplementary feedback probes were introduced after inspecting the results; they are diagnostic, not preregistered acceptance."
   ],
-  "postBenchmarkCorrection": "61cf7ba: unborn Git repositories, coherent worker ownership, end-to-end refusal review and stronger S3 acceptance. Covered locally; no new hosted benchmark of these later instructions."
+  "postBenchmarkCorrection": "61cf7ba: unborn Git repositories, coherent worker ownership, end-to-end refusal review and stronger S3 acceptance. Covered locally; no new hosted benchmark of these later instructions.",
+  "candidateArtifact": {
+    "version": "0.1.0-preview.2+hotfix.00dab7096225",
+    "sourceCommit": "00dab7096225c16183c06dbdca2675ab8d278bf9",
+    "archive": "dist/releases/n-ein-0.1.0-preview.2+hotfix.00dab7096225-darwin-arm64.tar.gz",
+    "sha256": "9464833e443d825fe914209ffba0ef8eae5f3d5852d8514370d809a0c6a594b5",
+    "manifestEntries": 70,
+    "doctorVerifiedFiles": 72,
+    "installedFromArchive": "dist/context-review-00dab7096225/preview",
+    "nativeResearchAndTeamTestsPassed": true,
+    "providerForArtifactTests": "deterministic fixture; no hosted inference",
+    "personalPreview": "0.1.0-preview.2+hotfix.3bc9b8006cc0",
+    "personalPreviewUpdated": false
+  }
 }

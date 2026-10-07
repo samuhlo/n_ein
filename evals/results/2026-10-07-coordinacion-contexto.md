@@ -82,6 +82,14 @@ Se añadieron dos casos al [test reservado](../reserved/s3-deudas/tests/api/zz-o
 
 El banco aloja `fc1bf6f`; `61cf7ba` añade después la corrección del repo sin commit, la propiedad por comportamiento y la revisión de mensajes. Esas correcciones tienen comprobación local, no una segunda tanda alojada.
 
+## Candidato comprobado desde el archivo
+
+Versión `0.1.0-preview.2+hotfix.00dab7096225`, fuente `00dab7096225c16183c06dbdca2675ab8d278bf9`. `./scripts/check.sh` completo pasa con las correcciones finales; log `/tmp/nein-context-release-check.log`.
+
+[Tarball macOS arm64](../../dist/releases/n-ein-0.1.0-preview.2+hotfix.00dab7096225-darwin-arm64.tar.gz), SHA-256 `9464833e443d825fe914209ffba0ef8eae5f3d5852d8514370d809a0c6a594b5`.
+
+Extraído e instalado en `dist/context-review-00dab7096225/preview`. Desde esa instalación pasan `tests/agents-read.ts` y `tests/team-pi.ts`: permisos de lectura, coordinador real, conservación de cambios, reanudación, proyecto sin primer commit, entrega temprana, integración y parada de ambos escritores antes de relevar. El proveedor es determinista: no son nuevas ejecuciones alojadas ni prueba de Claude real. Doctor verifica 72 archivos (70 entradas en el manifiesto más los metadatos). La preview personal continúa en `0.1.0-preview.2+hotfix.3bc9b8006cc0`.
+
 ## Decisión
 
 Conservar el candidato como experimento revisable y mantener la preview personal anterior. No convertir el paralelismo en un paso obligatorio ni bajar la calidad para mejorar la cifra de coste. Los datos apoyan disponer de lectores para contener contexto y de escritores para frentes independientes, pero no una promoción automática general con este corpus.
