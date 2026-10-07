@@ -58,6 +58,7 @@ bun run tests/agents-rpc.ts
 bun run tests/agents-pi.ts
 bun run tests/agents-store.ts
 bun run tests/agents-manager.ts
+bun run tests/agents-read.ts
 bun run tests/team-view.ts
 bun run tests/team-extension.ts
 bun run tests/team-pi.ts

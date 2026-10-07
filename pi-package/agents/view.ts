@@ -1,5 +1,5 @@
 // [UI] La actividad no equivale a aceptación: listo significa listo para integrar.
-import type { TaskRecord } from "./store.ts";
+import { taskPending, type TaskRecord } from "./store.ts";
 import { dirname, join } from "node:path";
 const labels: Record<string, string> = {
   queued: "en cola",
@@ -10,6 +10,7 @@ const labels: Record<string, string> = {
   failed: "falló",
   interrupted: "por recuperar",
   integrated: "integrado",
+  complete: "investigación terminada",
 };
 const clean = (value: string) =>
   String(value ?? "desconocido")
@@ -30,7 +31,7 @@ export function teamLines(
           ? 2
           : 3;
   const pending = tasks
-    .filter((t) => t.status !== "integrated")
+    .filter(taskPending)
     .sort((a, b) => priority(a) - priority(b));
   const shown = pending.length ? pending : tasks.slice(-2);
   const lines = [
@@ -81,9 +82,13 @@ export function taskDetail(t: TaskRecord): string {
     `Modelo: ${t.model} · ${t.thinking}`,
     `Intentos: ${t.attempt}. El consumo mostrado acumula todos los intentos.`,
     `Árbol: ${t.cwd}`,
-    `Rama: ${t.branch}`,
-    `Commit: ${t.head || "pendiente"}`,
-    t.dirty ? `Cambios pendientes:\n${t.dirty}` : "",
+    t.mode === "read"
+      ? "Solo lectura · archivos actuales del proyecto"
+      : `Rama: ${t.branch}`,
+    `${t.mode === "read" ? "HEAD observado al terminar" : "Commit"}: ${t.head || "pendiente"}`,
+    t.dirty
+      ? `${t.mode === "read" ? "Cambios del proyecto al terminar (no atribuibles al lector)" : "Cambios pendientes"}:\n${t.dirty}`
+      : "",
     t.result || "",
     t.error ? `Error: ${t.error}` : "",
   ]

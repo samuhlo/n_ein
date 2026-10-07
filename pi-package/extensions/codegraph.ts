@@ -40,7 +40,9 @@ export default function (pi: ExtensionAPI) {
     }),
     async execute(_toolCallId, params, signal, _onUpdate, ctx) {
       // Un sync fallido no invalida la consulta: el índice anterior sigue sirviendo.
-      await run(binary, ["sync", "--quiet"], ctx.cwd, signal);
+      // Los lectores comparten el árbol: no regeneran el índice del escritor.
+      if (process.env.N_EIN_ASSIGNMENT_MODE !== "read")
+        await run(binary, ["sync", "--quiet"], ctx.cwd, signal);
       const result = await run(binary, ["explore", String(params.query)], ctx.cwd, signal);
       if (result.code !== 0) {
         const reason = (result.stderr || result.stdout).trim().slice(0, 2000) || `exit ${result.code}`;

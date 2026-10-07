@@ -63,7 +63,7 @@ export default function (pi: ExtensionAPI) {
                       ? partial
                         ? `printf 'partial-${process.env.N_EIN_TEST_MARKER}' > partial.txt; sleep 30`
                         : `printf 'first-${process.env.N_EIN_TEST_MARKER}' > first.txt; git add first.txt; git commit -qm worker`
-                      : `sleep 0.8; printf done > '${file}'; git add '${file}'; git commit -qm worker`,
+                      : `sleep ${JSON.stringify(collapseSystemMessages(context).messages).includes("assignment T1:") ? 3 : 0.3}; printf done > '${file}'; git add '${file}'; git commit -qm worker`,
             }),
           ];
         else {
@@ -121,38 +121,51 @@ export default function (pi: ExtensionAPI) {
       } else if (n === 3) {
         content = [{ type: "text", text: "Waiting for worker results." }];
         reason = "stop";
-      } else if (resuming && n === 4) {
-        const dir = join(process.cwd(), ".git/n_ein/team");
-        const tasks = readdirSync(dir)
-          .filter((x) => x.endsWith(".json"))
-          .map((x) => JSON.parse(readFileSync(join(dir, x), "utf8")));
-        content = [
-          tool("nein_team", {
-            action: "resume",
-            id: tasks.find((t) => t.taskId === "T2").id,
-            message:
-              "Continue by adding resumed.txt while keeping the previous marker.",
-          }),
-        ];
-      } else if (resuming && n === 5) {
-        content = [{ type: "text", text: "Waiting for continuation." }];
-        reason = "stop";
-      } else if (n === 4 || (resuming && n === 6)) {
+      } else {
         const messages = JSON.stringify(
           collapseSystemMessages(context).messages,
         );
-        const dir = join(process.cwd(), ".git/n_ein/team");
-        const tasks = readdirSync(dir)
+        const tasks = readdirSync(join(process.cwd(), ".git/n_ein/team"))
           .filter((x) => x.endsWith(".json"))
-          .map((x) => JSON.parse(readFileSync(join(dir, x), "utf8")));
+          .map((x) =>
+            JSON.parse(
+              readFileSync(join(process.cwd(), ".git/n_ein/team", x), "utf8"),
+            ),
+          );
+        const second = tasks.find((t) => t.taskId === "T2");
         if (!messages.includes("Ready for integration."))
           throw new Error("Parent continued without receiving worker results");
-        content = tasks.map((t, i) =>
-          tool("nein_team", { action: "integrate", id: t.id }, `merge-${i}`),
-        );
-      } else {
-        content = [{ type: "text", text: "INTEGRATED" }];
-        reason = "stop";
+        if (resuming && second?.status === "ready" && second.attempt === 1) {
+          content = [
+            tool("nein_team", {
+              action: "resume",
+              id: second.id,
+              message:
+                "Continue by adding resumed.txt while keeping the previous marker.",
+            }),
+          ];
+        } else {
+          const ready = tasks.filter((t) => t.status === "ready");
+          if (ready.length)
+            content = ready.map((t, i) =>
+              tool(
+                "nein_team",
+                { action: "integrate", id: t.id },
+                `merge-${n}-${i}`,
+              ),
+            );
+          else {
+            content = [
+              {
+                type: "text",
+                text: tasks.every((t) => t.status === "integrated")
+                  ? "INTEGRATED"
+                  : "Waiting for pending worker results.",
+              },
+            ];
+            reason = "stop";
+          }
+        }
       }
       const message: any = {
         role: "assistant",

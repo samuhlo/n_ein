@@ -4,7 +4,7 @@ import { execFileSync } from "node:child_process";
 import { resolve, dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 import type { ExtensionAPI } from "@earendil-works/pi-coding-agent";
-import { TeamStore, type TaskRecord } from "./store.ts";
+import { TeamStore, taskLease, taskPending, type TaskRecord } from "./store.ts";
 export const STOP_TEAM = "n_ein:stop-team";
 export type StopTeamRequest = { origin: string; pending: Promise<void>[] };
 export function storedTeam(cwd: string): TaskRecord[] {
@@ -14,7 +14,7 @@ export function storedTeam(cwd: string): TaskRecord[] {
   } catch {
     return [];
   }
-  return store.list().filter((t) => t.status !== "integrated");
+  return store.list().filter(taskPending);
 }
 export async function stopTeam(cwd: string, events?: ExtensionAPI["events"]) {
   let store: TeamStore;
@@ -30,10 +30,10 @@ export async function stopTeam(cwd: string, events?: ExtensionAPI["events"]) {
   const host = existsSync(join(root, "bin/n-ein"))
     ? join(root, "bin/n-ein")
     : join(root, "dist/n-ein");
-  for (const t of store.list().filter((t) => t.status !== "integrated")) {
+  for (const t of store.list().filter(taskPending)) {
     if (!existsSync(t.cwd)) continue;
     try {
-      execFileSync(host, ["--worker-probe", "--project", t.cwd], {
+      execFileSync(host, ["--worker-probe", "--project", taskLease(t)], {
         stdio: "pipe",
         timeout: 3000,
         env: { ...process.env, N_EIN_LEASE_FD: "" },

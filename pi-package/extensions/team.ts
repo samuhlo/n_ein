@@ -11,7 +11,7 @@ import { truncateToWidth } from "@earendil-works/pi-tui";
 import { resolve, dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 import { TeamManager } from "../agents/manager.ts";
-import { type TaskRecord } from "../agents/store.ts";
+import { taskPending, type TaskRecord } from "../agents/store.ts";
 import { loadModels } from "../models.ts";
 import { newJobText } from "../router.ts";
 import { STOP_TEAM, type StopTeamRequest } from "../agents/runtime.ts";
@@ -22,6 +22,7 @@ export function teamReport(tasks: TaskRecord[], detailed = true) {
   return tasks.map((t) => ({
     id: t.id,
     task: t.taskId,
+    mode: t.mode || "write",
     label: t.label,
     status: t.status,
     worktree: t.cwd,
@@ -187,7 +188,7 @@ export default function (pi: ExtensionAPI) {
     };
     next.signal?.addEventListener("abort", stop, { once: true });
     try {
-      await current.wait();
+      if (!pendingResults.size) await current.waitForResult();
     } finally {
       next.signal?.removeEventListener("abort", stop);
     }
@@ -284,7 +285,7 @@ export default function (pi: ExtensionAPI) {
   });
   pi.on("before_agent_start", () => {
     if (recoveryNotice) return;
-    const pending = team?.list().filter((t) => t.status !== "integrated") ?? [];
+    const pending = team?.list().filter(taskPending) ?? [];
     if (!pending.length) return;
     recoveryNotice = true;
     return {
@@ -296,6 +297,7 @@ export default function (pi: ExtensionAPI) {
             pending.map((t) => ({
               id: t.id,
               task: t.taskId,
+              mode: t.mode || "write",
               status: t.status,
               worktree: t.cwd,
               branch: t.branch,
@@ -311,7 +313,7 @@ export default function (pi: ExtensionAPI) {
     name: "nein_team",
     label: "Equipo",
     description:
-      "Manage general-purpose Pi workers for an AUTHORIZED implementation. Delegate only substantial independent tasks with a committed common base and WORK.md. At most two workers run, each in a separate worktree. Prefer direct work for small/dependent tasks. Start takes taskId, label, full bounded assignment with acceptance and relevant context, and class. Results are ready for coordinator review and integration, NOT overall acceptance. status recovers results; resume preserves partial work and its model; supply class only for a deliberate capability change; integrate merges only an owned clean ready branch into the work branch. stop preserves changes. limit=0 means work alone. No recursive workers, remote delivery or new authorization. Results arrive automatically. You may do independent work while children run. If nothing independent remains, end your response; in single-shot mode the final boundary waits and continues with the results. Do not poll.",
+      "Manage bounded general-purpose Pi workers within the current authorized request. Use mode=read for substantial investigation that would inflate your context: read-only tools, current project files, no WORK.md or clean base required, no branch to integrate. Use mode=write (default) for substantial independent implementation units: requires authorization to implement, WORK.md and a clean committed base; each writer has its own worktree. At most two workers run. Keep small targeted work inline. Decide the split before exhaustively investigating delegated units; workers own their preparatory reading. Start takes mode, taskId (a short question ID for reading), label, bounded question or acceptance, known findings with paths, shared contracts and ownership, and class. Read results finish as complete; use their evidence, spot-check changed or consequential premises and resume for follow-ups. Writer results are ready for review and integration, NOT overall acceptance. status recovers results; resume preserves partial work and its model; supply class only for a deliberate capability change; integrate merges only an owned clean ready branch into the work branch. stop preserves changes. limit=0 means work alone. No recursive workers, remote delivery or new authorization. Results arrive automatically. You may do independent work while children run. If nothing independent remains, end your response; in single-shot mode the final boundary waits and continues with the results. Do not poll.",
     parameters: Type.Object({
       action: Type.Union(
         [
@@ -328,6 +330,9 @@ export default function (pi: ExtensionAPI) {
       tasks: Type.Optional(
         Type.Array(
           Type.Object({
+            mode: Type.Optional(
+              Type.Union([Type.Literal("read"), Type.Literal("write")]),
+            ),
             taskId: Type.String({ minLength: 1, maxLength: 120 }),
             label: Type.String({ minLength: 1, maxLength: 120 }),
             prompt: Type.String({ minLength: 1 }),
@@ -383,6 +388,7 @@ export default function (pi: ExtensionAPI) {
           const tasks = (params.tasks ?? []).map((t) => {
             const chosen = chooseModel(t.class);
             return {
+              mode: t.mode,
               taskId: t.taskId,
               label: t.label,
               prompt: t.prompt,
@@ -420,7 +426,13 @@ export default function (pi: ExtensionAPI) {
                 teamReport(
                   selected
                     ? team.list().filter((t) => selected!.includes(t.id))
-                    : team.list().filter((t) => t.status !== "integrated"),
+                    : [
+                        ...team.list().filter(taskPending),
+                        ...team
+                          .list()
+                          .filter((t) => t.mode === "read" && !taskPending(t))
+                          .slice(-2),
+                      ],
                   Boolean(selected),
                 ),
               ),
@@ -432,7 +444,7 @@ export default function (pi: ExtensionAPI) {
         let assignments: ReturnType<typeof teamReport> = [];
         try {
           assignments = teamReport(
-            team?.list().filter((t) => t.status !== "integrated") ?? [],
+            team?.list().filter(taskPending) ?? [],
             false,
           );
         } catch {}

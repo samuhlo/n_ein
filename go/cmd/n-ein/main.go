@@ -25,6 +25,7 @@ func main() {
 func run(args []string) error {
 	flags := flag.NewFlagSet("n-ein", flag.ContinueOnError)
 	worker := flags.Bool("worker-host", false, "ejecución interna con propietario")
+	workerCwd := flags.String("worker-cwd", "", "directorio de lectura del trabajador interno")
 	probe := flags.Bool("worker-probe", false, "comprobar que el árbol está libre")
 	project := flags.String("project", ".", "proyecto que mostrar")
 	root := flags.String("root", "", "raíz del paquete (desarrollo)")
@@ -36,11 +37,17 @@ func run(args []string) error {
 		return err
 	}
 	if *worker {
+		if *workerCwd == "" {
+			*workerCwd = *project
+		}
 		lease, err := workerLeaseFromEnv()
 		if err != nil {
 			return err
 		}
-		return runOwnedWorker(*project, flags.Args(), os.Stdin, os.Stdout, os.Stderr, lease)
+		return runOwnedWorker(*project, *workerCwd, flags.Args(), os.Stdin, os.Stdout, os.Stderr, lease)
+	}
+	if *workerCwd != "" {
+		return fmt.Errorf("--worker-cwd requiere --worker-host")
 	}
 	if *probe {
 		lease, err := acquireProjectLease(*project)

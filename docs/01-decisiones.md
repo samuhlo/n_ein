@@ -91,6 +91,8 @@ Fuentes inspeccionadas: [Gentle Shell, procesos, historial y continuación](http
 
 ## Recomendaciones de diseño, revisables
 
+El 7 de octubre Samu autorizó implementar y evaluar el reparto temprano y la investigación acotada con el mismo mecanismo de equipo, tras la [auditoría del piloto](../evals/results/2026-10-07-auditoria-paralelismo.md). La lectura puede delegarse sin preparar un encargo de escritura. Se mide por separado el ahorro de contexto y el avance paralelo, conservando checks e integración. Esto amplía el experimento; no demuestra ahorro ni activa por sí solo la preview personal. El estado de implementación y evaluación vive en WORK.md.
+
 - Pi como runtime inicial; n_ein como capa pequeña: un paquete Pi (skills, extensiones mínimas, prompts, tema) más un launcher que fija el hogar aislado. Pi ya ofrece el aislamiento (`PI_CODING_AGENT_DIR`) y la carga de paquetes (`pi install`, `pi -e`).
 - Pi al día y comprobado. El 5 de octubre Samu pidió no quedarse en una versión antigua: n_ein sube a cada versión nueva de Pi en cuanto sale y pasa sus comprobaciones. Cada versión de n_ein sigue declarando en `runtime.json` la versión de Pi con que se comprobó. Pi cambia su API de extensiones con frecuencia; se prefieren skills y configuración a código de extensión.
 - Formatos portables desde el primer día: `AGENTS.md`, skills en formato Agent Skills (`SKILL.md`), documento de trabajo en markdown y resumen de relevo en markdown. No se construyen adaptadores para Codex u OpenCode hasta que se usen.

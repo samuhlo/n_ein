@@ -11,7 +11,14 @@ import { memoryDirective } from "../memory.ts";
 import { langDirective, loadLang } from "../lang.ts";
 import { loadModels } from "../models.ts";
 import { startWorker } from "./rpc.ts";
-import { TeamStore, git, type Assignment, type TaskRecord } from "./store.ts";
+import {
+  TeamStore,
+  git,
+  taskLease,
+  taskFinished,
+  type Assignment,
+  type TaskRecord,
+} from "./store.ts";
 
 export type TeamOptions = {
   root: string;
@@ -71,8 +78,8 @@ export class TeamManager {
   recover() {
     for (const t of this.store.list()) {
       if (this.live.has(t.id) || this.owned.has(t.id)) continue;
-      if (existsSync(t.cwd) && !this.free(t.cwd)) {
-        if (t.status !== "integrated") this.quarantined.add(t.id);
+      if (existsSync(t.cwd) && !this.free(taskLease(t))) {
+        if (!taskFinished(t)) this.quarantined.add(t.id);
         continue;
       }
       this.quarantined.delete(t.id);
@@ -87,7 +94,7 @@ export class TeamManager {
           error:
             "Previous execution stopped; inspect preserved work and resume explicitly.",
         });
-      } else if (t.status !== "integrated" && existsSync(t.cwd)) {
+      } else if (t.mode !== "read" && !taskFinished(t) && existsSync(t.cwd)) {
         // Claude puede haber integrado el frente en el relevo. Git acredita
         // la integración; la aceptación sigue perteneciendo a WORK.md.
         try {
@@ -142,7 +149,7 @@ export class TeamManager {
       throw new Error("Workers are disabled.");
     const t = this.store.get(id);
     this.store.validateTree(t);
-    if (this.live.has(id) || !this.free(t.cwd))
+    if (this.live.has(id) || !this.free(taskLease(t)))
       throw new Error("Task still has a writer; do not replace it.");
     if (t.status === "integrated")
       throw new Error("Task already integrated; assign new work separately.");
@@ -173,13 +180,14 @@ export class TeamManager {
   }
   private launch(t: TaskRecord) {
     this.store.validateTree(t);
-    if (!this.free(t.cwd)) throw new Error("Worktree is already owned.");
+    if (!this.free(taskLease(t))) throw new Error("Worktree is already owned.");
     const { root } = this.options;
     const env: NodeJS.ProcessEnv = {
       ...process.env,
       ...this.options.env,
       N_EIN_WORKER_HOST: this.host,
       N_EIN_CHILD: "1",
+      N_EIN_ASSIGNMENT_MODE: t.mode || "write",
     };
     delete env.N_EIN_HANDOFF_SIGNAL;
     delete env.N_EIN_WORK_DOC;
@@ -221,7 +229,9 @@ export class TeamManager {
       "--mode",
       "rpc",
       "--tools",
-      "read,write,edit,bash,grep,find,ls" +
+      (t.mode === "read"
+        ? "read,grep,find,ls"
+        : "read,write,edit,bash,grep,find,ls") +
         (env.N_EIN_CODEGRAPH_BIN ? ",codegraph_explore" : ""),
       "--no-extensions",
       "--no-skills",
@@ -242,7 +252,12 @@ export class TeamManager {
       "--append-system-prompt",
       join(root, "pi-package/persona.md"),
       "--append-system-prompt",
-      join(root, "pi-package/agents/worker.md"),
+      join(
+        root,
+        t.mode === "read"
+          ? "pi-package/agents/reader.md"
+          : "pi-package/agents/worker.md",
+      ),
       "--append-system-prompt",
       langDirective(loadLang(root)),
       "--append-system-prompt",
@@ -251,12 +266,18 @@ export class TeamManager {
     const prompt = [
       `Authorized assignment ${t.taskId}: ${t.label}`,
       t.prompt,
-      `Your branch: ${t.branch}. Base: ${t.base}.`,
-      `The coordinator owns the active work document at ${document}; read it for context, do not edit either copy.`,
+      t.mode === "read"
+        ? `Read the current files in ${t.origin}. Starting HEAD: ${t.base}; local edits may exist or change during your investigation. Identify the paths and evidence you actually read.`
+        : `Your branch: ${t.branch}. Base: ${t.base}.`,
+      t.workDoc
+        ? `The coordinator owns the active work document at ${document}; read only the relevant requirements, decisions and task. Do not edit either copy.`
+        : "",
       existsSync(join(t.origin, "AGENTS.md"))
         ? `Also read project instructions at ${join(t.origin, "AGENTS.md")}; preserve those conventions in your worktree.`
         : "",
-      "Implement only this assignment, check its behaviour and commit your own changes on this branch. Report changes, checks, remaining issues and the commit. Do not merge or publish. If blocked by a product decision, return BLOCKED: with the question; do not guess.",
+      t.mode === "read"
+        ? "Investigate only the assigned question. Return concise findings, path:line evidence, uncertainties and the next useful action. Do not implement, install, run checks or create a plan. If blocked by a product decision, return BLOCKED: with the question."
+        : "Implement only this assignment, check its behaviour and commit your own changes on this branch. Report changes, checks, remaining issues and the commit. Do not merge or publish. If blocked by a product decision, return BLOCKED: with the question; do not guess.",
       instruction ? `Continuation: ${instruction}` : "",
     ].join("\n\n");
     this.store.update(t.id, {
@@ -273,6 +294,7 @@ export class TeamManager {
     const run = startWorker({
       host: this.host,
       cwd: t.cwd,
+      leaseCwd: taskLease(t),
       binary,
       args,
       prompt,
@@ -318,7 +340,9 @@ export class TeamManager {
             status:
               result.status === "ready" && /^BLOCKED:/im.test(result.text)
                 ? "blocked"
-                : result.status,
+                : result.status === "ready" && t.mode === "read"
+                  ? "complete"
+                  : result.status,
             ended: new Date().toISOString(),
             result: result.text,
             error: result.error,
@@ -342,6 +366,10 @@ export class TeamManager {
     while (this.live.size)
       await Promise.all([...this.live.values()].map((t) => t.done));
     return this.list();
+  }
+  async waitForResult() {
+    if (this.live.size)
+      await Promise.race([...this.live.values()].map((task) => task.done));
   }
   async steer(id: string, message: string) {
     const run = this.live.get(id);
@@ -382,7 +410,7 @@ export class TeamManager {
   }
   integrate(id: string) {
     const t = this.store.get(id);
-    if (!this.free(t.cwd)) throw new Error("Worker tree still owned.");
+    if (!this.free(taskLease(t))) throw new Error("Worker tree still owned.");
     const value = this.store.integrate(id);
     this.changed();
     return value;

@@ -17,6 +17,7 @@ export type WorkerResult = {
 export type WorkerOptions = {
   host: string;
   cwd: string;
+  leaseCwd?: string;
   binary: string;
   args: string[];
   prompt: string;
@@ -33,6 +34,8 @@ export function startWorker(options: WorkerOptions) {
     [
       "--worker-host",
       "--project",
+      options.leaseCwd || options.cwd,
+      "--worker-cwd",
       options.cwd,
       "--",
       options.binary,
@@ -215,7 +218,7 @@ export function startWorker(options: WorkerOptions) {
         try {
           execFileSync(
             options.host,
-            ["--worker-probe", "--project", options.cwd],
+            ["--worker-probe", "--project", options.leaseCwd || options.cwd],
             { env, cwd: options.cwd, stdio: "pipe", timeout: 500 },
           );
           free = true;

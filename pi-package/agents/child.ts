@@ -12,8 +12,9 @@ export default function (pi: ExtensionAPI) {
   if (!host || process.env.N_EIN_LEASE_FD !== "3")
     throw new Error("worker requires its owning launcher");
   const shell = ownedShell(host);
+  const reading = process.env.N_EIN_ASSIGNMENT_MODE === "read";
   pi.on("session_start", async (_event, ctx) => {
-    if (!process.env.N_EIN_CODEGRAPH_BIN) return;
+    if (reading || !process.env.N_EIN_CODEGRAPH_BIN) return;
     const script = resolve(
       dirname(fileURLToPath(import.meta.url)),
       "../../bin/n-ein-codegraph",
@@ -32,11 +33,23 @@ export default function (pi: ExtensionAPI) {
       );
     }
   });
-  pi.registerTool(
-    createBashToolDefinition(process.cwd(), { operations: shell }),
-  );
+  if (!reading)
+    pi.registerTool(
+      createBashToolDefinition(process.cwd(), { operations: shell }),
+    );
   // Los permisos del encargo no incluyen escribir en el árbol del coordinador.
   pi.on("tool_call", (event, ctx) => {
+    if (
+      reading &&
+      !["read", "grep", "find", "ls", "codegraph_explore"].includes(
+        event.toolName,
+      )
+    )
+      return {
+        block: true,
+        reason:
+          "This assignment is read-only. Return findings to the coordinator; no commands or writes are permitted.",
+      };
     if (event.toolName !== "write" && event.toolName !== "edit") return;
     const path = resolve(ctx.cwd, String((event.input as any).path ?? ""));
     let ancestor = path;

@@ -39,7 +39,13 @@ try {
   const failed = await tool.execute("q3", { query: "roto" }, new AbortController().signal, undefined, { cwd: testDir });
   assert.match(failed.content[0].text, /CODEGRAPH_FAIL :: reason: índice bloqueado/);
   assert.match(failed.content[0].text, /grep\/read como alternativa/);
+  process.env.N_EIN_ASSIGNMENT_MODE = "read";
+  writeFileSync(log, "");
+  const reading = await tool.execute("reader", { query: "current source" }, undefined, undefined, { cwd: testDir });
+  assert.match(reading.content[0].text, /current source/);
+  assert.equal(readFileSync(log, "utf8").trim(), "1|explore current source", "Readers do not regenerate a shared index");
 } finally {
+  delete process.env.N_EIN_ASSIGNMENT_MODE;
   if (previous === undefined) delete process.env.N_EIN_CODEGRAPH_BIN;
   else process.env.N_EIN_CODEGRAPH_BIN = previous;
   rmSync(testDir, { recursive: true, force: true });

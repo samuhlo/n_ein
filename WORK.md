@@ -2,6 +2,8 @@
 
 ## Objetivo
 
+Continuación autorizada el 7 de octubre: «Vamos probar a implementarla entonces, a ver si logramos que funcione y mejore nuestro agente». Implementar investigación acotada con el mismo equipo y reparto temprano; medir utilidad con calidad, tiempo y consumo total, sin activar la preview por inferencia.
+
 «Implementa todo para que funcione perfecto y ve haciendo commits, cuando acabes lo reviso.» Incorporar trabajadores generalistas visibles y recuperables al flujo conversacional, con calidad y coste y tiempo razonables.
 
 ## Autorización
@@ -35,6 +37,13 @@ Un proyecto Git y trabajadores Pi. Claude continúa secuencialmente. Sin equipos
 
 ## Tareas
 
+- [x] C1 Investigación recuperable — herramienta de equipo con encargos de lectura, sin WORK.md, rama ni árbol limpio obligatorios; herramientas sin escritura y propiedad de proceso independiente del escritor. Git y Pi reales: dos lectores con coordinador bloqueado, intentos de bash/write rechazados, cambios locales preservados, sesión y consumo recuperados.
+- [x] C2 Reparto y comprobación — investigar con quien implementa, reutilizar evidencia y evitar checks concurrentes sobre recursos generados compartidos; resultados disponibles en cuanto termine un frente también en print. Rojo/verde nativo: se retoma T2 antes de terminar T1. Instrucciones comprobadas estructuralmente; beneficio autónomo pendiente de C3.
+- [ ] C3 Piloto comparativo — versiones congeladas, caso pequeño, frentes independientes y lectura con continuación; sumar principal e hijos y preservar todos los resultados. Primera tanda acotada a 8 USD estimados y 8 ejecuciones; ampliar solo con señal útil y documentada.
+- [ ] C4 Revisión y entrega — comprobaciones pertinentes, paquete aislado y commits; explicar beneficios observados y pendientes.
+
+Fronteras de prueba: `nein_team` y Pi real (herramientas permitidas, entrega, continuación y parada), TeamStore con Git real (sin mutar el árbol de lectura), y aceptación externa del banco. Base de revisión de este corte: `e74e6c0`. Modelos alojados solo después de checks locales; presupuesto de ingeniería propuesto para esta tanda, no preferencia permanente del usuario.
+
 - [x] P Investigación y plan — fuentes y decisiones conservadas.
 - [x] P0 Transporte — RPC público, host Go, bash supervisado y pruebas de EOF/SIGKILL con Pi real.
 - [x] P1 Estado e integración — dos activos, cola, Git real, recuperación, continuidad de sesión, modelos y conflictos preservados.
@@ -44,6 +53,8 @@ Un proyecto Git y trabajadores Pi. Claude continúa secuencialmente. Sin equipos
 - [x] P4 Candidato — paquete instalado en hogar aislado y recorrido comprobado desde ese artefacto. No actualizar la preview personal al no pasar el criterio de adopción.
 
 ## Evidencia
+
+- Corte del 7 de octubre: `./scripts/check.sh` completo pasa (log `/tmp/nein-context-check.log`), incluidos Git, permisos de lectura con Pi real y proveedor determinista, recuperación, EOF/SIGKILL, resultado temprano, relevo, tipos contra Pi 1.0.2 y paquete. No confundir estas comprobaciones con rendimiento del modelo alojado.
 
 - Seis ensayos autónomos: aceptación, suites y tipos correctos; no lanzaron hijos. No atribuir sus diferencias al paralelismo.
 - Dirigido r1 detenido al descubrir la incompatibilidad de Vite bajo `.git`; datos preservados. Regresión sin modelos: rojo bajo `.git`, verde fuera con jsdom.

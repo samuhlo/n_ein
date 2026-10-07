@@ -100,6 +100,32 @@ const records = readdirSync(join(cwd, ".git/n_ein/team"))
     JSON.parse(readFileSync(join(cwd, ".git/n_ein/team", x), "utf8")),
   );
 assert.equal(records.length, 2);
+const resumedCall = out
+  .split("\n")
+  .flatMap((line) => {
+    try {
+      return [JSON.parse(line)];
+    } catch {
+      return [];
+    }
+  })
+  .find(
+    (e) =>
+      e.type === "message_end" &&
+      e.message?.role === "assistant" &&
+      e.message.content.some(
+        (c: any) =>
+          c.type === "toolCall" &&
+          c.name === "nein_team" &&
+          c.arguments.action === "resume",
+      ),
+  );
+assert.ok(
+  resumedCall.message.timestamp <
+    Date.parse(records.find((t) => t.taskId === "T1").ended),
+  "print mode must deliver the first result while the other worker still runs",
+);
+
 assert.ok(records.every((t) => t.status === "integrated"));
 assert.equal(records.find((t) => t.taskId === "T2").attempt, 2);
 assert.equal(readFileSync(join(cwd, "resumed.txt"), "utf8"), "resumed");

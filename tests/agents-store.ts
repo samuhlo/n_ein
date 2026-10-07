@@ -208,3 +208,42 @@ try {
   if (previousDoc === undefined) delete process.env.N_EIN_WORK_DOC;
   else process.env.N_EIN_WORK_DOC = previousDoc;
 }
+
+// Investigar conserva el árbol local, incluso sin guía y con cambios previos.
+const readRoot = mkdtempSync(join(tmpdir(), "nein-reader-store-"));
+const readGit = (...args: string[]) =>
+  execFileSync("git", args, { cwd: readRoot, encoding: "utf8" }).trim();
+readGit("init", "-q");
+readGit("config", "user.name", "Test");
+readGit("config", "user.email", "test@local");
+writeFileSync(join(readRoot, "source.txt"), "base");
+readGit("add", ".");
+readGit("commit", "-qm", "base");
+writeFileSync(join(readRoot, "source.txt"), "user change");
+const readStore = new TeamStore(readRoot);
+const beforeRead = readGit("status", "--porcelain");
+const beforeTrees = readGit("worktree", "list", "--porcelain");
+const research = readStore.create({
+  mode: "read",
+  taskId: "R1",
+  label: "Find the behavior",
+  prompt: "Locate source",
+  model: "test/model",
+  thinking: "medium",
+  owner: "reader",
+});
+assert.equal(research.cwd, realpathSync(readRoot));
+assert.equal(research.branch, "");
+assert.equal(research.workDoc, undefined);
+assert.equal(readGit("worktree", "list", "--porcelain"), beforeTrees);
+assert.equal(readGit("status", "--porcelain"), beforeRead);
+assert.equal(readStore.get(research.id).mode, "read");
+readStore.snapshot(research.id);
+readStore.update(research.id, {
+  status: "complete",
+  result: "source.txt:1",
+  delivered: true,
+});
+assert.throws(() => readStore.integrate(research.id), /read-only/i);
+assert.equal(readFileSync(join(readRoot, "source.txt"), "utf8"), "user change");
+console.log("read-only assignment without plan, clean tree or worktree: OK");

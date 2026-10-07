@@ -16,7 +16,7 @@ import (
 	"time"
 )
 
-func runOwnedWorker(project string, args []string, input io.Reader, output, diagnostics io.Writer, inherited *os.File) error {
+func runOwnedWorker(project, cwd string, args []string, input io.Reader, output, diagnostics io.Writer, inherited *os.File) error {
 	if len(args) == 0 {
 		return fmt.Errorf("WORKER_COMMAND: falta ejecutable")
 	}
@@ -30,7 +30,7 @@ func runOwnedWorker(project string, args []string, input io.Reader, output, diag
 	}
 	defer lease.Close()
 	cmd := exec.Command(args[0], args[1:]...)
-	cmd.Dir = project
+	cmd.Dir = cwd
 	cmd.Env = append(os.Environ(), "N_EIN_LEASE_FD=3")
 	cmd.ExtraFiles = []*os.File{lease}
 	cmd.SysProcAttr = &syscall.SysProcAttr{Setpgid: true}

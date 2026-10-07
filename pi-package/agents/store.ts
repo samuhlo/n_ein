@@ -26,8 +26,10 @@ export type TaskStatus =
   | "failed"
   | "stopped"
   | "interrupted"
+  | "complete"
   | "integrated";
 export type Assignment = {
+  mode?: "read" | "write";
   taskId: string;
   label: string;
   prompt: string;
@@ -36,6 +38,16 @@ export type Assignment = {
   owner: string;
   dependsOn?: string[];
 };
+// Los lectores bloquean su propia ejecución, nunca el árbol del escritor.
+export function taskLease(task: TaskRecord): string {
+  return task.mode === "read" ? join(task.workspaceRoot!, task.id) : task.cwd;
+}
+export function taskFinished(task: TaskRecord): boolean {
+  return task.status === "integrated" || task.status === "complete";
+}
+export function taskPending(task: TaskRecord): boolean {
+  return !taskFinished(task) || (task.status === "complete" && !task.delivered);
+}
 export type TaskRecord = Assignment & {
   schema: 1;
   id: string;
@@ -101,16 +113,22 @@ export class TeamStore {
       record.schema !== 1 ||
       record.id !== id ||
       record.origin !== this.origin ||
+      ![undefined, "read", "write"].includes(record.mode) ||
       (record.workspaceRoot !== undefined &&
         (typeof record.workspaceRoot !== "string" ||
           !isAbsolute(record.workspaceRoot))) ||
-      record.cwd !==
-        join(
-          record.workspaceRoot ?? join(this.common, "n_ein", "worktrees"),
-          id,
-        ) ||
-      record.cwd === this.origin ||
-      record.branch !== `nein/task-${id}` ||
+      (record.mode === "read"
+        ? record.cwd !== this.origin ||
+          record.branch !== "" ||
+          !record.workspaceRoot
+        : record.cwd !==
+            join(
+              record.workspaceRoot ?? join(this.common, "n_ein", "worktrees"),
+              id,
+            ) ||
+          record.cwd === this.origin ||
+          record.branch !== `nein/task-${id}`) ||
+      (record.status === "complete" && record.mode !== "read") ||
       typeof record.taskId !== "string" ||
       typeof record.base !== "string" ||
       !/^[a-f0-9]{40,64}$/.test(record.base) ||
@@ -123,6 +141,7 @@ export class TeamStore {
         "stopped",
         "interrupted",
         "integrated",
+        "complete",
       ].includes(record.status)
     )
       throw new Error(`invalid team record: ${id}; preserve it for recovery`);
@@ -172,24 +191,21 @@ export class TeamStore {
     return record;
   }
   create(input: Assignment): TaskRecord {
-    if (git(this.origin, "status", "--porcelain"))
+    const reading = input.mode === "read";
+    if (!reading && git(this.origin, "status", "--porcelain"))
       throw new Error(
         "Coordinator tree must be clean before assigning work; preserve existing changes and work directly until a committed base is available.",
       );
-    const workDoc = resolveWorkDoc(this.origin);
-    if (!workDoc)
+    const workDoc = resolveWorkDoc(this.origin) ?? undefined;
+    if (!reading && !workDoc)
       throw new Error(
         "Record the authorized tasks in WORK.md before delegating.",
       );
     const records = this.list();
-    if (
-      records.some(
-        (t) => t.taskId === input.taskId && t.status !== "integrated",
-      )
-    )
+    if (records.some((t) => t.taskId === input.taskId && taskPending(t)))
       throw new Error(`task already assigned: ${input.taskId}`);
     for (const dep of input.dependsOn ?? [])
-      if (!records.some((t) => t.id === dep && t.status === "integrated"))
+      if (!records.some((t) => t.id === dep && taskFinished(t)))
         throw new Error(
           `dependency assignment not integrated: ${dep}; use the returned assignment id`,
         );
@@ -214,8 +230,8 @@ export class TeamStore {
       );
     const id = randomUUID(),
       base = git(this.origin, "rev-parse", "HEAD"),
-      cwd = join(workspaceRoot, id),
-      branch = `nein/task-${id}`;
+      cwd = reading ? this.origin : join(workspaceRoot, id),
+      branch = reading ? "" : `nein/task-${id}`;
     mkdirSync(this.dir, { recursive: true, mode: 0o700 });
     const created = new Date().toISOString();
     const record: TaskRecord = {
@@ -240,7 +256,9 @@ export class TeamStore {
     // El registro precede a Git: incluso un fallo al crear el worktree es recuperable.
     writeAtomic(this.file(id), record);
     try {
-      git(this.origin, "worktree", "add", "-b", branch, cwd, base);
+      if (reading)
+        mkdirSync(taskLease(record), { recursive: true, mode: 0o700 });
+      else git(this.origin, "worktree", "add", "-b", branch, cwd, base);
     } catch (e) {
       this.update(id, { status: "failed", error: String(e) });
       throw e;
@@ -257,7 +275,8 @@ export class TeamStore {
           "--git-common-dir",
         ),
       ) !== this.common ||
-      git(task.cwd, "branch", "--show-current") !== task.branch
+      (task.mode !== "read" &&
+        git(task.cwd, "branch", "--show-current") !== task.branch)
     )
       throw new Error(
         "Worker worktree identity changed; inspect it before continuing.",
@@ -273,6 +292,10 @@ export class TeamStore {
   }
   integrate(id: string) {
     const t = this.get(id);
+    if (t.mode === "read")
+      throw new Error(
+        "A read-only result has no branch to integrate; use its evidence or resume with a follow-up.",
+      );
     if (t.status !== "ready")
       throw new Error("Only a ready result can be integrated.");
     this.validateTree(t);
