@@ -89,6 +89,7 @@ const readBodyMock = vi.fn()
 
 type Handler = (event: unknown) => Promise<unknown>
 const crear = (await import('../../server/api/academia/index.post')).default as Handler
+const { traducirErrorAlta } = await import('../../app/composables/use-academia-alta')
 
 const USER = { id: 'user-1', name: 'Ana', email: 'ana@example.com', emailVerified: true }
 const BODY = { nombre: 'Academia Norte', domicilio: 'Rúa Árbore 12', cp: '', municipio: 'Lugo', municipioId: '27028', provincia: 'Lugo' }
@@ -130,5 +131,19 @@ describe('S3 oculto · alta de centro', () => {
     const respuesta = await crear({}) as { academia?: Record<string, unknown> }
     expect(respuesta.academia).toMatchObject({ nombre: 'Academia Norte' })
     expect(mocks.batches).toHaveLength(1)
+  })
+})
+
+// Diagnóstico añadido el 7 de octubre: el rechazo debe llegar al consumidor
+// como regla de cuenta, no como una avería que invite a reintentar sin cambios.
+describe('S3 · explicación del rechazo en el consumidor real', () => {
+  it.each(['cursos', 'asignaciones_modulo'])('explica el rechazo por %s', async (tabla) => {
+    mocks.filas[tabla] = [tabla === 'cursos' ? CURSO_PROPIO : ASIGNACION]
+    const error = await rechazo() as { statusCode?: number; data?: unknown } | null
+    expect(error).not.toBeNull()
+    const mensaje = traducirErrorAlta({ data: { statusCode: error?.statusCode, data: error?.data } })
+    expect(mensaje).toMatch(/cuenta/i)
+    expect(mensaje).toMatch(/curso|módulo|docente/i)
+    expect(mensaje).not.toMatch(/fallo de conexión|fallo.*servidor|unos segundos/i)
   })
 })

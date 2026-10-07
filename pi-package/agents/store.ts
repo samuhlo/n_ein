@@ -83,6 +83,15 @@ export function git(cwd: string, ...args: string[]): string {
     stdio: ["ignore", "pipe", "pipe"],
   }).trim();
 }
+function observedHead(cwd: string, reading: boolean): string {
+  try {
+    return git(cwd, "rev-parse", "--verify", "--quiet", "HEAD");
+  } catch (error) {
+    // Leer no obliga a confirmar cambios. Otros errores de Git se conservan.
+    if (reading && (error as { status?: number }).status === 1) return "";
+    throw error;
+  }
+}
 function writeAtomic(path: string, value: unknown) {
   const temp = `${path}.${randomUUID()}.tmp`;
   writeFileSync(temp, JSON.stringify(value, null, 2) + "\n", {
@@ -131,7 +140,8 @@ export class TeamStore {
       (record.status === "complete" && record.mode !== "read") ||
       typeof record.taskId !== "string" ||
       typeof record.base !== "string" ||
-      !/^[a-f0-9]{40,64}$/.test(record.base) ||
+      (!(record.mode === "read" && record.base === "") &&
+        !/^[a-f0-9]{40,64}$/.test(record.base)) ||
       ![
         "queued",
         "running",
@@ -229,7 +239,7 @@ export class TeamStore {
         "Worker storage must be outside .git for build-tool compatibility.",
       );
     const id = randomUUID(),
-      base = git(this.origin, "rev-parse", "HEAD"),
+      base = observedHead(this.origin, reading),
       cwd = reading ? this.origin : join(workspaceRoot, id),
       branch = reading ? "" : `nein/task-${id}`;
     mkdirSync(this.dir, { recursive: true, mode: 0o700 });
@@ -286,7 +296,7 @@ export class TeamStore {
     const t = this.get(id);
     this.validateTree(t);
     return this.update(id, {
-      head: git(t.cwd, "rev-parse", "HEAD"),
+      head: observedHead(t.cwd, t.mode === "read"),
       dirty: git(t.cwd, "status", "--porcelain"),
     });
   }

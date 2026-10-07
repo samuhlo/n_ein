@@ -272,7 +272,7 @@ export class TeamManager {
       `Authorized assignment ${t.taskId}: ${t.label}`,
       t.prompt,
       t.mode === "read"
-        ? `Read the current files in ${t.origin}. Starting HEAD: ${t.base}; local edits may exist or change during your investigation. Identify the paths and evidence you actually read.`
+        ? `Read the current files in ${t.origin}. Assignment base: ${t.base || "no commit yet"}; local edits may exist or change during your investigation. Identify the paths and evidence you actually read.`
         : `Your branch: ${t.branch}. Base: ${t.base}.`,
       t.workDoc
         ? `The coordinator owns the active work document at ${document}; read only the relevant requirements, decisions and task. Do not edit either copy.`

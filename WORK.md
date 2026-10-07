@@ -56,6 +56,7 @@ Fronteras de prueba: `nein_team` y Pi real (herramientas permitidas, entrega, co
 
 - Corte del 7 de octubre: `./scripts/check.sh` completo pasa (log `/tmp/nein-context-check.log`), incluidos Git, permisos de lectura con Pi real y proveedor determinista, recuperación, EOF/SIGKILL, resultado temprano, relevo, tipos contra Pi 1.0.2 y paquete. No confundir estas comprobaciones con rendimiento del modelo alojado.
 - Revisión C1: se reprodujo y corrigió la contención cuando `N_EIN_WORKTREE_ROOT` vive dentro del proyecto. La identidad del lector se bloquea por directorio, sin heredar el repo contenedor. Pasan Go, lectura nativa, RPC, muerte abrupta, entrega temprana, relevo y tipos; se conserva el bloqueo del coordinador.
+- Revisión C4: lector sin primer commit reproducido en rojo y corregido, con Git y Pi reales. El banco original pasó S3, pero una comprobación posterior del error real a través del traductor de UI detectó que el directo nuevo devuelve un mensaje de avería ante un rechazo de cuenta (3/5); control anterior y paralelo pasan 5/5. Se conserva la evidencia original y se informa esta diferencia de calidad. La guía de reparto asigna comportamiento y consumidores, con exclusiones reales; la revisión sigue también el mensaje y la acción de recuperación del rechazo. Estas correcciones posteriores al banco no tienen una nueva medición con modelos.
 
 - Seis ensayos autónomos: aceptación, suites y tipos correctos; no lanzaron hijos. No atribuir sus diferencias al paralelismo.
 - Dirigido r1 detenido al descubrir la incompatibilidad de Vite bajo `.git`; datos preservados. Regresión sin modelos: rojo bajo `.git`, verde fuera con jsdom.
@@ -64,6 +65,8 @@ Fronteras de prueba: `nein_team` y Pi real (herramientas permitidas, entrega, co
 - Pi real abrió Claude con el estado de ambos frentes, pero Claude no infirió por cuota. Su mensaje indica reinicio a las 00:20 de Europe/Madrid; no se cambió de cuenta ni facturación.
 
 ## Siguiente paso
+
+Corte activo del 7 de octubre: runtime implementado en `738a3ab` y `fc1bf6f`; banco actualizado en `f58b094` y `de9aa1f`. Comparación congelada `e74e6c0` frente a `fc1bf6f`, Sol medium en todos los participantes, sin reparto forzado. Logs externos `../n_ein-bench/logs/context-{s6,s3,reading}-{before,after}-r1`. S6 antes/después ya pasa 4/4, suite y tipos; los casos S3 y lectura de seis turnos están en ejecución, con revisión semántica de respuestas pendiente. No cambiar las instrucciones dentro de esta tanda ni seleccionar solo resultados favorables. El arnés corta cada ejecución al observar 2,5 USD estimados; el lote comprueba el presupuesto acumulado de 8 USD. Una llamada en curso puede no estar aún contabilizada.
 
 Candidato `0.1.0-preview.2+hotfix.087eaa8835a9` instalado desde tarball y comprobado (71 archivos; test nativo de equipo, reanudación y relevo controlado). Código y evidencia listos para revisión. Conservar la preview `0.1.0-preview.2+hotfix.3bc9b8006cc0`. Cuando exista cuota, el único recorrido de proveedor pendiente es `bun evals/bench/conversation.ts handoff-team <id-nuevo>`; no repetir la entrevista ni el banco completo por rutina.
 

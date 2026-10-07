@@ -247,3 +247,30 @@ readStore.update(research.id, {
 assert.throws(() => readStore.integrate(research.id), /read-only/i);
 assert.equal(readFileSync(join(readRoot, "source.txt"), "utf8"), "user change");
 console.log("read-only assignment without plan, clean tree or worktree: OK");
+
+// Un lector tampoco exige fabricar el primer commit de un proyecto nuevo.
+const unbornRoot = mkdtempSync(join(tmpdir(), "nein-unborn-reader-"));
+execFileSync("git", ["init", "-q"], { cwd: unbornRoot });
+writeFileSync(join(unbornRoot, "source.txt"), "uncommitted project");
+const unbornStore = new TeamStore(unbornRoot);
+const unborn = unbornStore.create({
+  mode: "read",
+  taskId: "R0",
+  label: "Inspect new project",
+  prompt: "Read source.txt",
+  model: "test/model",
+  thinking: "medium",
+  owner: "reader",
+});
+assert.equal(unborn.base, "");
+assert.equal(unbornStore.get(unborn.id).base, "");
+assert.equal(unbornStore.snapshot(unborn.id).head, "");
+assert.match(unbornStore.get(unborn.id).dirty!, /source.txt/);
+assert.equal(
+  execFileSync("git", ["status", "--porcelain"], {
+    cwd: unbornRoot,
+    encoding: "utf8",
+  }).trim(),
+  "?? source.txt",
+);
+console.log("read-only assignment before the first project commit: OK");

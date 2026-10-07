@@ -176,3 +176,33 @@ assert.equal(git("status", "--porcelain"), original);
 console.log(
   "native coordinator tool schema, read-only child and automatic delivery: OK",
 );
+
+const fresh = join(area, "unborn");
+execFileSync("git", ["init", "-q", fresh]);
+writeFileSync(join(fresh, "source.txt"), "new project evidence");
+const freshManager = new TeamManager({
+  root,
+  cwd: fresh,
+  owner: "first-session",
+  env: manager.options.env,
+});
+const [freshTask] = freshManager.start([
+  {
+    mode: "read",
+    taskId: "R0",
+    label: "Uncommitted project",
+    prompt: "Read source.txt without changing it.",
+    model: "nein-test/reader",
+    thinking: "off",
+  },
+]);
+await freshManager.wait();
+assert.equal(freshManager.store.get(freshTask!.id).status, "complete");
+assert.equal(freshManager.store.get(freshTask!.id).head, "");
+assert.match(
+  freshManager.store.get(freshTask!.id).result!,
+  /new project evidence/,
+);
+assert.equal(existsSync(join(fresh, "forbidden.txt")), false);
+await freshManager.shutdown();
+console.log("native research before the first Git commit: OK");

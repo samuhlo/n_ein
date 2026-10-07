@@ -19,6 +19,8 @@ For **each ask**, derive one probe a careless change would fail, and run it here
 - what must **not** change: existing output, data and callers outside the ask;
 - failure paths: the error the user sees, and that nothing is half written.
 
+For an expected business refusal, trace the actual server response through the consumer's error mapper and recovery action. Exercise that path even when the implementation reuses an existing error code: an HTTP rejection can pass while the UI wrongly reports a network failure or tells the user to retry unchanged input.
+
 Report per ask: done, partial, wrong or missing, with the probe and its result. Add anything the diff does that nobody asked for.
 
 For parallel work, review the combined integration diff and the original acceptance, including interfaces between workers. Passing checks in separate worktrees is not evidence that their combination works. Compare each recorded check with the revision it exercised; repeat only what changed or lacked coverage.
