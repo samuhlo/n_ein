@@ -30,6 +30,7 @@ Referencias de evidencia:
 
 - [Calidad y continuidad](../evals/results/2026-10-06-fiabilidad.md): aceptación, recuperación, decisiones y relevo real.
 - [Flujo conversacional](../evals/results/2026-10-06-flujo-conversacional.md): diseñar, ejecutar, cambiar de encargo y retomar.
+- [Consolidación del agente único](../evals/results/2026-10-07-agente-unico.md): modo ordinario, calidad hasta el consumidor, intent con correcciones y selección de modelo.
 - [Coordinación y contexto](../evals/results/2026-10-07-coordinacion-contexto.md): ocho ejecuciones, ahorro de contexto con más espera y hueco de mensajes de error.
 - [Rumbo del agente único](09-rumbo.md): motivo del cambio y banco anterior; sus planes numéricos son históricos.
 
