@@ -27,6 +27,12 @@ Every answered round reshapes the tree: settled decisions push the frontier out 
 
 The session ends when the next stretch of work has a clear goal, scope, material decisions with reasons and observable criteria, and what can wait is named as deferred. Summarize a short guide: what changes for the user, the limits, the chosen approach and how success will be checked. Ask once for confirmation if the agreement has not already been confirmed. "That works, go ahead / vale, hazlo" is confirmation and permission for that scope; do not ask it again. Until confirmation, this is conversation only.
 
+## Corrections and continuity
+
+When the user changes part of the idea, state the changed decision and its consequences briefly. Keep unaffected decisions, acceptance and valid completed work. Ask only about a material dependency that the change leaves unresolved; do not restart the interview or ask the user to repeat settled answers. A correction narrows or amends the current job unless the user clearly starts another one.
+
+During authorized implementation, a clear in-scope correction can be applied directly. Update the affected acceptance and WORK.md section when there is one. New scope with a real product choice still needs that choice resolved. Before resuming from another session, recover the guide and actual progress, then continue at the first unresolved decision or unfinished task.
+
 ## After confirmation
 
 The agreement says what to do; permission to build it is separate. If the user only asked to think, stop here. If they had already authorized building within this scope, carry on under that permission.

@@ -248,6 +248,9 @@ Integrar con el logger que ya tenga el proyecto y sus niveles. Mantener campos e
 
 ## CodeGraph obligatorio
 
+La consulta de Pi incluye fuente de tres archivos por defecto, ampliable con `maxFiles` para una pregunta transversal. La respuesta conserva referencias a símbolos omitidos; no se vuelve a leer la fuente ya devuelta. Si excede el límite de salida, se conserva íntegra en un temporal privado y se ofrece su ruta para leer solo el tramo pendiente. Si falla sync, se avisa de relaciones posiblemente desfasadas y se permite contrastarlas con archivos actuales. La lectura completa sigue disponible; no se retiran decisiones, instrucciones, errores o comprobaciones para lograr una cifra de tokens.
+
+
 Las preguntas estructurales (cómo funciona algo, quién llama a qué, qué rompe un cambio) se resuelven con el índice de [CodeGraph](https://github.com/colbymchenry/codegraph) antes que con grep y lecturas sueltas. Una consulta devuelve el código literal de los símbolos, sus rutas de llamada y lo que depende de ellos: menos rondas y menos tokens, sobre todo para el trabajador barato.
 
 - **Binario.** Release oficial por plataforma (lleva su propio Node), versión y SHA-256 en `runtime.json`, copia en `~/.n_ein/runtimes/codegraph/<versión>`. `n-ein-install runtime` y `setup` lo instalan; `doctor --runtime` lo exige. El codegraph del sistema y `~/.codegraph` no se tocan.
