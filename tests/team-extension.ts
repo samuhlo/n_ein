@@ -14,6 +14,27 @@ mock.module("@earendil-works/pi-tui", () => ({
 const { default: registerTeam } = await import(
   "../pi-package/extensions/team.ts"
 );
+const previousTeam = process.env.N_EIN_TEAM;
+for (const flag of [undefined, "0", "true"]) {
+  if (flag === undefined) delete process.env.N_EIN_TEAM;
+  else process.env.N_EIN_TEAM = flag;
+  const tools: string[] = [];
+  registerTeam({
+    events: { on() {} },
+    on() {},
+    registerMessageRenderer() {},
+    registerCommand() {},
+    registerShortcut() {},
+    registerTool(value: any) {
+      tools.push(value.name);
+    },
+  } as any);
+  assert.ok(
+    !tools.includes("nein_team"),
+    "The ordinary session must not expose experimental delegation",
+  );
+}
+process.env.N_EIN_TEAM = "1";
 const cwd = mkdtempSync(join(tmpdir(), "nein-team-ui-"));
 execFileSync("git", ["init", "-q"], { cwd });
 const hooks: Record<string, any> = {},
@@ -72,3 +93,6 @@ assert.equal(notices, 3);
 assert.equal(menus, 0, "empty teams do not open a menu of irrelevant actions");
 await hooks.session_shutdown();
 console.log("team command, shortcut and conversational view: OK");
+
+if (previousTeam === undefined) delete process.env.N_EIN_TEAM;
+else process.env.N_EIN_TEAM = previousTeam;

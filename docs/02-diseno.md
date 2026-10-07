@@ -72,7 +72,9 @@ El retorno contiene resultado completo/parcial, cambios, comprobaciones observad
 
 Antes de aceptar el resultado, el padre contrasta el encargo, el diff y la evidencia disponible. Si el runtime registró una comprobación pertinente sobre el código actual, no se repite solo para demostrar que ocurrió. Repetir o ampliar checks cuando falte evidencia fiable, haya cambiado el código o exista una laguna de cobertura. Añadir revisión semántica independiente según las consecuencias de un error y la incertidumbre del cambio. El precio o esfuerzo del modelo no activa por sí solo otro verificador; su fiabilidad observada informa la decisión.
 
-## Trabajadores
+## Trabajadores (experimento desactivado)
+
+Tras la decisión del 7 de octubre, el recorrido ordinario no registra `nein_team` ni carga sus instrucciones. Solo `N_EIN_TEAM=1` habilita el experimento y añade `pi-package/agents/team.md` en Pi. La inspección y parada de asignaciones conservadas siguen disponibles; desactivarlo no borra estado ni abandona procesos. Los párrafos siguientes documentan esa capacidad experimental.
 
 El corte experimental del 6 de octubre incorpora hasta dos trabajadores generalistas en Pi. El coordinador conserva la conversación, las decisiones, el documento de trabajo y la aceptación; puede programar y usa las clases de modelos existentes para cada encargo delegado. No hay roles permanentes ni delegación obligatoria para abaratar. La [evaluación](../evals/results/2026-10-06-paralelismo.md) no justifica todavía su activación automática en la preview personal.
 

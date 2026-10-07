@@ -1,69 +1,28 @@
-# Decisiones pendientes y límites
+# Pendientes y límites vigentes
 
-## Estado y decisiones abiertas
+Actualizado tras decidir el 7 de octubre consolidar un agente y un modelo por encargo. WORK.md mantiene las tareas activas; esta página no es otro checklist.
 
-| Área | Estado a 1 de octubre de 2026 | Pendiente real |
-|---|---|---|
-| Pi y modelos alojados | Paquete aislado sobre Pi 1.0.2, al día con cada versión; Sol high y Luna high por suscripción. | Compatibilidad al actualizar Pi y medición de coste total en más tareas reales. |
-| Trabajador | Un mecanismo de proceso hijo Pi con cancelación y evidencias; [recorridos observados](../evals/results/2026-09-29-worker.md). | Coordinar procesos padre independientes en el mismo árbol si se necesita concurrencia. |
-| Corpus real | Samu escogió solo `planificador-didactico`; [regresión reproducida](../evals/results/2026-09-29-planificador.md) en copias aisladas. | Más casos representativos antes de generalizar ahorro o calidad. |
-| Documento y relevo | `WORK.md`, TODO y Pi↔Claude probados en TUI real; Claude muestra el TODO en su barra de estado y recibe su esfuerzo de `/nein:models`; por decisión de Samu no delega en Luna ni elige modelo. | Agentes de fondo y escritores padre independientes; Codex/OpenCode si se incorporan. |
-| Launcher e instalador | Go con Bubble Tea v2; paquete local, preview/estable, doctor, restore, cinco vistas, selector `/nein:models`, banner de arranque en Pi, hotfix local y primera release de mantenimiento desde `hotfix/model-selector`. | Actualización remota automática; Configuración del launcher muestra los ajustes y abre Pi para editarlos. |
-| Remoto, licencia propia y distribución | Repositorio público `samuhlo/n_ein` y primera preview en `.tar.gz`; sin licencia propia. | Decidir licencia y promoción estable después de uso supervisado. |
-| Modelo local | Objetivo posterior Qwen3.8-27B en 24 GB. | **Aplazado por Samu hasta que tenga la máquina**; no preparar servidor ni descargar pesos ahora. |
+## Prioridades
 
-### Runner de trabajadores
+1. **Calidad completa.** Comprobar cambios desde su entrada hasta el consumidor, mensaje y recuperación. Las suites y un juez no sustituyen la aceptación del encargo.
+2. **Exploración proporcionada.** Consultas concretas, lecturas acotadas, reutilización de hallazgos y acceso al detalle cuando sea necesario. Medir el ahorro junto con calidad y tiempo.
+3. **Conversación y modelo.** Incorporar correcciones sin reabrir decisiones resueltas; conservar permisos y pendientes. Validar selección, continuación y escalado en uso real.
+4. **Entrega.** Paquete instalado y checks antes de promover una preview. Conservar configuraciones, sesiones y credenciales; coordinar cambios concurrentes.
 
-Actualización del 6 de octubre: el experimento usa RPC público de Pi y supervisión Go. La comparación y la decisión vigente están en [el plan](10-paralelismo.md) y [la evaluación](../evals/results/2026-10-06-paralelismo.md); los candidatos de abajo son investigación inicial, no mecanismos adicionales que instalar.
+## Ya comprobado
 
+Intent y ejecución por conversación, nuevo encargo, memoria selectiva, recuperación de trabajo y relevo ordinario Pi↔Claude tienen [evidencia](../evals/results/2026-10-06-flujo-conversacional.md). El código experimental del equipo tiene pruebas de transporte y recuperación; su [banco](../evals/results/2026-10-07-coordinacion-contexto.md) no justifica adoptarlo por defecto. No reconstruir estas capacidades ni repetir bancos completos por rutina.
 
-Pi no trae subagentes en su núcleo. Antes de implementar el trabajador se consideraron estos candidatos, en orden de prueba:
+## Aplazado o fuera del alcance actual
 
-1. [Ejemplo oficial de Pi](sources/pi-installed/examples/extensions/subagent/README.md): proceso aislado por tarea, modelo por agente, coste por tarea y cancelación. Hipótesis: le faltarán tiempo de espera para herramientas largas y persistencia de resultados.
-2. `pi-subagents`, usado por Ein; fijar y evaluar su versión efectiva. Gentle Shell archivado usa su runner propio Gentle Agents, no esta dependencia como opción preferida.
-3. Runner de Ein o de Gentle Shell, solo si los anteriores no superan el contrato.
+- Equipo de agentes y relevo con equipo hacia Claude real: experimento conservado, sin promoción automática.
+- Codex/OpenCode como nuevos runtimes: solo cuando se decida incorporarlos y se compruebe cada relevo.
+- Canal estable, distribución remota y actualización automática: decisiones y verificación de entrega propias.
+- Licencia propia del proyecto: pendiente de decisión antes de ampliar su distribución.
+- Modelo local: descartado por Samu el 5 de octubre.
 
-El trabajador actual usa un único proceso hijo Pi y cumple en los ensayos el contrato relevante:
+## Riesgos a vigilar
 
-- se puede cancelar sin perder el diff;
-- devuelve el resultado parcial;
-- no corta una herramienta larga por falso silencio;
-- distingue que el agente termina de hablar de que ha terminado de verdad;
-- muestra el modelo realmente usado y distingue coste estimado, facturado o desconocido.
+Contexto excesivo; instrucciones que se contradicen; tests que no observan el comportamiento pedido; ahorro aparente por entregas incompletas; regresiones de continuación; compatibilidad accidental con el checkout; y cambios de Pi sin comprobar el paquete instalado. Un fallo auxiliar de presentación o contabilidad no debe vetar el trabajo seguro.
 
-No hacer una entrevista larga sobre estas decisiones antes de construir algo útil. Resolver por inspección y criterio las reversibles; preguntar lo que realmente cambie el producto, permisos, coste o destino.
-
-## Riesgos concretos
-
-- **Reescritura interminable:** convertir el nuevo comienzo en una plataforma. Antídoto: primera corrección real antes de UI avanzada, perfiles o proveedores propios.
-- **Copiar el arnés antiguo por piezas hasta reconstruirlo:** cada importación necesita una propiedad útil y dependencias explícitas.
-- **Skills contradictorias:** una fuente por política y adaptación deliberada. No cargar original y variante simultáneamente.
-- **Ahorro aparente:** medir preparación, caché, intentos, revisión y rescates; conservar capaz directo como comparador.
-- **Benchmark irrelevante:** LiveCodeBench no representa directamente nuestros proyectos ni tool calling.
-- **Contexto local que no cabe:** cuantización, buffers y caché cuentan; una petición inicial y perfil conservador.
-- **Falsa evidencia:** no equiparar relato del agente con resultado de proceso ni tipos con comportamiento.
-- **Compatibilidad accidental:** validar paquete instalado, no solo fuentes y mocks con dependencias de la máquina.
-- **Regresión de continuación:** transportar decisiones y conservar trabajo; caso SQLSTATE como prueba de integración.
-- **Doble mantenimiento:** Ein legado no recibe todas las novedades de n_ein.
-- **Reconstruir Ein por fuera arrastrando su interior:** launcher e instalador se conservan por sus comportamientos; si una vista necesita algo de SDD/OpenSpec para funcionar, se rediseña esa vista, no se recupera el mecanismo.
-- **Dos lenguajes:** Go y TS solo se comunican por archivos neutros. Si aparece código compartido duplicado, es señal de que falta un contrato en archivo.
-- **API de Pi cambiante:** cada línea de extensión es deuda al subir de versión; prueba rápida del paquete instalado en cada subida.
-
-## Lo que no está demostrado todavía
-
-Hay implementación, evaluaciones registradas, repositorio público y preview de paquetes; **no hay canal estable**. No se ha probado Codex u OpenCode con n_ein, ni Qwen3.8-27B en la tarjeta objetivo; el trabajo local está aplazado a petición de Samu. Los ensayos actuales no demuestran una mejora general sobre el agente nativo ni un porcentaje de ahorro estable. No hay fechas o ahorro económico comprometidos.
-
-Las propuestas de cinco entregas, 12 casos y ahorro orientativo del 20 % son instrumentos de decisión. Se pueden simplificar cuando la evidencia lo aconseje; no son otra burocracia obligatoria.
-
-## Mezcla con Matt y Gentle Shell
-
-Hechas el 2 de octubre la fase A (13 skills de Matt adaptadas) y la B (flujo ODD de Gentle en `flow.md`, solo para el agente principal). Pendiente, en este orden:
-
-1. **Prueba real** de dos o tres encargos en un proyecto de Samu, comparando con el agente a secas: ¿sigue el flujo, crea `WORK.md` cuando toca, hace un commit por tarea, usa CodeGraph y las skills? Necesita la cuota de Codex disponible.
-2. **Fase C, revisión:** hechos los tres roles con modelo propio, roles de solo lectura en paralelo y superficies impuestas por el runtime (2 de octubre). Queda decidir si la revisión gana ejes (legibilidad, fiabilidad, resiliencia, riesgo) o un juicio doble para lo de alto riesgo, a la vista de la prueba real.
-3. **Fase D, interfaz de sesión:** vista de trabajadores en vivo, visor de cambios hechos por el agente, paleta de comandos y modo de permiso amplio por sesión.
-4. Skills de Matt que faltan si se echan de menos: `teach`, `handoff`, `to-questionnaire`, `triage`/`wayfinder` si un día se usa un gestor de incidencias.
-
-## Próxima decisión útil
-
-Priorizar un recorrido de uso real y los huecos observables de la interfaz o distribución local. Elegir cualquier ampliación de la evaluación por la pregunta que responda, sin repetir trabajo ya registrado ni reabrir Qwen hasta disponer de la máquina.
+No está demostrado un porcentaje estable de ahorro ni calidad universal frente al agente nativo. Ampliar pruebas solo para una pregunta concreta, con versiones y presupuesto definidos, conservando los resultados desfavorables.

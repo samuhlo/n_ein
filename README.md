@@ -19,7 +19,7 @@ Los comandos siguen como atajos; el recorrido ordinario no requiere conocer nomb
 
 ## Equipo experimental
 
-La rama de desarrollo puede repartir un encargo autorizado entre hasta dos trabajadores generalistas, cada uno en su worktree. Puedes pedir «haz estos dos frentes en paralelo», «ver equipo», «detén el calendario» o «trabaja sin ayudantes». El principal conserva el acuerdo, puede avanzar mientras trabajan los hijos y comprueba el resultado integrado. La vista enseña estado, modelo, tiempo y consumo acumulado por tarea; `Ctrl+Shift+G` y `/nein:equipo` son atajos opcionales.
+El recorrido normal usa un agente. El equipo requiere activar expresamente `N_EIN_TEAM=1`; solo entonces puede repartir un encargo autorizado entre hasta dos trabajadores generalistas, cada uno en su worktree. Puedes pedir «haz estos dos frentes en paralelo», «ver equipo», «detén el calendario» o «trabaja sin ayudantes». El principal conserva el acuerdo, puede avanzar mientras trabajan los hijos y comprueba el resultado integrado. La vista enseña estado, modelo, tiempo y consumo acumulado por tarea; `Ctrl+Shift+G` y `/nein:equipo` son atajos opcionales.
 
 El mismo equipo permite investigar una pregunta amplia con herramientas de lectura, sin crear ramas ni exigir un documento de trabajo o un árbol limpio. El principal reutiliza los hallazgos y puede pedir una continuación. Los lectores observan los archivos actuales: si cambian durante la investigación, se comprueban las referencias afectadas. El reparto se decide antes de estudiar exhaustivamente cada frente; cada escritor investiga su parte. Los resultados llegan al terminar cada hijo, también en ejecuciones no interactivas.
 

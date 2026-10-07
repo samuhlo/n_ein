@@ -308,7 +308,7 @@ export default function (pi: ExtensionAPI) {
     };
   });
 
-  if (process.env.N_EIN_TEAM === "0") return;
+  if (process.env.N_EIN_TEAM !== "1") return;
   pi.registerTool({
     name: "nein_team",
     label: "Equipo",
