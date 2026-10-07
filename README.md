@@ -25,7 +25,7 @@ El mismo equipo permite investigar una pregunta amplia con herramientas de lectu
 
 Los resultados llegan por eventos, sin consultar al modelo para refrescar la pantalla. Al cerrar se detienen los procesos supervisados y quedan los cambios y las sesiones. El relevo conserva también ramas y archivos pendientes; «listo para integrar» no significa que el encargo esté aceptado. Se reutilizan las clases de modelos existentes y se respeta una selección manual.
 
-**Esta capacidad no se ha activado en la preview personal:** el [piloto](evals/results/2026-10-06-paralelismo.md) verifica entregas correctas con dos trabajadores, pero no demuestra una mejora de tiempo que compense el consumo añadido. El regreso completo con Claude real queda pendiente por cuota del proveedor. La implementación y el candidato se conservan para revisión.
+**Esta capacidad no se ha activado en la preview personal:** el [piloto inicial](evals/results/2026-10-06-paralelismo.md) y la [evaluación de coordinación y contexto](evals/results/2026-10-07-coordinacion-contexto.md) no justifican una promoción automática general. Delegar lectura redujo contexto y tokens, con más espera; el ensayo con escritores produjo una entrega más completa que el directo nuevo, pero gastó y tardó más. Los ensayos autónomos no usaron hijos. El regreso completo con Claude real sigue pendiente del corte anterior. La implementación y el candidato se conservan para revisión.
 
 ## Arrancar
 

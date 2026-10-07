@@ -1,0 +1,704 @@
+{
+  "date": "2026-10-07",
+  "baseline": "e74e6c04c1314388e2333df2ff90c229ef7d558e",
+  "candidate": "fc1bf6f518c030792cbf4313bf97c0b728aa0aec",
+  "model": "openai/gpt-6-sol",
+  "thinking": "medium",
+  "runs": [
+    {
+      "id": "context-s6-before-r1",
+      "directed": false,
+      "scenario": "s6",
+      "arm": "team",
+      "revision": "e74e6c0",
+      "exit": 0,
+      "maxUsd": 2.5,
+      "budgetStopped": false,
+      "modelSeconds": 103.677,
+      "turns": [
+        {
+          "seconds": 103.674,
+          "exit": 0
+        }
+      ],
+      "parentUsage": {
+        "input": 50292,
+        "output": 1357,
+        "cacheRead": 157696,
+        "cacheWrite": 0
+      },
+      "childUsage": {
+        "input": 0,
+        "output": 0,
+        "cacheRead": 0,
+        "cacheWrite": 0
+      },
+      "usage": {
+        "input": 50292,
+        "output": 1357,
+        "cacheRead": 157696,
+        "cacheWrite": 0
+      },
+      "childCount": 0,
+      "tokens": 209345,
+      "catalogUsd": 0.14569320000000002,
+      "tasks": [],
+      "secondsToAcceptedResult": 141.912,
+      "grade": {
+        "run": "context-s6-before-r1",
+        "hidden": "4/4",
+        "hiddenPass": 4,
+        "hiddenTotal": 4,
+        "suite": "3152/3156",
+        "suiteBadFiles": 0,
+        "suiteFailed": 0,
+        "typecheck": true,
+        "extra": {}
+      },
+      "acceptance": {
+        "complete": true,
+        "reasons": []
+      },
+      "parentResponses": 13,
+      "peakParentContext": 21227,
+      "lastParentContext": 18568,
+      "parentTokens": 209345,
+      "driverEvidence": "events.jsonl, native sessions, persisted team records and frozen product.tar in the run directory",
+      "reviewedDeliveryComplete": true
+    },
+    {
+      "id": "context-s6-after-r1",
+      "directed": false,
+      "scenario": "s6",
+      "arm": "team",
+      "revision": "fc1bf6f518c030792cbf4313bf97c0b728aa0aec",
+      "exit": 0,
+      "maxUsd": 2.5,
+      "budgetStopped": false,
+      "modelSeconds": 133.207,
+      "turns": [
+        {
+          "seconds": 133.207,
+          "exit": 0
+        }
+      ],
+      "parentUsage": {
+        "input": 56556,
+        "output": 1543,
+        "cacheRead": 208384,
+        "cacheWrite": 0
+      },
+      "childUsage": {
+        "input": 0,
+        "output": 0,
+        "cacheRead": 0,
+        "cacheWrite": 0
+      },
+      "usage": {
+        "input": 56556,
+        "output": 1543,
+        "cacheRead": 208384,
+        "cacheWrite": 0
+      },
+      "childCount": 0,
+      "tokens": 266483,
+      "catalogUsd": 0.17021880000000003,
+      "tasks": [],
+      "secondsToAcceptedResult": 171.407,
+      "grade": {
+        "run": "context-s6-after-r1",
+        "hidden": "4/4",
+        "hiddenPass": 4,
+        "hiddenTotal": 4,
+        "suite": "3152/3156",
+        "suiteBadFiles": 0,
+        "suiteFailed": 0,
+        "typecheck": true,
+        "extra": {}
+      },
+      "acceptance": {
+        "complete": true,
+        "reasons": []
+      },
+      "revisionProvenance": "git get-tar-commit-id of the frozen product.tar",
+      "parentResponses": 16,
+      "peakParentContext": 21931,
+      "lastParentContext": 18867,
+      "parentTokens": 266483,
+      "driverEvidence": "events.jsonl, native sessions, persisted team records and frozen product.tar in the run directory",
+      "reviewedDeliveryComplete": true
+    },
+    {
+      "id": "context-s3-after-r1",
+      "directed": false,
+      "scenario": "s3",
+      "arm": "team",
+      "revision": "fc1bf6f518c030792cbf4313bf97c0b728aa0aec",
+      "exit": 0,
+      "maxUsd": 2.5,
+      "budgetStopped": false,
+      "modelSeconds": 471.852,
+      "turns": [
+        {
+          "seconds": 471.852,
+          "exit": 0
+        }
+      ],
+      "parentUsage": {
+        "input": 126656,
+        "output": 10545,
+        "cacheRead": 1804032,
+        "cacheWrite": 0
+      },
+      "childUsage": {
+        "input": 0,
+        "output": 0,
+        "cacheRead": 0,
+        "cacheWrite": 0
+      },
+      "usage": {
+        "input": 126656,
+        "output": 10545,
+        "cacheRead": 1804032,
+        "cacheWrite": 0
+      },
+      "childCount": 0,
+      "tokens": 1941233,
+      "catalogUsd": 0.7195684000000003,
+      "tasks": [],
+      "secondsToAcceptedResult": 511.085,
+      "grade": {
+        "run": "context-s3-after-r1",
+        "hidden": "3/3",
+        "hiddenPass": 3,
+        "hiddenTotal": 3,
+        "suite": "3149/3153",
+        "suiteBadFiles": 0,
+        "suiteFailed": 0,
+        "typecheck": true,
+        "extra": {
+          "mount": {
+            "readsText": false,
+            "mounts": true,
+            "pass": "6/6",
+            "mutantsKilled": 2
+          },
+          "docFixed": true
+        }
+      },
+      "acceptance": {
+        "complete": true,
+        "reasons": []
+      },
+      "parentResponses": 47,
+      "peakParentContext": 56378,
+      "lastParentContext": 44695,
+      "parentTokens": 1941233,
+      "driverEvidence": "events.jsonl, native sessions, persisted team records and frozen product.tar in the run directory",
+      "postRunFeedbackProbe": {
+        "introducedAfterOriginalRuns": true,
+        "passed": 3,
+        "total": 5,
+        "checks": "Original three API checks plus two checks of the actual refusal through the client mapper",
+        "originalGradePreserved": true
+      },
+      "reviewedDeliveryComplete": false,
+      "deliveryFinding": "Business refusal is displayed as a connection/server failure; original 3/3 acceptance did not catch it."
+    },
+    {
+      "id": "context-s3-before-r1",
+      "directed": false,
+      "scenario": "s3",
+      "arm": "team",
+      "revision": "e74e6c04c1314388e2333df2ff90c229ef7d558e",
+      "exit": 0,
+      "maxUsd": 2.5,
+      "budgetStopped": false,
+      "modelSeconds": 558.086,
+      "turns": [
+        {
+          "seconds": 558.086,
+          "exit": 0
+        }
+      ],
+      "parentUsage": {
+        "input": 174583,
+        "output": 12442,
+        "cacheRead": 2332800,
+        "cacheWrite": 0
+      },
+      "childUsage": {
+        "input": 0,
+        "output": 0,
+        "cacheRead": 0,
+        "cacheWrite": 0
+      },
+      "usage": {
+        "input": 174583,
+        "output": 12442,
+        "cacheRead": 2332800,
+        "cacheWrite": 0
+      },
+      "childCount": 0,
+      "tokens": 2519825,
+      "catalogUsd": 0.940146,
+      "tasks": [],
+      "secondsToAcceptedResult": 595.907,
+      "grade": {
+        "run": "context-s3-before-r1",
+        "hidden": "3/3",
+        "hiddenPass": 3,
+        "hiddenTotal": 3,
+        "suite": "3151/3155",
+        "suiteBadFiles": 0,
+        "suiteFailed": 0,
+        "typecheck": true,
+        "extra": {
+          "mount": {
+            "readsText": false,
+            "mounts": true,
+            "pass": "6/6",
+            "mutantsKilled": 2
+          },
+          "docFixed": true
+        }
+      },
+      "acceptance": {
+        "complete": true,
+        "reasons": []
+      },
+      "parentResponses": 55,
+      "peakParentContext": 56962,
+      "lastParentContext": 53984,
+      "parentTokens": 2519825,
+      "driverEvidence": "events.jsonl, native sessions, persisted team records and frozen product.tar in the run directory",
+      "postRunFeedbackProbe": {
+        "introducedAfterOriginalRuns": true,
+        "passed": 5,
+        "total": 5,
+        "checks": "Original three API checks plus two checks of the actual refusal through the client mapper",
+        "originalGradePreserved": true
+      },
+      "reviewedDeliveryComplete": true
+    },
+    {
+      "id": "context-reading-before-r1",
+      "directed": false,
+      "scenario": "context",
+      "arm": "team",
+      "revision": "e74e6c04c1314388e2333df2ff90c229ef7d558e",
+      "exit": 0,
+      "maxUsd": 2.5,
+      "budgetStopped": false,
+      "modelSeconds": 362.718,
+      "turns": [
+        {
+          "seconds": 105.239,
+          "exit": 0
+        },
+        {
+          "seconds": 41.828,
+          "exit": 0
+        },
+        {
+          "seconds": 66.449,
+          "exit": 0
+        },
+        {
+          "seconds": 28.429,
+          "exit": 0
+        },
+        {
+          "seconds": 94.849,
+          "exit": 0
+        },
+        {
+          "seconds": 25.924,
+          "exit": 0
+        }
+      ],
+      "parentUsage": {
+        "input": 181060,
+        "output": 10647,
+        "cacheRead": 3143424,
+        "cacheWrite": 0
+      },
+      "childUsage": {
+        "input": 0,
+        "output": 0,
+        "cacheRead": 0,
+        "cacheWrite": 0
+      },
+      "usage": {
+        "input": 181060,
+        "output": 10647,
+        "cacheRead": 3143424,
+        "cacheWrite": 0
+      },
+      "childCount": 0,
+      "tokens": 3335131,
+      "catalogUsd": 1.0972747999999999,
+      "tasks": [],
+      "unchanged": true,
+      "answerReview": {
+        "method": "Manual source inspection against evals/reserved/context-review.md; implementation agent, not blind",
+        "criteriaPassed": [
+          1,
+          2,
+          3,
+          4,
+          5,
+          6,
+          7,
+          8,
+          9
+        ],
+        "criteriaFailed": [],
+        "notes": [
+          "Distinguishes authenticated from verified and UI visibility from server authority.",
+          "Identifies the exhaustive secondary error consumer.",
+          "Does not mistake source-text assertions for runtime verification; identifies the await-navigateTo caveat.",
+          "Covers both clients, three export formats and official-curriculum validation separately from stored-course fidelity.",
+          "Reports checks as proposed, not executed."
+        ],
+        "limits": [
+          "Not an independent blind judge or an executed browser verification."
+        ]
+      },
+      "acceptance": {
+        "complete": true,
+        "reasons": []
+      },
+      "parentResponses": 36,
+      "peakParentContext": 169375,
+      "lastParentContext": 169375,
+      "parentTokens": 3335131,
+      "driverEvidence": "events.jsonl, native sessions, persisted team records and frozen product.tar in the run directory",
+      "reviewedDeliveryComplete": true
+    },
+    {
+      "id": "context-reading-after-r1",
+      "directed": false,
+      "scenario": "context",
+      "arm": "team",
+      "revision": "fc1bf6f518c030792cbf4313bf97c0b728aa0aec",
+      "exit": 0,
+      "maxUsd": 2.5,
+      "budgetStopped": false,
+      "modelSeconds": 426.732,
+      "turns": [
+        {
+          "seconds": 126.932,
+          "exit": 0
+        },
+        {
+          "seconds": 48.335,
+          "exit": 0
+        },
+        {
+          "seconds": 95.719,
+          "exit": 0
+        },
+        {
+          "seconds": 26.955,
+          "exit": 0
+        },
+        {
+          "seconds": 102.066,
+          "exit": 0
+        },
+        {
+          "seconds": 26.725,
+          "exit": 0
+        }
+      ],
+      "parentUsage": {
+        "input": 211540,
+        "output": 11195,
+        "cacheRead": 3918976,
+        "cacheWrite": 0
+      },
+      "childUsage": {
+        "input": 0,
+        "output": 0,
+        "cacheRead": 0,
+        "cacheWrite": 0
+      },
+      "usage": {
+        "input": 211540,
+        "output": 11195,
+        "cacheRead": 3918976,
+        "cacheWrite": 0
+      },
+      "childCount": 0,
+      "tokens": 4141711,
+      "catalogUsd": 1.3188251999999998,
+      "tasks": [],
+      "unchanged": true,
+      "answerReview": {
+        "method": "Manual source inspection against evals/reserved/context-review.md; implementation agent, not blind",
+        "criteriaPassed": [
+          1,
+          2,
+          3,
+          4,
+          5,
+          6,
+          7,
+          8,
+          9
+        ],
+        "criteriaFailed": [],
+        "notes": [
+          "Separates UI restrictions from POST authority and existing rules from pending requirements.",
+          "Covers both error consumers and the exhaustive shared error map.",
+          "Preserves the distinction between text checks, a mounted component and actual Nuxt navigation.",
+          "Covers persisted-course discrepancy and official-curriculum gate as separate checks.",
+          "Proposes independent work units and integrated acceptance without writing or claiming tests executed."
+        ],
+        "limits": [
+          "Not an independent blind judge or an executed browser verification."
+        ]
+      },
+      "acceptance": {
+        "complete": true,
+        "reasons": []
+      },
+      "parentResponses": 40,
+      "peakParentContext": 188244,
+      "lastParentContext": 188244,
+      "parentTokens": 4141711,
+      "driverEvidence": "events.jsonl, native sessions, persisted team records and frozen product.tar in the run directory",
+      "reviewedDeliveryComplete": true
+    },
+    {
+      "id": "context-reading-directed-r1",
+      "directed": true,
+      "scenario": "context",
+      "arm": "team",
+      "revision": "fc1bf6f518c030792cbf4313bf97c0b728aa0aec",
+      "exit": 0,
+      "maxUsd": 2.5,
+      "budgetStopped": false,
+      "modelSeconds": 560.25,
+      "turns": [
+        {
+          "seconds": 183.011,
+          "exit": 0
+        },
+        {
+          "seconds": 76.265,
+          "exit": 0
+        },
+        {
+          "seconds": 148.619,
+          "exit": 0
+        },
+        {
+          "seconds": 26.87,
+          "exit": 0
+        },
+        {
+          "seconds": 99.664,
+          "exit": 0
+        },
+        {
+          "seconds": 25.821,
+          "exit": 0
+        }
+      ],
+      "parentUsage": {
+        "input": 119755,
+        "output": 9432,
+        "cacheRead": 2006272,
+        "cacheWrite": 0
+      },
+      "childUsage": {
+        "input": 115205,
+        "output": 5568,
+        "cacheRead": 747136,
+        "cacheWrite": 0
+      },
+      "usage": {
+        "input": 234960,
+        "output": 15000,
+        "cacheRead": 2753408,
+        "cacheWrite": 0
+      },
+      "childCount": 2,
+      "tokens": 3003368,
+      "catalogUsd": 1.1706016,
+      "tasks": [
+        {
+          "id": "c3b69ace-0ce6-4e81-a98e-2bdcb8d7cbf5",
+          "mode": "read",
+          "status": "complete",
+          "tokens": 621258,
+          "cost": 0.29855600000000004,
+          "started": "2026-10-07T08:40:00.197Z",
+          "ended": "2026-10-07T08:41:55.752Z"
+        },
+        {
+          "id": "b4f1607d-95b4-4d5a-8e5c-0276da11f552",
+          "mode": "read",
+          "status": "complete",
+          "tokens": 246651,
+          "cost": 0.13696120000000003,
+          "started": "2026-10-07T08:44:18.855Z",
+          "ended": "2026-10-07T08:45:46.637Z"
+        }
+      ],
+      "unchanged": true,
+      "answerReview": {
+        "method": "Manual source inspection against evals/reserved/context-review.md; implementation agent, not blind",
+        "criteriaPassed": [
+          1,
+          2,
+          4,
+          5,
+          6,
+          7,
+          8,
+          9
+        ],
+        "criteriaPartial": [
+          3
+        ],
+        "criteriaFailed": [],
+        "notes": [
+          "Finds the secondary use-academia-contrato.ts consumer, but unlike both direct runs does not explain that its Record is exhaustive and adding an error requires updating that map. Criterion 3 is conservatively marked partial; no false claim is identified.",
+          "Preserves the distinction between source-text checks and runtime behavior, including the navigateTo caveat.",
+          "Covers both clients, all three exports and the independent official-curriculum gate.",
+          "No files changed; no tests falsely claimed. Two reading assignments, then the coordinator investigates III directly."
+        ],
+        "limits": [
+          "Not an independent blind judge or an executed browser verification.",
+          "Partial criterion concerns precision of the impact explanation, not failure to name the consumer."
+        ]
+      },
+      "acceptance": {
+        "complete": false,
+        "reasons": [
+          "Source criterion 3 partial: secondary consumer named, exhaustiveness impact not explained"
+        ]
+      },
+      "parentResponses": 37,
+      "peakParentContext": 114528,
+      "lastParentContext": 114528,
+      "parentTokens": 2135459,
+      "driverEvidence": "events.jsonl, native sessions, persisted team records and frozen product.tar in the run directory",
+      "reviewedDeliveryComplete": false
+    },
+    {
+      "id": "context-s3-directed-r1",
+      "directed": true,
+      "scenario": "s3",
+      "arm": "team",
+      "revision": "fc1bf6f518c030792cbf4313bf97c0b728aa0aec",
+      "exit": 0,
+      "maxUsd": 2.437672,
+      "budgetStopped": false,
+      "modelSeconds": 665.763,
+      "turns": [
+        {
+          "seconds": 665.763,
+          "exit": 0
+        }
+      ],
+      "parentUsage": {
+        "input": 189609,
+        "output": 9842,
+        "cacheRead": 2026880,
+        "cacheWrite": 0
+      },
+      "childUsage": {
+        "input": 125004,
+        "output": 13414,
+        "cacheRead": 2405760,
+        "cacheWrite": 0
+      },
+      "usage": {
+        "input": 314613,
+        "output": 23256,
+        "cacheRead": 4432640,
+        "cacheWrite": 0
+      },
+      "childCount": 2,
+      "tokens": 4770509,
+      "catalogUsd": 1.7483140000000008,
+      "tasks": [
+        {
+          "id": "6630b1f9-60ff-45eb-a934-e0a4a967398b",
+          "mode": "write",
+          "status": "integrated",
+          "tokens": 2034215,
+          "cost": 0.6419644000000003,
+          "started": "2026-10-07T08:50:58.922Z",
+          "ended": "2026-10-07T08:56:31.826Z"
+        },
+        {
+          "id": "51a18c0c-c486-4e52-acee-2c228a324dff",
+          "mode": "write",
+          "status": "integrated",
+          "tokens": 509963,
+          "cost": 0.22333560000000002,
+          "started": "2026-10-07T08:50:58.937Z",
+          "ended": "2026-10-07T08:54:08.754Z"
+        }
+      ],
+      "secondsToAcceptedResult": 704.818,
+      "grade": {
+        "run": "context-s3-directed-r1",
+        "hidden": "3/3",
+        "hiddenPass": 3,
+        "hiddenTotal": 3,
+        "suite": "3155/3159",
+        "suiteBadFiles": 0,
+        "suiteFailed": 0,
+        "typecheck": true,
+        "extra": {
+          "mount": {
+            "readsText": false,
+            "mounts": true,
+            "pass": "5/5",
+            "mutantsKilled": 2
+          },
+          "docFixed": true
+        }
+      },
+      "acceptance": {
+        "complete": true,
+        "reasons": []
+      },
+      "parentResponses": 43,
+      "peakParentContext": 74715,
+      "lastParentContext": 74715,
+      "parentTokens": 2226331,
+      "driverEvidence": "events.jsonl, native sessions, persisted team records and frozen product.tar in the run directory",
+      "postRunFeedbackProbe": {
+        "introducedAfterOriginalRuns": true,
+        "passed": 5,
+        "total": 5,
+        "checks": "Original three API checks plus two checks of the actual refusal through the client mapper",
+        "originalGradePreserved": true
+      },
+      "reviewedDeliveryComplete": true
+    }
+  ],
+  "catalogUsdObserved": 7.3106420000000005,
+  "automaticAdoption": false,
+  "personalPreviewUpdated": false,
+  "limits": [
+    "One observation per condition; no statistical inference.",
+    "Both products chose direct work in all six autonomous runs.",
+    "Directed runs change the execution instruction: task distribution is prescribed.",
+    "Reading review is manual, by the implementation agent, not blind.",
+    "Catalog estimate of observed assistant usage; not subscription invoice or quota accounting.",
+    "No matched Gentle execution.",
+    "Six-request investigation is not a multi-hour implementation or compaction benchmark.",
+    "Does not include development conversation or local compute.",
+    "The new direct S3 run is not a quality-equivalent control for the parallel run: the supplementary feedback probe fails only in that direct run.",
+    "Supplementary feedback probes were introduced after inspecting the results; they are diagnostic, not preregistered acceptance."
+  ],
+  "postBenchmarkCorrection": "61cf7ba: unborn Git repositories, coherent worker ownership, end-to-end refusal review and stronger S3 acceptance. Covered locally; no new hosted benchmark of these later instructions."
+}

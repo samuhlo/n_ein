@@ -68,7 +68,7 @@ El 5 de octubre, a la vista del [banco de modelos de trabajo](../evals/results/2
 
 Tras revisar `220e60e` y `7e18da8`, Samu pidió priorizar fluidez, ayuda para diseñar, modelo adecuado, fiabilidad y coste y tiempo razonables, sin memorizar comandos; autorizó implementar los seis recorridos propuestos con «Hazlo». La conversación es la entrada ordinaria: una petición explícita de ayuda para pensar o diseñar activa intent; una petición clara va directa; «hazlo» usa el acuerdo sin reconfirmaciones rutinarias; otro encargo permite elegir modelo de nuevo; continuar recupera lo pendiente; pedir otro runtime prepara el relevo. Los comandos quedan como atajos. Spec y tareas las usa el agente cuando el encargo autorizado las necesita. Las comprobaciones y el cierre se ajustan al cambio y reutilizan evidencia vigente. Confirmar diseño sigue sin autorizar implementación por sí solo.
 
-### Paralelismo acordado el 6 de octubre — pendiente de implementar
+### Paralelismo acordado el 6 de octubre — implementación experimental
 
 Tras investigar Gentle Shell y las skills de Matt, Samu confirmó las recomendaciones con «Sí a las recomendaciones». El acuerdo amplía el diseño del 5 de octubre: permite paralelismo útil, manteniendo retirada la delegación automática por precio. El banco anterior no aisló el beneficio de dos frentes independientes en worktrees frente a ejecución secuencial.
 

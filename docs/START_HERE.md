@@ -105,6 +105,10 @@ Implementado en la rama de trabajo: dos trabajadores Pi con worktrees separados,
 
 La preview personal sigue en `0.1.0-preview.2+hotfix.3bc9b8006cc0`: el piloto no justifica activar automáticamente el paralelismo. La prueba completa con Claude real queda pendiente porque el proveedor devolvió `429 usage_limit_reached`; no sustituir esa reserva por una afirmación de éxito. El candidato `0.1.0-preview.2+hotfix.087eaa8835a9` está instalado desde tarball y comprobado en un destino aislado (71 archivos), listo para revisión y sin publicación remota.
 
+## Coordinación y contexto del 7 de octubre
+
+El corte del 7 de octubre incorpora lectores con el mismo equipo, sin exigir WORK.md, árbol limpio ni primer commit, y resultados por hijo también en print. La [evaluación de coordinación y contexto](../evals/results/2026-10-07-coordinacion-contexto.md) conserva ocho ejecuciones y una revisión adicional que detecta un rechazo mal explicado en UI pese a tests verdes. No acredita activación automática general; la preview personal sigue en `3bc9b8006cc0`. WORK.md conserva el estado de entrega y del candidato.
+
 ## Cómo leer sin agotar contexto
 
 Ruta corta: este archivo → decisiones → plan → sección de pruebas del corte actual. Abre diseño/modelos/despliegue solo para decisiones de esas áreas. Para justificar una elección, consulta el informe o fuente específica indicada en investigación.
