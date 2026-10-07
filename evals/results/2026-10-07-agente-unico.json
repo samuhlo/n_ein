@@ -1,0 +1,358 @@
+{
+  "date": "2026-10-07",
+  "branch": "fix/agente-unico-consolidado",
+  "base": "2b821ae",
+  "testedProduct": "993dc0989e3016ebe07fa14e007d482c2544b098",
+  "ordinaryWorkersEnabled": false,
+  "runs": [
+    {
+      "id": "single-agent-s3-r2",
+      "directed": false,
+      "conversation": false,
+      "automatic": true,
+      "scenario": "s3",
+      "arm": "serial",
+      "revision": "993dc0989e3016ebe07fa14e007d482c2544b098",
+      "exit": 0,
+      "maxUsd": 2.5,
+      "budgetStopped": false,
+      "modelSeconds": 686.908,
+      "turns": [
+        {
+          "prompt": "Cierra las deudas de docs/alpha-v1/estado-actual.md: que al dar de alta un centro se rechace a quien ya tiene cursos propios o módulos asignados; que tests/pages/anexo-iv-codigo.test.ts monte el componente en vez de leerlo como texto; y corrige el documento, que todavía da en gris el botón «Crear un curso» del centro.",
+          "models": [
+            "openai/gpt-6-sol:high"
+          ],
+          "toolCalls": [
+            "codegraph_explore",
+            "codegraph_explore",
+            "bash",
+            "read",
+            "read",
+            "read",
+            "read",
+            "read",
+            "read",
+            "nein_escalate",
+            "codegraph_explore",
+            "bash",
+            "read",
+            "read",
+            "read",
+            "read",
+            "read",
+            "read",
+            "read",
+            "read",
+            "read",
+            "read",
+            "read",
+            "read",
+            "read",
+            "read",
+            "bash",
+            "bash",
+            "write",
+            "read",
+            "read",
+            "read",
+            "read",
+            "read",
+            "read",
+            "edit",
+            "edit",
+            "bash",
+            "read",
+            "edit",
+            "edit",
+            "edit",
+            "edit",
+            "edit",
+            "bash",
+            "edit",
+            "bash",
+            "edit",
+            "bash",
+            "read",
+            "read",
+            "read",
+            "write",
+            "bash",
+            "edit",
+            "bash",
+            "edit",
+            "edit",
+            "edit",
+            "bash",
+            "edit",
+            "bash",
+            "edit",
+            "bash",
+            "edit",
+            "edit",
+            "bash",
+            "read",
+            "read",
+            "edit",
+            "edit",
+            "edit",
+            "bash",
+            "edit",
+            "bash",
+            "bash",
+            "read",
+            "read",
+            "bash",
+            "bash",
+            "edit",
+            "edit",
+            "bash",
+            "edit",
+            "bash",
+            "edit",
+            "bash",
+            "bash",
+            "bash",
+            "edit",
+            "bash"
+          ],
+          "seconds": 686.893,
+          "exit": 0
+        }
+      ],
+      "parentUsage": {
+        "input": 183586,
+        "output": 16393,
+        "cacheRead": 3155072,
+        "cacheWrite": 0
+      },
+      "childUsage": {
+        "input": 0,
+        "output": 0,
+        "cacheRead": 0,
+        "cacheWrite": 0
+      },
+      "usage": {
+        "input": 183586,
+        "output": 16393,
+        "cacheRead": 3155072,
+        "cacheWrite": 0
+      },
+      "childCount": 0,
+      "tokens": 3355051,
+      "catalogUsd": 1.1621163999999997,
+      "tasks": [],
+      "secondsToAcceptedResult": 727.462,
+      "grade": {
+        "run": "single-agent-s3-r2",
+        "hidden": "5/5",
+        "hiddenPass": 5,
+        "hiddenTotal": 5,
+        "suite": "3153/3157",
+        "suiteBadFiles": 0,
+        "suiteFailed": 0,
+        "typecheck": true,
+        "extra": {
+          "mount": {
+            "readsText": false,
+            "mounts": true,
+            "pass": "5/5",
+            "mutantsKilled": 2
+          },
+          "docFixed": true
+        }
+      },
+      "acceptance": {
+        "complete": true,
+        "reasons": []
+      }
+    },
+    {
+      "id": "single-agent-intent-r1",
+      "directed": false,
+      "conversation": true,
+      "automatic": true,
+      "designUnchanged": true,
+      "codePreservedOnNewJob": true,
+      "documentationCorrected": true,
+      "scenario": "s6",
+      "arm": "serial",
+      "revision": "993dc0989e3016ebe07fa14e007d482c2544b098",
+      "exit": 0,
+      "maxUsd": 2.5,
+      "budgetStopped": false,
+      "modelSeconds": 308.161,
+      "turns": [
+        {
+          "prompt": "Quiero que el panel del centro permita ver de un vistazo cuántos cursos hay. Ayúdame a diseñar cómo mostrarlo antes de cambiar código; quiero acordar la experiencia y los casos importantes. No implementes todavía.",
+          "models": [
+            "openai/gpt-6-sol:high"
+          ],
+          "toolCalls": [
+            "codegraph_explore",
+            "read",
+            "codegraph_explore",
+            "bash",
+            "codegraph_explore",
+            "bash",
+            "bash",
+            "read"
+          ],
+          "seconds": 44.33,
+          "exit": 0
+        },
+        {
+          "prompt": "El acuerdo es mantener el título Los cursos del centro y añadir el número entre paréntesis, también (0) cuando no haya cursos. Debe actualizarse al cambiar la lista. Conserva el resto del panel. Me encaja: hazlo y comprueba el comportamiento.",
+          "models": [
+            "openai/gpt-6-sol:high",
+            "openai/gpt-6-sol:medium"
+          ],
+          "toolCalls": [
+            "nein_set_task",
+            "read",
+            "codegraph_explore",
+            "bash",
+            "read",
+            "read",
+            "read",
+            "bash",
+            "edit",
+            "bash",
+            "read",
+            "edit",
+            "bash",
+            "edit",
+            "bash",
+            "bash",
+            "bash",
+            "bash"
+          ],
+          "seconds": 135.25,
+          "exit": 0
+        },
+        {
+          "prompt": "Rectifico solo el caso vacío: con cero cursos el título debe quedarse como antes, sin (0). El resto del acuerdo se mantiene. Aplica esa corrección y compruébala.",
+          "models": [
+            "openai/gpt-6-sol:medium"
+          ],
+          "toolCalls": [
+            "bash",
+            "edit",
+            "bash",
+            "edit",
+            "edit",
+            "bash",
+            "bash",
+            "bash",
+            "bash",
+            "bash"
+          ],
+          "seconds": 96.964,
+          "exit": 0
+        },
+        {
+          "prompt": "Ahora otra cosa, corrige únicamente curssos por cursos en nota-evaluacion.md. Es una errata de documentación; conserva el código tal como está.",
+          "models": [
+            "openai/gpt-6-luna:high"
+          ],
+          "toolCalls": [
+            "bash",
+            "read",
+            "edit",
+            "bash"
+          ],
+          "seconds": 31.558,
+          "exit": 0
+        }
+      ],
+      "parentUsage": {
+        "input": 127781,
+        "output": 5010,
+        "cacheRead": 812800,
+        "cacheWrite": 0
+      },
+      "childUsage": {
+        "input": 0,
+        "output": 0,
+        "cacheRead": 0,
+        "cacheWrite": 0
+      },
+      "usage": {
+        "input": 127781,
+        "output": 5010,
+        "cacheRead": 812800,
+        "cacheWrite": 0
+      },
+      "childCount": 0,
+      "tokens": 945591,
+      "catalogUsd": 0.38309250000000017,
+      "tasks": [],
+      "secondsToAcceptedResult": 346.056,
+      "grade": {
+        "run": "single-agent-intent-r1",
+        "hidden": "4/4",
+        "hiddenPass": 4,
+        "hiddenTotal": 4,
+        "suite": "3153/3157",
+        "suiteBadFiles": 0,
+        "suiteFailed": 0,
+        "typecheck": true,
+        "extra": {}
+      },
+      "acceptance": {
+        "complete": true,
+        "reasons": []
+      }
+    }
+  ],
+  "observedCatalogUsd": 1.5452089,
+  "implementationReview": {
+    "S3": "API, shared error catalog, exhaustive consumer, specific client message and pending-account recovery copy updated; real mount test and docs included. No branch changes outside isolated copy.",
+    "conversation": "Two recommended design questions; no project mutation before agreement. Authorized implementation, scoped correction without interview restart, then Luna for the independent typo with code unchanged."
+  },
+  "preparationIncident": {
+    "modelStarted": false,
+    "reason": "Disk full during initial preparation",
+    "runs": [
+      "single-agent-s3-r1",
+      "single-agent-prepare-check"
+    ],
+    "cleanupManifest": "../n_ein-bench/logs/single-agent-storage-cleanup.json",
+    "preserved": [
+      "source code",
+      "Git commits",
+      "native sessions",
+      "results",
+      "frozen product archives"
+    ]
+  },
+  "limits": [
+    "One observation per real scenario; not a performance comparison or a proof of universal routing quality.",
+    "S3 used automatic Sol high; older medium runs are not matched speed/cost controls.",
+    "Backend checks use controlled data and the corpus keeps four skipped PostgreSQL tests.",
+    "Another agent has uncommitted UI work in the original checkout; integration is pending coordination.",
+    "Catalog estimate is not subscription billing or quota accounting; excludes development conversation."
+  ],
+  "postBenchmarkFix": {
+    "commit": "ff61bb2",
+    "change": "Recover explicit class from the public native session entry before auxiliary calls after reopening",
+    "verified": "Router regression, native recorded session data, ordinary Pi and strict SDK types; no new hosted run"
+  },
+  "artifact": {
+    "version": "0.1.0-preview.2+hotfix.fd2699527ea0",
+    "commit": "fd2699527ea0fa7a0b4a4966f79272b39c5a7c62",
+    "archive": "dist/releases/n-ein-0.1.0-preview.2+hotfix.fd2699527ea0-darwin-arm64.tar.gz",
+    "sha256": "9d22c66c338c59836a0b18e02a8a7583ebade82f1abdc0ffd8875741cd92e426",
+    "installedFromArchive": "dist/single-review-fd2699527ea0/preview",
+    "manifestEntries": 71,
+    "doctorVerifiedFiles": 73,
+    "ordinaryNativeTestsPassed": true,
+    "experimentalRecoveryRegressionPassed": true,
+    "personalInstallationUpdated": false
+  },
+  "integration": {
+    "status": "pending",
+    "reason": "User confirmed another agent is still working on uncommitted UI changes in the original checkout; isolated branch is ready",
+    "branch": "fix/agente-unico-consolidado"
+  }
+}

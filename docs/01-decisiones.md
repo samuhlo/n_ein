@@ -6,6 +6,14 @@ n_ein ayuda a Samu a terminar cambios correctos, revisables y explicados con poc
 
 La fuerza debe estar en elegir el trabajo adecuado, dar contexto suficiente, ejecutar y comprobar. La complejidad solo se incorpora cuando evita un fallo o mejora un resultado observado.
 
+## Decisión vigente: consolidar el agente único (7 de octubre)
+
+Tras el banco de coordinación, Samu confirmó cerrar el experimento y mantener un agente y un modelo por encargo en el recorrido ordinario. Autorizó implementar las mejoras de calidad, contexto, intent/correcciones y selector, comprobarlas en encargos reales y preparar una preview. El equipo queda fuera del recorrido por defecto: `N_EIN_TEAM=1` es una activación experimental explícita, no una recomendación automática del agente.
+
+Se conservan las mejoras de comprobación de consumidores y mensajes de error. La continuidad ordinaria Pi↔Claude ya tiene evidencia; el ensayo pendiente con equipos queda aplazado junto con ese experimento. No reabrirlo como requisito de esta entrega. Estado operativo en WORK.md.
+
+Las secciones cronológicas siguientes registran cómo se llegó aquí. Las propuestas antiguas de roles baratos, modelo local o paralelismo ordinario no son instrucciones vigentes.
+
 ## Acordado explícitamente
 
 | Decisión | Consecuencia |

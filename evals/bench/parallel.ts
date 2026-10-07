@@ -11,6 +11,7 @@ import {
   readFileSync,
   writeFileSync,
   readdirSync,
+  statfsSync,
 } from "node:fs";
 import { homedir } from "node:os";
 import { join, resolve } from "node:path";
@@ -18,6 +19,12 @@ import { acceptanceStatus } from "./acceptance.ts";
 const repo = resolve(import.meta.dir, "../..");
 const [scenario, arm, id, mode] = process.argv.slice(2);
 const directed = mode === "directed";
+const conversation = mode === "conversation";
+const automatic = process.env.N_EIN_EVAL_ROUTING === "auto";
+if (![undefined, "directed", "conversation"].includes(mode))
+  throw new Error("Unknown run mode");
+if (conversation && scenario !== "s6")
+  throw new Error("Conversation mode uses s6 acceptance");
 if (
   !["s6", "s2", "s3", "context"].includes(scenario) ||
   !["serial", "team"].includes(arm) ||
@@ -33,6 +40,11 @@ const project = join(bench, "copies", id),
   product = join(bench, "products", id);
 if (existsSync(project) || existsSync(log) || existsSync(product))
   throw new Error("Run already exists; preserve it.");
+const storage = statfsSync(bench);
+if (storage.bavail * storage.bsize < 512 * 1024 * 1024)
+  throw new Error(
+    "Evaluation preparation needs at least 512 MiB free; no model was started.",
+  );
 mkdirSync(log, { recursive: true });
 mkdirSync(product, { recursive: true });
 execFileSync("cp", ["-c", "-R", join(bench, "bases/4d66007"), project]);
@@ -59,6 +71,26 @@ execFileSync(
   ["build", "-o", join(product, "dist/n-ein"), "./cmd/n-ein"],
   { cwd: join(product, "go"), env: { ...process.env, GOTOOLCHAIN: "local" } },
 );
+if (conversation) {
+  writeFileSync(
+    join(project, "nota-evaluacion.md"),
+    "# Nota de prueba\n\nRecuento de curssos del centro.\n",
+  );
+  execFileSync("git", ["add", "nota-evaluacion.md"], { cwd: project });
+  execFileSync(
+    "git",
+    [
+      "-c",
+      "user.name=n_ein evaluation",
+      "-c",
+      "user.email=eval@n-ein.invalid",
+      "commit",
+      "-qm",
+      "test: seed an independent documentation correction",
+    ],
+    { cwd: project },
+  );
+}
 const base = execFileSync("git", ["rev-parse", "HEAD"], {
   cwd: project,
   encoding: "utf8",
@@ -77,17 +109,27 @@ const prompt = {
   s2: "Haz que el Anexo III lea la planificación guardada del curso en el servidor en vez del cuerpo que manda el cliente, y que el cliente deje de mandarla cuando hay curso.",
   s3: "Cierra las deudas de docs/alpha-v1/estado-actual.md: que al dar de alta un centro se rechace a quien ya tiene cursos propios o módulos asignados; que tests/pages/anexo-iv-codigo.test.ts monte el componente en vez de leerlo como texto; y corrige el documento, que todavía da en gris el botón «Crear un curso» del centro.",
 }[scenario]!;
-const prompts = (scenario === "context" ? contextPrompts : [prompt]).map(
-  (value, index) => {
-    if (!directed || arm !== "team" || index !== 0) return value;
-    return (
-      value +
-      (scenario === "context"
-        ? " En este ensayo usa un ayudante de solo lectura para la investigación amplia. Tú sintetiza el resultado y responde las preguntas posteriores reutilizando sus hallazgos; reserva otro encargo de lectura para un ámbito distinto que requiera nueva investigación. No implementes ni crees documentos."
-        : " En este ensayo usa dos trabajadores en paralelo para T1 (alta de centro y sus consumidores) y T2 (test montado), tras fijar el contrato y dejar la base limpia; tú conserva WORK.md, la documentación, la integración y la comprobación del conjunto. No publiques.")
-    );
-  },
-);
+const conversationPrompts = [
+  "Quiero que el panel del centro permita ver de un vistazo cuántos cursos hay. Ayúdame a diseñar cómo mostrarlo antes de cambiar código; quiero acordar la experiencia y los casos importantes. No implementes todavía.",
+  "El acuerdo es mantener el título Los cursos del centro y añadir el número entre paréntesis, también (0) cuando no haya cursos. Debe actualizarse al cambiar la lista. Conserva el resto del panel. Me encaja: hazlo y comprueba el comportamiento.",
+  "Rectifico solo el caso vacío: con cero cursos el título debe quedarse como antes, sin (0). El resto del acuerdo se mantiene. Aplica esa corrección y compruébala.",
+  "Ahora otra cosa, corrige únicamente curssos por cursos en nota-evaluacion.md. Es una errata de documentación; conserva el código tal como está.",
+];
+const prompts = (
+  conversation
+    ? conversationPrompts
+    : scenario === "context"
+      ? contextPrompts
+      : [prompt]
+).map((value, index) => {
+  if (!directed || arm !== "team" || index !== 0) return value;
+  return (
+    value +
+    (scenario === "context"
+      ? " En este ensayo usa un ayudante de solo lectura para la investigación amplia. Tú sintetiza el resultado y responde las preguntas posteriores reutilizando sus hallazgos; reserva otro encargo de lectura para un ámbito distinto que requiera nueva investigación. No implementes ni crees documentos."
+      : " En este ensayo usa dos trabajadores en paralelo para T1 (alta de centro y sus consumidores) y T2 (test montado), tras fijar el contrato y dejar la base limpia; tú conserva WORK.md, la documentación, la integración y la comprobación del conjunto. No publiques.")
+  );
+});
 if (scenario === "context")
   writeFileSync(
     join(project, "notes-local.txt"),
@@ -101,17 +143,24 @@ const beforeDiff = execFileSync("git", ["diff", "HEAD"], {
   cwd: project,
   encoding: "utf8",
 });
-const model = { model: "openai/gpt-6-sol", thinking: "medium" };
+const model = automatic
+  ? { model: "nein/auto", thinking: "medium" }
+  : { model: "openai/gpt-6-sol", thinking: "medium" };
+const routing = automatic
+  ? {
+      mecanico: { model: "openai/gpt-6-luna", thinking: "high" },
+      ordinario: { model: "openai/gpt-6-sol", thinking: "medium" },
+      riesgo: { model: "openai/gpt-6-sol", thinking: "high" },
+      abierto: { model: "openai/gpt-6-sol", thinking: "high" },
+    }
+  : { mecanico: model, ordinario: model, riesgo: model, abierto: model };
 writeFileSync(
   join(log, "models.json"),
   JSON.stringify({
     schema: 1,
     agents: {
       principal: model,
-      mecanico: model,
-      ordinario: model,
-      riesgo: model,
-      abierto: model,
+      ...routing,
     },
   }),
 );
@@ -127,6 +176,8 @@ writeFileSync(
     arm,
     sourceCommit: revision,
     directed,
+    conversation,
+    routing,
     base_rev: base,
     model,
     prompts,
@@ -155,10 +206,37 @@ let meteredParentUsd = 0,
   budgetStopped = false;
 const maxUsd = Number(process.env.N_EIN_EVAL_MAX_USD || "2.5");
 if (!Number.isFinite(maxUsd) || maxUsd <= 0) throw new Error("invalid budget");
-const turns: { prompt: string; seconds: number; exit: number | null }[] = [];
+const turns: {
+  prompt: string;
+  seconds: number;
+  exit: number | null;
+  models: string[];
+  toolCalls: string[];
+  text: string;
+}[] = [];
+let designUnchanged: boolean | undefined,
+  codeBeforeTypo: string | undefined,
+  codeAfterTypo: string | undefined;
+const fingerprint = () =>
+  ["rev-parse HEAD", "status --porcelain", "diff HEAD"]
+    .map((args) =>
+      execFileSync("git", args.split(" "), { cwd: project, encoding: "utf8" }),
+    )
+    .join("\n");
+const initialFingerprint = fingerprint();
+const codeDiff = () =>
+  execFileSync(
+    "git",
+    ["diff", base, "--", "app", "server", "shared", "tests"],
+    { cwd: project, encoding: "utf8" },
+  );
 let exit: number | null = null;
 for (const currentPrompt of prompts) {
   const turnStarted = Date.now();
+  const turnModels = new Set<string>(),
+    turnTools: string[] = [],
+    turnTexts: string[] = [];
+  if (conversation && turns.length === 3) codeBeforeTypo = codeDiff();
   const child = spawn(
     join(product, "dist/n-ein"),
     [
@@ -190,8 +268,16 @@ for (const currentPrompt of prompts) {
       meterBuffer = meterBuffer.slice(end + 1);
       try {
         const e = JSON.parse(line);
-        if (e.type === "message_end" && e.message?.role === "assistant")
+        if (e.type === "message_end" && e.message?.role === "assistant") {
           meteredParentUsd += e.message.usage?.cost?.total || 0;
+          turnModels.add(
+            `${e.message.provider}/${e.message.model}:${e.message.thinkingLevel || "unknown"}`,
+          );
+          for (const c of e.message.content ?? []) {
+            if (c.type === "toolCall") turnTools.push(c.name);
+            if (c.type === "text") turnTexts.push(c.text);
+          }
+        }
       } catch {}
     }
   });
@@ -227,9 +313,17 @@ for (const currentPrompt of prompts) {
   clearInterval(spending);
   turns.push({
     prompt: currentPrompt,
+    models: [...turnModels],
+    toolCalls: turnTools,
+    text: turnTexts.join("\n"),
     seconds: (Date.now() - turnStarted) / 1000,
     exit,
   });
+  if (conversation && turns.length === 1) {
+    designUnchanged = fingerprint() === initialFingerprint;
+    if (!designUnchanged) break;
+  }
+  if (conversation && turns.length === 4) codeAfterTypo = codeDiff();
   if (exit !== 0 || budgetStopped) break;
 }
 await out.end();
@@ -291,6 +385,16 @@ writeFileSync(
 const summary = {
   id,
   directed,
+  conversation,
+  automatic,
+  designUnchanged,
+  codePreservedOnNewJob: conversation
+    ? codeBeforeTypo !== undefined && codeBeforeTypo === codeAfterTypo
+    : undefined,
+  documentationCorrected: conversation
+    ? readFileSync(join(project, "nota-evaluacion.md"), "utf8") ===
+      "# Nota de prueba\n\nRecuento de cursos del centro.\n"
+    : undefined,
   scenario,
   arm,
   revision,
@@ -390,6 +494,30 @@ graded.stderr.on("data", () => {});
 await new Promise<void>((r) => graded.once("close", () => r()));
 const grade = JSON.parse(readFileSync(join(log, "grade.json"), "utf8"));
 const acceptance = acceptanceStatus(scenario, grade);
+if (conversation) {
+  const reasons = [
+    ...(!designUnchanged
+      ? ["Design changed the project before authorization"]
+      : []),
+    ...(!summary.codePreservedOnNewJob
+      ? ["Documentation job changed or did not preserve code"]
+      : []),
+    ...(!summary.documentationCorrected
+      ? ["Documentation correction incomplete"]
+      : []),
+    ...(turns.length !== 4 ? ["Conversation incomplete"] : []),
+    ...(automatic &&
+    !turns[3]?.models.every((m) => m.startsWith("openai/gpt-6-luna:"))
+      ? ["New mechanical job did not select Luna"]
+      : []),
+  ];
+  acceptance.reasons.push(...reasons);
+  acceptance.complete &&= reasons.length === 0;
+}
+if (automatic && tasks.length) {
+  acceptance.complete = false;
+  acceptance.reasons.push("Ordinary route delegated work");
+}
 writeFileSync(
   join(log, "parallel.json"),
   JSON.stringify(

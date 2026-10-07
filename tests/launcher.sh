@@ -81,6 +81,11 @@ $N_EIN_TEST_PI_THINKING
 cambia este texto
 EOF
 diff -u "$test_dir/expected" "$N_EIN_CAPTURE"
+! rg -q 'pi-package/agents/team.md' "$N_EIN_CAPTURE"
+N_EIN_TEAM=1 "$repo_dir/bin/n-ein-dev" --print 'experimento explícito'
+rg -Fxq "$repo_dir/pi-package/agents/team.md" "$N_EIN_CAPTURE"
+N_EIN_TEAM=0 "$repo_dir/bin/n-ein-dev" --print 'trabajo directo'
+! rg -q 'pi-package/agents/team.md' "$N_EIN_CAPTURE"
 
 cat > "$N_EIN_MODELS_FILE" <<'MODELS'
 {"schema":1,"agents":{"principal":{"model":"openai-codex/gpt-6-luna","thinking":"medium"}}}

@@ -41,8 +41,6 @@ Add the tasks under the tasks section in dependency order, blockers first, with 
 
 Criteria are plain sub-bullets so the TODO counts only tasks. No file paths or snippets in tasks (they go stale), except a prototype snippet that pins a decision, trimmed and marked. The work then follows the **frontier**: any task whose blockers are done.
 
-## Independent assignments
+## Execute the ready tasks
 
-When two substantial pieces can progress independently, launch them together once acceptance, the shared contract and ownership are clear. Leave detailed preparatory reading with the writer; pass known findings instead of repeating exploration. Keep the same WORK.md and stable task references; use distinct assignment IDs for each worker. Commit the agreed base first. Give each worker its acceptance, shared contract, relevant code paths and ownership boundaries. Keep shared files with one owner, and integrate results before checking off the enclosing delivery. Workers do not maintain another plan. If coordination or preparation is likely to outweigh the work, execute directly. A separate read-only investigation uses the same team tool without requiring a plan or worktree; reserve it for a substantial named uncertainty, not routine preparation of every task.
-
-Own a coherent behavior and its affected consumers, with explicit exclusions for other owners. Starting paths are navigation hints, not an exhaustive list of every file the worker may need. Resolve genuine overlaps; do not make the coordinator finish routine consumers merely because the initial map missed them.
+Execute the ready tasks directly, respecting dependencies. Keep each task coherent with its affected consumers, tests and documentation; a list of starting paths is not permission to omit necessary consumers. Keep the current model while the job continues, unless new risk requires escalation. The ordinary workflow does not use subagents.

@@ -23,7 +23,7 @@ For an expected business refusal, trace the actual server response through the c
 
 Report per ask: done, partial, wrong or missing, with the probe and its result. Add anything the diff does that nobody asked for.
 
-For parallel work, review the combined integration diff and the original acceptance, including interfaces between workers. Passing checks in separate worktrees is not evidence that their combination works. Compare each recorded check with the revision it exercised; repeat only what changed or lacked coverage.
+Compare each recorded check with the revision, dependencies and environment it exercised; repeat only what changed or lacked coverage.
 
 ## 3. Standards
 

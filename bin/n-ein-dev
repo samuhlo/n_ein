@@ -20,6 +20,9 @@ IFS=$'\t' read -r expected_pi_version main_model main_thinking _claude_effort <<
 lang_directive="$(bun "$repo_dir/pi-package/lang.ts" "$repo_dir" "$channel")" || exit 64
 memory_directive="$(bun "$repo_dir/pi-package/memory.ts")"
 flow_args=(--append-system-prompt "$repo_dir/pi-package/pi-only.md" --append-system-prompt "$repo_dir/pi-package/flow.md")
+if [[ "${N_EIN_TEAM:-0}" == 1 ]]; then
+  flow_args+=(--append-system-prompt "$repo_dir/pi-package/agents/team.md")
+fi
 n_ein_home="${N_EIN_HOME:-$HOME/.n_ein}"
 agent_dir="${N_EIN_AGENT_DIR:-$n_ein_home/$channel/pi-agent}"
 pi_bin="${N_EIN_PI_BIN:-$n_ein_home/runtimes/pi/$expected_pi_version/bin/pi}"

@@ -6,6 +6,10 @@ Este plan sustituye la parte de migración in situ del informe original. La inve
 
 El corte posterior de agentes en paralelo se concreta en [10-paralelismo.md](10-paralelismo.md), con su estado y evidencia en `WORK.md`. No reintroducir los roles económicos de esta propuesta histórica.
 
+## Consolidación vigente del 7 de octubre
+
+Tras cerrar el experimento de equipo, el encargo activo consolida un agente, calidad de extremo a extremo, exploración acotada, intent con correcciones y selección de modelo. Las entregas y aceptación vigentes están en WORK.md. El paralelismo requiere opt-in experimental; no es un paso del recorrido ordinario. Los apartados siguientes conservan el plan inicial como referencia histórica.
+
 ## Preparación acotada
 
 Inspeccionar la carpeta actual y las instrucciones vigentes. Fijar versiones de Pi y dependencias realmente utilizadas; la instalada al preparar este paquete era `@earendil-works/pi-coding-agent` 0.87.1. Usar el mecanismo nativo de Pi: un paquete local (`skills/`, `extensions/`, `prompts/`, tema) cargado en un hogar propio con `PI_CODING_AGENT_DIR`, sin tocar Pi vanilla ni Ein (`~/.pi-ein`). Tener en cuenta la confianza de proyecto de Pi: sin ella no carga la configuración `.pi` del proyecto.

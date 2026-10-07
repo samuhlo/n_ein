@@ -61,3 +61,7 @@ test("calculateTotal sums line items", () => {
   expect(calculateTotal([{ price: 10 }, { price: 5 }])).toBe(15);
 });
 ```
+
+## Expected refusals cross boundaries
+
+A rejected operation may be correct at the HTTP boundary and wrong in its consumer. Use the actual error shape from the handler through the real client mapper or component: a refusal because an account is ineligible must explain that rule and a valid recovery action, rather than claim a network failure or invite the same doomed retry. Exercise a still-eligible case too. Reusing an existing code does not prove that its existing message has the right meaning. Mock external effects, not the mapping behavior this test needs to observe.
