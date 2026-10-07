@@ -11,6 +11,7 @@ import {
   readFileSync,
   writeFileSync,
   readdirSync,
+  statfsSync,
 } from "node:fs";
 import { homedir } from "node:os";
 import { join, resolve } from "node:path";
@@ -39,6 +40,11 @@ const project = join(bench, "copies", id),
   product = join(bench, "products", id);
 if (existsSync(project) || existsSync(log) || existsSync(product))
   throw new Error("Run already exists; preserve it.");
+const storage = statfsSync(bench);
+if (storage.bavail * storage.bsize < 512 * 1024 * 1024)
+  throw new Error(
+    "Evaluation preparation needs at least 512 MiB free; no model was started.",
+  );
 mkdirSync(log, { recursive: true });
 mkdirSync(product, { recursive: true });
 execFileSync("cp", ["-c", "-R", join(bench, "bases/4d66007"), project]);

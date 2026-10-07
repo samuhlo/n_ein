@@ -9,10 +9,21 @@ set -uo pipefail
 
 bench="${N_EIN_BENCH:-/Users/samu/Documents/01_Proyectos/n_ein-bench}"
 repo="${N_EIN_REPO:-/Users/samu/Documents/01_Proyectos/n_ein}"
-run="$1"; log="$bench/logs/$run"; src="$bench/copies/$run"; g="$bench/copies/$run-grade"
+run="$1"
+if [[ ! "$run" =~ ^[a-zA-Z0-9_-]+$ ]]; then
+  printf '[ERR] :: RUN_INVALID :: use an evaluation identifier\n' >&2
+  exit 64
+fi
+log="$bench/logs/$run"; src="$bench/copies/$run"; g="$bench/copies/$run-grade"
 scenario="$(bun -e 'console.log(JSON.parse(await Bun.file(process.argv[1]).text()).scenario)' "$log/meta.json")"
 base_rev="$(bun -e 'console.log(JSON.parse(await Bun.file(process.argv[1]).text()).base_rev)' "$log/meta.json")"
-rm -rf "$g"; cp -c -R "$src" "$g"; cd "$g"
+rm -rf "$g"; cp -c -R "$src" "$g" || exit 1
+cd "$g" || exit 1
+# Solo dependencias generadas de esta copia desechable; resultados y código quedan.
+cleanup_grade() {
+  if [[ "${N_EIN_KEEP_GRADE_DEPS:-0}" != 1 ]]; then rm -rf "$g/node_modules" "$g/.nuxt"; fi
+}
+trap cleanup_grade EXIT
 
 # vitest con reporter JSON: devuelve "pasados total" de los archivos pedidos.
 vt() {

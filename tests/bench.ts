@@ -1,3 +1,5 @@
+import {spawnSync} from "node:child_process";
+import {resolve} from "node:path";
 import { strict as assert } from "node:assert";
 import { acceptanceStatus } from "../evals/bench/acceptance.ts";
 
@@ -14,3 +16,7 @@ assert.equal(acceptanceStatus("s5", { ...green, extra: { codeFilesTouched: 1 } }
 assert.equal(acceptanceStatus("s5", { ...green, extra: { codeFilesTouched: 0 } }).complete, true);
 assert.equal(acceptanceStatus("unknown", green).complete, false);
 console.log("bench: aceptación completa distingue omisiones, mutantes, suite, tipos y evidencia ausente");
+
+const invalid = spawnSync("bash", [resolve("evals/bench/grade.sh"), "../outside"], {encoding:"utf8"});
+assert.equal(invalid.status,64);
+assert.match(invalid.stderr,/RUN_INVALID/);
