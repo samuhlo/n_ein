@@ -213,4 +213,5 @@ const quietResult = await startWorker({
   onEvent: () => {},
 }).done;
 assert.equal(quietResult.status, "ready");
-assert.match(quietResult.text, /Inspect the preserved branch/);
+assert.match(quietResult.text, /Inspect.*assignment/);
+assert.match(quietResult.text, /session evidence/);

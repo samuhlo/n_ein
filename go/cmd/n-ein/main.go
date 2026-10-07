@@ -46,15 +46,21 @@ func run(args []string) error {
 		}
 		return runOwnedWorker(*project, *workerCwd, flags.Args(), os.Stdin, os.Stdout, os.Stderr, lease)
 	}
-	if *workerCwd != "" {
-		return fmt.Errorf("--worker-cwd requiere --worker-host")
-	}
 	if *probe {
-		lease, err := acquireProjectLease(*project)
+		var lease *os.File
+		var err error
+		if *workerCwd != "" && *workerCwd != *project {
+			lease, err = acquireDirectoryLease(*project)
+		} else {
+			lease, err = acquireProjectLease(*project)
+		}
 		if err != nil {
 			return err
 		}
 		return lease.Close()
+	}
+	if *workerCwd != "" {
+		return fmt.Errorf("--worker-cwd requiere --worker-host o --worker-probe")
 	}
 	if flags.NArg() != 0 && *runtime == "" {
 		return fmt.Errorf("argumentos inesperados: %v", flags.Args())

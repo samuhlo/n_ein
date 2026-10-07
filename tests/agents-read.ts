@@ -33,7 +33,7 @@ writeFileSync(
   `#!/bin/sh\nexec ${quote(pi)} "$@" -e ${quote(resolve("tests/fixtures/reader-provider.ts"))}\n`,
   { mode: 0o755 },
 );
-process.env.N_EIN_WORKTREE_ROOT = join(area, "leases");
+process.env.N_EIN_WORKTREE_ROOT = join(cwd, ".readers");
 const manager = new TeamManager({
   root,
   cwd,
@@ -82,7 +82,7 @@ try {
       JSON.stringify(response.tools),
     );
     assert.match(result.result!, /local user evidence/);
-    assert.equal(manager.free(taskLease(result)), true);
+    assert.equal(manager.free(taskLease(result), result.cwd), true);
     assert.throws(() => manager.integrate(task.id), /read-only/i);
   }
   const restored = new TeamManager({

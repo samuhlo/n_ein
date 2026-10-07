@@ -55,6 +55,7 @@ Fronteras de prueba: `nein_team` y Pi real (herramientas permitidas, entrega, co
 ## Evidencia
 
 - Corte del 7 de octubre: `./scripts/check.sh` completo pasa (log `/tmp/nein-context-check.log`), incluidos Git, permisos de lectura con Pi real y proveedor determinista, recuperación, EOF/SIGKILL, resultado temprano, relevo, tipos contra Pi 1.0.2 y paquete. No confundir estas comprobaciones con rendimiento del modelo alojado.
+- Revisión C1: se reprodujo y corrigió la contención cuando `N_EIN_WORKTREE_ROOT` vive dentro del proyecto. La identidad del lector se bloquea por directorio, sin heredar el repo contenedor. Pasan Go, lectura nativa, RPC, muerte abrupta, entrega temprana, relevo y tipos; se conserva el bloqueo del coordinador.
 
 - Seis ensayos autónomos: aceptación, suites y tipos correctos; no lanzaron hijos. No atribuir sus diferencias al paralelismo.
 - Dirigido r1 detenido al descubrir la incompatibilidad de Vite bajo `.git`; datos preservados. Regresión sin modelos: rojo bajo `.git`, verde fuera con jsdom.

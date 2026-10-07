@@ -63,13 +63,17 @@ export class TeamManager {
       activeHere: this.live.has(t.id),
     }));
   }
-  free(cwd: string) {
+  free(cwd: string, project = cwd) {
     try {
-      execFileSync(this.host, ["--worker-probe", "--project", cwd], {
-        stdio: "pipe",
-        timeout: 3000,
-        env: { ...process.env, N_EIN_LEASE_FD: "" },
-      });
+      execFileSync(
+        this.host,
+        ["--worker-probe", "--project", cwd, "--worker-cwd", project],
+        {
+          stdio: "pipe",
+          timeout: 3000,
+          env: { ...process.env, N_EIN_LEASE_FD: "" },
+        },
+      );
       return true;
     } catch {
       return false;
@@ -78,7 +82,7 @@ export class TeamManager {
   recover() {
     for (const t of this.store.list()) {
       if (this.live.has(t.id) || this.owned.has(t.id)) continue;
-      if (existsSync(t.cwd) && !this.free(taskLease(t))) {
+      if (existsSync(t.cwd) && !this.free(taskLease(t), t.cwd)) {
         if (!taskFinished(t)) this.quarantined.add(t.id);
         continue;
       }
@@ -149,7 +153,7 @@ export class TeamManager {
       throw new Error("Workers are disabled.");
     const t = this.store.get(id);
     this.store.validateTree(t);
-    if (this.live.has(id) || !this.free(taskLease(t)))
+    if (this.live.has(id) || !this.free(taskLease(t), t.cwd))
       throw new Error("Task still has a writer; do not replace it.");
     if (t.status === "integrated")
       throw new Error("Task already integrated; assign new work separately.");
@@ -180,7 +184,8 @@ export class TeamManager {
   }
   private launch(t: TaskRecord) {
     this.store.validateTree(t);
-    if (!this.free(taskLease(t))) throw new Error("Worktree is already owned.");
+    if (!this.free(taskLease(t), t.cwd))
+      throw new Error("Worktree is already owned.");
     const { root } = this.options;
     const env: NodeJS.ProcessEnv = {
       ...process.env,
@@ -410,7 +415,8 @@ export class TeamManager {
   }
   integrate(id: string) {
     const t = this.store.get(id);
-    if (!this.free(taskLease(t))) throw new Error("Worker tree still owned.");
+    if (!this.free(taskLease(t), t.cwd))
+      throw new Error("Worker tree still owned.");
     const value = this.store.integrate(id);
     this.changed();
     return value;

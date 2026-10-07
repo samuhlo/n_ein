@@ -23,7 +23,11 @@ func runOwnedWorker(project, cwd string, args []string, input io.Reader, output,
 	lease := inherited
 	if lease == nil {
 		var err error
-		lease, err = acquireProjectLease(project)
+		if project == cwd {
+			lease, err = acquireProjectLease(project)
+		} else {
+			lease, err = acquireDirectoryLease(project)
+		}
 		if err != nil {
 			return err
 		}

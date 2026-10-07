@@ -18,17 +18,23 @@ import (
 
 func acquireProjectLease(project string) (*os.File, error) {
 	gitDir, err := exec.Command("git", "-C", project, "rev-parse", "--absolute-git-dir").Output()
-	var dir string
-	if err == nil {
-		dir = strings.TrimSpace(string(gitDir))
-	} else {
-		canonical, err := filepath.EvalSymlinks(project)
-		if err != nil {
-			return nil, err
-		}
-		key := sha256.Sum256([]byte(canonical))
-		dir = filepath.Join(os.TempDir(), "n-ein-runtime-locks", fmt.Sprintf("%x", key))
+	if err != nil {
+		return acquireDirectoryLease(project)
 	}
+	return acquireLeaseAt(strings.TrimSpace(string(gitDir)), project)
+}
+
+// Un lector conserva identidad propia aunque su carpeta viva dentro de un repo.
+func acquireDirectoryLease(directory string) (*os.File, error) {
+	canonical, err := filepath.EvalSymlinks(directory)
+	if err != nil {
+		return nil, err
+	}
+	key := sha256.Sum256([]byte(canonical))
+	return acquireLeaseAt(filepath.Join(os.TempDir(), "n-ein-runtime-locks", fmt.Sprintf("%x", key)), directory)
+}
+
+func acquireLeaseAt(dir, project string) (*os.File, error) {
 	if err := os.MkdirAll(dir, 0o700); err != nil {
 		return nil, err
 	}

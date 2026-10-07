@@ -160,7 +160,7 @@ export function startWorker(options: WorkerOptions) {
       settled = true;
       if (!text && !error)
         text =
-          "Worker settled without a text report. Inspect the preserved branch and session tool evidence before integration.";
+          "Worker settled without a text report. Inspect the saved assignment, session evidence and any preserved changes before accepting its result.";
       stopProcess();
     }
     if (
@@ -218,7 +218,13 @@ export function startWorker(options: WorkerOptions) {
         try {
           execFileSync(
             options.host,
-            ["--worker-probe", "--project", options.leaseCwd || options.cwd],
+            [
+              "--worker-probe",
+              "--project",
+              options.leaseCwd || options.cwd,
+              "--worker-cwd",
+              options.cwd,
+            ],
             { env, cwd: options.cwd, stdio: "pipe", timeout: 500 },
           );
           free = true;

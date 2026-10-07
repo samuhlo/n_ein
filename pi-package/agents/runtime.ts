@@ -33,11 +33,15 @@ export async function stopTeam(cwd: string, events?: ExtensionAPI["events"]) {
   for (const t of store.list().filter(taskPending)) {
     if (!existsSync(t.cwd)) continue;
     try {
-      execFileSync(host, ["--worker-probe", "--project", taskLease(t)], {
-        stdio: "pipe",
-        timeout: 3000,
-        env: { ...process.env, N_EIN_LEASE_FD: "" },
-      });
+      execFileSync(
+        host,
+        ["--worker-probe", "--project", taskLease(t), "--worker-cwd", t.cwd],
+        {
+          stdio: "pipe",
+          timeout: 3000,
+          env: { ...process.env, N_EIN_LEASE_FD: "" },
+        },
+      );
     } catch {
       throw new Error(`Cannot transfer: worker exit unconfirmed: ${t.cwd}`);
     }
