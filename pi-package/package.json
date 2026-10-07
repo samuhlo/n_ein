@@ -5,6 +5,7 @@
   "pi": {
     "extensions": [
       "./extensions/banner.ts",
+      "./extensions/tools-view.ts",
       "./extensions/router.ts",
       "./extensions/todo.ts",
       "./extensions/handoff.ts",

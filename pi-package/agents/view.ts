@@ -35,7 +35,7 @@ export function teamLines(
     .sort((a, b) => priority(a) - priority(b));
   const shown = pending.length ? pending : tasks.slice(-2);
   const lines = [
-    "// 005 EQUIPO · Ctrl+Shift+G para ver y detener",
+    "// 005 EQUIPO · Ctrl+Shift+E para ver y detener",
     ...shown.slice(0, 4).flatMap((t) => {
       const seconds = Math.max(
         0,

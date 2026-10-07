@@ -279,7 +279,7 @@ export default function (pi: ExtensionAPI) {
     description: "Ver el equipo y detener trabajadores",
     handler: async (_args, next) => showTeam(next),
   });
-  pi.registerShortcut("ctrl+shift+g", {
+  pi.registerShortcut("ctrl+shift+e", {
     description: "Ver equipo",
     handler: showTeam,
   });
