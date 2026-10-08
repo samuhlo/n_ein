@@ -173,6 +173,7 @@ Para medir uso se aprovechan los registros de los mensajes del asistente y sus h
 Dos superficies, con la [gramática visual de Ein](#voz-y-estilo):
 
 - **Dentro de la sesión** (extensiones de Pi, mínimas): actividad de trabajadores sobre el editor y TODO debajo. Detalles de hijos bajo demanda: tarea, modelo/esfuerzo efectivo, tiempo, coste conocido y motivo de espera.
+- **Dentro de Claude Code** (relevo): el plugin `pi-package/claude-plugin`, que `n-ein-claude-dev` carga con `--plugin-dir` sin tocar `~/.claude`. Cada herramienta es un recibo de una línea con el mismo núcleo que Pi (`receipt-core.ts`); el spinner dice lo que hace el turno, el cierre es `✓ 12s` y el Panel aparece sobre el prompt hasta la primera petición. `/detalle` alterna con las filas nativas (comando, salida y diff completos). El diálogo de permisos sigue siendo el de Claude. Requiere Claude 2.1.294 o posterior; con uno anterior se abre con el aspecto nativo.
 - **Fuera de la sesión**: el launcher.
 
 La atribución de ediciones observadas puede inspirarse en Gentle Shell; el diff Git completo sigue siendo necesario para entregar. Las modificaciones vía shell o externas no desaparecen porque el visor de eventos no las capture.
