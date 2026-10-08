@@ -9,6 +9,7 @@ export N_EIN_TEST_PI_VERSION="$(bun -e 'console.log((await Bun.file(process.argv
 
 cat > "$test_dir/claude" <<'FAKE_CLAUDE'
 #!/usr/bin/env bash
+if [[ "${1:-}" == "--version" ]]; then printf '%s (Claude Code)\n' "${N_EIN_TEST_CLAUDE_VERSION:-2.1.294}"; exit 0; fi
 "$N_EIN_ROOT/bin/n-ein-prepare-pi" "Claude confirmó por lectura que parsePort acepta 0; decidir el contrato con Samu."
 printf 'claude finished\n' > "$N_EIN_TEST_DONE"
 FAKE_CLAUDE

@@ -15,6 +15,7 @@ printf 'pi finished\n' > "$N_EIN_TEST_DONE"
 FAKE_PI
 cat > "$test_dir/claude" <<'FAKE_CLAUDE'
 #!/usr/bin/env bash
+if [[ "${1:-}" == "--version" ]]; then printf '%s (Claude Code)\n' "${N_EIN_TEST_CLAUDE_VERSION:-2.1.294}"; exit 0; fi
 test -f "$N_EIN_TEST_DONE" || exit 1
 test ! -L "$CLAUDE_CONFIG_DIR/skills" || exit 1
 mkdir -p "$CLAUDE_CONFIG_DIR/skills/synced"
@@ -72,7 +73,14 @@ bun -e '
   if (settings.attribution?.commit !== "" || settings.attribution?.pr !== "") throw new Error("Claude firmaría commits y PR como coautor: " + JSON.stringify(settings.attribution));
   if (mcp.command !== bin || mcp.args.join(" ") !== "serve --mcp" || mcp.env.DO_NOT_TRACK !== "1") throw new Error("MCP de CodeGraph mal declarado");
   if (hook !== JSON.stringify(bin) + " prompt-hook") throw new Error("hook de CodeGraph mal declarado: " + hook);
-' "$N_EIN_TEST_ARGS" "$N_EIN_CODEGRAPH_BIN"
+  if (args[args.indexOf("--plugin-dir") + 1] !== process.argv[3] + "/pi-package/claude-plugin") throw new Error("Claude sin el plugin de n_ein");
+' "$N_EIN_TEST_ARGS" "$N_EIN_CODEGRAPH_BIN" "$repo_dir"
+# Un Claude anterior a los hooks de función se abre sin plugin: aspecto nativo, mismo trabajo.
+N_EIN_TEST_CLAUDE_VERSION=2.1.200 "$repo_dir/bin/n-ein-claude-dev"
+if rg -q -- '--plugin-dir' "$N_EIN_TEST_ARGS"; then
+  printf 'Un Claude sin hooks de función no debe recibir el plugin.\n' >&2
+  exit 1
+fi
 if rg -q 'n_ein_worker' "$N_EIN_TEST_ARGS"; then
   printf 'Claude no debe recibir instrucciones de herramientas exclusivas de Pi.\n' >&2
   exit 1

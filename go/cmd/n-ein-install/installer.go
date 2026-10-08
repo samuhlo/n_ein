@@ -142,7 +142,7 @@ func collect(source, self string) ([]sourceFile, error) {
 	if err := add(launcher, "bin/n-ein"); err != nil {
 		return nil, err
 	}
-	for _, rel := range []string{"pi-package/extensions", "pi-package/themes", "pi-package/agents"} {
+	for _, rel := range []string{"pi-package/extensions", "pi-package/themes", "pi-package/agents", "pi-package/claude-plugin"} {
 		if err := walkFiles(filepath.Join(source, rel), source, add); err != nil {
 			return nil, err
 		}
@@ -179,6 +179,10 @@ func walkFiles(root, source string, add func(string, string) error) error {
 			return err
 		}
 		if entry.IsDir() {
+			// Claude Code escribe sus tipos junto al plugin al cargarlo: se regeneran, no se empaquetan.
+			if entry.Name() == "types" && filepath.Base(filepath.Dir(path)) == ".claude-plugin" {
+				return filepath.SkipDir
+			}
 			return nil
 		}
 		rel, err := filepath.Rel(source, path)

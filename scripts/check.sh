@@ -40,6 +40,7 @@ bun run tests/codegraph.ts
 bun run tests/brand.ts
 bun run tests/banner.ts
 bun run tests/receipts.ts
+bun run tests/claude-receipts.ts
 bun run tests/tools-view.ts
 bun run tests/skills.ts
 bun run tests/router.ts
@@ -66,6 +67,11 @@ bun run tests/team-view.ts
 bun run tests/team-extension.ts
 bun run tests/team-pi.ts
 bun run scripts/typecheck-agents.ts
+# El plugin de Claude se valida con el motor que lo cargará; sin Claude instalado no hay nada que validar.
+if command -v claude >/dev/null 2>&1; then
+  claude plugin validate pi-package/claude-plugin > /dev/null
+  claude plugin test pi-package/claude-plugin
+fi
 scripts/smoke-package.sh
 
 printf 'checks locales: OK\n'
