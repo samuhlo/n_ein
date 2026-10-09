@@ -7,8 +7,11 @@ repo_dir="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd -P)"
 tag="${1:-}"
 if [[ "$tag" =~ ^v([0-9]+\.[0-9]+\.[0-9]+-preview\.[0-9]+)\.hotfix\.([0-9]+)$ ]]; then
   base="v${BASH_REMATCH[1]}"
+elif [[ "$tag" =~ ^v[0-9]+\.[0-9]+\.[0-9]+(-(alpha|beta|rc)\.[0-9]+)?$ && -n "${2:-}" ]]; then
+  base="$2"
+  if [[ ! "$base" =~ ^v[0-9]+\.[0-9]+\.[0-9]+(-(preview|alpha|beta|rc)\.[0-9]+)?$ ]]; then exit 64; fi
 else
-  printf '[ERR] :: HOTFIX_TAG :: expected: v0.1.0-preview.1.hotfix.1\n' >&2
+  printf '[ERR] :: HOTFIX_TAG :: expected: tag [base-tag]; legacy .hotfix.N supported\n' >&2
   exit 64
 fi
 if [[ -n "$(git -C "$repo_dir" status --porcelain)" ]]; then

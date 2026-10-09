@@ -6,10 +6,6 @@ set -euo pipefail
 repo_dir="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd -P)"
 release_version="${1:-}"
 output_dir="${2:-$repo_dir/dist/releases}"
-if [[ ! "$release_version" =~ ^[0-9]+\.[0-9]+\.[0-9]+-preview\.[0-9]+(\.hotfix\.[0-9]+|\+hotfix\.[0-9a-f]{7,40})?$ ]]; then
-  printf '[ERR] :: VERSION_BAD :: expected: 0.1.0-preview.1[.hotfix.N|+hotfix.sha]\n' >&2
-  exit 64
-fi
 
 case "$(uname -s)-$(uname -m)" in
   Darwin-arm64) platform=darwin-arm64 ;;
@@ -73,6 +69,7 @@ trap cleanup_preview_build EXIT
   GOTOOLCHAIN=local "$go_bin" build -trimpath -o ../dist/n-ein ./cmd/n-ein
   GOTOOLCHAIN=local "$go_bin" build -trimpath -ldflags "-X main.version=$release_version" -o ../dist/n-ein-install ./cmd/n-ein-install
 )
+release_channel="$("$repo_dir/dist/n-ein-install" version "$release_version")"
 "$repo_dir/dist/n-ein-install" package --source "$repo_dir" --output "$candidate"
 candidate_created=1
 
@@ -89,7 +86,7 @@ export N_EIN_MODELS_FILE="$smoke_dir/models.json"
 export N_EIN_LANG_FILE="$smoke_dir/lang.json"
 export N_EIN_PREFERENCES_FILE="$smoke_dir/preferences.md"
 mkdir -p "$smoke_dir/project"
-"$candidate/bin/n-ein-install" install --source "$candidate" --target "$smoke_dir/preview" --channel preview > /dev/null
+"$candidate/bin/n-ein-install" install --source "$candidate" --target "$smoke_dir/preview" --channel "$release_channel" > /dev/null
 "$smoke_dir/preview/bin/n-ein-install" doctor --target "$smoke_dir/preview" --runtime > /dev/null
 "$smoke_dir/preview/bin/n-ein" --project "$smoke_dir/project" --view configuracion --once > "$smoke_dir/launcher"
 rg -Fq "$release_version" "$smoke_dir/preview/install.json"
@@ -99,7 +96,7 @@ tar -czf "$archive" -C "$output_dir" "$(basename "$candidate")"
 mkdir -p "$smoke_dir/extracted"
 tar -xzf "$archive" -C "$smoke_dir/extracted"
 extracted="$smoke_dir/extracted/$(basename "$candidate")"
-"$extracted/bin/n-ein-install" install --source "$extracted" --target "$smoke_dir/from-archive" --channel preview > /dev/null
+"$extracted/bin/n-ein-install" install --source "$extracted" --target "$smoke_dir/from-archive" --channel "$release_channel" > /dev/null
 "$smoke_dir/from-archive/bin/n-ein-install" doctor --target "$smoke_dir/from-archive" > /dev/null
 (
   cd "$output_dir"

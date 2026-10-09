@@ -39,7 +39,7 @@ read -r installed_version installed_commit < <(bun -e 'const m=await Bun.file(pr
   exit 69
 }
 base_version="${installed_version%%+hotfix.*}"
-if [[ ! "$base_version" =~ ^[0-9]+\.[0-9]+\.[0-9]+-preview\.[0-9]+$ ]]; then
+if [[ "$("$installer" version "$base_version" 2>/dev/null || true)" != preview && ! "$base_version" =~ ^[0-9]+\.[0-9]+\.[0-9]+-(preview|alpha|beta|rc)\.[0-9]+$ ]]; then
   printf '[ERR] :: PREVIEW_BAD :: version: %s\n' "$installed_version" >&2
   exit 64
 fi

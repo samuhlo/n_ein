@@ -14,6 +14,7 @@ import (
 	"time"
 
 	"n_ein/internal/layout"
+	"n_ein/internal/release"
 )
 
 func main() {
@@ -33,6 +34,17 @@ func run(args []string, output io.Writer, self string) error {
 		return fmt.Errorf("uso: n-ein-install <setup|package|runtime|install|update|doctor|activate|restore|uninstall> [flags]")
 	}
 	verb := args[0]
+	if verb == "version" {
+		if len(args) != 2 {
+			return fmt.Errorf("uso: version <semver>")
+		}
+		parsed, err := release.Parse(args[1])
+		if err != nil {
+			return err
+		}
+		fmt.Fprintln(output, parsed.Channel())
+		return nil
+	}
 	if verb != "setup" && verb != "package" && verb != "runtime" && verb != "install" && verb != "update" && verb != "doctor" && verb != "activate" && verb != "restore" && verb != "uninstall" {
 		return fmt.Errorf("verbo desconocido: %s", verb)
 	}
