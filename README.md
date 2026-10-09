@@ -22,6 +22,9 @@
 
   <code style="color:#737373;">// no hace falta tanto //</code>
 
+  <br /><br />
+  <img src="docs/assets/pi.png" alt="Pi abierto con n_ein: marca Panel, estado del proyecto y tabla de modelos" width="820" />
+
   <br />
 </div>
 
@@ -36,6 +39,10 @@ tar -xzf n-ein-0.1.0-preview.3-darwin-arm64.tar.gz
 ./n-ein-0.1.0-preview.3-darwin-arm64/bin/nein-setup
 nein
 ```
+
+<div align="center">
+  <img src="docs/assets/nein-setup.png" alt="Plan de nein-setup --dry-run" width="720" />
+</div>
 
 Solo hace falta Bun: `nein-setup` instala Pi y CodeGraph fijados dentro de `~/.n_ein`, sin tocar el `pi` global ni Ein legado. Hay candidato para macOS arm64 y Linux amd64. El primer arranque pide `/login` en el hogar aislado; ninguna credencial se copia.
 
