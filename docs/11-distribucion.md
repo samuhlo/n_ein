@@ -34,7 +34,7 @@ Requisitos externos comprobados: Bash, curl, certificados CA, Git y ripgrep; SHA
 - `scripts/installer-e2e.sh <assets> <versión>`: servidor local con el contrato de releases; el curl real descarga esos bytes. El PATH inicial no contiene Node ni Bun. Instala, arranca Pi con proveedor determinista, crea/consulta índice CodeGraph, repite, rechaza una descarga corrupta, actualiza desde preview.3, restaura y desinstala. Comprueba auth/sesiones/modelos/preferencias con fixtures propios, sin credenciales reales.
 - `scripts/verify-release-assets.py <assets> <versión> <commit>`: compara manifiestos de ambas plataformas, todo el contenido declarado, modos y hashes, y que los instaladores del bootstrap sean los mismos del paquete.
 
-GitHub `check.yml` llama a `candidate.yml`: macOS-15 arm64 y Ubuntu-24.04 amd64; después Arch actual con el mismo tarball Linux y comparación de assets. Hay disparo manual y semanal para detectar cambios de Arch/red/dependencias externas. La imagen usada queda registrada por digest. No se ejecuta Omarchy gráfico dentro de ese contenedor: su recorrido interactivo es una comprobación separada.
+GitHub `check.yml` llama a `candidate.yml`: macOS-15 arm64 y Ubuntu-24.04 amd64; después contenedores limpios Ubuntu 24.04 y Arch actual con el mismo tarball Linux y comparación de assets. Hay disparo manual y semanal para detectar cambios de Arch/red/dependencias externas. La imagen usada queda registrada por digest. No se ejecuta Omarchy gráfico dentro de ese contenedor: su recorrido interactivo es una comprobación separada.
 
 ## Publicación tras revisión
 

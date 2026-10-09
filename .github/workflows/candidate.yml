@@ -69,8 +69,16 @@ jobs:
             dist/releases/install.sh
           if-no-files-found: error
           retention-days: 14
-  arch:
-    name: Arch Linux x86_64
+  linux-distros:
+    name: Clean ${{ matrix.distro }} x86_64
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - distro: arch
+            image: archlinux:base
+          - distro: ubuntu
+            image: ubuntu:24.04
     needs: native
     runs-on: ubuntu-24.04
     timeout-minutes: 20
@@ -80,14 +88,21 @@ jobs:
         with:
           name: candidate-linux-amd64
           path: candidate
-      - name: Mismo artefacto Linux en Arch actual, usuario sin privilegios
+      - name: Mismo artefacto Linux en sistema limpio, usuario sin privilegios
         env:
           RELEASE_VERSION: ${{ inputs.version }}
+          DISTRO: ${{ matrix.distro }}
+          IMAGE: ${{ matrix.image }}
         run: |
-          docker pull archlinux:base
-          docker image inspect archlinux:base --format '{{index .RepoDigests 0}}'
-          docker run --rm --init -e RELEASE_VERSION -v "$PWD:/work:ro" archlinux:base bash -euc '
-            pacman -Syu --noconfirm --needed bash curl ca-certificates git ripgrep python tar gzip perl shadow
+          docker pull "$IMAGE"
+          docker image inspect "$IMAGE" --format '{{index .RepoDigests 0}}'
+          docker run --rm --init -e RELEASE_VERSION -e DISTRO -v "$PWD:/work:ro" "$IMAGE" bash -euc '
+            if [[ "$DISTRO" == arch ]]; then
+              pacman -Syu --noconfirm --needed bash curl ca-certificates git ripgrep python tar gzip perl shadow
+            else
+              apt-get update
+              DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends curl ca-certificates git ripgrep python3 tar gzip perl passwd
+            fi
             useradd --create-home tester
             su -s /bin/bash tester -c '\''cd /work && ./scripts/installer-e2e.sh /work/candidate "$RELEASE_VERSION"'\''
           '
