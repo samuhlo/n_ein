@@ -93,6 +93,19 @@ export DO_NOT_TRACK=1
 if [[ -n "$mcp_config" ]]; then claude_args+=(--mcp-config "$mcp_config"); fi
 claude_args+=(--settings "$claude_settings")
 
+# [UI] La estética de n_ein (recibos, spinner, cierre de turno, marca) entra como plugin de Claude Code.
+# Sus hooks de función existen desde Claude 2.1.294: con uno anterior se abre sin plugin y con el
+# aspecto nativo; el trabajo no cambia.
+plugin_ready() {
+  local major minor patch
+  IFS=. read -r major minor patch <<< "${1%% *}"
+  [[ "$major" =~ ^[0-9]+$ && "$minor" =~ ^[0-9]+$ && "$patch" =~ ^[0-9]+$ ]] || return 1
+  (( major > 2 || (major == 2 && (minor > 1 || (minor == 1 && patch >= 294))) ))
+}
+if plugin_ready "$("$claude_bin" --version 2>/dev/null || true)"; then
+  claude_args+=(--plugin-dir "$repo_dir/pi-package/claude-plugin")
+fi
+
 if [[ "${1:-}" == "--handoff" ]]; then
   if [[ $# -lt 2 || ! -f "$2" ]]; then
     printf '[ERR] :: HANDOFF_BAD :: summary: missing\n' >&2

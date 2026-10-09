@@ -12,16 +12,13 @@
 // =============================================================================
 
 import { homedir } from "node:os";
-import { basename, dirname, isAbsolute, relative } from "node:path";
-import { stripVTControlCharacters } from "node:util";
+import {
+  baseName, clip, diffCount, dirName, firstText, GLYPH, humanName, LABEL_WIDTH, lastLine, lineCount, oneLine, plural, record,
+  shortPath as corePath, str, type Outcome, type Receipt,
+} from "../claude-plugin/hooks/receipt-core.ts";
 
-export type Receipt = { label: string; target: string };
-export type Outcome = { meta: string; bad: boolean };
+export { clip, GLYPH, LABEL_WIDTH, oneLine, receiptLine, type Outcome, type Paint, type Receipt } from "../claude-plugin/hooks/receipt-core.ts";
 export type ToolResultLike = { content?: unknown; details?: unknown; isError?: boolean };
-
-/** Gramática de STYLE: lo pendiente apagado, el foco con ▸, lo comprobado con ✓ y lo fallido con ×. */
-export const GLYPH = { running: "▸", done: "✓", failed: "×", sep: "·" } as const;
-export const LABEL_WIDTH = 9;
 
 const TEAM_STATUS: Record<string, string> = {
   queued: "en cola",
@@ -46,58 +43,14 @@ const TEAM_ACTION: Record<string, string> = {
   view: "vista",
 };
 
-function record(value: unknown): Record<string, unknown> {
-  return typeof value === "object" && value !== null && !Array.isArray(value) ? value as Record<string, unknown> : {};
-}
-
-function str(value: unknown): string {
-  return typeof value === "string" ? value : "";
-}
-
-/** Una sola línea imprimible: el recibo nunca rompe la fila ni arrastra escapes de terminal. */
-export function oneLine(text: string): string {
-  return stripVTControlCharacters(text).replace(/[\x00-\x1f\x7f-\x9f]+/g, " ").replace(/\s+/g, " ").trim();
-}
-
-export function clip(text: string, room: number): string {
-  const chars = [...text];
-  if (room <= 0) return "";
-  return chars.length <= room ? text : chars.slice(0, Math.max(0, room - 1)).join("") + "…";
-}
-
-function plural(count: number, one: string, many: string): string {
-  return `${count} ${count === 1 ? one : many}`;
-}
-
+/** La ruta como la lee la persona: relativa al proyecto, o con `~` fuera de él. */
 export function shortPath(path: string, cwd: string): string {
-  if (!path) return "";
-  const absolute = isAbsolute(path);
-  const inside = absolute && cwd ? relative(cwd, path) : path;
-  if (absolute && inside && !inside.startsWith("..") && !isAbsolute(inside)) return inside;
-  const home = homedir();
-  return absolute && path.startsWith(home) ? `~${path.slice(home.length)}` : path;
+  return corePath(path, cwd, homedir());
 }
 
 export function resultText(result: ToolResultLike | undefined): string {
   if (!result || !Array.isArray(result.content)) return "";
   return result.content.map((part) => str(record(part).text)).filter(Boolean).join("\n");
-}
-
-function lineCount(text: string): number {
-  const trimmed = text.replace(/\n+$/, "");
-  return trimmed ? trimmed.split("\n").length : 0;
-}
-
-function lastLine(text: string): string {
-  return oneLine(text.trim().split("\n").filter((line) => line.trim()).at(-1) ?? "");
-}
-
-function humanName(tool: string): string {
-  return tool.replace(/^mcp__/, "").replace(/__/g, " · ").replace(/_/g, " ");
-}
-
-function firstText(args: Record<string, unknown>): string {
-  return Object.values(args).find((value): value is string => typeof value === "string" && value.trim().length > 0) ?? "";
 }
 
 /** Verbo y objeto de la llamada. Funciona con argumentos a medio llegar. */
@@ -106,7 +59,7 @@ export function receiptFor(tool: string, rawArgs: unknown, cwd = ""): Receipt {
   const path = shortPath(str(args.file_path) || str(args.path), cwd);
   switch (tool) {
     case "read": {
-      if (basename(path) === "SKILL.md") return { label: "skill", target: basename(dirname(path)) || path };
+      if (baseName(path) === "SKILL.md") return { label: "skill", target: baseName(dirName(path)) || path };
       const offset = typeof args.offset === "number" ? args.offset : undefined;
       const limit = typeof args.limit === "number" ? args.limit : undefined;
       const range = offset !== undefined || limit !== undefined
@@ -174,7 +127,7 @@ export function outcomeFor(tool: string, rawArgs: unknown, result: ToolResultLik
   }
   switch (tool) {
     case "read": {
-      if (basename(str(args.file_path) || str(args.path)) === "SKILL.md") return { meta: "cargada", bad };
+      if (baseName(str(args.file_path) || str(args.path)) === "SKILL.md") return { meta: "cargada", bad };
       if (Array.isArray(result.content) && result.content.some((part) => record(part).type === "image")) return { meta: "imagen", bad };
       const lines = lineCount(text);
       return { meta: record(details.truncation).truncated ? `${plural(lines, "línea", "líneas")} ${GLYPH.sep} recortado` : plural(lines, "línea", "líneas"), bad };
@@ -185,10 +138,7 @@ export function outcomeFor(tool: string, rawArgs: unknown, result: ToolResultLik
       return { meta: lines ? plural(lines, "línea", "líneas") : "sin salida", bad };
     }
     case "edit": {
-      const diff = str(details.diff).split("\n");
-      const added = diff.filter((line) => /^\+(?!\+\+)/.test(line)).length;
-      const removed = diff.filter((line) => /^-(?!--)/.test(line)).length;
-      return { meta: added || removed ? `+${added} −${removed}` : "editado", bad };
+      return { meta: diffCount(str(details.diff).split("\n")) || "editado", bad };
     }
     case "write":
       return { meta: plural(lineCount(str(args.content)), "línea", "líneas"), bad };
@@ -214,24 +164,4 @@ export function outcomeFor(tool: string, rawArgs: unknown, result: ToolResultLik
     default:
       return { meta: bad ? lastLine(text) || "falló" : "hecho", bad };
   }
-}
-
-export type Paint = (token: "accent" | "success" | "error" | "text" | "muted" | "dim", text: string) => string;
-
-/**
- * Fila del recibo: `▸ verbo    objeto  · lo que salió`. El objeto es lo que se
- * recorta: el verbo y el resultado son lo que se lee de un vistazo.
- */
-export function receiptLine(receipt: Receipt, outcome: Outcome | undefined, width: number, paint: Paint): string {
-  const glyph = !outcome
-    ? paint("accent", GLYPH.running)
-    : outcome.bad ? paint("error", GLYPH.failed) : paint("dim", GLYPH.done);
-  const label = clip(oneLine(receipt.label), LABEL_WIDTH - 1).padEnd(LABEL_WIDTH - 1);
-  const meta = outcome?.meta ? `  ${GLYPH.sep} ${oneLine(outcome.meta)}` : "";
-  const fixed = 1 + 2 + LABEL_WIDTH;
-  const metaRoom = Math.max(0, Math.min([...meta].length, width - fixed - 12));
-  const metaShown = clip(meta, metaRoom);
-  const target = clip(oneLine(receipt.target), width - fixed - [...metaShown].length);
-  const tone = outcome?.bad ? "error" : "dim";
-  return ` ${glyph} ${paint("text", label)} ${paint("muted", target)}${paint(tone, metaShown)}`;
 }

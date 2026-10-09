@@ -1,7 +1,8 @@
 // =============================================================================
 // [UI] MARCA EN PI
 // La misma marca 004 Panel que launcher e instalador: palas que giran hasta
-// asentarse en n_ein, con el `_` como único amarillo. Port de go/internal/brand;
+// asentarse en n_ein, con el `_` como único amarillo. La geometría vive en
+// claude-plugin/hooks/brand-core.ts, compartida con Claude; port de go/internal/brand;
 // tests/fixtures/panel-final.txt obliga a que los dos dibujen lo mismo.
 // Módulo puro: sin Pi ni pi-tui, para probarlo con Bun.
 // =============================================================================
@@ -9,6 +10,8 @@
 import { readFileSync } from "node:fs";
 import { dirname, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
+
+import { panelCells, type BrandTone } from "../claude-plugin/hooks/brand-core.ts";
 
 const packageRoot = resolve(dirname(fileURLToPath(import.meta.url)), "../..");
 
@@ -35,9 +38,7 @@ export const COLORS = {
   tileCard: "#161616",
 } as const;
 
-export const INTRO_SECONDS = 2.2;
-export const LARGE_WIDTH = 39;
-export const LARGE_HEIGHT = 6;
+export { INTRO_SECONDS, LARGE_HEIGHT, LARGE_WIDTH } from "../claude-plugin/hooks/brand-core.ts";
 
 export type Painter = {
   color: boolean;
@@ -64,74 +65,23 @@ export function wordmark(p: Painter): string {
   return p.fg(COLORS.concrete, "n") + p.fg(COLORS.yellow, "_") + p.fg(COLORS.concrete, "ein");
 }
 
-// Letras de 5 × 7 píxeles (la i mide 3); un píxel es una celda de ancho y media de alto.
-const FONT: Record<string, string[]> = {
-  n: [".....", ".....", "####.", "#...#", "#...#", "#...#", "#...#"],
-  e: [".....", ".....", ".###.", "#...#", "#####", "#....", ".###."],
-  i: [".#.", "...", "##.", ".#.", ".#.", ".#.", "###"],
-  _: [".....", ".....", ".....", ".....", ".....", ".....", "#####"],
-  o: [".....", ".....", ".###.", "#...#", "#...#", "#...#", ".###."],
-  a: [".....", ".....", ".###.", "....#", ".####", "#...#", ".####"],
-  s: [".....", ".....", ".####", "#....", ".###.", "....#", "####."],
-  t: [".#...", ".#...", "####.", ".#...", ".#...", ".#...", "..##."],
-  r: [".....", ".....", "#.##.", "##..#", "#....", "#....", "#...."],
-  u: [".....", ".....", "#...#", "#...#", "#...#", "#...#", ".####"],
+const TONE: Record<BrandTone, string> = {
+  concrete: COLORS.concrete,
+  yellow: COLORS.yellow,
+  muted: COLORS.muted,
+  tileHigh: COLORS.tileHigh,
+  tileLow: COLORS.tileLow,
 };
-const WORD = [..."n_ein"];
-const FLAP_POOL = [..."aostrunei_"];
-const ALPHABET = [..."abcdefghijklmnopqrstuvwxyz"];
-
-// Mismo hash que Go y que el diseño: el giro es pseudoaleatorio pero determinista.
-function hash(x: number, y: number, seed: number): number {
-  let h = Math.imul(x | 0, 374761393) ^ Math.imul(y | 0, 668265263) ^ Math.imul(seed | 0, 982451653);
-  h = Math.imul(h ^ (h >>> 13), 1274126177);
-  h ^= h >>> 16;
-  return (h >>> 0) / 4294967296;
-}
-
-function flap(k: number, t: number, pool: string[]): { visible: boolean; letter: string; settled: boolean } {
-  if (t <= 0.1 + 0.06 * k) return { visible: false, letter: "", settled: false };
-  if (t >= 0.55 + 0.3 * k) return { visible: true, letter: WORD[k], settled: true };
-  return { visible: true, letter: pool[Math.floor(hash(k, Math.floor(t * 16), 5) * pool.length)], settled: false };
-}
-
-function letterColor(letter: string, settled: boolean): string {
-  if (!settled) return COLORS.muted;
-  return letter === "_" ? COLORS.yellow : COLORS.concrete;
-}
-
-type Cell = { top: boolean; bottom: boolean; bg: string; fg: string; tile: boolean };
 
 /** Las seis filas del Panel grande en el instante t (segundos desde la apertura). */
 export function panelLarge(p: Painter, t: number): string[] {
-  const tile = 7, gap = 1, height = LARGE_HEIGHT;
-  const grid: Cell[][] = Array.from({ length: height }, () =>
-    Array.from({ length: LARGE_WIDTH }, () => ({ top: false, bottom: false, bg: "", fg: "", tile: false })));
-  WORD.forEach((_, k) => {
-    const state = flap(k, t, FLAP_POOL);
-    if (!state.visible) return;
-    const left = k * (tile + gap);
-    for (let y = 0; y < height; y++) {
-      for (let x = 0; x < tile; x++) grid[y][left + x] = { ...grid[y][left + x], tile: true, bg: y < height / 2 ? COLORS.tileHigh : COLORS.tileLow };
-    }
-    const glyph = FONT[state.letter];
-    const offset = left + Math.floor((tile - glyph[0].length) / 2);
-    const color = letterColor(state.letter, state.settled);
-    glyph.forEach((row, gy) => [...row].forEach((pixel, gx) => {
-      if (pixel !== "#") return;
-      // La letra empieza dos píxeles por debajo del borde: queda centrada en la pala.
-      const py = gy + 2;
-      const cell = grid[Math.floor(py / 2)][offset + gx];
-      cell.fg = color;
-      if (py % 2 === 0) cell.top = true; else cell.bottom = true;
-    }));
-  });
-  return grid.map((row) => row.map((cell) => {
-    const glyph = cell.top && cell.bottom ? "█" : cell.top ? "▀" : cell.bottom ? "▄" : " ";
-    if (!p.color || !cell.tile) return glyph;
-    return p.bg(cell.bg, cell.fg ? p.fg(cell.fg, glyph) : glyph);
+  return panelCells(t).map((row) => row.map((cell) => {
+    if (!p.color || !cell.bg) return cell.glyph;
+    return p.bg(TONE[cell.bg], cell.fg ? p.fg(TONE[cell.fg], cell.glyph) : cell.glyph);
   }).join("").replace(/ +$/, ""));
 }
+
+const ALPHABET = [..."abcdefghijklmnopqrstuvwxyz"];
 
 /** Indicador de trabajo: una pala que sigue girando. */
 export function flapIndicator(p: Painter, seconds: number): string {

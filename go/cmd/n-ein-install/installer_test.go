@@ -101,6 +101,9 @@ func sourceFixture(t *testing.T) (source, self, target, data string) {
 	writeFixture(t, source, "pi-package/agents/summary.ts", "export const marker = true\n", 0o644)
 	writeFixture(t, source, "pi-package/extensions/agents.ts", "export default () => {}\n", 0o644)
 	writeFixture(t, source, "pi-package/themes/ein.json", `{"name":"ein"}`, 0o644)
+	writeFixture(t, source, "pi-package/claude-plugin/.claude-plugin/plugin.json", `{"name":"n-ein"}`, 0o644)
+	writeFixture(t, source, "pi-package/claude-plugin/.claude-plugin/types/claude-code/index.d.ts", "// generado\n", 0o644)
+	writeFixture(t, source, "pi-package/claude-plugin/hooks/register.tsx", "export const register = () => {}\n", 0o644)
 	writeFixture(t, source, "pi-package/skills/intent/SKILL.md", "# Intent\n", 0o644)
 	writeFixture(t, source, "pi-package/skills/synced/foreign.txt", "generated cache\n", 0o644)
 	writeFixture(t, data, "auth.json", "private auth\n", 0o600)
@@ -123,6 +126,19 @@ func TestWorkerRuntimeIsPackaged(t *testing.T) {
 	content, err := os.ReadFile(filepath.Join(target, "pi-package/agents/summary.ts"))
 	if err != nil || string(content) != "export const marker = true\n" {
 		t.Fatalf("worker dependency missing: %s %v", content, err)
+	}
+}
+
+func TestClaudePluginIsPackagedWithoutGeneratedTypes(t *testing.T) {
+	source, self, target, _ := sourceFixture(t)
+	if _, err := call(t, self, "install", "--source", source, "--target", target); err != nil {
+		t.Fatal(err)
+	}
+	if _, err := os.Stat(filepath.Join(target, "pi-package/claude-plugin/hooks/register.tsx")); err != nil {
+		t.Fatalf("plugin de Claude ausente: %v", err)
+	}
+	if _, err := os.Stat(filepath.Join(target, "pi-package/claude-plugin/.claude-plugin/types")); !os.IsNotExist(err) {
+		t.Fatalf("los tipos generados no deben empaquetarse: %v", err)
 	}
 }
 

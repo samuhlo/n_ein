@@ -1,0 +1,9 @@
+{
+  "name": "n-ein",
+  "version": "0.1.0",
+  "description": "Recibos de herramienta, ritmo de turno y marca de n_ein dentro de Claude Code.",
+  "author": {
+    "name": "samuhlo"
+  },
+  "types": "./types/index.d.ts"
+}

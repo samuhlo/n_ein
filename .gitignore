@@ -4,3 +4,4 @@ dist/
 .n_ein/
 *.log
 .codegraph/
+pi-package/claude-plugin/.claude-plugin/types/
