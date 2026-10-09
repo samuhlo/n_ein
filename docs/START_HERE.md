@@ -24,7 +24,7 @@ El experimento de equipo se conserva desactivado: `N_EIN_TEAM=1` lo habilita exp
 
 ## Candidata del 9 de octubre
 
-Encargo autorizado: preparar `0.2.0-alpha.1` para revisión de Samu, sin publicación ni actualización personal. Rama `feat/alpha-distribution` desde main `ed9f7c9`, incluyendo README y estética Claude. WORK.md registra el estado y [distribución](11-distribucion.md) el contrato de versiones/instalación/CI. No confundir la candidata con una release ya publicada.
+Encargo autorizado: preparar `0.2.0-alpha.1` para revisión de Samu, sin publicación ni actualización personal. Rama `feat/alpha-distribution` desde main `ed9f7c9`, incluyendo README y estética Claude. WORK.md registra el estado y [distribución](11-distribucion.md) el contrato de versiones/instalación/CI. Candidata comprobada: `d9ab032`, matriz completa verde y copia macOS de CI instalada en `dist/alpha-home` (86 archivos). [Evidencia](../evals/results/2026-10-09-alpha-candidate.md). Espera la revisión de Samu, incluido el recorrido interactivo Omarchy; no confundirla con una release ya publicada.
 
 ## Ruta de lectura
 

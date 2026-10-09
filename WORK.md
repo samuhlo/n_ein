@@ -19,8 +19,8 @@ Base: `ed9f7c9` (main remoto con estética Claude y README). Rama `feat/alpha-di
 - [x] A1 Versiones: validar/ordenar SemVer, preservar tags legacy, build y hotfix coherentes.
 - [x] A2 Dependencias: instalación limpia con Node y Bun gestionados, checksums, dry-run, reparación, entorno efectivo al lanzar.
 - [x] A3 Distribución: curl, canal/versión explícita, SHA antes de ejecutar, descarga fallida sin sustituir instalación, setup/update existentes.
-- [ ] A4 Matriz: macOS, Ubuntu limpio y Arch limpio; instalar, repetir, actualizar desde preview.3, restaurar y preservar datos; pruebas nativas Claude explícitas.
-- [ ] A5 Candidata: paquete y CI comprobados, notas y guía de revisión; sin publicación ni actualización personal.
+- [x] A4 Matriz: macOS, Ubuntu limpio y Arch limpio; instalar, repetir, actualizar desde preview.3, restaurar y preservar datos; pruebas nativas Claude explícitas.
+- [x] A5 Candidata: paquete y CI comprobados, notas y guía de revisión; sin publicación ni actualización personal.
 
 ## Fronteras de prueba
 
@@ -28,4 +28,10 @@ CLI y artefacto instalado; repositorio HTTP simulado para errores/selección; ru
 
 ## Evidencia en curso
 
-Go y suite completa local pasan con hogar aislado `dist/alpha-home` y Node 24.21.0/Bun 1.3.14 propios. La instalación limpia detectó que Bun podía usar un package.json padre: Pi ahora tiene manifest privado dentro de su runtime y no modifica el proyecto padre. Cliente de releases probado con HTTP simulado, checksum y versión de manifest antes de extraer/ejecutar. E2E completo de curl y matriz aún pendientes.
+Go y suite completa local pasan con hogar aislado `dist/alpha-home` y Node 24.21.0/Bun 1.3.14 propios. La instalación limpia detectó que Bun podía usar un package.json padre: Pi ahora tiene manifest privado dentro de su runtime y no modifica el proyecto padre. Cliente de releases probado con HTTP simulado, checksum y versión de manifest antes de extraer/ejecutar. E2E completo de curl y matriz final superados; cierre abajo.
+
+## Entrega para revisión
+
+Fuente candidata `d9ab0323b97c867370b83d961b0cb043bb505af9`. CI 37907381998 completamente verde: macOS arm64, Ubuntu nativo, contenedores Ubuntu 24.04 y Arch actual sin privilegios, comparación de artefactos. Misma fuente y payload; solo difieren los ejecutables nativos. Paquetes descargados y verificados en `dist/alpha-review-d9ab032/assets`; instalada la copia macOS de CI en `dist/alpha-home`, doctor 86 archivos y launcher comprobados. La preview personal sigue en 0.1.0-preview.3.
+
+[Informe y límites](evals/results/2026-10-09-alpha-candidate.md), [registro de hashes y jobs](evals/results/2026-10-09-alpha-candidate.json). No hay tag ni release alpha y no se ha integrado en main. La rama está subida para revisar. Siguiente acción: Samu revisa diff/candidato y prueba la sesión interactiva Omarchy. No convertir el verde del contenedor Arch en una afirmación de prueba gráfica real; no publicar ni actualizar la instalación personal sin la revisión pedida.
