@@ -36,6 +36,9 @@ if [[ ! -x "$N_EIN_CODEGRAPH_BIN" || "$(DO_NOT_TRACK=1 "$N_EIN_CODEGRAPH_BIN" --
   exit 69
 fi
 
+if command -v sha256sum >/dev/null; then hash=(sha256sum)
+else hash=(shasum -a 256); fi
+
 dirty_suffix=""
 if [[ -n "$(git -C "$repo_dir" status --porcelain)" ]]; then
   if [[ "${N_EIN_ALLOW_DIRTY:-0}" != 1 ]]; then
@@ -100,12 +103,12 @@ extracted="$smoke_dir/extracted/$(basename "$candidate")"
 "$smoke_dir/from-archive/bin/n-ein-install" doctor --target "$smoke_dir/from-archive" > /dev/null
 (
   cd "$output_dir"
-  shasum -a 256 "$(basename "$archive")" > "$(basename "$archive").sha256"
+  "${hash[@]}" "$(basename "$archive")" > "$(basename "$archive").sha256"
 )
 # El bootstrap usa el mismo instalador del paquete ya comprobado.
 installer_asset="n-ein-install-$release_version-$platform"
 cp "$candidate/bin/n-ein-install" "$output_dir/$installer_asset"
-(cd "$output_dir" && shasum -a 256 "$installer_asset" > "$installer_asset.sha256")
+(cd "$output_dir" && "${hash[@]}" "$installer_asset" > "$installer_asset.sha256")
 sed "s/^bootstrap_tag=.*/bootstrap_tag=\"v$release_version\"/" "$repo_dir/install.sh" > "$output_dir/install.sh"
 printf '// 000 PREVIEW · %s\n' "$archive"
 cat "$archive.sha256"

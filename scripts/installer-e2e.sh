@@ -84,7 +84,8 @@ old="n-ein-0.1.0-preview.3-$platform"
 curl -fsSL --retry 2 --connect-timeout 15 --max-time 180 "https://github.com/samuhlo/n_ein/releases/download/v0.1.0-preview.3/$old.tar.gz" -o "$area/old.tar.gz"
 curl -fsSL --retry 2 --connect-timeout 15 --max-time 30 "https://github.com/samuhlo/n_ein/releases/download/v0.1.0-preview.3/$old.tar.gz.sha256" -o "$area/old.sha256"
 expected="$(cut -d ' ' -f 1 "$area/old.sha256")"
-actual="$(shasum -a 256 "$area/old.tar.gz")"
+if command -v sha256sum >/dev/null; then actual="$(sha256sum "$area/old.tar.gz")"
+else actual="$(shasum -a 256 "$area/old.tar.gz")"; fi
 [[ "${actual%% *}" == "$expected" ]]
 tar -xzf "$area/old.tar.gz" -C "$area"
 "$area/$old/bin/n-ein-install" update --source "$area/$old" --channel "$channel"
