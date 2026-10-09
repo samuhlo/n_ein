@@ -1,0 +1,67 @@
+name: Publicar release comprobada
+on:
+  push:
+    tags: ['v[0-9]*']
+permissions:
+  contents: read
+concurrency:
+  group: release-${{ github.ref }}
+  cancel-in-progress: false
+jobs:
+  version:
+    runs-on: ubuntu-24.04
+    outputs:
+      value: ${{ steps.version.outputs.value }}
+      prerelease: ${{ steps.version.outputs.prerelease }}
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-go@v7
+        with:
+          go-version-file: go/go.mod
+      - id: version
+        run: |
+          (cd go && go build -o ../dist/n-ein-install ./cmd/n-ein-install)
+          value="${GITHUB_REF_NAME#v}"
+          test "$value" = "$(cat VERSION)"
+          test "$value" = "${value%%+*}"
+          channel="$(./dist/n-ein-install version "$value")"
+          echo "value=$value" >> "$GITHUB_OUTPUT"
+          if [[ "$channel" == stable ]]; then echo 'prerelease=false'; else echo 'prerelease=true'; fi >> "$GITHUB_OUTPUT"
+  candidate:
+    needs: version
+    uses: ./.github/workflows/candidate.yml
+    with:
+      version: ${{ needs.version.outputs.value }}
+  publish:
+    needs: [version, candidate]
+    runs-on: ubuntu-24.04
+    permissions:
+      contents: write
+      id-token: write
+      attestations: write
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/download-artifact@v7
+        with:
+          pattern: candidate-*
+          merge-multiple: true
+          path: release-assets
+      - name: Verificar hashes de los bytes descargados
+        run: |
+          cd release-assets
+          sha256sum -c *.sha256
+      - uses: actions/attest-build-provenance@v3
+        with:
+          subject-path: 'release-assets/*'
+      - name: Publicar exactamente esos adjuntos
+        env:
+          GH_TOKEN: ${{ github.token }}
+          RELEASE_VERSION: ${{ needs.version.outputs.value }}
+          IS_PRERELEASE: ${{ needs.version.outputs.prerelease }}
+        run: |
+          flags=(--latest)
+          if [[ "$IS_PRERELEASE" == true ]]; then flags=(--prerelease --latest=false); fi
+          gh release create "$GITHUB_REF_NAME" --verify-tag "${flags[@]}" \
+            --title "n_ein $RELEASE_VERSION" --notes-file "docs/releases/$RELEASE_VERSION.md" release-assets/*

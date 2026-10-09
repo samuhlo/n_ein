@@ -1,48 +1,27 @@
-name: Checks locales
-
+name: Checks
 on:
   push:
-    branches: [main, 'hotfix/**']
-    tags: ['v*-preview.*']
+    branches: [main, 'hotfix/**', 'feat/alpha-distribution']
   pull_request:
-
+  workflow_dispatch:
+  schedule:
+    - cron: '23 6 * * 1'
 permissions:
   contents: read
-
+concurrency:
+  group: checks-${{ github.ref }}
+  cancel-in-progress: true
 jobs:
-  check:
-    runs-on: ubuntu-latest
+  version:
+    runs-on: ubuntu-24.04
+    outputs:
+      value: ${{ steps.version.outputs.value }}
     steps:
       - uses: actions/checkout@v7
-        with:
-          fetch-depth: 0
-      - name: Verificar procedencia del hotfix de rama
-        if: startsWith(github.ref, 'refs/tags/v') && contains(github.ref_name, '.hotfix.')
-        run: ./scripts/verify-hotfix-branch.sh "$GITHUB_REF_NAME"
-      - uses: actions/setup-go@v7
-        with:
-          go-version-file: go/go.mod
-          cache-dependency-path: go/go.sum
-      - uses: oven-sh/setup-bun@v2
-        with:
-          bun-version: 1.3.14
-      - name: Instalar runtimes fijados (Pi y CodeGraph) y ripgrep
-        run: |
-          sudo apt-get update
-          sudo apt-get install -y ripgrep
-          (cd go && go build -o ../dist/n-ein-install ./cmd/n-ein-install)
-          ./dist/n-ein-install runtime --source .
-      - name: Checks sin modelos
-        run: ./scripts/check.sh
-      - name: Crear candidato nativo de preview
-        if: startsWith(github.ref, 'refs/tags/v')
-        run: ./scripts/build-preview.sh "${GITHUB_REF_NAME#v}"
-      - uses: actions/upload-artifact@v7
-        if: startsWith(github.ref, 'refs/tags/v')
-        with:
-          name: n-ein-preview-linux-amd64-${{ github.ref_name }}
-          path: |
-            dist/releases/*.tar.gz
-            dist/releases/*.sha256
-          if-no-files-found: error
-          retention-days: 14
+      - id: version
+        run: echo "value=$(cat VERSION)" >> "$GITHUB_OUTPUT"
+  candidate:
+    needs: version
+    uses: ./.github/workflows/candidate.yml
+    with:
+      version: ${{ needs.version.outputs.value }}

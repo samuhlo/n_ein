@@ -1,0 +1,93 @@
+name: Candidato multiplataforma
+on:
+  workflow_call:
+    inputs:
+      version:
+        required: true
+        type: string
+permissions:
+  contents: read
+jobs:
+  native:
+    name: Native (${{ matrix.platform }})
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - os: ubuntu-24.04
+            platform: linux-amd64
+          - os: macos-15
+            platform: darwin-arm64
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 25
+    env:
+      N_EIN_HOME: ${{ github.workspace }}/dist/ci-home
+      N_EIN_REQUIRE_CLAUDE: '1'
+      CLAUDE_CONFIG_DIR: ${{ github.workspace }}/dist/claude-test-home
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-go@v7
+        with:
+          go-version-file: go/go.mod
+          cache-dependency-path: go/go.sum
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: 1.3.14
+      - name: Herramientas de prueba del sistema
+        run: |
+          if [[ "$RUNNER_OS" == Linux ]]; then
+            sudo apt-get update
+            sudo apt-get install -y ripgrep python3
+          else
+            command -v rg >/dev/null || brew install ripgrep
+          fi
+      - name: Runtime aislado y Claude fijado para probar el plugin
+        run: |
+          (cd go && go build -o ../dist/n-ein-install ./cmd/n-ein-install)
+          ./dist/n-ein-install runtime --source .
+          npm install --prefix "$RUNNER_TEMP/claude-host" @anthropic-ai/claude-code@2.1.295
+          echo "$RUNNER_TEMP/claude-host/node_modules/.bin" >> "$GITHUB_PATH"
+      - name: Suite completa sin modelos
+        run: ./scripts/check.sh
+      - name: Construir bytes candidatos
+        env:
+          RELEASE_VERSION: ${{ inputs.version }}
+        run: ./scripts/build-release.sh "$RELEASE_VERSION"
+      - name: Instalar por curl en hogar limpio y probar upgrade/restore
+        env:
+          RELEASE_VERSION: ${{ inputs.version }}
+        run: ./scripts/installer-e2e.sh dist/releases "$RELEASE_VERSION"
+      - uses: actions/upload-artifact@v7
+        with:
+          name: candidate-${{ matrix.platform }}
+          path: |
+            dist/releases/*.tar.gz
+            dist/releases/*.sha256
+            dist/releases/n-ein-install-*
+            dist/releases/install.sh
+          if-no-files-found: error
+          retention-days: 14
+  arch:
+    name: Arch Linux x86_64
+    needs: native
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/download-artifact@v7
+        with:
+          name: candidate-linux-amd64
+          path: candidate
+      - name: Mismo artefacto Linux en Arch actual, usuario sin privilegios
+        env:
+          RELEASE_VERSION: ${{ inputs.version }}
+        run: |
+          docker pull archlinux:base
+          docker image inspect archlinux:base --format '{{index .RepoDigests 0}}'
+          docker run --rm --init -e RELEASE_VERSION -v "$PWD:/work:ro" archlinux:base bash -euc '
+            pacman -Syu --noconfirm --needed bash curl ca-certificates git ripgrep python tar gzip perl shadow
+            useradd --create-home tester
+            su -s /bin/bash tester -c '\''cd /work && ./scripts/installer-e2e.sh /work/candidate "$RELEASE_VERSION"'\''
+          '
