@@ -413,16 +413,22 @@ func backupPath(target, prefix string) (string, error) {
 
 func install(source, target, channel, self string, requireExisting, dryRun bool, output io.Writer) error {
 	artifactPath := filepath.Join(source, "package-manifest.json")
-	if _, err := os.Stat(artifactPath); err == nil {
-		if _, err := validateArtifact(source); err != nil {
-			return fmt.Errorf("paquete inválido: %w", err)
+	var files []sourceFile
+	var err error
+	if _, statErr := os.Stat(artifactPath); statErr == nil {
+		artifact, validateErr := validateArtifact(source)
+		if validateErr != nil {
+			return fmt.Errorf("paquete inválido: %w", validateErr)
 		}
-		// BLINDAJE -> Preview y estable copian el mismo instalador del artefacto.
-		self = filepath.Join(source, "bin", "n-ein-install")
-	}
-	files, err := collect(source, self)
-	if err != nil {
-		return err
+		// Solo se copian los bytes declarados: cachés del host y metadatos de macOS quedan fuera.
+		for _, item := range artifact.Files {
+			files = append(files, sourceFile{from: filepath.Join(source, item.Path), rel: item.Path, mode: fs.FileMode(item.Mode)})
+		}
+	} else {
+		files, err = collect(source, self)
+		if err != nil {
+			return err
+		}
 	}
 	if _, err := os.Stat(artifactPath); err == nil {
 		info, err := os.Lstat(artifactPath)

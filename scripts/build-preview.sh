@@ -92,7 +92,7 @@ mkdir -p "$smoke_dir/project"
 rg -Fq "$release_version" "$smoke_dir/preview/install.json"
 rg -q 'openai-codex/gpt-6-sol' "$smoke_dir/launcher"
 
-tar -czf "$archive" -C "$output_dir" "$(basename "$candidate")"
+COPYFILE_DISABLE=1 tar -czf "$archive" -C "$output_dir" "$(basename "$candidate")"
 mkdir -p "$smoke_dir/extracted"
 tar -xzf "$archive" -C "$smoke_dir/extracted"
 extracted="$smoke_dir/extracted/$(basename "$candidate")"

@@ -17,6 +17,11 @@ class Handler(http.server.SimpleHTTPRequestHandler):
         pass
 
     def do_GET(self):
+        if pathlib.Path(args.port_file).with_name('corrupt').exists() and self.path.endswith('.tar.gz'):
+            self.send_response(200)
+            self.end_headers()
+            self.wfile.write(b'broken download')
+            return
         if self.path.startswith('/releases'):
             release = {
                 'tag_name': 'v' + args.version,

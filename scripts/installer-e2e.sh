@@ -39,7 +39,27 @@ export PATH="$("$installer" runtime-path --source "$N_EIN_HOME/installations/$ch
 (cd "$area" && "$N_EIN_HOME/installations/$channel/bin/n-ein-dev" --mode json --print --session-dir "$area/pi-session" -e "$repo_dir/tests/fixtures/ordinary-provider.ts" --provider nein-test --model cheap 'Report your model and tools') > "$area/pi.jsonl"
 grep -q '"role":"assistant"' "$area/pi.jsonl"
 grep -q 'codegraph_explore' "$area/pi.jsonl"
-printf 'preserve me\n' > "$N_EIN_HOME/$channel/personal-marker"
+mkdir -p "$area/personal" "$N_EIN_HOME/$channel/pi-agent/sessions"
+printf '{"fixture":{"type":"api_key","key":"test-only"}}\n' > "$N_EIN_HOME/$channel/pi-agent/auth.json"
+printf 'test session\n' > "$N_EIN_HOME/$channel/pi-agent/sessions/keep.jsonl"
+printf '{"schema":1,"agents":{}}\n' > "$N_EIN_HOME/$channel/models.json"
+printf 'test preference\n' > "$N_EIN_HOME/preferences.md"
+cp "$N_EIN_HOME/$channel/pi-agent/auth.json" "$area/personal/auth"
+cp "$N_EIN_HOME/$channel/pi-agent/sessions/keep.jsonl" "$area/personal/session"
+cp "$N_EIN_HOME/$channel/models.json" "$area/personal/models"
+cp "$N_EIN_HOME/preferences.md" "$area/personal/preferences"
+check_personal() {
+ cmp "$area/personal/auth" "$N_EIN_HOME/$channel/pi-agent/auth.json"
+ cmp "$area/personal/session" "$N_EIN_HOME/$channel/pi-agent/sessions/keep.jsonl"
+ cmp "$area/personal/models" "$N_EIN_HOME/$channel/models.json"
+ cmp "$area/personal/preferences" "$N_EIN_HOME/preferences.md"
+}
+cp "$N_EIN_HOME/installations/$channel/install.json" "$area/installed-before"
+printf 'corrupt' > "$area/corrupt"
+if curl -fsS "$base/install.sh" | bash -s -- --channel "$channel"; then echo 'se aceptó una descarga corrupta' >&2; exit 1; fi
+rm "$area/corrupt"
+cmp "$area/installed-before" "$N_EIN_HOME/installations/$channel/install.json"
+check_personal
 curl -fsS "$base/install.sh" | bash -s -- --version "$version"
 [[ ! -d "$N_EIN_HOME/installations/$channel.backups" ]]
 # También se ejercita CodeGraph: ejecutar --version no prueba el binario de indexación.
@@ -62,11 +82,11 @@ tar -xzf "$area/old.tar.gz" -C "$area"
 "$area/$old/bin/n-ein-install" update --source "$area/$old" --channel "$channel"
 curl -fsS "$base/install.sh" | bash -s -- --channel "$channel"
 "$installer" doctor --runtime
-grep -q 'preserve me' "$N_EIN_HOME/$channel/personal-marker"
+check_personal
 "$installer" restore --channel "$channel"
 "$installer" doctor --channel "$channel" | grep -q '0.1.0-preview.3'
 "$N_EIN_LINK_DIR/nein" --project "$area" --view configuracion --once > /dev/null
 curl -fsS "$base/install.sh" | bash -s -- --channel "$channel"
 "$installer" uninstall --channel "$channel"
-grep -q 'preserve me' "$N_EIN_HOME/$channel/personal-marker"
+check_personal
 printf 'installer E2E: clean curl install, repeat, Pi, CodeGraph, upgrade, restore and data preservation: OK\n'

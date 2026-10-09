@@ -82,3 +82,21 @@ func TestRemotePackageBeforeExecution(t *testing.T) {
 		t.Fatal("wrong manifest version accepted")
 	}
 }
+
+func TestArtifactInstallsOnlyManifestFiles(t *testing.T) {
+	source, self, target, _ := sourceFixture(t)
+	artifact := filepath.Join(t.TempDir(), "artifact")
+	if err := packageArtifact(source, artifact, self, false, io.Discard); err != nil {
+		t.Fatal(err)
+	}
+	extra := filepath.Join(artifact, "pi-package/extensions/unlisted.ts")
+	if err := os.WriteFile(extra, []byte("not in artifact manifest"), 0600); err != nil {
+		t.Fatal(err)
+	}
+	if err := install(artifact, target, "preview", self, false, false, io.Discard); err != nil {
+		t.Fatal(err)
+	}
+	if _, err := os.Stat(filepath.Join(target, "pi-package/extensions/unlisted.ts")); !os.IsNotExist(err) {
+		t.Fatal("installed an undeclared file")
+	}
+}
