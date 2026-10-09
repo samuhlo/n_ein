@@ -44,7 +44,9 @@ nein
   <img src="docs/assets/nein-setup.png" alt="Plan de nein-setup --dry-run" width="720" />
 </div>
 
-Solo hace falta Bun: `nein-setup` instala Pi y CodeGraph fijados dentro de `~/.n_ein`, sin tocar el `pi` global ni Ein legado. Hay candidato para macOS arm64 y Linux amd64. El primer arranque pide `/login` en el hogar aislado; ninguna credencial se copia.
+La preview.3 necesita Bun y Node ≥22.19.0: `nein-setup` instala Pi y CodeGraph fijados dentro de `~/.n_ein`, sin tocar el `pi` global ni Ein legado. Hay candidato para macOS arm64 y Linux amd64. El primer arranque pide `/login` en el hogar aislado; ninguna credencial se copia.
+
+> _note: la candidata `0.2.0-alpha.1` añade Node/Bun gestionados, instalación por curl y matriz macOS/Ubuntu/Arch. Está pendiente de revisión; [detalles](docs/releases/0.2.0-alpha.1.md). Los comandos anteriores siguen instalando la preview publicada._
 
 > _note: `--dry-run` enseña el plan sin escribir. Sobre una preview anterior, `nein-setup` actualiza con backup y `n-ein-install restore --channel preview` vuelve atrás._
 

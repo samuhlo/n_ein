@@ -12,8 +12,12 @@ cleanup() { [[ -z "$server_pid" ]] || { kill "$server_pid" 2>/dev/null || true; 
 trap cleanup EXIT
 python3 "$repo_dir/tests/installer-server.py" "$assets" "$version" "$area/port" &
 server_pid=$!
-for ((attempt=0; attempt<100; attempt++)); do [[ ! -s "$area/port" ]] || break; sleep 0.1; done
-[[ -s "$area/port" ]]
+for ((attempt=0; attempt<600; attempt++)); do
+  [[ ! -s "$area/port" ]] || break
+  kill -0 "$server_pid" 2>/dev/null || { echo 'fixture HTTP terminó antes de arrancar' >&2; exit 1; }
+  sleep 0.1
+done
+if [[ ! -s "$area/port" ]]; then echo 'fixture HTTP no arrancó en 60 segundos' >&2; exit 1; fi
 base="http://127.0.0.1:$(cat "$area/port")"
 export N_EIN_BOOTSTRAP_BASE_URL="$base" N_EIN_RELEASE_API="$base"
 export N_EIN_HOME="$area/home with spaces" N_EIN_LINK_DIR="$area/links"

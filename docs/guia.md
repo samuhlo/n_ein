@@ -88,7 +88,7 @@ Para volver desde Claude, di «sigamos con Pi». El agente carga `to-pi` y conse
 
 ## // 004. Instalación local de prueba
 
-La [preview 0.1.0-preview.3](https://github.com/samuhlo/n_ein/releases/tag/v0.1.0-preview.3) distribuye un candidato para macOS arm64 y otro para Linux amd64. Solo hace falta Bun: `nein-setup` instala Pi y CodeGraph fijados dentro de `~/.n_ein`.
+La [preview 0.1.0-preview.3](https://github.com/samuhlo/n_ein/releases/tag/v0.1.0-preview.3) distribuye un candidato para macOS arm64 y otro para Linux amd64. La preview.3 requiere Bun y Node ≥22.19.0: `nein-setup` instala Pi y CodeGraph fijados dentro de `~/.n_ein`.
 
 ```sh
 gh release download v0.1.0-preview.3 -R samuhlo/n_ein --pattern 'n-ein-0.1.0-preview.3-darwin-arm64.tar.gz*'
@@ -103,7 +103,7 @@ El primer arranque de Pi en preview requiere `/login` en `~/.n_ein/preview/pi-ag
 
 ### Entrada `nein` con Pi gestionado
 
-Un candidato extraído se instala completo con un solo comando, solo con Bun disponible:
+Un candidato extraído se instala completo con un solo comando, con Bun y Node disponibles para preview.3:
 
 ```sh
 ./<candidato>/bin/nein-setup --dry-run
@@ -159,3 +159,7 @@ La instalación directa desde `.` sirve para desarrollo. Para probar y promover 
 El código va a `~/.n_ein/installations/<canal>`; Pi y Claude guardan credenciales y sesiones en `~/.n_ein/<canal>/`, fuera del árbol gestionado. `doctor` comprueba hashes y modos; con `--runtime` comprueba además que Bun está disponible y que el Pi gestionado (o `N_EIN_PI_BIN`) tiene la versión de `runtime.json`, sin probar la autenticación. La vista Sistema usa ese diagnóstico ampliado. `install` y `update` rechazan directorios existentes que no sean instalaciones n_ein; una instalación identificada se puede reparar aunque un archivo esté dañado. `update --source`, `restore` y `uninstall` crean o conservan backups del código sin borrar esos datos. El [ensayo del instalador](../evals/results/2026-09-29-installer.md) verificó la promoción de un candidato en destinos temporales; las releases remotas se distribuyen en el canal preview.
 
 `nein` (o `n-ein`) abre la portada: la marca 004 Panel, el contexto del proyecto y el menú para abrir Pi (`p`), Claude Code (`c`), elegir una sesión (`s`) o ver el estado (`e`). `tab` recorre Estado, Configuración, Sesiones y Sistema; `j/k`, `g/G`, `f` o `/`, `enter` y `q` conservan los atajos de Ein; cualquier tecla salta la apertura y `--no-intro` la omite. `--once` o una salida sin TTY pintan una vez y salen con 0; `--view sesiones` permite inspeccionar otra vista en scripts. En la TUI, la portada abre Pi o Claude, Sesiones reanuda una sesión del proyecto y Sistema ejecuta `doctor --runtime` sobre el paquete instalado. La portada y Sistema respetan `N_EIN_PI_BIN` y `N_EIN_CLAUDE_BIN`; la portada no ofrece abrir Pi si su versión difiere de la fijada. La [prueba del launcher](../evals/results/2026-09-29-launcher.md) incluye el binario instalado fuera del checkout y sesiones reales de Pi y Claude abiertas y reanudadas desde el binario Go de desarrollo. La edición de ajustes y las actualizaciones remotas aún no están conectadas a esas vistas.
+
+## Alpha y distribución nueva
+
+La candidata 0.2.0-alpha.1 incorpora dependencias gestionadas, curl y matriz de instalación. Conserva el hogar preview. El [contrato de distribución](11-distribucion.md) describe versionado, instalación, hotfixes, pruebas y publicación; las [notas](releases/0.2.0-alpha.1.md) distinguen los comandos futuros de la preview pública.

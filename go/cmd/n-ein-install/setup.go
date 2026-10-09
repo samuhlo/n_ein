@@ -136,6 +136,9 @@ func tildePath(path string) string {
 
 // [FLOW] Recorrido completo desde un paquete: Pi gestionado → código → enlace nein → doctor.
 func setup(source, channel, self string, dryRun bool, output io.Writer) error {
+	if err := systemTools(); err != nil {
+		return err
+	}
 	artifact, err := validateArtifact(source)
 	if err != nil {
 		return fmt.Errorf("setup requiere un paquete válido: %w", err)

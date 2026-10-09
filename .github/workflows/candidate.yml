@@ -91,3 +91,19 @@ jobs:
             useradd --create-home tester
             su -s /bin/bash tester -c '\''cd /work && ./scripts/installer-e2e.sh /work/candidate "$RELEASE_VERSION"'\''
           '
+
+  assets:
+    name: Cross-platform payload
+    needs: native
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/download-artifact@v7
+        with:
+          pattern: candidate-*
+          merge-multiple: true
+          path: candidate
+      - name: Mismos fuentes y metadatos, binarios correspondientes al paquete
+        env:
+          RELEASE_VERSION: ${{ inputs.version }}
+        run: python3 scripts/verify-release-assets.py candidate "$RELEASE_VERSION" "$GITHUB_SHA"

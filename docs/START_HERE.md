@@ -22,6 +22,10 @@ El experimento de equipo se conserva desactivado: `N_EIN_TEAM=1` lo habilita exp
 - El relevo ordinario Pi→Claude→Pi y la recuperación en una sesión nueva están probados. El ensayo con equipo y Claude real quedó pendiente por cuota y ahora está aplazado con el experimento.
 - Modelo local descartado el 5 de octubre. No descargar modelos ni preparar servidores.
 
+## Candidata del 9 de octubre
+
+Encargo autorizado: preparar `0.2.0-alpha.1` para revisión de Samu, sin publicación ni actualización personal. Rama `feat/alpha-distribution` desde main `ed9f7c9`, incluyendo README y estética Claude. WORK.md registra el estado y [distribución](11-distribucion.md) el contrato de versiones/instalación/CI. No confundir la candidata con una release ya publicada.
+
 ## Ruta de lectura
 
 Lee [decisiones](01-decisiones.md) y `WORK.md`. Para implementar, [plan](03-plan.md) y solo las secciones pertinentes de [pruebas](04-pruebas.md), [diseño](02-diseno.md) y [despliegue](05-despliegue.md). Los comentarios y logs siguen el contrato de diseño. `./scripts/check.sh` reúne comprobaciones locales sin inferencia pagada.

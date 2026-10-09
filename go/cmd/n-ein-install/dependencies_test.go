@@ -12,6 +12,7 @@ import (
 	"os"
 	"path/filepath"
 	"runtime"
+	"strings"
 	"testing"
 )
 
@@ -63,5 +64,22 @@ func TestDependenciesVerifiedAndRepairable(t *testing.T) {
 	}
 	if _, err := os.Stat(filepath.Join(home, "runtimes/bun/1.3.15")); !os.IsNotExist(err) {
 		t.Fatal("failed stage promoted")
+	}
+}
+
+func TestSetupMissingSystemToolsLeavesHomeUntouched(t *testing.T) {
+	source, self, _, _ := sourceFixture(t)
+	artifact := filepath.Join(t.TempDir(), "artifact")
+	if err := packageArtifact(source, artifact, self, false, io.Discard); err != nil {
+		t.Fatal(err)
+	}
+	home := filepath.Join(t.TempDir(), "fresh-home")
+	t.Setenv("N_EIN_HOME", home)
+	t.Setenv("PATH", t.TempDir())
+	if err := setup(artifact, "preview", self, false, io.Discard); err == nil || !strings.Contains(err.Error(), "git") {
+		t.Fatalf("missing dependency diagnostic: %v", err)
+	}
+	if _, err := os.Stat(home); !os.IsNotExist(err) {
+		t.Fatal("mutated home before checking dependencies")
 	}
 }

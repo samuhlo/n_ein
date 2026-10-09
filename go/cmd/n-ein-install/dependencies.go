@@ -273,3 +273,17 @@ func installDependency(target, name string, pin dependencyPin, asset dependencyA
 	}
 	return nil
 }
+
+// Las dependencias del sistema se explican antes de mutar el hogar; no se instala con sudo.
+func systemTools() error {
+	var missing []string
+	for _, name := range []string{"git", "rg"} {
+		if _, err := exec.LookPath(name); err != nil {
+			missing = append(missing, name)
+		}
+	}
+	if len(missing) > 0 {
+		return fmt.Errorf("faltan herramientas: %s; instala Git y ripgrep (Ubuntu: apt install git ripgrep; Arch: pacman -S git ripgrep; macOS: brew install git ripgrep)", strings.Join(missing, ", "))
+	}
+	return nil
+}
