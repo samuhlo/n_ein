@@ -38,7 +38,7 @@ curl -fsS "$base/install.sh" | bash -s -- --channel "$channel" --dry-run
 [[ ! -e "$N_EIN_HOME" ]]
 curl -fsS "$base/install.sh" | bash -s -- --channel "$channel"
 installer="$N_EIN_HOME/installations/$channel/bin/n-ein-install"
-"$installer" doctor --runtime
+"$installer" doctor --channel "$channel" --runtime
 cmp "$area/package-before.json" "$area/package.json"
 "$N_EIN_LINK_DIR/nein" --project "$area" --view configuracion --once > "$area/launcher"
 grep -q 'nein/auto' "$area/launcher"
@@ -89,7 +89,7 @@ actual="$(shasum -a 256 "$area/old.tar.gz")"
 tar -xzf "$area/old.tar.gz" -C "$area"
 "$area/$old/bin/n-ein-install" update --source "$area/$old" --channel "$channel"
 curl -fsS "$base/install.sh" | bash -s -- --channel "$channel"
-"$installer" doctor --runtime
+"$installer" doctor --channel "$channel" --runtime
 check_personal
 "$installer" restore --channel "$channel"
 "$installer" doctor --channel "$channel" | grep -q '0.1.0-preview.3'

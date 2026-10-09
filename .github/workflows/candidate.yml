@@ -98,10 +98,10 @@ jobs:
           docker image inspect "$IMAGE" --format '{{index .RepoDigests 0}}'
           docker run --rm --init -e RELEASE_VERSION -e DISTRO -v "$PWD:/work:ro" "$IMAGE" bash -euc '
             if [[ "$DISTRO" == arch ]]; then
-              pacman -Syu --noconfirm --needed bash curl ca-certificates git ripgrep python tar gzip perl shadow
+              pacman -Syu --noconfirm --needed bash curl ca-certificates git ripgrep python tar gzip perl shadow diffutils
             else
               apt-get update
-              DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends curl ca-certificates git ripgrep python3 tar gzip perl passwd
+              DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends curl ca-certificates git ripgrep python3 tar gzip perl passwd diffutils
             fi
             useradd --create-home tester
             su -s /bin/bash tester -c '\''cd /work && ./scripts/installer-e2e.sh /work/candidate "$RELEASE_VERSION"'\''
