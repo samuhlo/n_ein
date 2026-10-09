@@ -13,6 +13,7 @@ import (
 	"github.com/charmbracelet/x/term"
 
 	"n_ein/internal/brand"
+	"n_ein/internal/layout"
 )
 
 func main() {
@@ -80,6 +81,9 @@ func run(args []string) error {
 	}
 	packageRoot, err := findPackageRoot(*root)
 	if err != nil {
+		return err
+	}
+	if err := layout.UseDependencies(packageRoot); err != nil {
 		return err
 	}
 	if *runtime != "" {

@@ -33,6 +33,7 @@ bash -n bin/nein bin/nein-setup bin/n-ein-codegraph bin/n-ein-dev bin/n-ein-clau
 tests/launcher.sh
 tests/handoff-launcher.sh
 tests/reverse-launcher.sh
+bash -n install.sh scripts/build-release.sh scripts/installer-e2e.sh
 bun run tests/work-doc.ts
 bun run tests/models.ts
 bun run tests/memory.ts
@@ -68,9 +69,14 @@ bun run tests/team-extension.ts
 bun run tests/team-pi.ts
 bun run scripts/typecheck-agents.ts
 # El plugin de Claude se valida con el motor que lo cargará; sin Claude instalado no hay nada que validar.
+if [[ "${N_EIN_REQUIRE_CLAUDE:-0}" == 1 ]] && ! command -v claude >/dev/null 2>&1; then
+  printf '[ERR] :: CLAUDE_TEST :: required host missing\n' >&2; exit 69
+fi
 if command -v claude >/dev/null 2>&1; then
   claude plugin validate pi-package/claude-plugin > /dev/null
   claude plugin test pi-package/claude-plugin
+else
+  printf '[PEND] :: CLAUDE_TEST :: native plugin tests skipped; host unavailable\n'
 fi
 scripts/smoke-package.sh
 

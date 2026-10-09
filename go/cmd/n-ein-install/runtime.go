@@ -146,8 +146,17 @@ func installPiRuntime(source string, dryRun bool, output io.Writer) error {
 	defer os.RemoveAll(stage)
 	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Minute)
 	defer cancel()
-	cmd := exec.CommandContext(ctx, bun, "install", "--global", piPackage+"@"+version)
-	cmd.Dir = stage
+	// Un manifest propio evita que Bun busque el package.json de un proyecto padre.
+	global := filepath.Join(stage, "global")
+	if err := os.MkdirAll(global, 0700); err != nil {
+		return err
+	}
+	manifest, _ := json.Marshal(map[string]any{"private": true, "dependencies": map[string]string{piPackage: version}})
+	if err := os.WriteFile(filepath.Join(global, "package.json"), manifest, 0600); err != nil {
+		return err
+	}
+	cmd := exec.CommandContext(ctx, bun, "install", "--cwd", global)
+	cmd.Dir = global
 	cmd.Env = append(os.Environ(),
 		"BUN_INSTALL_GLOBAL_DIR="+filepath.Join(stage, "global"),
 		"BUN_INSTALL_BIN="+filepath.Join(stage, "bin"),
@@ -155,6 +164,15 @@ func installPiRuntime(source string, dryRun bool, output io.Writer) error {
 	)
 	if data, err := cmd.CombinedOutput(); err != nil {
 		return fmt.Errorf("instalación de Pi falló: %w: %s", err, strings.TrimSpace(string(data)))
+	}
+	if err := os.MkdirAll(filepath.Join(stage, "bin"), 0755); err != nil {
+		return err
+	}
+	binary := filepath.Join(stage, "bin", "pi")
+	if _, err := os.Lstat(binary); os.IsNotExist(err) {
+		if err := os.Symlink("../global/node_modules/.bin/pi", binary); err != nil {
+			return err
+		}
 	}
 	marker, err := json.MarshalIndent(map[string]string{"package": piPackage, "version": version}, "", "  ")
 	if err != nil {

@@ -102,6 +102,11 @@ extracted="$smoke_dir/extracted/$(basename "$candidate")"
   cd "$output_dir"
   shasum -a 256 "$(basename "$archive")" > "$(basename "$archive").sha256"
 )
+# El bootstrap usa el mismo instalador del paquete ya comprobado.
+installer_asset="n-ein-install-$release_version-$platform"
+cp "$candidate/bin/n-ein-install" "$output_dir/$installer_asset"
+(cd "$output_dir" && shasum -a 256 "$installer_asset" > "$installer_asset.sha256")
+sed "s/^bootstrap_tag=.*/bootstrap_tag=\"v$release_version\"/" "$repo_dir/install.sh" > "$output_dir/install.sh"
 printf '// 000 PREVIEW · %s\n' "$archive"
 cat "$archive.sha256"
 finished=1

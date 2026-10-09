@@ -17,11 +17,15 @@ Base: `ed9f7c9` (main remoto con estética Claude y README). Rama `feat/alpha-di
 ## Tareas y aceptación
 
 - [x] A1 Versiones: validar/ordenar SemVer, preservar tags legacy, build y hotfix coherentes.
-- [ ] A2 Dependencias: instalación limpia con Node y Bun gestionados, checksums, dry-run, reparación, entorno efectivo al lanzar.
-- [ ] A3 Distribución: curl, canal/versión explícita, SHA antes de ejecutar, descarga fallida sin sustituir instalación, setup/update existentes.
+- [x] A2 Dependencias: instalación limpia con Node y Bun gestionados, checksums, dry-run, reparación, entorno efectivo al lanzar.
+- [x] A3 Distribución: curl, canal/versión explícita, SHA antes de ejecutar, descarga fallida sin sustituir instalación, setup/update existentes.
 - [ ] A4 Matriz: macOS, Ubuntu limpio y Arch limpio; instalar, repetir, actualizar desde preview.3, restaurar y preservar datos; pruebas nativas Claude explícitas.
 - [ ] A5 Candidata: paquete y CI comprobados, notas y guía de revisión; sin publicación ni actualización personal.
 
 ## Fronteras de prueba
 
 CLI y artefacto instalado; repositorio HTTP simulado para errores/selección; runtimes fijados reales en hogares temporales; tests de Pi sin modelos; plugin Claude con su host. Contenedor Arch acredita instalación/CLI, no una sesión gráfica Omarchy. No hay Docker daemon local al iniciar; usar CI para Linux.
+
+## Evidencia en curso
+
+Go y suite completa local pasan con hogar aislado `dist/alpha-home` y Node 24.21.0/Bun 1.3.14 propios. La instalación limpia detectó que Bun podía usar un package.json padre: Pi ahora tiene manifest privado dentro de su runtime y no modifica el proyecto padre. Cliente de releases probado con HTTP simulado, checksum y versión de manifest antes de extraer/ejecutar. E2E completo de curl y matriz aún pendientes.

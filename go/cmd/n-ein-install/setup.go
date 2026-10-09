@@ -239,6 +239,22 @@ func setup(source, channel, self string, dryRun bool, output io.Writer) error {
 		}},
 	}
 
+	pins, err := dependencyPins(source)
+	if err != nil {
+		return err
+	}
+	if len(pins) > 0 {
+		steps = append([]setupStep{{"dependencias", func(report io.Writer) (string, error) {
+			if err := installDependencies(source, dryRun, report); err != nil {
+				return "", err
+			}
+			if err := layout.UseDependencies(source); err != nil {
+				return "", err
+			}
+			return "Node y Bun · versiones fijadas", nil
+		}}}, steps...)
+	}
+
 	p := brand.ForWriter(output)
 	view := setupView{output: output, painter: p, live: p.Color, plan: dryRun, total: len(steps)}
 	fmt.Fprintln(output)

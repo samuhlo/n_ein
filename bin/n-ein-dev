@@ -7,6 +7,11 @@ export N_EIN_COORDINATOR_ROOT="$(git rev-parse --show-toplevel 2>/dev/null || pw
 # [FLOW] ARRANQUE AISLADO
 # Pi conserva su configuración, autenticación y sesiones dentro de este hogar.
 repo_dir="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd -P)"
+# El paquete instalado encuentra sus dependencias sin pedir cambios globales de PATH.
+if [[ -x "$repo_dir/bin/n-ein-install" ]]; then
+  runtime_path="$("$repo_dir/bin/n-ein-install" runtime-path --source "$repo_dir")" || exit 69
+  export PATH="$runtime_path"
+fi
 channel="dev"
 if [[ -f "$repo_dir/.n-ein-channel" ]]; then IFS= read -r channel < "$repo_dir/.n-ein-channel"; fi
 case "$channel" in dev|preview|stable) ;; *) printf '[ERR] :: CHANNEL_BAD :: value: %s\n' "$channel" >&2; exit 64 ;; esac
