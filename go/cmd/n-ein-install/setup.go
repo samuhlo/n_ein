@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"io"
 	"os"
+	"os/exec"
 	"path/filepath"
 	"strings"
 	"sync"
@@ -283,7 +284,16 @@ func setup(source, channel, self string, dryRun bool, output io.Writer) error {
 		fmt.Fprintf(output, "\n  %s\n", p.Fg(brand.Faint, "--dry-run enseña el plan sin tocar nada"))
 		return nil
 	}
-	fmt.Fprintf(output, "\n  %s %s %s\n", p.Fg(brand.Concrete, "listo."), p.Fg(brand.Muted, "abre el launcher con"), p.Fg(brand.Concrete, "nein"))
+	entry := filepath.Join(linkDirectory(root), "nein")
+	command := "nein"
+	found, lookupErr := exec.LookPath("nein")
+	actual, _ := filepath.EvalSymlinks(found)
+	expected, _ := filepath.EvalSymlinks(entry)
+	if lookupErr != nil || actual != expected {
+		command = "'" + strings.ReplaceAll(entry, "'", "'\\''") + "'"
+		fmt.Fprintf(output, "\n  Añade %s al PATH de tu shell para abrir con nein.\n", linkDirectory(root))
+	}
+	fmt.Fprintf(output, "\n  %s %s %s\n", p.Fg(brand.Concrete, "listo."), p.Fg(brand.Muted, "abre el launcher con"), p.Fg(brand.Concrete, command))
 	return nil
 }
 

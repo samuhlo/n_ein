@@ -22,6 +22,9 @@ base="http://127.0.0.1:$(cat "$area/port")"
 export N_EIN_BOOTSTRAP_BASE_URL="$base" N_EIN_RELEASE_API="$base"
 export N_EIN_HOME="$area/home with spaces" N_EIN_LINK_DIR="$area/links"
 unset N_EIN_PI_BIN N_EIN_CODEGRAPH_BIN N_EIN_BUN_BIN N_EIN_MODELS_FILE N_EIN_AGENT_DIR N_EIN_LANG_FILE N_EIN_PREFERENCES_FILE
+# Un instalador ejecutado desde un proyecto no debe escribir su package.json padre.
+printf '{"name":"unrelated-parent","private":true,"dependencies":{}}\n' > "$area/package.json"
+cp "$area/package.json" "$area/package-before.json"
 original_path="$PATH"
 # No se dejan Node ni Bun globales disponibles para esconder dependencias ausentes.
 mkdir "$area/path"
@@ -36,6 +39,7 @@ curl -fsS "$base/install.sh" | bash -s -- --channel "$channel" --dry-run
 curl -fsS "$base/install.sh" | bash -s -- --channel "$channel"
 installer="$N_EIN_HOME/installations/$channel/bin/n-ein-install"
 "$installer" doctor --runtime
+cmp "$area/package-before.json" "$area/package.json"
 "$N_EIN_LINK_DIR/nein" --project "$area" --view configuracion --once > "$area/launcher"
 grep -q 'nein/auto' "$area/launcher"
 # El host instalado carga el paquete con un proveedor determinista y hogares sin credenciales.

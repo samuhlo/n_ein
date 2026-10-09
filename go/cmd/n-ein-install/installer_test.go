@@ -492,6 +492,9 @@ func TestSetupInstallsEverythingOnceFromPackage(t *testing.T) {
 			t.Fatalf("falta %q en la salida:\n%s", want, first)
 		}
 	}
+	if !strings.Contains(first, "PATH") {
+		t.Fatal("setup did not explain the missing PATH entry")
+	}
 	if strings.Contains(first, "\x1b[") {
 		t.Fatal("setup sin TTY emitió ANSI")
 	}
