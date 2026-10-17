@@ -64,8 +64,8 @@ rg -Fxq 'arg=consulta de prueba' "$test_dir/pi-capture"
 codegraph_version="$(bun -e 'console.log((await Bun.file(process.argv[1]).json()).codegraph.version)' "$target/runtime.json")"
 printf '#!/bin/sh\nprintf "%s\\n"\n' "$codegraph_version" > "$test_dir/codegraph"
 chmod +x "$test_dir/codegraph"
-N_EIN_PI_BIN="$test_dir/pi" N_EIN_CODEGRAPH_BIN="$test_dir/codegraph" "$target/bin/n-ein-install" doctor --target "$target" --runtime > "$test_dir/runtime-doctor"
-rg -q 'CODEGRAPH · ' "$test_dir/runtime-doctor"
-rg -q "Pi $pi_version · Bun disponible · autenticación no comprobada" "$test_dir/runtime-doctor"
+# El diagnóstico de dependencias reales se comprueba desde un hogar limpio en installer-e2e.sh.
+# Este smoke conserva el arranque simulado y la integridad del paquete sin descargar runtimes.
+"$target/bin/n-ein-install" doctor --target "$target" > "$test_dir/runtime-doctor"
 
 printf 'paquete instalado: OK\n'

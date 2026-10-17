@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"io"
 	"os"
+	"os/exec"
 	"path/filepath"
 	"strings"
 	"sync"
@@ -136,6 +137,9 @@ func tildePath(path string) string {
 
 // [FLOW] Recorrido completo desde un paquete: Pi gestionado → código → enlace nein → doctor.
 func setup(source, channel, self string, dryRun bool, output io.Writer) error {
+	if err := systemTools(); err != nil {
+		return err
+	}
 	artifact, err := validateArtifact(source)
 	if err != nil {
 		return fmt.Errorf("setup requiere un paquete válido: %w", err)
@@ -239,6 +243,22 @@ func setup(source, channel, self string, dryRun bool, output io.Writer) error {
 		}},
 	}
 
+	pins, err := dependencyPins(source)
+	if err != nil {
+		return err
+	}
+	if len(pins) > 0 {
+		steps = append([]setupStep{{"dependencias", func(report io.Writer) (string, error) {
+			if err := installDependencies(source, dryRun, report); err != nil {
+				return "", err
+			}
+			if err := layout.UseDependencies(source); err != nil {
+				return "", err
+			}
+			return "Node y Bun · versiones fijadas", nil
+		}}}, steps...)
+	}
+
 	p := brand.ForWriter(output)
 	view := setupView{output: output, painter: p, live: p.Color, plan: dryRun, total: len(steps)}
 	fmt.Fprintln(output)
@@ -264,7 +284,16 @@ func setup(source, channel, self string, dryRun bool, output io.Writer) error {
 		fmt.Fprintf(output, "\n  %s\n", p.Fg(brand.Faint, "--dry-run enseña el plan sin tocar nada"))
 		return nil
 	}
-	fmt.Fprintf(output, "\n  %s %s %s\n", p.Fg(brand.Concrete, "listo."), p.Fg(brand.Muted, "abre el launcher con"), p.Fg(brand.Concrete, "nein"))
+	entry := filepath.Join(linkDirectory(root), "nein")
+	command := "nein"
+	found, lookupErr := exec.LookPath("nein")
+	actual, _ := filepath.EvalSymlinks(found)
+	expected, _ := filepath.EvalSymlinks(entry)
+	if lookupErr != nil || actual != expected {
+		command = "'" + strings.ReplaceAll(entry, "'", "'\\''") + "'"
+		fmt.Fprintf(output, "\n  Añade %s al PATH de tu shell para abrir con nein.\n", linkDirectory(root))
+	}
+	fmt.Fprintf(output, "\n  %s %s %s\n", p.Fg(brand.Concrete, "listo."), p.Fg(brand.Muted, "abre el launcher con"), p.Fg(brand.Concrete, command))
 	return nil
 }
 

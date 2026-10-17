@@ -30,6 +30,9 @@ func TestRuntimeLeaseAcrossProcesses(t *testing.T) {
 	if err := os.MkdirAll(filepath.Join(root, "bin"), 0o755); err != nil {
 		t.Fatal(err)
 	}
+	if err := os.WriteFile(filepath.Join(root, "runtime.json"), []byte(`{"schema":1}`), 0600); err != nil {
+		t.Fatal(err)
+	}
 	marker := filepath.Join(project, "started")
 	script := "#!/bin/sh\nprintf '%s\\n' \"$1\" >> started\nread -r done || true\n"
 	if err := os.WriteFile(filepath.Join(root, "bin", "n-ein-dev"), []byte(script), 0o755); err != nil {

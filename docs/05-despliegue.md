@@ -12,6 +12,10 @@ Conservar este handoff como documentación de origen. Al comenzar desarrollo, el
 
 La carpeta nueva no estaba inicializada en Git cuando se creó el paquete; ahora `main` se sigue desde `samuhlo/n_ein` público. No se ha elegido licencia propia. Los ejecutables locales se llaman `n-ein` y `n-ein-install`; eso no supone disponibilidad en registros.
 
+## Actualización del 9 de octubre
+
+El [contrato de distribución](11-distribucion.md) concreta ahora SemVer, alpha en preview, bootstrap curl, Node/Bun gestionados, matriz macOS/Ubuntu/Arch y publicación de bytes comprobados. La implementación se prepara en rama para revisión; todavía no hay alpha pública. Los apartados siguientes conservan el diseño y la evidencia de las previews anteriores.
+
 ## Canales propuestos
 
 | Canal | Origen | Uso | Condición de entrada |

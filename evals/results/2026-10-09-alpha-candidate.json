@@ -1,0 +1,78 @@
+{
+  "schema": 1,
+  "version": "0.2.0-alpha.1",
+  "source": "d9ab0323b97c867370b83d961b0cb043bb505af9",
+  "published": false,
+  "ci": {
+    "url": "https://github.com/samuhlo/n_ein/actions/runs/37907381998",
+    "conclusion": "success",
+    "jobs": [
+      {
+        "name": "version",
+        "conclusion": "success"
+      },
+      {
+        "name": "candidate / Native (linux-amd64)",
+        "conclusion": "success"
+      },
+      {
+        "name": "candidate / Native (darwin-arm64)",
+        "conclusion": "success"
+      },
+      {
+        "name": "candidate / Clean arch x86_64",
+        "conclusion": "success"
+      },
+      {
+        "name": "candidate / Cross-platform payload",
+        "conclusion": "success"
+      },
+      {
+        "name": "candidate / Clean ubuntu x86_64",
+        "conclusion": "success"
+      }
+    ]
+  },
+  "artifacts": {
+    "install.sh": {
+      "sha256": "c4efa78f240655d5691a8f57a279853e901d140cc0e93965b21ef1ddc60f4fce",
+      "bytes": 2527
+    },
+    "n-ein-0.2.0-alpha.1-darwin-arm64.tar.gz": {
+      "sha256": "ec60e13706e083cac442adc766166d27fa0f0a52fe86e29104bc7eb5edd2559f",
+      "bytes": 9714727
+    },
+    "n-ein-0.2.0-alpha.1-darwin-arm64.tar.gz.sha256": {
+      "sha256": "288f52268fd1018ffcdc87e91f6c5c6826a3038cd01cfb270957bcc22a75d4e6",
+      "bytes": 106
+    },
+    "n-ein-0.2.0-alpha.1-linux-amd64.tar.gz": {
+      "sha256": "8c624e0f6bb6ecc05156dbd9f6f56506ca562301e83470a83e6dfa5a502e3bad",
+      "bytes": 10454218
+    },
+    "n-ein-0.2.0-alpha.1-linux-amd64.tar.gz.sha256": {
+      "sha256": "8f8d728c76b145442a72e36fc2db5c406a45203d7c4a5091131a5d5e99f979c1",
+      "bytes": 105
+    },
+    "n-ein-install-0.2.0-alpha.1-darwin-arm64": {
+      "sha256": "8acd70e3ef60e9ccabe95a33008fc7aea6df4ad384327a1a91270230e9151510",
+      "bytes": 10481058
+    },
+    "n-ein-install-0.2.0-alpha.1-darwin-arm64.sha256": {
+      "sha256": "35110aa7c1fa07ef4c86d2ab26a6c2dd4879e41c4a111a334f3e6c40c0e36885",
+      "bytes": 107
+    },
+    "n-ein-install-0.2.0-alpha.1-linux-amd64": {
+      "sha256": "5050d97a8281563ede4b7c303df49e4a5ab0db69b4bcabacb23e42d30faf8bd3",
+      "bytes": 11179260
+    },
+    "n-ein-install-0.2.0-alpha.1-linux-amd64.sha256": {
+      "sha256": "75886cc299d7c2a4d37c702e3d3d3678dbd958cba8559df0e2ecec82dbcd281c",
+      "bytes": 106
+    }
+  },
+  "reviewHome": "dist/alpha-home",
+  "personalInstallation": "0.1.0-preview.3",
+  "personalInstallationUpdated": false,
+  "omarchyInteractive": "pending_user_review"
+}

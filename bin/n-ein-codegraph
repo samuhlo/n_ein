@@ -5,6 +5,11 @@ set -uo pipefail
 # Cada agente abre con el índice de CodeGraph creado y al día. Un fallo avisa y
 # no impide trabajar: sin índice el agente es más torpe, no inútil.
 repo_dir="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd -P)"
+# El paquete instalado encuentra sus dependencias sin pedir cambios globales de PATH.
+if [[ -x "$repo_dir/bin/n-ein-install" ]]; then
+  runtime_path="$("$repo_dir/bin/n-ein-install" runtime-path --source "$repo_dir")" || exit 69
+  export PATH="$runtime_path"
+fi
 export DO_NOT_TRACK=1
 
 warn() {

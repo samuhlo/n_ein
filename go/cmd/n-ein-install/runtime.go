@@ -146,8 +146,18 @@ func installPiRuntime(source string, dryRun bool, output io.Writer) error {
 	defer os.RemoveAll(stage)
 	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Minute)
 	defer cancel()
-	cmd := exec.CommandContext(ctx, bun, "install", "--global", piPackage+"@"+version)
-	cmd.Dir = stage
+	// Un manifest propio evita que Bun busque el package.json de un proyecto padre.
+	global := filepath.Join(stage, "global")
+	if err := os.MkdirAll(global, 0700); err != nil {
+		return err
+	}
+	// El lockfile del paquete fija también las dependencias transitivas: Pi acepta rangos ^ que
+	// upstream puede romper sin cambiar la versión de Pi.
+	if err := copyPiLock(source, global, version); err != nil {
+		return err
+	}
+	cmd := exec.CommandContext(ctx, bun, "install", "--frozen-lockfile", "--cwd", global)
+	cmd.Dir = global
 	cmd.Env = append(os.Environ(),
 		"BUN_INSTALL_GLOBAL_DIR="+filepath.Join(stage, "global"),
 		"BUN_INSTALL_BIN="+filepath.Join(stage, "bin"),
@@ -155,6 +165,15 @@ func installPiRuntime(source string, dryRun bool, output io.Writer) error {
 	)
 	if data, err := cmd.CombinedOutput(); err != nil {
 		return fmt.Errorf("instalación de Pi falló: %w: %s", err, strings.TrimSpace(string(data)))
+	}
+	if err := os.MkdirAll(filepath.Join(stage, "bin"), 0755); err != nil {
+		return err
+	}
+	binary := filepath.Join(stage, "bin", "pi")
+	if _, err := os.Lstat(binary); os.IsNotExist(err) {
+		if err := os.Symlink("../global/node_modules/.bin/pi", binary); err != nil {
+			return err
+		}
 	}
 	marker, err := json.MarshalIndent(map[string]string{"package": piPackage, "version": version}, "", "  ")
 	if err != nil {
@@ -186,4 +205,25 @@ func installPiRuntime(source string, dryRun bool, output io.Writer) error {
 	}
 	say(output, "// 000 PI INSTALADO · %s · %s\n", version, target)
 	return nil
+}
+
+func copyPiLock(source, global, version string) error {
+	data, err := os.ReadFile(filepath.Join(source, "pi-runtime", "package.json"))
+	if err != nil {
+		return err
+	}
+	var manifest struct {
+		Dependencies map[string]string `json:"dependencies"`
+	}
+	if json.Unmarshal(data, &manifest) != nil || manifest.Dependencies[piPackage] != version || len(manifest.Dependencies) != 1 {
+		return fmt.Errorf("pi-runtime/package.json no fija Pi %s", version)
+	}
+	if err := os.WriteFile(filepath.Join(global, "package.json"), data, 0o600); err != nil {
+		return err
+	}
+	lock, err := os.ReadFile(filepath.Join(source, "pi-runtime", "bun.lock"))
+	if err != nil {
+		return err
+	}
+	return os.WriteFile(filepath.Join(global, "bun.lock"), lock, 0o600)
 }

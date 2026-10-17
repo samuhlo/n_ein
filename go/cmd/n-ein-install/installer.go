@@ -126,7 +126,7 @@ func collect(source, self string) ([]sourceFile, error) {
 	}
 	for _, rel := range []string{
 		"brand.json", "runtime.json", "bin/nein", "bin/nein-setup", "bin/n-ein-dev", "bin/n-ein-claude-dev", "bin/n-ein-prepare-pi", "bin/n-ein-codegraph", "bin/n-ein-todo",
-		"pi-package/package.json", "pi-package/persona.md", "pi-package/pi-only.md", "pi-package/flow.md", "pi-package/models.ts", "pi-package/router.ts", "pi-package/lang.ts", "pi-package/memory.ts", "pi-package/NOTICE.md",
+		"pi-runtime/package.json", "pi-runtime/bun.lock", "pi-package/package.json", "pi-package/persona.md", "pi-package/pi-only.md", "pi-package/flow.md", "pi-package/models.ts", "pi-package/router.ts", "pi-package/lang.ts", "pi-package/memory.ts", "pi-package/NOTICE.md",
 	} {
 		if err := add(filepath.Join(source, rel), rel); err != nil {
 			return nil, err
@@ -413,16 +413,22 @@ func backupPath(target, prefix string) (string, error) {
 
 func install(source, target, channel, self string, requireExisting, dryRun bool, output io.Writer) error {
 	artifactPath := filepath.Join(source, "package-manifest.json")
-	if _, err := os.Stat(artifactPath); err == nil {
-		if _, err := validateArtifact(source); err != nil {
-			return fmt.Errorf("paquete inválido: %w", err)
+	var files []sourceFile
+	var err error
+	if _, statErr := os.Stat(artifactPath); statErr == nil {
+		artifact, validateErr := validateArtifact(source)
+		if validateErr != nil {
+			return fmt.Errorf("paquete inválido: %w", validateErr)
 		}
-		// BLINDAJE -> Preview y estable copian el mismo instalador del artefacto.
-		self = filepath.Join(source, "bin", "n-ein-install")
-	}
-	files, err := collect(source, self)
-	if err != nil {
-		return err
+		// Solo se copian los bytes declarados: cachés del host y metadatos de macOS quedan fuera.
+		for _, item := range artifact.Files {
+			files = append(files, sourceFile{from: filepath.Join(source, item.Path), rel: item.Path, mode: fs.FileMode(item.Mode)})
+		}
+	} else {
+		files, err = collect(source, self)
+		if err != nil {
+			return err
+		}
 	}
 	if _, err := os.Stat(artifactPath); err == nil {
 		info, err := os.Lstat(artifactPath)

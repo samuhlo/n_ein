@@ -11,6 +11,11 @@ if [[ ! -f "$N_EIN_HANDOFF_SIGNAL" ]]; then
 fi
 
 repo_dir="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd -P)"
+# El paquete instalado encuentra sus dependencias sin pedir cambios globales de PATH.
+if [[ -x "$repo_dir/bin/n-ein-install" ]]; then
+  runtime_path="$("$repo_dir/bin/n-ein-install" runtime-path --source "$repo_dir")" || exit 69
+  export PATH="$runtime_path"
+fi
 project_dir="${N_EIN_COORDINATOR_ROOT:-$PWD}"
 team_summary="$(bun "$repo_dir/pi-package/agents/summary.ts" "$project_dir")" || exit 69
 note="$1"

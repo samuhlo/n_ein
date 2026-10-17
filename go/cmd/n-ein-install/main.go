@@ -10,10 +10,12 @@ import (
 	"os"
 	"os/exec"
 	"path/filepath"
+	"runtime"
 	"strings"
 	"time"
 
 	"n_ein/internal/layout"
+	"n_ein/internal/release"
 )
 
 func main() {
@@ -33,7 +35,21 @@ func run(args []string, output io.Writer, self string) error {
 		return fmt.Errorf("uso: n-ein-install <setup|package|runtime|install|update|doctor|activate|restore|uninstall> [flags]")
 	}
 	verb := args[0]
-	if verb != "setup" && verb != "package" && verb != "runtime" && verb != "install" && verb != "update" && verb != "doctor" && verb != "activate" && verb != "restore" && verb != "uninstall" {
+	if verb == "fetch" {
+		return fetch(args[1:], output)
+	}
+	if verb == "version" {
+		if len(args) != 2 {
+			return fmt.Errorf("uso: version <semver>")
+		}
+		parsed, err := release.Parse(args[1])
+		if err != nil {
+			return err
+		}
+		fmt.Fprintln(output, parsed.Channel())
+		return nil
+	}
+	if verb != "setup" && verb != "package" && verb != "runtime" && verb != "install" && verb != "update" && verb != "doctor" && verb != "activate" && verb != "restore" && verb != "uninstall" && verb != "runtime-path" {
 		return fmt.Errorf("verbo desconocido: %s", verb)
 	}
 
@@ -56,6 +72,14 @@ func run(args []string, output io.Writer, self string) error {
 	}
 	if *runtime && verb != "doctor" {
 		return fmt.Errorf("--runtime solo se usa con doctor")
+	}
+	if verb == "runtime-path" {
+		path, err := layout.DependencyPath(*source)
+		if err != nil {
+			return err
+		}
+		fmt.Fprintln(output, path)
+		return nil
 	}
 	if verb == "package" {
 		if *artifactPath == "" {
@@ -81,6 +105,12 @@ func run(args []string, output io.Writer, self string) error {
 	if verb == "runtime" {
 		absSource, err := filepath.Abs(*source)
 		if err != nil {
+			return err
+		}
+		if err := installDependencies(absSource, *dryRun, output); err != nil {
+			return err
+		}
+		if err := layout.UseDependencies(absSource); err != nil {
 			return err
 		}
 		if err := installPiRuntime(absSource, *dryRun, output); err != nil {
@@ -149,6 +179,24 @@ func separate(source, target string) error {
 
 // [FLOW] Diagnóstico opcional: la integridad del paquete no depende de tener Pi instalado.
 func checkRuntime(root string, output io.Writer) error {
+	if err := layout.UseDependencies(root); err != nil {
+		return err
+	}
+	pins, err := dependencyPins(root)
+	if err != nil {
+		return err
+	}
+	home, err := layout.Root()
+	if err != nil {
+		return err
+	}
+	for name, pin := range pins {
+		asset := pin.Assets[runtime.GOOS+"-"+runtime.GOARCH]
+		if !dependencyValid(filepath.Join(home, "runtimes", name, pin.Version), name, pin, asset) {
+			return fmt.Errorf("%s gestionado ausente o dañado; ejecuta nein-setup", name)
+		}
+	}
+
 	var config struct {
 		Schema int `json:"schema"`
 		Pi     struct {

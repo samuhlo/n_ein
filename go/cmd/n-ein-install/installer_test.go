@@ -89,6 +89,8 @@ func sourceFixture(t *testing.T) (source, self, target, data string) {
 	writeFixture(t, source, "brand.json", `{"colors":{"yellow":"#FFCA40"}}`, 0o644)
 	key, hash := fakeCodeGraphRelease(t, "1.6.1")
 	writeFixture(t, source, "runtime.json", fmt.Sprintf(`{"schema":1,"pi":{"version":"0.87.1","model":"openai-codex/gpt-6-sol","thinking":"high"},"worker":{"model":"openai-codex/gpt-6-luna","thinking":"high"},"codegraph":{"version":"1.6.1","sha256":{%q:%q}}}`, key, hash), 0o644)
+	writeFixture(t, source, "pi-runtime/package.json", `{"dependencies":{"@earendil-works/pi-coding-agent":"0.87.1"}}`, 0o644)
+	writeFixture(t, source, "pi-runtime/bun.lock", "{\"lockfileVersion\":1}\n", 0o644)
 	writeFixture(t, source, "pi-package/package.json", `{"name":"n-ein-pi"}`, 0o644)
 	writeFixture(t, source, "pi-package/persona.md", "persona v1\n", 0o644)
 	writeFixture(t, source, "pi-package/pi-only.md", "Pi worker\n", 0o644)
@@ -363,6 +365,8 @@ func TestDoctorRuntimeSeparatesPackageAndDependencies(t *testing.T) {
 
 const fakeBunScript = `#!/bin/sh
 set -eu
+# Sin lockfile congelado Bun resolvería rangos nuevos de las dependencias de Pi.
+[ "$1 $2" = "install --frozen-lockfile" ] && [ -f "$BUN_INSTALL_GLOBAL_DIR/bun.lock" ] || { echo "install sin lockfile" >&2; exit 1; }
 package="$BUN_INSTALL_GLOBAL_DIR/node_modules/@earendil-works/pi-coding-agent"
 mkdir -p "$BUN_INSTALL_BIN" "$package/dist/bundle"
 printf '{"name":"@earendil-works/pi-coding-agent","version":"0.87.1"}\n' > "$package/package.json"
@@ -491,6 +495,9 @@ func TestSetupInstallsEverythingOnceFromPackage(t *testing.T) {
 		if !strings.Contains(first, want) {
 			t.Fatalf("falta %q en la salida:\n%s", want, first)
 		}
+	}
+	if !strings.Contains(first, "PATH") {
+		t.Fatal("setup did not explain the missing PATH entry")
 	}
 	if strings.Contains(first, "\x1b[") {
 		t.Fatal("setup sin TTY emitió ANSI")

@@ -5,7 +5,7 @@ import { join, resolve } from "node:path";
 import { startWorker } from "../pi-package/agents/rpc.ts";
 const cwd = mkdtempSync(join(tmpdir(), "nein-pi-worker-"));
 const host = resolve("dist/n-ein"),
-  binary = join(homedir(), ".n_ein/runtimes/pi/1.0.2/bin/pi");
+  binary = process.env.N_EIN_PI_BIN || join(process.env.N_EIN_HOME || join(homedir(), ".n_ein"), "runtimes/pi/1.0.2/bin/pi");
 const args = [
   "--mode",
   "rpc",
