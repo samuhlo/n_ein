@@ -1,6 +1,7 @@
 package release
 
 import (
+	"errors"
 	"fmt"
 	"net/http"
 	"net/http/httptest"
@@ -32,7 +33,7 @@ func TestSelectPublishedCompleteRelease(t *testing.T) {
 	if _, err = c.Select("stable", "0.2.0-alpha.2", "linux-amd64"); err == nil {
 		t.Fatal("stable accepted alpha")
 	}
-	if _, err = c.Select("preview", "", "darwin-arm64"); err == nil {
-		t.Fatal("missing platform accepted")
+	if _, err = c.Select("preview", "", "darwin-arm64"); !errors.Is(err, ErrNoRelease) {
+		t.Fatalf("missing platform: %v", err)
 	}
 }

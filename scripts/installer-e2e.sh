@@ -34,7 +34,8 @@ for tool in bash curl uname mktemp rm chmod shasum sha256sum env dirname readlin
 done
 export PATH="$area/path"
 if command -v node >/dev/null || command -v bun >/dev/null; then echo 'el fixture no está limpio' >&2; exit 1; fi
-curl -fsS "$base/install.sh" | bash -s -- --channel "$channel" --dry-run
+# Sin canal: el comando corto del README debe llegar al mismo canal que la versión probada.
+curl -fsS "$base/install.sh" | bash -s -- --dry-run | grep -q " · $channel · "
 [[ ! -e "$N_EIN_HOME" ]]
 curl -fsS "$base/install.sh" | bash -s -- --channel "$channel"
 installer="$N_EIN_HOME/installations/$channel/bin/n-ein-install"

@@ -65,3 +65,26 @@ jobs:
           if [[ "$IS_PRERELEASE" == true ]]; then flags=(--prerelease --latest=false); fi
           gh release create "$GITHUB_REF_NAME" --verify-tag "${flags[@]}" \
             --title "n_ein $RELEASE_VERSION" --notes-file "docs/releases/$RELEASE_VERSION.md" release-assets/*
+  # La URL corta de Pages sirve el bootstrap ya verificado, solo tras existir su release.
+  pages:
+    needs: publish
+    runs-on: ubuntu-24.04
+    permissions:
+      pages: write
+      id-token: write
+    environment:
+      name: github-pages
+      url: ${{ steps.deploy.outputs.page_url }}install.sh
+    steps:
+      - uses: actions/download-artifact@v7
+        with:
+          pattern: candidate-*
+          merge-multiple: true
+          path: release-assets
+      - run: mkdir site && cp release-assets/install.sh site/install.sh
+      - uses: actions/configure-pages@v5
+      - uses: actions/upload-pages-artifact@v4
+        with:
+          path: site
+      - id: deploy
+        uses: actions/deploy-pages@v4

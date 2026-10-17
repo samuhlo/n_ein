@@ -6,6 +6,7 @@ package main
 import (
 	"encoding/hex"
 	"encoding/json"
+	"errors"
 	"flag"
 	"fmt"
 	"io"
@@ -22,7 +23,7 @@ func fetch(args []string, output io.Writer) error {
 	flags := flag.NewFlagSet("fetch", flag.ContinueOnError)
 	flags.SetOutput(io.Discard)
 	requested := flags.String("version", "", "versión exacta")
-	channel := flags.String("channel", "", "preview o stable; por defecto stable")
+	channel := flags.String("channel", "", "preview o stable; por defecto stable, o preview si aún no hay stable")
 	dry := flags.Bool("dry-run", false, "mostrar sin instalar")
 	if err := flags.Parse(args); err != nil {
 		return err
@@ -30,6 +31,7 @@ func fetch(args []string, output io.Writer) error {
 	if flags.NArg() != 0 {
 		return fmt.Errorf("argumentos inesperados")
 	}
+	implicit := *channel == "" && *requested == ""
 	if *channel == "" {
 		*channel = "stable"
 		if *requested != "" {
@@ -46,6 +48,12 @@ func fetch(args []string, output io.Writer) error {
 	}
 	client := release.Client{API: os.Getenv("N_EIN_RELEASE_API")}
 	chosen, err := client.Select(*channel, *requested, platform)
+	// Sin argumentos, el curl corto sirve antes de la primera stable; con canal explícito no se sustituye.
+	if implicit && errors.Is(err, release.ErrNoRelease) {
+		say(output, "// 000 SIN STABLE · se usa el canal preview\n")
+		*channel = "preview"
+		chosen, err = client.Select(*channel, "", platform)
+	}
 	if err != nil {
 		return err
 	}

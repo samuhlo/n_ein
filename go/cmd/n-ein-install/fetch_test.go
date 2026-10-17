@@ -12,6 +12,8 @@ import (
 	"net/http/httptest"
 	"os"
 	"path/filepath"
+	"runtime"
+	"strings"
 	"testing"
 )
 
@@ -98,5 +100,35 @@ func TestArtifactInstallsOnlyManifestFiles(t *testing.T) {
 	}
 	if _, err := os.Stat(filepath.Join(target, "pi-package/extensions/unlisted.ts")); !os.IsNotExist(err) {
 		t.Fatal("installed an undeclared file")
+	}
+}
+
+func TestFetchWithoutArgumentsUsesPreviewUntilStable(t *testing.T) {
+	platform := runtime.GOOS + "-" + runtime.GOARCH
+	failing := false
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		if failing {
+			w.WriteHeader(http.StatusBadGateway)
+			return
+		}
+		name := "n-ein-0.2.0-alpha.1-" + platform + ".tar.gz"
+		fmt.Fprintf(w, `[{"tag_name":"v0.2.0-alpha.1","prerelease":true,"assets":[{"name":%q,"browser_download_url":"https://example.org/a"},{"name":%q,"browser_download_url":"https://example.org/b"}]}]`, name, name+".sha256")
+	}))
+	defer server.Close()
+	t.Setenv("N_EIN_RELEASE_API", server.URL)
+	t.Setenv("N_EIN_HOME", t.TempDir())
+	var out bytes.Buffer
+	if err := fetch([]string{"--dry-run"}, &out); err != nil {
+		t.Fatal(err)
+	}
+	if !strings.Contains(out.String(), "SIN STABLE") || !strings.Contains(out.String(), "0.2.0-alpha.1 · preview") {
+		t.Fatalf("salida: %s", out.String())
+	}
+	if err := fetch([]string{"--channel", "stable", "--dry-run"}, io.Discard); err == nil {
+		t.Fatal("un canal explícito cambió a preview")
+	}
+	failing = true
+	if err := fetch([]string{"--dry-run"}, io.Discard); err == nil || strings.Contains(err.Error(), "preview") {
+		t.Fatalf("un fallo de la API no debe convertirse en preview: %v", err)
 	}
 }

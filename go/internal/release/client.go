@@ -4,6 +4,7 @@ package release
 // GitHub /latest excluye alphas; no sirve para decidir la preview.
 import (
 	"encoding/json"
+	"errors"
 	"fmt"
 	"io"
 	"net/http"
@@ -11,6 +12,9 @@ import (
 	"strings"
 	"time"
 )
+
+// ErrNoRelease distingue un canal vacío de un fallo de red o de la API.
+var ErrNoRelease = errors.New("no hay release completa")
 
 type Asset struct {
 	Name string `json:"name"`
@@ -114,7 +118,7 @@ func (c Client) Select(channel, version, platform string) (Candidate, error) {
 			if best.Version != "" {
 				return best, nil
 			}
-			return Candidate{}, fmt.Errorf("no hay release %s completa para %s; elige una versión publicada", channel, platform)
+			return Candidate{}, fmt.Errorf("%w de %s para %s; elige una versión publicada", ErrNoRelease, channel, platform)
 		}
 	}
 	return Candidate{}, fmt.Errorf("demasiadas releases: indica --version")
