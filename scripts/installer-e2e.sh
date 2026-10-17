@@ -35,7 +35,9 @@ done
 export PATH="$area/path"
 if command -v node >/dev/null || command -v bun >/dev/null; then echo 'el fixture no está limpio' >&2; exit 1; fi
 # Sin canal: el comando corto del README debe llegar al mismo canal que la versión probada.
-curl -fsS "$base/install.sh" | bash -s -- --dry-run | grep -q " · $channel · "
+# Se captura antes de filtrar: grep -q cierra la tubería y pipefail convertiría el SIGPIPE en fallo.
+plan="$(curl -fsS "$base/install.sh" | bash -s -- --dry-run)"
+grep -q " · $channel · " <<<"$plan"
 [[ ! -e "$N_EIN_HOME" ]]
 curl -fsS "$base/install.sh" | bash -s -- --channel "$channel"
 installer="$N_EIN_HOME/installations/$channel/bin/n-ein-install"
@@ -94,7 +96,7 @@ curl -fsS "$base/install.sh" | bash -s -- --channel "$channel"
 "$installer" doctor --channel "$channel" --runtime
 check_personal
 "$installer" restore --channel "$channel"
-"$installer" doctor --channel "$channel" | grep -q '0.1.0-preview.3'
+grep -q '0.1.0-preview.3' <<<"$("$installer" doctor --channel "$channel")"
 "$N_EIN_LINK_DIR/nein" --project "$area" --view configuracion --once > /dev/null
 curl -fsS "$base/install.sh" | bash -s -- --channel "$channel"
 "$installer" uninstall --channel "$channel"
