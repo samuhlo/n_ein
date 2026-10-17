@@ -35,3 +35,8 @@ Go y suite completa local pasan con hogar aislado `dist/alpha-home` y Node 24.21
 Fuente candidata `d9ab0323b97c867370b83d961b0cb043bb505af9`. CI 37907381998 completamente verde: macOS arm64, Ubuntu nativo, contenedores Ubuntu 24.04 y Arch actual sin privilegios, comparación de artefactos. Misma fuente y payload; solo difieren los ejecutables nativos. Paquetes descargados y verificados en `dist/alpha-review-d9ab032/assets`; instalada la copia macOS de CI en `dist/alpha-home`, doctor 86 archivos y launcher comprobados. La preview personal sigue en 0.1.0-preview.3.
 
 [Informe y límites](evals/results/2026-10-09-alpha-candidate.md), [registro de hashes y jobs](evals/results/2026-10-09-alpha-candidate.json). No hay tag ni release alpha y no se ha integrado en main. La rama está subida para revisar. Siguiente acción: Samu revisa diff/candidato y prueba la sesión interactiva Omarchy. No convertir el verde del contenedor Arch en una afirmación de prueba gráfica real; no publicar ni actualizar la instalación personal sin la revisión pedida.
+
+## Publicación (17 de octubre)
+
+Samu revisó y pidió publicar. Antes se añadió el comando corto `curl -fsSL https://samuhlo.github.io/n_ein/install.sh | bash`: sin canal usa preview mientras no haya stable, y el job `pages` de release.yml sirve el bootstrap verificado. Pages activado con origen Actions. La sesión interactiva en Omarchy no consta como comprobada.
+

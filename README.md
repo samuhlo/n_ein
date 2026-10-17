@@ -33,10 +33,7 @@
 ## // 00_ QUICK_START
 
 ```bash
-gh release download v0.1.0-preview.3 -R samuhlo/n_ein --pattern 'n-ein-0.1.0-preview.3-darwin-arm64.tar.gz*'
-shasum -a 256 -c n-ein-0.1.0-preview.3-darwin-arm64.tar.gz.sha256
-tar -xzf n-ein-0.1.0-preview.3-darwin-arm64.tar.gz
-./n-ein-0.1.0-preview.3-darwin-arm64/bin/nein-setup
+curl -fsSL https://samuhlo.github.io/n_ein/install.sh | bash
 nein
 ```
 
@@ -44,11 +41,9 @@ nein
   <img src="docs/assets/nein-setup.png" alt="Plan de nein-setup --dry-run" width="720" />
 </div>
 
-La preview.3 necesita Bun y Node ≥22.19.0: `nein-setup` instala Pi y CodeGraph fijados dentro de `~/.n_ein`, sin tocar el `pi` global ni Ein legado. Hay candidato para macOS arm64 y Linux amd64. El primer arranque pide `/login` en el hogar aislado; ninguna credencial se copia.
+macOS arm64 y Linux amd64 (Ubuntu, Arch). Requisitos: Bash, curl, Git y ripgrep. El instalador verifica SHA-256 antes de ejecutar nada e instala como usuario, sin sudo, dentro de `~/.n_ein`: Node, Bun, Pi y CodeGraph fijados, sin tocar el `pi` global ni Ein legado. El primer arranque pide `/login` en el hogar aislado; ninguna credencial se copia. Mientras no haya release estable se instala la alpha del canal preview; [notas de 0.2.0-alpha.1](docs/releases/0.2.0-alpha.1.md).
 
-> _note: la candidata `0.2.0-alpha.1` añade Node/Bun gestionados, instalación por curl y matriz macOS/Ubuntu/Arch. Está pendiente de revisión; [detalles](docs/releases/0.2.0-alpha.1.md). Los comandos anteriores siguen instalando la preview publicada._
-
-> _note: `--dry-run` enseña el plan sin escribir. Sobre una preview anterior, `nein-setup` actualiza con backup y `n-ein-install restore --channel preview` vuelve atrás._
+> _note: `curl -fsSL https://samuhlo.github.io/n_ein/install.sh | bash -s -- --dry-run` enseña el plan sin escribir. Sobre una preview anterior se actualiza con backup y `n-ein-install restore --channel preview` vuelve atrás._
 
 ---
 
@@ -173,7 +168,7 @@ n_ein/
 
 ## // 09_ ESTADO
 
-Preview. La pública vigente es [0.1.0-preview.3](https://github.com/samuhlo/n_ein/releases/tag/v0.1.0-preview.3); las notas de cada versión están en [docs/releases](docs/releases/). Pendientes: la promoción a estable, la actualización remota desde la vista Sistema y Qwen local, aplazado hasta tener una máquina con 24 GB.
+Preview. La pública vigente es [0.2.0-alpha.1](https://github.com/samuhlo/n_ein/releases/tag/v0.2.0-alpha.1); las notas de cada versión están en [docs/releases](docs/releases/). Pendientes: la promoción a estable, la actualización remota desde la vista Sistema y Qwen local, aplazado hasta tener una máquina con 24 GB.
 
 ---
 
