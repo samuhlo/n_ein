@@ -151,11 +151,12 @@ func installPiRuntime(source string, dryRun bool, output io.Writer) error {
 	if err := os.MkdirAll(global, 0700); err != nil {
 		return err
 	}
-	manifest, _ := json.Marshal(map[string]any{"private": true, "dependencies": map[string]string{piPackage: version}})
-	if err := os.WriteFile(filepath.Join(global, "package.json"), manifest, 0600); err != nil {
+	// El lockfile del paquete fija también las dependencias transitivas: Pi acepta rangos ^ que
+	// upstream puede romper sin cambiar la versión de Pi.
+	if err := copyPiLock(source, global, version); err != nil {
 		return err
 	}
-	cmd := exec.CommandContext(ctx, bun, "install", "--cwd", global)
+	cmd := exec.CommandContext(ctx, bun, "install", "--frozen-lockfile", "--cwd", global)
 	cmd.Dir = global
 	cmd.Env = append(os.Environ(),
 		"BUN_INSTALL_GLOBAL_DIR="+filepath.Join(stage, "global"),
@@ -204,4 +205,25 @@ func installPiRuntime(source string, dryRun bool, output io.Writer) error {
 	}
 	say(output, "// 000 PI INSTALADO · %s · %s\n", version, target)
 	return nil
+}
+
+func copyPiLock(source, global, version string) error {
+	data, err := os.ReadFile(filepath.Join(source, "pi-runtime", "package.json"))
+	if err != nil {
+		return err
+	}
+	var manifest struct {
+		Dependencies map[string]string `json:"dependencies"`
+	}
+	if json.Unmarshal(data, &manifest) != nil || manifest.Dependencies[piPackage] != version || len(manifest.Dependencies) != 1 {
+		return fmt.Errorf("pi-runtime/package.json no fija Pi %s", version)
+	}
+	if err := os.WriteFile(filepath.Join(global, "package.json"), data, 0o600); err != nil {
+		return err
+	}
+	lock, err := os.ReadFile(filepath.Join(source, "pi-runtime", "bun.lock"))
+	if err != nil {
+		return err
+	}
+	return os.WriteFile(filepath.Join(global, "bun.lock"), lock, 0o600)
 }
