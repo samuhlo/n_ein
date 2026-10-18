@@ -14,6 +14,8 @@ import (
 	"strings"
 	"testing"
 	"time"
+
+	"n_ein/internal/layout"
 )
 
 func writeFixture(t *testing.T, root, rel, content string, mode os.FileMode) string {
@@ -88,9 +90,11 @@ func sourceFixture(t *testing.T) (source, self, target, data string) {
 	}
 	writeFixture(t, source, "brand.json", `{"colors":{"yellow":"#FFCA40"}}`, 0o644)
 	key, hash := fakeCodeGraphRelease(t, "1.6.1")
-	writeFixture(t, source, "runtime.json", fmt.Sprintf(`{"schema":1,"pi":{"version":"0.87.1","model":"openai-codex/gpt-6-sol","thinking":"high"},"worker":{"model":"openai-codex/gpt-6-luna","thinking":"high"},"codegraph":{"version":"1.6.1","sha256":{%q:%q}}}`, key, hash), 0o644)
+	writeFixture(t, source, "runtime.json", fmt.Sprintf(`{"schema":1,"pi":{"version":"0.87.1","model":"openai-codex/gpt-6-sol","thinking":"high"},"claude":{"version":"2.1.302"},"worker":{"model":"openai-codex/gpt-6-luna","thinking":"high"},"codegraph":{"version":"1.6.1","sha256":{%q:%q}}}`, key, hash), 0o644)
 	writeFixture(t, source, "pi-runtime/package.json", `{"dependencies":{"@earendil-works/pi-coding-agent":"0.87.1"}}`, 0o644)
 	writeFixture(t, source, "pi-runtime/bun.lock", "{\"lockfileVersion\":1}\n", 0o644)
+	writeFixture(t, source, "claude-runtime/package.json", `{"dependencies":{"@anthropic-ai/claude-code":"2.1.302"},"trustedDependencies":["@anthropic-ai/claude-code"]}`, 0o644)
+	writeFixture(t, source, "claude-runtime/bun.lock", "{\"lockfileVersion\":1}\n", 0o644)
 	writeFixture(t, source, "pi-package/package.json", `{"name":"n-ein-pi"}`, 0o644)
 	writeFixture(t, source, "pi-package/persona.md", "persona v1\n", 0o644)
 	writeFixture(t, source, "pi-package/pi-only.md", "Pi worker\n", 0o644)
@@ -367,8 +371,18 @@ const fakeBunScript = `#!/bin/sh
 set -eu
 # Sin lockfile congelado Bun resolvería rangos nuevos de las dependencias de Pi.
 [ "$1 $2" = "install --frozen-lockfile" ] && [ -f "$BUN_INSTALL_GLOBAL_DIR/bun.lock" ] || { echo "install sin lockfile" >&2; exit 1; }
+mkdir -p "$BUN_INSTALL_BIN"
+if grep -q claude-code "$BUN_INSTALL_GLOBAL_DIR/package.json"; then
+  package="$BUN_INSTALL_GLOBAL_DIR/node_modules/@anthropic-ai/claude-code"
+  mkdir -p "$package/bin" "$BUN_INSTALL_GLOBAL_DIR/node_modules/.bin"
+  printf '{"name":"@anthropic-ai/claude-code","version":"2.1.302"}\n' > "$package/package.json"
+  printf '#!/bin/sh\nprintf "2.1.302 (Claude Code)\\n"\n' > "$package/bin/claude.exe"
+  chmod +x "$package/bin/claude.exe"
+  ln -s ../@anthropic-ai/claude-code/bin/claude.exe "$BUN_INSTALL_GLOBAL_DIR/node_modules/.bin/claude"
+  exit 0
+fi
 package="$BUN_INSTALL_GLOBAL_DIR/node_modules/@earendil-works/pi-coding-agent"
-mkdir -p "$BUN_INSTALL_BIN" "$package/dist/bundle"
+mkdir -p "$package/dist/bundle"
 printf '{"name":"@earendil-works/pi-coding-agent","version":"0.87.1"}\n' > "$package/package.json"
 printf '#!/bin/sh\nprintf "0.87.1\\n"\n' > "$package/dist/bundle/cli.js"
 chmod +x "$package/dist/bundle/cli.js"
@@ -409,6 +423,15 @@ func TestManagedPiRuntimeIsolatedAndRepairable(t *testing.T) {
 	}
 	if err := inspectCodeGraphRuntime(filepath.Join(home, "runtimes", "codegraph", "1.6.1"), "1.6.1"); err != nil {
 		t.Fatalf("runtime no dejó CodeGraph verificado: %v", err)
+	}
+	claudeTarget := filepath.Join(home, "runtimes", "claude", "2.1.302")
+	if err := inspectRuntime(npmRuntime{"claude", "Claude", claudePackage, "2.1.302"}, claudeTarget); err != nil {
+		t.Fatalf("runtime no dejó Claude propio: %v", err)
+	}
+	t.Setenv("N_EIN_CLAUDE_BIN", "")
+	t.Setenv("PATH", t.TempDir())
+	if bin, origin := layout.Claude(source); origin != "n_ein" || bin != filepath.Join(claudeTarget, "bin", "claude") {
+		t.Fatalf("Claude elegido: %s %s", bin, origin)
 	}
 }
 
@@ -491,7 +514,7 @@ func TestSetupInstallsEverythingOnceFromPackage(t *testing.T) {
 	if err != nil {
 		t.Fatalf("%v\n%s", err, first)
 	}
-	for _, want := range []string{"// 000  INSTALAR", "✓ pi", "✓ código", "✓ entrada", "✓ doctor", "instalador · preview", "listo."} {
+	for _, want := range []string{"// 000  INSTALAR", "✓ pi", "✓ claude", "✓ código", "✓ entrada", "✓ doctor", "instalador · preview", "listo."} {
 		if !strings.Contains(first, want) {
 			t.Fatalf("falta %q en la salida:\n%s", want, first)
 		}
@@ -506,7 +529,7 @@ func TestSetupInstallsEverythingOnceFromPackage(t *testing.T) {
 		t.Fatalf("enlace nein: %s %v", value, err)
 	}
 	again, err := call(t, self, "setup", "--source", artifact)
-	if err != nil || strings.Count(again, "ya instalado") != 3 {
+	if err != nil || strings.Count(again, "ya instalado") != 4 {
 		t.Fatalf("setup repetido reinstaló: %v\n%s", err, again)
 	}
 	if _, err := os.Stat(filepath.Join(home, "installations", "preview.backups")); !os.IsNotExist(err) {

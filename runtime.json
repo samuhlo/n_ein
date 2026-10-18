@@ -63,5 +63,8 @@
         "format": "zip"
       }
     }
+  },
+  "claude": {
+    "version": "2.1.302"
   }
 }

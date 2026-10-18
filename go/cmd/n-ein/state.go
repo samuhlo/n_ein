@@ -347,8 +347,13 @@ func loadState(root, project string) appState {
 			piBin, piSource = managed, "runtime Pi de n_ein"
 		}
 	}
-	claudeBin, claudeSource := os.Getenv("N_EIN_CLAUDE_BIN"), "N_EIN_CLAUDE_BIN"
-	if claudeBin == "" {
+	claudeBin, claudeSource := layout.Claude(root)
+	switch claudeSource {
+	case "sistema":
+		claudeSource = "claude del sistema"
+	case "n_ein":
+		claudeSource = "runtime Claude de n_ein"
+	case "":
 		claudeBin, claudeSource = "claude", "claude --version"
 	}
 	piVersion := known(command(project, piBin, "--version"))

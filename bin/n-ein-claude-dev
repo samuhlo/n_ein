@@ -16,6 +16,14 @@ case "$channel" in dev|preview|stable) ;; *) printf '[ERR] :: CHANNEL_BAD :: val
 n_ein_home="${N_EIN_HOME:-$HOME/.n_ein}"
 claude_dir="${N_EIN_CLAUDE_DIR:-$n_ein_home/$channel/claude}"
 claude_bin="${N_EIN_CLAUDE_BIN:-claude}"
+# El paquete instalado elige con la misma regla que el Panel: su copia de runtimes/claude, como Pi.
+# Esa copia se actualiza con n_ein, no por su cuenta.
+if [[ -z "${N_EIN_CLAUDE_BIN:-}" && -x "$repo_dir/bin/n-ein-install" ]]; then
+  if IFS=$'\t' read -r chosen origin < <("$repo_dir/bin/n-ein-install" claude-path --source "$repo_dir" 2>/dev/null); then
+    claude_bin="$chosen"
+    if [[ "$origin" == "n_ein" ]]; then export DISABLE_AUTOUPDATER=1; fi
+  fi
+fi
 
 case "$claude_dir" in
   "$HOME/.claude"|"$HOME/.claude-ein")
@@ -24,7 +32,7 @@ case "$claude_dir" in
     ;;
 esac
 if ! command -v "$claude_bin" >/dev/null 2>&1; then
-  printf '[ERR] :: CLAUDE_MISS :: binary: %s\n' "$claude_bin" >&2
+  printf '[ERR] :: CLAUDE_MISS :: binary: %s · fix: nein-setup\n' "$claude_bin" >&2
   exit 69
 fi
 

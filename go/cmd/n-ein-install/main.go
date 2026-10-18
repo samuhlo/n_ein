@@ -49,7 +49,7 @@ func run(args []string, output io.Writer, self string) error {
 		fmt.Fprintln(output, parsed.Channel())
 		return nil
 	}
-	if verb != "setup" && verb != "package" && verb != "runtime" && verb != "install" && verb != "update" && verb != "doctor" && verb != "activate" && verb != "restore" && verb != "uninstall" && verb != "runtime-path" {
+	if verb != "setup" && verb != "package" && verb != "runtime" && verb != "install" && verb != "update" && verb != "doctor" && verb != "activate" && verb != "restore" && verb != "uninstall" && verb != "runtime-path" && verb != "claude-path" {
 		return fmt.Errorf("verbo desconocido: %s", verb)
 	}
 
@@ -72,6 +72,18 @@ func run(args []string, output io.Writer, self string) error {
 	}
 	if *runtime && verb != "doctor" {
 		return fmt.Errorf("--runtime solo se usa con doctor")
+	}
+	if verb == "claude-path" {
+		absSource, err := filepath.Abs(*source)
+		if err != nil {
+			return err
+		}
+		bin, origin := layout.Claude(absSource)
+		if bin == "" {
+			return fmt.Errorf("Claude Code no disponible; ejecuta nein-setup")
+		}
+		fmt.Fprintf(output, "%s\t%s\n", bin, origin)
+		return nil
 	}
 	if verb == "runtime-path" {
 		path, err := layout.DependencyPath(*source)
@@ -114,6 +126,9 @@ func run(args []string, output io.Writer, self string) error {
 			return err
 		}
 		if err := installPiRuntime(absSource, *dryRun, output); err != nil {
+			return err
+		}
+		if err := installClaudeRuntime(absSource, *dryRun, output); err != nil {
 			return err
 		}
 		return installCodeGraphRuntime(absSource, *dryRun, output)
