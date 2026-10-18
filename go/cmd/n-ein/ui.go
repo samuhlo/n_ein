@@ -43,6 +43,8 @@ type uiModel struct {
 	started time.Time
 	now     time.Time
 	intro   bool
+	// update es la versión nueva del canal, cuando la hay; mantiene viva la animación del aviso.
+	update string
 }
 
 func newUIModel(state appState, view int, intro bool) uiModel {
@@ -55,10 +57,11 @@ func tick() tea.Cmd {
 }
 
 func (m uiModel) Init() tea.Cmd {
+	check := checkUpdate(m.state.home.channel, m.state.home.version)
 	if m.intro {
-		return tick()
+		return tea.Batch(tick(), check)
 	}
-	return nil
+	return check
 }
 
 func (m uiModel) visibleRows() []row {
@@ -116,11 +119,22 @@ func (m uiModel) Update(message tea.Msg) (tea.Model, tea.Cmd) {
 		return m, nil
 	case introTick:
 		m.now = time.Time(msg)
-		if !m.intro {
-			return m, nil
-		}
-		if m.now.Sub(m.started).Seconds() >= brand.IntroSeconds {
+		if m.intro && m.now.Sub(m.started).Seconds() >= brand.IntroSeconds {
 			m.intro = false
+		}
+		if m.intro || m.update != "" {
+			return m, tick()
+		}
+		return m, nil
+	case updateFound:
+		ticking := m.intro
+		m.update = string(msg)
+		m.state = withUpdate(m.state, m.update)
+		// El foco sigue en lo que estaba: un enter por costumbre no debe actualizar.
+		if m.view == homeView {
+			m.row++
+		}
+		if ticking {
 			return m, nil
 		}
 		return m, tick()
@@ -197,7 +211,7 @@ func (m uiModel) View() tea.View {
 	if m.intro {
 		elapsed = m.now.Sub(m.started).Seconds()
 	}
-	frame := screen{width: m.width, height: m.height, elapsed: elapsed}
+	frame := screen{width: m.width, height: m.height, elapsed: elapsed, update: m.update, lift: bounce(m.now.Sub(m.started).Seconds())}
 	view := tea.NewView(render(m.state, m.view, m.row, m.filter, m.focus, painter, frame))
 	view.AltScreen = true
 	if painter.Color {
@@ -211,6 +225,8 @@ type screen struct {
 	width   int
 	height  int
 	elapsed float64
+	update  string // versión nueva, si la hay
+	lift    int    // altura del aviso en su bote, 0–2
 }
 
 func (s screen) total() int {
@@ -285,6 +301,16 @@ func renderHome(state appState, selected int, p brand.Painter, s screen) string 
 		home := state.home
 		context := strings.Join([]string{home.name, home.branch, home.changes}, " · ")
 		b.WriteString(center(p.Fg(brand.Muted, clip(context, total-4)), total) + "\n\n")
+		// El aviso bota dentro de tres filas propias: el menú no se mueve con él.
+		if s.update != "" {
+			badge := center(p.Bold(p.Fg(brand.Yellow, "▲ nueva versión "+s.update))+p.Fg(brand.Faint, " · u actualizar"), total)
+			for y := 2; y >= 0; y-- {
+				if y == s.lift {
+					b.WriteString(badge)
+				}
+				b.WriteString("\n")
+			}
+		}
 	} else {
 		b.WriteString("\n\n\n")
 	}
