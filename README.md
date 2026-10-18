@@ -41,7 +41,7 @@ nein
   <img src="docs/assets/nein-setup.png" alt="Plan de nein-setup --dry-run" width="720" />
 </div>
 
-macOS arm64 y Linux amd64 (Ubuntu, Arch). Requisitos: Bash, curl, Git y ripgrep. El instalador verifica SHA-256 antes de ejecutar nada e instala como usuario, sin sudo, dentro de `~/.n_ein`: Node, Bun, Pi, Claude Code y CodeGraph fijados, sin tocar el `pi` ni el `claude` globales ni Ein legado. El primer arranque pide `/login` en el hogar aislado; ninguna credencial se copia. Mientras no haya release estable se instala la alpha del canal preview; [notas de 0.2.0-alpha.1](docs/releases/0.2.0-alpha.1.md).
+macOS arm64 y Linux amd64 (Ubuntu, Arch). Requisitos: Bash, curl, Git y ripgrep. El instalador verifica SHA-256 antes de ejecutar nada e instala como usuario, sin sudo, dentro de `~/.n_ein`: Node, Bun, Pi, Claude Code y CodeGraph fijados, sin tocar el `pi` ni el `claude` globales ni Ein legado. El primer arranque pide `/login` en el hogar aislado; ninguna credencial se copia. Mientras no haya release estable se instala la alpha del canal preview; [notas de 0.2.0-alpha.2](docs/releases/0.2.0-alpha.2.md).
 
 > _note: `curl -fsSL https://samuhlo.github.io/n_ein/install.sh | bash -s -- --dry-run` enseña el plan sin escribir. Sobre una preview anterior se actualiza con backup y `n-ein-install restore --channel preview` vuelve atrás._
 
@@ -168,7 +168,7 @@ n_ein/
 
 ## // 09_ ESTADO
 
-Preview. La pública vigente es [0.2.0-alpha.1](https://github.com/samuhlo/n_ein/releases/tag/v0.2.0-alpha.1); las notas de cada versión están en [docs/releases](docs/releases/). Pendientes: la promoción a estable, la actualización remota desde la vista Sistema y Qwen local, aplazado hasta tener una máquina con 24 GB.
+Preview. La pública vigente es [0.2.0-alpha.2](https://github.com/samuhlo/n_ein/releases/tag/v0.2.0-alpha.2); las notas de cada versión están en [docs/releases](docs/releases/). Pendientes: la promoción a estable, la actualización remota desde la vista Sistema y Qwen local, aplazado hasta tener una máquina con 24 GB.
 
 ---
 
