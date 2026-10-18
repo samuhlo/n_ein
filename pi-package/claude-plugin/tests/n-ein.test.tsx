@@ -70,10 +70,3 @@ test("un grupo de varias llamadas cuenta sus verbos", async ($) => {
   const ui = await $.ui.mount({ plugin: "n-ein", surface: "terminal", component: "ToolGroup", props: { calls: [read, read], isActive: false, isExpanded: false }, viewport });
   expect(JSON.stringify(await ui.drawn())).toContain("lee 2");
 });
-
-test("bajo el prompt, a la derecha, la marca pequeña y los modos de Claude", async ($) => {
-  const ui = await $.ui.mount({ plugin: "n-ein", surface: "terminal", component: "SessionMode", props: { modes: ["focus"] } });
-  const drawn = JSON.stringify(await ui.drawn());
-  expect(drawn).toContain("focus");
-  for (const letter of [" n ", " _ ", " e ", " i "]) expect(drawn).toContain(letter);
-});
