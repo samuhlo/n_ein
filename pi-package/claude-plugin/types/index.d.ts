@@ -3,7 +3,7 @@ declare module 'claude-code' {
     'n-ein': {
       /** true: Claude dibuja sus filas nativas (comando completo, salida, diff). */
       detail: boolean;
-      /** Segundos de la apertura del Panel; null cuando la marca ya no se muestra. */
+      /** Segundos de la apertura de la marca pequeña; null cuando ya no se muestra. */
       intro: number | null;
     };
   }

@@ -14,7 +14,7 @@
 import { atom, read, update } from "claude-code";
 import type { EngineInterface, Register, RenderInput } from "claude-code";
 
-import { INTRO_SECONDS, LARGE_WIDTH, panelCells, panelRuns, smallRuns, type BrandTone, type TileTone } from "./brand-core.ts";
+import { INTRO_SECONDS, smallRuns, type BrandTone, type TileTone } from "./brand-core.ts";
 import { groupSummary, NATIVE_TOOLS, outcomeFor, receiptFor, type Place } from "./claude-receipts.ts";
 import { GLYPH, receiptSegments, type Segment, type Tone } from "./receipt-core.ts";
 
@@ -123,44 +123,18 @@ export const register: Register = (on) => {
   on("ui.render", { component: "TurnDuration" }, ($, e) =>
     row($, e, [{ tone: "dim", text: `${GLYPH.done} ${duration(e.props.durationMs)}` }]));
 
-  // La marca pequeña del instalador ocupa el hueco a la derecha bajo el prompt; los modos de Claude
-  // (focus, memory paused) siguen encima, en su tono tenue.
-  on("ui.render", { component: "SessionMode" }, ($, e) => {
-    const { Box, Text } = $.ui.resolve(e);
-    return (
-      <Box flexDirection="column" alignItems="flex-end">
-        {e.props.modes.length > 0 ? <Text color={TONE.muted}>{e.props.modes.join(" & ")}</Text> : null}
-        {smallRuns().map((runs) => (
-          <Box flexDirection="row">
-            {runs.map((run) => (
-              <Text color={run.fg ? BRAND[run.fg] : undefined} backgroundColor={run.bg ? TILE[run.bg] : undefined}>{run.text}</Text>
-            ))}
-          </Box>
-        ))}
-      </Box>
-    );
-  });
-
+  // La marca pequeña del instalador abre la sesión encima del prompt: sus palas giran y se asientan,
+  // y se retira con el primer mensaje.
   on("ui.render", { component: "AbovePrompt" }, async ($, e, next) => {
     const t = await read($, intro);
     if (t === null) return next(e);
     const { Box, Text } = $.ui.resolve(e);
-    // Sin sitio para las palas, la marca queda en su forma corta.
-    if ((e.props.bodyColumns ?? FALLBACK_COLUMNS) < LARGE_WIDTH + 2) {
-      return (
-        <Box>
-          <Text color={BRAND.concrete}>n</Text>
-          <Text color={YELLOW}>_</Text>
-          <Text color={BRAND.concrete}>ein</Text>
-        </Box>
-      );
-    }
     return (
       <Box flexDirection="column" paddingLeft={1}>
-        {panelCells(t).map((cells) => (
+        {smallRuns(t).map((runs) => (
           <Box flexDirection="row">
-            {panelRuns(cells).map((run) => (
-              <Text color={run.fg ? BRAND[run.fg] : undefined} backgroundColor={run.bg ? BRAND[run.bg] : undefined}>{run.text}</Text>
+            {runs.map((run) => (
+              <Text color={run.fg ? BRAND[run.fg] : undefined} backgroundColor={run.bg ? TILE[run.bg] : undefined}>{run.text}</Text>
             ))}
           </Box>
         ))}
