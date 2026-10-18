@@ -8,6 +8,7 @@ import (
 	"os/exec"
 	"path/filepath"
 	"strings"
+	"syscall"
 
 	tea "charm.land/bubbletea/v2"
 	"github.com/charmbracelet/x/term"
@@ -110,6 +111,18 @@ func run(args []string) error {
 	selected := final.(uiModel)
 	if selected.launch == "" {
 		return nil
+	}
+	if selected.launch == "update" {
+		// El instalador del paquete actual descarga y verifica la release, como el curl.
+		cmd := exec.Command(filepath.Join(packageRoot, "bin", "n-ein-install"), "fetch", "--channel", state.home.channel)
+		cmd.Dir = absProject
+		cmd.Stdin, cmd.Stdout, cmd.Stderr = os.Stdin, os.Stdout, os.Stderr
+		if err := cmd.Run(); err != nil {
+			return fmt.Errorf("actualización: %w", err)
+		}
+		// La portada vuelve a abrirse con el launcher recién instalado en el mismo sitio.
+		launcher := filepath.Join(packageRoot, "bin", "n-ein")
+		return syscall.Exec(launcher, append([]string{launcher}, args...), os.Environ())
 	}
 	if selected.launch == "doctor" {
 		cmd := exec.Command(filepath.Join(packageRoot, "bin", "n-ein-install"), "doctor", "--target", packageRoot, "--runtime")

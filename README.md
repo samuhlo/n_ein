@@ -168,7 +168,7 @@ n_ein/
 
 ## // 09_ ESTADO
 
-Preview. La pública vigente es [0.2.0-alpha.2](https://github.com/samuhlo/n_ein/releases/tag/v0.2.0-alpha.2); las notas de cada versión están en [docs/releases](docs/releases/). Pendientes: la promoción a estable, la actualización remota desde la vista Sistema y Qwen local, aplazado hasta tener una máquina con 24 GB.
+Preview. La pública vigente es [0.2.0-alpha.2](https://github.com/samuhlo/n_ein/releases/tag/v0.2.0-alpha.2); las notas de cada versión están en [docs/releases](docs/releases/). Pendientes: la promoción a estable y Qwen local, aplazado hasta tener una máquina con 24 GB.
 
 ---
 
