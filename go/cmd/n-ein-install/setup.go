@@ -162,6 +162,10 @@ func setup(source, channel, self string, dryRun bool, output io.Writer) error {
 	if err != nil {
 		return err
 	}
+	claudeVersion, err := claudeVersionFrom(source)
+	if err != nil {
+		return err
+	}
 	_, statErr := os.Stat(target)
 	existing := statErr == nil
 	unchanged := false
@@ -183,6 +187,22 @@ func setup(source, channel, self string, dryRun bool, output io.Writer) error {
 				return version + " · se instalará en runtimes/pi", nil
 			default:
 				return version + " · instalado en runtimes/pi", nil
+			}
+		}},
+		{"claude", func(report io.Writer) (string, error) {
+			if claudeVersion == "" {
+				return "sin Claude en este paquete", nil
+			}
+			if err := installClaudeRuntime(source, dryRun, report); err != nil {
+				return "", err
+			}
+			switch text := report.(*bytes.Buffer).String(); {
+			case strings.Contains(text, "ya instalado"):
+				return claudeVersion + " · ya instalado", nil
+			case dryRun:
+				return claudeVersion + " · se instalará en runtimes/claude", nil
+			default:
+				return claudeVersion + " · instalado en runtimes/claude", nil
 			}
 		}},
 		{"codegraph", func(report io.Writer) (string, error) {

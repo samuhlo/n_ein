@@ -99,3 +99,16 @@ export function panelRuns(row: readonly PanelCell[]): PanelRun[] {
   }
   return runs;
 }
+
+export const SMALL_WIDTH = 19;
+export type TileTone = "tileHigh" | "tileCard" | "tileLow";
+export type SmallRun = { text: string; fg?: BrandTone; bg?: TileTone };
+
+/** Las tres filas de la marca pequeña del instalador, ya asentada: palas de 3 × 3 con la letra en medio. */
+export function smallRuns(): SmallRun[][] {
+  const tiles: TileTone[] = ["tileHigh", "tileCard", "tileLow"];
+  return tiles.map((bg, y) => WORD.flatMap((letter, k) => {
+    const tile: SmallRun = y === 1 ? { text: ` ${letter} `, fg: letterTone(letter, true), bg } : { text: "   ", bg };
+    return k === 0 ? [tile] : [{ text: " " }, tile];
+  }));
+}

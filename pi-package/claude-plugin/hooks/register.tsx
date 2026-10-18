@@ -14,7 +14,7 @@
 import { atom, read, update } from "claude-code";
 import type { EngineInterface, Register, RenderInput } from "claude-code";
 
-import { INTRO_SECONDS, LARGE_WIDTH, panelCells, panelRuns, type BrandTone } from "./brand-core.ts";
+import { INTRO_SECONDS, LARGE_WIDTH, panelCells, panelRuns, smallRuns, type BrandTone, type TileTone } from "./brand-core.ts";
 import { groupSummary, NATIVE_TOOLS, outcomeFor, receiptFor, type Place } from "./claude-receipts.ts";
 import { GLYPH, receiptSegments, type Segment, type Tone } from "./receipt-core.ts";
 
@@ -25,6 +25,7 @@ const intro = atom({ plugin: "n-ein", key: "intro" } as const, null);
 const YELLOW = "#FFCA40";
 const TONE: Record<Tone, string> = { accent: YELLOW, success: "success", error: "error", text: "text", muted: "inactive", dim: "subtle" };
 const BRAND: Record<BrandTone, string> = { concrete: "#FAF3F0", yellow: YELLOW, muted: "#9A9A9A", tileHigh: "#1A1A1A", tileLow: "#141414" };
+const TILE: Record<TileTone, string> = { tileHigh: "#1A1A1A", tileCard: "#161616", tileLow: "#141414" };
 
 // El verbo del spinner sale de lo que hace el turno, no de una lista de ocurrencias.
 const SPINNER_WORD: Record<string, string> = {
@@ -121,6 +122,24 @@ export const register: Register = (on) => {
 
   on("ui.render", { component: "TurnDuration" }, ($, e) =>
     row($, e, [{ tone: "dim", text: `${GLYPH.done} ${duration(e.props.durationMs)}` }]));
+
+  // La marca pequeña del instalador ocupa el hueco a la derecha bajo el prompt; los modos de Claude
+  // (focus, memory paused) siguen encima, en su tono tenue.
+  on("ui.render", { component: "SessionMode" }, ($, e) => {
+    const { Box, Text } = $.ui.resolve(e);
+    return (
+      <Box flexDirection="column" alignItems="flex-end">
+        {e.props.modes.length > 0 ? <Text color={TONE.muted}>{e.props.modes.join(" & ")}</Text> : null}
+        {smallRuns().map((runs) => (
+          <Box flexDirection="row">
+            {runs.map((run) => (
+              <Text color={run.fg ? BRAND[run.fg] : undefined} backgroundColor={run.bg ? TILE[run.bg] : undefined}>{run.text}</Text>
+            ))}
+          </Box>
+        ))}
+      </Box>
+    );
+  });
 
   on("ui.render", { component: "AbovePrompt" }, async ($, e, next) => {
     const t = await read($, intro);
