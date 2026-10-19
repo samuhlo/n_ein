@@ -2,7 +2,7 @@
 
 ## Skills derivadas de mattpocock/skills
 
-`tdd`, `diagnose`, `review`, `design`, `glossary`, `research`, `prototype`, `pr`, `agent-docs`, `spec`, `tasks`, `retro` y `tell-again`, y la manera de entrevistar de `intent`, son obras derivadas de [mattpocock/skills](https://github.com/mattpocock/skills) (revisión `d81f3a183412e71a5b1e84ca21bc1a35eea03a60`), reescritas para n_ein: sus roles, `WORK.md`, CodeGraph y su flujo. El menú de vistas de `pr` procede a su vez de la skill `show-me` de Dex Horthy (Humanlayer). Licencia de origen:
+`tdd`, `diagnose`, `review`, `design`, `glossary`, `research`, `prototype`, `pr`, `agent-docs`, `spec`, `tasks`, `retro` y `tell-again`, y la manera de entrevistar de `intent` y `vision`, son obras derivadas de [mattpocock/skills](https://github.com/mattpocock/skills) (revisión `d81f3a183412e71a5b1e84ca21bc1a35eea03a60`), reescritas para n_ein: sus roles, `WORK.md`, CodeGraph y su flujo. El menú de vistas de `pr` procede a su vez de la skill `show-me` de Dex Horthy (Humanlayer). Licencia de origen:
 
 ```
 MIT License

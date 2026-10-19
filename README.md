@@ -62,6 +62,7 @@ Abre `nein`, entra en Pi y cuenta qué necesitas. El agente elige las skills y n
 | PUEDES DECIR | QUÉ OCURRE |
 | :--- | :--- |
 | «Ayúdame a pensar esta idea» | Investiga y plantea pocas decisiones, con recomendación (`intent`). |
+| `/skill:vision` | Da forma a una idea difusa con preguntas y wireframes en HTML, y deja un brief antes de desarrollar. |
 | «Corrige este fallo» | Trabaja directamente si el encargo está claro. |
 | «Vale, hazlo» | Construye el acuerdo dentro del alcance autorizado. |
 | «Otra cosa: …» | Empieza otro encargo y elige de nuevo el modelo. |
