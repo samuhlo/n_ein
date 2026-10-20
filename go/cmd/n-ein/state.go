@@ -446,6 +446,7 @@ func loadState(root, project string) appState {
 		{"Pi", piNote, "p", piAction},
 		{"Claude Code", claudeNote, "c", claudeAction},
 		{"Codex", "sin adaptador", "", ""},
+		previewerItem(readPreviewer(root, project)),
 		{"Elegir una sesión", sessionNote, "s", "view:3"},
 		{"Estado del proyecto", tasks, "e", "view:1"},
 	}

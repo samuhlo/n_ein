@@ -38,6 +38,9 @@ bun -e '
   process.kill(state.pid, "SIGTERM");
   if (!page.ok || !(await page.text()).includes("previewer-token")) throw new Error("web del revisor sin compilar");
 ' "$target"
+# `nein previewer` llega al revisor instalado; su diagnóstico es el que muestra doctor --runtime.
+"$target/bin/n-ein" --project "$project" previewer check > "$test_dir/previewer-check"
+rg -q '^// 003 REVISOR · .* · web compila$' "$test_dir/previewer-check"
 
 "$target/bin/n-ein" --project "$project" --view configuracion --once > "$test_dir/config-view"
 rg -q 'openai-codex/gpt-6-sol' "$test_dir/config-view"
