@@ -13,7 +13,9 @@ import { makeCitationChecker } from "./citations.ts";
 import { createCopy, sweepCopies, type ReviewCopy } from "./copy.ts";
 import type { Citation, Finding, Probe } from "./finding.ts";
 import { branchTip, commitsOf, diffOf, resolveRange, type Range } from "./git.ts";
+import { reviewGuard } from "./guard-rules.ts";
 import { parseReport, type ProposedFinding } from "./report.ts";
+import { sandboxFor, type Sandbox } from "./sandbox.ts";
 import { piRunner, type AgentRunner } from "./runner.ts";
 import { ReviewStore, type Run, type RunResult, type Session, type StoredFinding } from "./store.ts";
 
@@ -58,8 +60,14 @@ export function reviewPrompt(range: Range): string {
   ].join("\n\n");
 }
 
-/** Repite la sonda en la copia: un hallazgo «demostrado» lo es porque falló aquí, no porque el agente lo diga. */
-function rerunProbe(copy: string, proposed: NonNullable<ProposedFinding["probe"]>, timeoutMs: number): Probe {
+type ProbeContext = { copy: string; guard: ReturnType<typeof reviewGuard>; sandbox: Sandbox; timeoutMs: number };
+
+/**
+ * Repite la sonda en la copia: un hallazgo «demostrado» lo es porque falló aquí,
+ * no porque el agente lo diga. Pasa por la misma guardia y aislamiento que su bash.
+ */
+function rerunProbe(context: ProbeContext, proposed: NonNullable<ProposedFinding["probe"]>): Probe {
+  const { copy } = context;
   let source: string | null = null;
   let file: string | null = null;
   if (proposed.file) {
@@ -70,8 +78,11 @@ function rerunProbe(copy: string, proposed: NonNullable<ProposedFinding["probe"]
       if (existsSync(path)) source = tail(readFileSync(path, "utf8"), PROBE_SOURCE_LIMIT);
     }
   }
-  const result = spawnSync("/bin/bash", ["-c", proposed.command], {
-    cwd: copy, encoding: "utf8", timeout: timeoutMs, maxBuffer: 16 << 20, stdio: ["ignore", "pipe", "pipe"],
+  const blocked = context.guard("bash", { command: proposed.command }, copy);
+  if (blocked) return { command: proposed.command, file, source, exitCode: null, output: `no ejecutada: ${blocked.reason}`, reproduced: false };
+  const { file: bin, args } = context.sandbox.wrap(proposed.command);
+  const result = spawnSync(bin, args, {
+    cwd: copy, encoding: "utf8", timeout: context.timeoutMs, maxBuffer: 16 << 20, stdio: ["ignore", "pipe", "pipe"],
   });
   const output = tail(`${result.stdout ?? ""}${result.stderr ?? ""}`.trim(), PROBE_OUTPUT_LIMIT);
   const exitCode = result.error || result.signal ? null : result.status;
@@ -117,6 +128,8 @@ export async function review(options: ReviewOptions): Promise<ReviewOutcome> {
       })();
       const check = makeCitationChecker(range.repo, [range.headSha, range.baseSha]);
       const rejected = [...report.rejected];
+      const sandbox = sandboxFor(range.repo);
+      const probes: ProbeContext = { copy: copy.path, guard: reviewGuard(copy.path, range.repo), sandbox, timeoutMs: options.probeTimeoutMs ?? DEFAULT_PROBE_TIMEOUT_MS };
       const findings: Finding[] = [];
       for (const item of report.findings) {
         const citations: Citation[] = [];
@@ -129,11 +142,14 @@ export async function review(options: ReviewOptions): Promise<ReviewOutcome> {
           rejected.push(`${item.title}: ninguna cita existe en el SHA revisado`);
           continue;
         }
-        const probe = item.probe ? rerunProbe(copy.path, item.probe, options.probeTimeoutMs ?? DEFAULT_PROBE_TIMEOUT_MS) : null;
+        const probe = item.probe ? rerunProbe(probes, item.probe) : null;
         if (probe) log(`[REVIEW] :: PROBE :: finding: ${item.title.slice(0, 60)} | exit: ${probe.exitCode ?? "timeout"} | reproduced: ${probe.reproduced}`);
         findings.push({ ...item, citations, probe });
       }
-      result = { status: "done", summary: report.summary, gaps: report.gaps, rejected, usage: agent.usage, findings };
+      const gaps = sandbox.kind === "none"
+        ? [...report.gaps, "sin aislamiento del sistema (sandbox-exec o bwrap): solo la guardia de texto protegía el repositorio"]
+        : report.gaps;
+      result = { status: "done", summary: report.summary, gaps, rejected, usage: agent.usage, findings };
     }
   } catch (error) {
     result = { status: signal.aborted ? "cancelled" : "failed", error: error instanceof Error ? error.message : String(error) };

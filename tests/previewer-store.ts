@@ -65,10 +65,18 @@ assert.deepEqual(all.map((f) => [f.title, f.current]), [["D", true], ["A", false
 assert.equal(all.find((f) => f.title === "A")?.rating?.verdict, "vale", "volver a analizar no toca la valoración");
 assert.equal(store.runs(session.id).length, 3);
 
+// Dos revisiones a la vez: la que empezó antes y termina después no recupera la vigencia.
+const slow = store.startRun({ sessionId: session.id, baseSha: "base", headSha: "h4", model: "m/x", thinking: "high" });
+const fast = store.startRun({ sessionId: session.id, baseSha: "base", headSha: "h5", model: "m/x", thinking: "high" });
+store.finishRun(fast.id, { status: "done", findings: [sample("E")] });
+store.finishRun(slow.id, { status: "done", findings: [sample("F")] });
+assert.equal(store.session(session.id)?.headSha, "h5");
+assert.deepEqual(store.findings(session.id).filter((f) => f.current).map((f) => f.title), ["E"]);
+
 // Persistencia entre aperturas.
 store.close();
 store = new ReviewStore(path);
-assert.equal(store.findings(session.id).length, 3);
+assert.equal(store.findings(session.id).length, 5);
 assert.equal(store.selection(session.id).length, 1);
 store.close();
 

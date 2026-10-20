@@ -208,8 +208,8 @@ export class ReviewStore {
   }
 
   /**
-   * Cierra una ejecución. Solo una terminada con éxito mueve el head vigente de la
-   * sesión: un fallo no debe dejar «antiguos» los hallazgos de la revisión buena anterior.
+   * Cierra una ejecución. Solo una terminada con éxito, y la última en empezar, mueve
+   * el head vigente: un fallo o una revisión rezagada no dejan «antiguos» los buenos.
    */
   finishRun(runId: string, result: RunResult): StoredFinding[] {
     const current = this.run(runId);
@@ -232,8 +232,11 @@ export class ReviewStore {
         citations: JSON.stringify(item.citations), probe: item.probe ? JSON.stringify(item.probe) : null,
         verification: item.verification, position,
       }));
-      this.db.query("UPDATE sessions SET base_sha = $base, head_sha = $head WHERE id = $id")
-        .run({ base: current.baseSha, head: current.headSha, id: current.sessionId });
+      // BLINDAJE -> Si una revisión posterior ya terminó, esta llega tarde y no le quita la vigencia.
+      this.db.query(`UPDATE sessions SET base_sha = $base, head_sha = $head WHERE id = $id AND NOT EXISTS (
+        SELECT 1 FROM runs later WHERE later.session_id = $id AND later.status = 'done'
+          AND later.rowid > (SELECT rowid FROM runs WHERE id = $run))`)
+        .run({ base: current.baseSha, head: current.headSha, id: current.sessionId, run: runId });
     })();
     return this.findings(current.sessionId).filter((item) => item.runId === runId);
   }

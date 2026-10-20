@@ -4,6 +4,7 @@
 // repositorio en `<repo>-worktrees/` (CodeGraph no indexa temporales).
 // Es un clon local sin remotos, no un `git worktree`: un worktree comparte
 // ramas con el original y un `git branch -f` dentro movería la rama de Samu.
+// Sin hardlinks: un objeto enlazado es el mismo fichero en los dos repositorios.
 // =============================================================================
 
 import { existsSync, mkdirSync, readdirSync, readFileSync, rmdirSync, rmSync, writeFileSync } from "node:fs";
@@ -57,7 +58,7 @@ export function createCopy(repo: string, range: { baseSha: string; headSha: stri
     }
   };
   try {
-    git(root, "clone", "--quiet", "--local", "--no-checkout", repo, path);
+    git(root, "clone", "--quiet", "--local", "--no-hardlinks", "--no-checkout", repo, path);
     writeFileSync(join(path, ".git", OWNER), `${process.pid}\n`);
     git(path, "remote", "remove", "origin");
     // Sin remotos, la base solo se alcanza por este ref: así `git diff base head` funciona dentro.
