@@ -47,6 +47,7 @@ bun run tests/skills.ts
 bun run tests/router.ts
 bun run tests/context.ts
 bun run tests/bench.ts
+bun run tests/previewer-store.ts
 
 (
   cd go

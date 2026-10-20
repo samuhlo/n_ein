@@ -67,6 +67,7 @@ try {
         join(root, "pi-package/extensions/receipts.ts"),
         join(root, "pi-package/extensions/tools-view.ts"),
         join(root, "pi-package/extensions/codegraph.ts"),
+        join(root, "previewer/src/*.ts"),
       ],
     }),
   );

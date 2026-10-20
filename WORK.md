@@ -54,7 +54,7 @@ Tramo 1, revisor completo:
 - [ ] T1 · Motor — dada una rama con base/head fijados, crea el worktree, ejecuta el agente sin interfaz y devuelve hallazgos estructurados con citas validadas y sonda cuando la haya. Blocked by: none.
   - Citas inexistentes en el SHA se rechazan, no se muestran.
   - El worktree se borra también si el agente falla o se cancela.
-- [ ] T2 · Sesiones — almacén `bun:sqlite` en el hogar del canal: sesión, hallazgos, valoraciones, selección y vigencia por head. Blocked by: none.
+- [x] T2 · Sesiones — almacén `bun:sqlite` en el hogar del canal: sesión, hallazgos, valoraciones, selección y vigencia por head. Blocked by: none.
 - [ ] T3 · Recorrido — resumen llano del cambio y partes en orden de lectura, con voz docente. Blocked by: T1.
 - [ ] T4 · Web — recorrido, diff con marcas, panel de hallazgo, valoración y selección, con estética n_ein; servidor local. Blocked by: T2, T3.
 - [ ] T5 · Traspaso — `nein previewer handoff`, «aplica la revisión» en Pi y Claude, y la propuesta «¿Abro el revisor?» en el flujo. Blocked by: T2.
