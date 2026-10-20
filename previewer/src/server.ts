@@ -37,7 +37,7 @@ function palette(packageRoot: string): string {
   return `:root{${valid.map(([name, value]) => `--${name}:${value}`).join(";")}}`;
 }
 
-async function bundle(): Promise<string> {
+export async function bundle(): Promise<string> {
   const built = await Bun.build({ entrypoints: [join(WEB, "main.ts")], target: "browser", minify: true });
   const output = built.outputs[0];
   if (!built.success || !output) throw new Error(`la web no compila: ${built.logs.map(String).join("; ")}`);

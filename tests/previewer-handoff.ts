@@ -1,6 +1,6 @@
 import { strict as assert } from "node:assert";
 import { execFileSync, spawnSync } from "node:child_process";
-import { mkdirSync, mkdtempSync, realpathSync, writeFileSync } from "node:fs";
+import { existsSync, mkdirSync, mkdtempSync, realpathSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join, resolve } from "node:path";
 import type { Finding } from "../previewer/src/finding.ts";
@@ -29,6 +29,15 @@ const handoff = (): string => {
   assert.equal(result.status, 0, result.stderr);
   return result.stdout;
 };
+
+// `status` es lo que lee el Panel: un resumen de la rama, sin crear el almacén.
+const status = (cwd = repo): Record<string, unknown> => {
+  const result = spawnSync(join(root, "bin/n-ein-previewer"), ["status"], { cwd, env, encoding: "utf8" });
+  assert.equal(result.status, 0, result.stderr);
+  return JSON.parse(result.stdout);
+};
+assert.deepEqual(status(), { branch: "feat/x", head, reviewable: true, reason: "", session: null, reviewed: null, current: 0, unchecked: 0, selected: 0 });
+assert.equal(existsSync(db), false, "leer el estado no crea el almacén");
 
 const sample = (title: string, probe: Finding["probe"] = null): Finding => ({
   kind: "bug", severity: "high", title, plain: `Explicación llana de ${title}.`, condition: "si a vale 2", consequence: "se rompe",
@@ -61,6 +70,8 @@ store.finishRun(second.id, {
 });
 store.close();
 
+assert.deepEqual(status(), { branch: "feat/x", head, reviewable: true, reason: "", session: session.id, reviewed: head, current: 1, unchecked: 2, selected: 2 });
+
 const brief = handoff();
 assert.match(brief, /The user selected 2 findings/);
 assert.deepEqual([...brief.matchAll(/^## \d+\. (.+)$/gm)].map((match) => match[1]), ["Sigue, dicho de otra forma", "Callado"], "solo lo seleccionado y sin resolver, en orden");
@@ -77,5 +88,10 @@ assert.doesNotMatch(brief, /branch is now at/);
 writeFileSync(join(repo, "a.ts"), "export const a = 3;\n");
 git("commit", "-qam", "fix: a");
 assert.match(handoff(), /The branch is now at [0-9a-f]{12}: check each finding against the current code/);
+
+assert.notEqual(status().head, head);
+assert.equal(status().reviewed, head, "lo revisado es el head anterior: el Panel propone volver a revisar");
+git("switch", "-q", "main");
+assert.equal(status().reviewable, false, "en la base no hay nada que revisar");
 
 console.log("previewer handoff: OK");

@@ -1,19 +1,23 @@
 // =============================================================================
-// [FLOW] ENTRADA PROVISIONAL DEL REVISOR
+// [FLOW] ENTRADA DEL REVISOR
 // uso: n-ein-previewer review [--base REF] [--head REF] [--model P/M]
 //      [--thinking NIVEL] [--pr URL] [--no-open] [--json]
-//      n-ein-previewer open
-//      n-ein-previewer handoff [--json]
-// `nein previewer` la llevará al launcher; el agente usa bin/n-ein-previewer.
+//      n-ein-previewer open | handoff [--json] | status | check
+// El usuario entra por `nein previewer` o el Panel; el agente, por bin/n-ein-previewer.
+// `status` y `check` son para el Panel y `doctor`: leen, no revisan ni crean nada.
 // =============================================================================
 
-import { resolve } from "node:path";
+import { existsSync, mkdirSync, mkdtempSync, rmSync } from "node:fs";
+import { tmpdir } from "node:os";
+import { join, resolve } from "node:path";
 import { parseArgs } from "node:util";
 import { review } from "./engine.ts";
-import { git } from "./git.ts";
+import { git, resolveRange } from "./git.ts";
 import { handoffBrief } from "./handoff.ts";
 import { ensureServer, reviewerLink } from "./open.ts";
-import { ReviewStore } from "./store.ts";
+import { sandboxFor } from "./sandbox.ts";
+import { bundle } from "./server.ts";
+import { ReviewStore, storePath } from "./store.ts";
 
 const packageRoot = resolve(import.meta.dir, "../..");
 const { values, positionals } = parseArgs({
@@ -30,8 +34,9 @@ const { values, positionals } = parseArgs({
   },
 });
 
-const USAGE = "uso: n-ein-previewer review [--base REF] [--head REF] [--model P/M] [--thinking NIVEL] [--pr URL] [--no-open] [--json]\n       n-ein-previewer open\n       n-ein-previewer handoff [--json]\n";
-if (positionals[0] !== "review" && positionals[0] !== "handoff" && positionals[0] !== "open") {
+const USAGE = "uso: n-ein-previewer review [--base REF] [--head REF] [--model P/M] [--thinking NIVEL] [--pr URL] [--no-open] [--json]\n       n-ein-previewer open\n       n-ein-previewer handoff [--json]\n       n-ein-previewer status | check\n";
+const VERBS = ["review", "open", "handoff", "status", "check"];
+if (!VERBS.includes(positionals[0] ?? "")) {
   process.stderr.write(USAGE);
   process.exit(64);
 }
@@ -58,7 +63,7 @@ if (positionals[0] === "open") {
     const session = store.findSession(repo, branch);
     store.close();
     if (!session) {
-      process.stdout.write(`No hay revisiones de ${branch}: lanza primero n-ein-previewer review.\n`);
+      process.stdout.write(`No hay revisiones de ${branch}: pide una con «review».\n`);
       process.exit(1);
     }
     process.stdout.write(`// 000  REVISOR · ${branch}\n▏ ${await link(session.id)}\n`);
@@ -67,6 +72,57 @@ if (positionals[0] === "open") {
     process.stderr.write(`[ERR] :: OPEN_FAIL :: reason: ${error instanceof Error ? error.message : String(error)}\n`);
     process.exit(1);
   }
+}
+
+// El Panel lo lee en cada apertura: sin almacén no lo crea, y una rama sin cambios propios no se ofrece.
+if (positionals[0] === "status") {
+  try {
+    const { repo, head, branch } = current();
+    let reason = "";
+    try {
+      resolveRange(repo);
+    } catch (error) {
+      reason = error instanceof Error ? error.message : String(error);
+    }
+    const path = storePath(packageRoot);
+    const store = existsSync(path) ? new ReviewStore(path) : null;
+    const session = store?.findSession(repo, branch) ?? null;
+    const findings = session && store ? store.findings(session.id) : [];
+    const reviewed = session && store ? (store.runs(session.id).filter((run) => run.status === "done").at(-1)?.headSha ?? null) : null;
+    store?.close();
+    const open = findings.filter((item) => item.rating?.verdict !== "descartar");
+    process.stdout.write(`${JSON.stringify({
+      branch, head, reviewable: reason === "", reason, session: session?.id ?? null, reviewed,
+      current: open.filter((item) => item.current).length,
+      unchecked: open.filter((item) => item.status === "unchecked").length,
+      selected: findings.filter((item) => item.selected && item.status !== "resolved").length,
+    })}\n`);
+    process.exit(0);
+  } catch (error) {
+    process.stderr.write(`[ERR] :: STATUS_FAIL :: reason: ${error instanceof Error ? error.message : String(error)}\n`);
+    process.exit(1);
+  }
+}
+
+// Para `doctor`: el aislamiento que tendrían las sondas aquí y la web compilando desde el paquete instalado.
+if (positionals[0] === "check") {
+  const area = mkdtempSync(join(tmpdir(), "nein-previewer-check-"));
+  let line = "";
+  try {
+    for (const name of ["copy", "origin"]) mkdirSync(join(area, name));
+    const { kind } = sandboxFor(join(area, "copy"), join(area, "origin"));
+    await bundle();
+    const isolation = kind === "none"
+      ? `sin aislamiento: las revisiones no ejecutan tests ni sondas${process.platform === "linux" ? "; instala bubblewrap" : ""}`
+      : `aislamiento ${kind}`;
+    line = `// 003 REVISOR · ${isolation} · web compila\n`;
+  } catch (error) {
+    process.stderr.write(`[ERR] :: CHECK_FAIL :: reason: ${error instanceof Error ? error.message : String(error)}\n`);
+  }
+  // process.exit no pasa por un finally: el temporal se borra antes de salir.
+  rmSync(area, { recursive: true, force: true });
+  process.stdout.write(line);
+  process.exit(line ? 0 : 1);
 }
 
 if (positionals[0] === "handoff") {
