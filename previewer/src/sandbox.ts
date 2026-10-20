@@ -3,7 +3,7 @@
 // La guardia de texto no ve un `cd ../..`: el sistema operativo sí. Cada comando
 // del revisor y cada sonda solo pueden escribir en la copia, los temporales y
 // las cachés de herramientas (instalar dependencias, compilar): el resto del
-// disco, incluido el repositorio de Samu, queda en solo lectura. `sandbox-exec`
+// disco, incluido el repositorio del usuario, queda en solo lectura. `sandbox-exec`
 // en macOS, `bwrap` en Linux si está instalado. Sin ninguno, o dentro de otro
 // aislamiento que no deja anidar, queda la guardia de texto y la revisión lo dice.
 // =============================================================================

@@ -284,9 +284,9 @@ assert.equal(git("rev-parse", "main"), baseSha);
     },
   });
   assert.equal(second.run.status, "done", second.run.error ?? "");
-  assert.match(prompt, /Corta letras a la mitad \[Samu|Corta letras a la mitad\n/, "el hallazgo abierto va en el prompt");
+  assert.match(prompt, /^P\d+\. Corta letras a la mitad$/m, "el hallazgo abierto va en el prompt");
   assert.match(prompt, /restored at \.previewer-probes\/clip\.sh/);
-  assert.match(prompt, /Samu dismissed[\s\S]*Sonda que no falla \[Samu: descartar, pasa, no es un fallo\]/, "lo descartado se menciona para no repetirlo");
+  assert.match(prompt, /The user dismissed[\s\S]*Sonda que no falla \[user: descartar, pasa, no es un fallo\]/, "lo descartado se menciona para no repetirlo");
   assert.doesNotMatch(prompt, /^P\d+\. Sonda que no falla/m);
   const byTitle = new Map(second.findings.map((item) => [item.title, item]));
   const resolvedClip = byTitle.get("Corta letras a la mitad");

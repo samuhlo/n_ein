@@ -2,7 +2,7 @@
 // [DATA] SESIONES DEL REVISOR
 // Una sesión por rama de un repositorio; cada revisión de un head es una
 // ejecución. Vive en el hogar del canal, nunca en el repositorio revisado.
-// Las valoraciones de Samu van en su propia tabla: volver a analizar no las toca,
+// Las valoraciones del usuario van en su propia tabla: volver a analizar no las toca,
 // y un hallazgo de un head anterior no se borra, solo deja de estar vigente.
 // Cada hallazgo pertenece a un hilo (el id de su primera aparición): si una
 // revisión posterior lo ve otra vez, continúa el hilo y hereda valoración y
@@ -350,7 +350,7 @@ export class ReviewStore {
     return this.require(findingId);
   }
 
-  /** Lo que Samu eligió para que n_ein corrija y aún no está resuelto. */
+  /** Lo que el usuario eligió para que n_ein corrija y aún no está resuelto. */
   selection(sessionId: string): StoredFinding[] {
     return this.findings(sessionId).filter((item) => item.selected && item.status !== "resolved");
   }

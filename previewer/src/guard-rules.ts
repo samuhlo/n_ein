@@ -9,7 +9,7 @@ import { basename, dirname, isAbsolute, relative, resolve } from "node:path";
 
 /** Git que publica, trae o cambia la configuración o el árbol de worktrees. */
 const OUTWARD_GIT = /\bgit\b[^|;&\n]*\b(push|pull|fetch|remote|clone|worktree|config|submodule)\b/;
-/** `gh` publicaría en GitHub en nombre de Samu. */
+/** `gh` publicaría en GitHub en nombre del usuario. */
 const GITHUB_CLI = /(^|[\s;&|(])gh\s/;
 
 const MAX_LINKS = 40;

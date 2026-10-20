@@ -70,7 +70,7 @@ const tail = (text: string, limit: number): string => (text.length > limit ? `â€
 function previousSection(previous: Previous, execute: boolean): string {
   if (!previous.pending.length && !previous.dismissed.length) return "";
   const rated = (item: StoredFinding): string =>
-    item.rating ? ` [Samu: ${item.rating.verdict}${item.rating.reason ? `, ${item.rating.reason}` : ""}]` : "";
+    item.rating ? ` [user: ${item.rating.verdict}${item.rating.reason ? `, ${item.rating.reason}` : ""}]` : "";
   const lines = previous.pending.map(({ key, item }) => {
     const probe = item.probe ? `\n   Probe${item.probe.reproduced ? " (failed then: demonstrated)" : ""}: \`${item.probe.command}\`${item.probe.file ? ` (restored at ${item.probe.file})` : ""}` : "";
     return `${key}. ${item.title}${rated(item)}\n   Condition: ${item.condition}\n   Cited: ${item.citations.map((c) => c.ref).join(", ")}${probe}`;
@@ -84,7 +84,7 @@ function previousSection(previous: Previous, execute: boolean): string {
       lines.join("\n"),
     ].filter(Boolean).join("\n") : "",
     previous.dismissed.length
-      ? `Samu dismissed these earlier findings as not valid. Do not report them again unless this head makes them real in a new way:\n${previous.dismissed.map((item) => `- ${item.title}${rated(item)}`).join("\n")}`
+      ? `The user dismissed these earlier findings as not valid. Do not report them again unless this head makes them real in a new way:\n${previous.dismissed.map((item) => `- ${item.title}${rated(item)}`).join("\n")}`
       : "",
   ].filter(Boolean).join("\n\n");
 }
@@ -222,7 +222,7 @@ export async function review(options: ReviewOptions): Promise<ReviewOutcome> {
   mkdirSync(runDir, { recursive: true, mode: 0o700 });
   log(`[REVIEW] >> RUN_START :: run: ${run.id.slice(0, 8)} | head: ${short(range.headSha)} | base: ${short(range.baseSha)} | model: ${model}`);
 
-  // Lo abierto de revisiones anteriores; lo descartado por Samu solo se menciona para no repetirlo.
+  // Lo abierto de revisiones anteriores; lo descartado por el usuario solo se menciona para no repetirlo.
   const open = store.findings(session.id).filter((item) => item.status !== "resolved");
   const previous: Previous = {
     pending: open.filter((item) => item.rating?.verdict !== "descartar").map((item, index) => ({ key: `P${index + 1}`, item })),

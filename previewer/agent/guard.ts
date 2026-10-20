@@ -2,7 +2,7 @@
 // [AUTH] GUARDIA DEL REVISOR
 // El revisor puede ejecutar tests y escribir sondas, pero solo en su copia.
 // Es la capa que explica el motivo al agente; debajo, el bash corre con el
-// repositorio de Samu en solo lectura (sandbox.ts) y la copia no tiene remotos.
+// repositorio del usuario en solo lectura (sandbox.ts) y la copia no tiene remotos.
 // =============================================================================
 
 import { createBashToolDefinition, type ExtensionAPI } from "@earendil-works/pi-coding-agent";

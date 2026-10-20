@@ -1,6 +1,6 @@
 // =============================================================================
 // [DATA] GIT DEL REPOSITORIO REVISADO
-// Solo lecturas: el revisor nunca escribe en el repositorio de Samu.
+// Solo lecturas: el revisor nunca escribe en el repositorio del usuario.
 // =============================================================================
 
 import { execFileSync } from "node:child_process";

@@ -2,7 +2,7 @@
 // [FLOW] AGENTE REVISOR SIN INTERFAZ
 // El mismo Pi fijado de n_ein, en modo `-p --mode json`, con las herramientas
 // justas para leer, ejecutar tests y escribir sondas dentro de la copia. La
-// guardia y la copia sin remotos impiden que toque el repositorio de Samu.
+// guardia y la copia sin remotos impiden que toque el repositorio del usuario.
 // =============================================================================
 
 import { spawn, spawnSync } from "node:child_process";
@@ -16,7 +16,7 @@ import type { Usage } from "./store.ts";
 export type AgentRequest = {
   /** Copia de revisión: el agente trabaja aquí y en ningún otro sitio. */
   cwd: string;
-  /** Repositorio de Samu; la guardia bloquea cualquier comando que lo nombre. */
+  /** Repositorio del usuario; la guardia bloquea cualquier comando que lo nombre. */
   origin: string;
   prompt: string;
   runDir: string;

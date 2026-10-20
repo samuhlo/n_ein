@@ -3,7 +3,7 @@
 // El revisor ejecuta tests y sondas en una copia fijada al head, junto al
 // repositorio en `<repo>-worktrees/` (CodeGraph no indexa temporales).
 // Es un clon local sin remotos, no un `git worktree`: un worktree comparte
-// ramas con el original y un `git branch -f` dentro movería la rama de Samu.
+// ramas con el original y un `git branch -f` dentro movería la rama del usuario.
 // Sin hardlinks: un objeto enlazado es el mismo fichero en los dos repositorios.
 // =============================================================================
 
