@@ -101,6 +101,20 @@ Fuentes inspeccionadas: [Gentle Shell, procesos, historial y continuación](http
 
 Samu propuso un modo para exponer una idea, aclarar qué quiere y hasta dónde debe llegar antes del plan de ejecución, para proyectos nuevos y features, con wireframes y esquemas que eviten iterar por malentendidos. Precisó que no es un recorrido obligatorio sino algo que invoca él cuando no tiene clara la idea, y que ampliar `intent` lo ensuciaría. Decisiones: skill propia `vision`, de invocación manual; el agente puede sugerirla en una línea; el brief y los bocetos aceptados viven en `docs/design/<tema>.md` y `.html`; bocetos en HTML simple desde la primera versión, por legibilidad, con un coste adicional pequeño frente a ASCII. Confirmó el acuerdo y autorizó implementarlo y abrir una PR para su revisión. [Diseño](02-diseno.md#vision-dar-forma-a-una-idea).
 
+### p_reviewer acordado el 20 de octubre
+
+Samu propuso convertir su proyecto `lang-pr-review` (Python y LangGraph, hecho para aprender) en una herramienta de n_ein que, al terminar un trabajo, dé un enlace para revisarlo e interactúe con el agente. Decidió dejar `lang-pr-review` intacto como referencia y crear dentro de n_ein una herramienta nueva con personalidad propia: **p_reviewer**, invocada con `nein previewer`. Acuerdo cerrado con `intent` y confirmado; implementarlo requiere autorización aparte.
+
+- Solo revisa trabajo de n_ein, sobre la rama local con SHA fijados; las PR de otras personas quedan fuera de alcance.
+- Samu está en medio: valora cada hallazgo y solo lo que selecciona vuelve a n_ein, que lo recoge desde la conversación («aplica la revisión»). La web no escribe en el repositorio. Una segunda revisión indica qué quedó resuelto.
+- El motor es el agente de n_ein sin interfaz, con CodeGraph. Puede ejecutar tests y sondas en un worktree aparte, sin commits. Un banco compara un revisor de la misma familia de modelo que el autor con otro de otra familia.
+- Voz docente y lenguaje que entendería un niño, con recorrido guiado. Ayuda a Samu a explicar después qué se hizo.
+- n_ein propone «¿Abro el revisor?» en una línea; nunca se lanza solo. La skill `review` no cambia.
+- TypeScript con Bun y `bun:sqlite`, sin LangGraph: el ritmo lo marca Samu y n_ein ya aporta el bucle de agente.
+- Dos tramos: revisor completo con banco mínimo y después afinado hasta umbrales de detección y falsas alarmas.
+
+Detalle, criterios y tareas en `WORK.md`.
+
 ## Recomendaciones de diseño, revisables
 
 El 7 de octubre Samu autorizó implementar y evaluar el reparto temprano y la investigación acotada con el mismo mecanismo de equipo, tras la [auditoría del piloto](../evals/results/2026-10-07-auditoria-paralelismo.md). La lectura puede delegarse sin preparar un encargo de escritura. Se mide por separado el ahorro de contexto y el avance paralelo, conservando checks e integración. Esto amplía el experimento; no demuestra ahorro ni activa por sí solo la preview personal. El estado de implementación y evaluación vive en WORK.md.
