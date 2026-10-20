@@ -23,6 +23,7 @@ Acuerdo confirmado con `intent` el 20 de octubre: «Confirmo, guardalo». El mis
 - **Segunda revisión por hilos (técnica, 20 de octubre).** Cada hallazgo pertenece a un hilo, el id de su primera aparición; valoración y selección van por hilo y no se pierden al revisar otra vez. La revisión siguiente recibe los hilos abiertos (`P1`…), con sus sondas restauradas en la copia, y dice si siguen o están resueltos. Si la sonda anterior sigue fallando, el hilo sigue aunque el agente lo dé por resuelto; si ya pasa, queda resuelto. Lo que nadie comprueba queda «sin comprobar»: deja de estar vigente pero sigue en la selección, marcado en el traspaso para reproducirlo antes de tocar código. Lo descartado se le menciona al revisor solo para que no lo repita.
 - **Lanzamiento:** al cerrar un encargo o abrir una PR, n_ein propone en una línea «¿Abro el revisor?»; Samu también lo abre a mano. Nunca automático: cuesta modelo y tiempo.
 - **Stack:** TypeScript con Bun gestionado, `bun:sqlite`, `Bun.serve`; sin LangGraph (el ritmo lo marca Samu; n_ein ya aporta el bucle de agente). Lo instala el instalador de Go; la web se compila en el build de la release.
+- **Web (técnica, 20 de octubre).** Sin dependencias nuevas: `Bun.serve` en `127.0.0.1` con un servidor por canal que se apaga tras 2 h sin uso, y `Bun.build` compila `previewer/web/main.ts` al arrancar. El enlace lleva un token en el fragmento, que no viaja en las peticiones de página y se borra de la barra. La API exige su cabecera, el `Host` propio y JSON, contra DNS rebinding y formularios de otras webs. Las vistas se generan como texto con escape automático, porque todo lo que pintan viene del modelo o del repositorio. Colores desde `brand.json` y el tema `ein`; sin resaltado de sintaxis, que pediría `shiki`. Los archivos largos sin hallazgos empiezan plegados, y lo descartado no marca el diff.
 - **La skill `review` no cambia** y su informe no se entrega al revisor, para que mire sin ideas previas.
 - **Técnicas (del agente):** sesiones en el hogar del canal (`~/.n_ein/<canal>/`), nunca en el repo; servidor solo en `127.0.0.1`, arrancado al abrir el revisor; idioma de la interfaz = idioma de conversación de n_ein; macOS y Omarchy.
 
@@ -57,7 +58,7 @@ Tramo 1, revisor completo:
   - El worktree se borra también si el agente falla o se cancela.
 - [x] T2 · Sesiones — almacén `bun:sqlite` en el hogar del canal: sesión, hallazgos, valoraciones, selección y vigencia por head. Blocked by: none.
 - [x] T3 · Recorrido — resumen llano del cambio y partes en orden de lectura, con voz docente. Blocked by: T1.
-- [ ] T4 · Web — recorrido, diff con marcas, panel de hallazgo, valoración y selección, con estética n_ein; servidor local. Blocked by: T2, T3.
+- [x] T4 · Web — recorrido, diff con marcas, panel de hallazgo, valoración y selección, con estética n_ein; servidor local. Blocked by: T2, T3.
 - [x] T5 · Traspaso — `nein previewer handoff`, «aplica la revisión» en Pi y Claude, y la propuesta «¿Abro el revisor?» en el flujo. Blocked by: T2.
 - [x] T6 · Segunda revisión — sobre el nuevo head: resuelto / sigue / nuevo, sin perder valoraciones. Blocked by: T1, T2.
 - [ ] T7 · Launcher e instalador — `nein previewer`, entrada en el Panel, web compilada en la release, comprobación en `doctor`; macOS y Omarchy. Blocked by: T4.
@@ -72,6 +73,7 @@ Tramo 2, afinado:
 
 - Código en `previewer/`: `src/store.ts` (T2, hilos y comprobaciones de T6, esquema 3), `src/engine.ts` con `git.ts`, `copy.ts`, `citations.ts`, `report.ts`, `runner.ts`, `sandbox.ts`, `guard-rules.ts`; recorrido en `settleTour` (T3); traspaso en `src/handoff.ts` (T5); agente en `agent/reviewer.md` y `agent/guard.ts`. Entrada `bin/n-ein-previewer review|handoff` hasta `nein previewer` (T7); skill `previewer` y propuesta de cierre en `pi-package/flow.md`.
 - `tests/previewer-store.ts`, `tests/previewer-engine.ts` y `tests/previewer-handoff.ts` (sin inferencia) en `scripts/check.sh`; `previewer/` entra en `typecheck-agents.ts` y en la regla de `tests/skills.ts` de no nombrar a una persona concreta. La migración v1 → v2 se probó también sobre la base real del canal dev, con copia previa. `./scripts/check.sh` completo pasó el 20 de octubre sobre `9f30069`.
+- Web (T4): `tests/previewer-web.ts` cubre el escape de HTML hostil, las marcas en la línea exacta del head o de la base, lo llano a la vista y lo técnico plegado, el orden del recorrido, el rechazo de `Host`, `Origin` y token ajenos o de cuerpos que no son JSON, y el arranque y la reutilización del servidor en segundo plano. El smoke del paquete arranca el servidor instalado y comprueba que la web compila. Visto en Chrome headless con la sesión real de esta rama (7 revisiones, 14 hilos, recorrido de 7 pasos). Por DevTools, en una sesión desechable: el token sale de la URL, «vale» se guarda con su motivo sin cerrar el detalle abierto, lo descartado no se puede enviar y una marca del diff enfoca su hallazgo. En viewport móvil de 390 px no hay scroll horizontal de página. `./scripts/check.sh` completo pasó sobre `95b1fb1`.
 - Aceptación de T5 con agente real, en un proyecto desechable con tres hallazgos sembrados (dos seleccionados, uno descartado): tras «aplica la revisión», Pi (`openai-codex/gpt-6-sol`) y Claude crearon exactamente las dos tareas seleccionadas, reprodujeron cada fallo en rojo antes de arreglarlo, hicieron un commit por tarea, no tocaron el descartado y cerraron ofreciendo «¿Abro el revisor?».
 - Cuatro revisiones reales de esta rama con `openai-codex/gpt-6-sol` alto (canal dev):
 
@@ -91,4 +93,4 @@ Tramo 2, afinado:
 
 ## Siguiente paso
 
-T1, T2, T3, T5 y T6 terminados. Sigue T4 (web), ya sin bloqueos; T8 (banco) también puede empezar. Decisión abierta para Samu: si un hallazgo seleccionado que la última revisión no comprobó debe seguir en el traspaso, marcado, como ahora, o salir de él.
+T1 a T6 terminados. Siguen T7 (`nein previewer`, entrada en el Panel, `doctor`, prueba en Omarchy), ya sin bloqueos, y T8 (banco). Decisión abierta para Samu: si un hallazgo seleccionado que la última revisión no comprobó debe seguir en el traspaso, marcado, como ahora, o salir de él.
