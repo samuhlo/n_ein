@@ -24,6 +24,8 @@ export type Citation = {
 export type Probe = {
   command: string;
   file: string | null;
+  /** Contenido de la sonda: la copia se borra, esto queda para que Samu la lea. */
+  source: string | null;
   exitCode: number | null;
   output: string;
   reproduced: boolean;

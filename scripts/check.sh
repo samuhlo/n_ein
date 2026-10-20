@@ -48,6 +48,7 @@ bun run tests/router.ts
 bun run tests/context.ts
 bun run tests/bench.ts
 bun run tests/previewer-store.ts
+bun run tests/previewer-engine.ts
 
 (
   cd go
