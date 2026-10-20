@@ -42,6 +42,13 @@ try {
     console.log(`// 000  REVISIÓN ${run.status.toUpperCase()}`);
     if (run.error) console.log(`▏ ${run.error}`);
     if (run.summary) console.log(`\n${run.summary}`);
+    if (run.tour.length) console.log("\n// 001  RECORRIDO");
+    run.tour.forEach((step, index) => {
+      console.log(`\n${index + 1}. ${step.title}`);
+      console.log(`▏ ${step.plain}${step.why ? ` ${step.why}` : ""}`);
+      console.log(`▏ ${step.files.join(" · ")}`);
+    });
+    if (findings.length) console.log("\n// 002  HALLAZGOS");
     const label = { new: "nuevo", persists: "sigue", resolved: "resuelto", unchecked: "sin comprobar" } as const;
     findings.forEach((item, index) => {
       const probe = item.check?.probe ?? item.probe;

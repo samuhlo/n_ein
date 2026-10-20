@@ -102,7 +102,7 @@ const logBefore = git("log", "--all", "--format=%H %D");
 }
 
 const short = headSha.slice(0, 10);
-const report = (findings: unknown[]): string => `He revisado.\n\n\`\`\`json\n${JSON.stringify({ summary: "Recorta el texto a tres letras.", findings, gaps: ["no hay tests"] })}\n\`\`\``;
+const report = (findings: unknown[], tour: unknown[] = []): string => `He revisado.\n\n\`\`\`json\n${JSON.stringify({ summary: "Recorta el texto a tres letras.", tour, findings, gaps: ["no hay tests"] })}\n\`\`\``;
 const finding = (title: string, citations: string[], probe?: unknown) => ({
   kind: "bug", severity: "high", title, plain: "Si escribes una palabra con tilde, se puede romper.", condition: "texto con caracteres de dos unidades",
   consequence: "devuelve medio carácter", citations, probe, verification: "",
@@ -140,6 +140,10 @@ const outcome = await review({
         finding("Sonda que se agota", [`text.ts@${short}:L1`], { command: `(sleep 2; touch ${late}) & sleep 10`, file: null }),
         finding("Sonda que deja un hijo", [`text.ts@${short}:L1`], { command: `(sleep 2; touch ${orphan}) & exit 1`, file: null }),
         finding("Sonda que no falla", [`text.ts@${baseSha.slice(0, 8)}:L2`], { command: "bash .previewer-probes/pass.sh", file: ".previewer-probes/pass.sh" }),
+      ], [
+        { title: "El recorte", plain: "Ahora el texto se queda en tres letras.", why: "Los nombres largos se ven cortados.", files: ["text.ts", "ghost.ts"] },
+        { title: "Otra vez lo mismo", plain: "Repite el archivo.", files: ["text.ts"] },
+        { title: "Sin explicar", files: ["empty.txt"] },
       ]),
       usage: { input: 100, output: 20, cacheRead: 0, usd: 0.12 },
       error: null,
@@ -179,6 +183,9 @@ assert.match(rejected, /SHA ajeno/);
 assert.match(rejected, /Tipo raro: tipo desconocido/);
 assert.match(rejected, /Cita a un archivo vacío: cita .* rechazada \(el archivo tiene 0 líneas\)/);
 assert.deepEqual(outcome.run.gaps, ["no hay tests"]);
+assert.deepEqual(outcome.run.tour.map((step) => [step.title, step.files]), [["El recorte", ["text.ts"]], ["Archivos sin explicar", ["empty.txt"]]], "el recorrido solo nombra lo cambiado, una vez, y nada queda fuera");
+assert.equal(outcome.run.tour[0]?.why, "Los nombres largos se ven cortados.");
+assert.match(rejected, /recorrido: «Otra vez lo mismo»/);
 assert.equal(outcome.run.usage?.usd, 0.12);
 assert.ok(!existsSync(seen.cwd), "la copia se borra al terminar");
 assert.ok(!existsSync(copiesRoot(repo)), "sin copias, la carpeta hermana tampoco queda");

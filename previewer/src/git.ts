@@ -64,6 +64,11 @@ export function diffOf(range: Range, ...extra: string[]): string {
   return git(range.repo, "diff", "--no-color", "--no-ext-diff", ...extra, range.baseSha, range.headSha);
 }
 
+/** Archivos que cambian entre base y head, en el orden del diff. */
+export function changedFiles(range: Range): string[] {
+  return git(range.repo, "diff", "--name-only", "--no-color", "-M", range.baseSha, range.headSha).split("\n").filter(Boolean);
+}
+
 /** Punta de una rama, para comprobar después que la revisión no la movió. */
 export function branchTip(repo: string, branch: string): string | null {
   return branch ? tryGit(repo, "rev-parse", "--verify", "--quiet", `refs/heads/${branch}`) : null;

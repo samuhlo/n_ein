@@ -14,8 +14,8 @@ import { basename, dirname, isAbsolute, join, relative, resolve } from "node:pat
 import { channelDir, loadModels } from "../../pi-package/models.ts";
 import { makeCitationChecker } from "./citations.ts";
 import { createCopy, sweepCopies, type ReviewCopy } from "./copy.ts";
-import type { Citation, Finding, Probe } from "./finding.ts";
-import { branchTip, commitsOf, diffOf, resolveRange, type Range } from "./git.ts";
+import type { Citation, Finding, Probe, TourStep } from "./finding.ts";
+import { branchTip, changedFiles, commitsOf, diffOf, resolveRange, type Range } from "./git.ts";
 import { reviewGuard } from "./guard-rules.ts";
 import { parseReport, type ProposedFinding } from "./report.ts";
 import { sandboxFor, type Sandbox } from "./sandbox.ts";
@@ -139,6 +139,23 @@ function runGrouped(file: string, args: string[], cwd: string, timeoutMs: number
 }
 
 /**
+ * El recorrido solo nombra archivos que el diff cambia, cada uno una vez; lo que
+ * deja sin explicar va a un último paso para que nada quede escondido.
+ */
+export function settleTour(proposed: TourStep[], changed: string[]): { tour: TourStep[]; dropped: string[] } {
+  const pending = new Set(changed);
+  const tour: TourStep[] = [];
+  const dropped: string[] = [];
+  for (const step of proposed) {
+    const files = step.files.filter((file) => pending.delete(file));
+    if (files.length) tour.push({ ...step, files });
+    else dropped.push(`recorrido: «${step.title}» no nombra ningún archivo cambiado que quede por explicar`);
+  }
+  if (pending.size) tour.push({ title: "Archivos sin explicar", plain: "El recorrido no cuenta qué hacen estos archivos; míralos por tu cuenta.", why: "", files: [...pending] });
+  return { tour, dropped };
+}
+
+/**
  * Devuelve a la copia el archivo de una sonda anterior, solo si cabe entero, queda
  * dentro de la copia y no pisa un archivo del head. Devuelve si lo escribió.
  */
@@ -233,7 +250,8 @@ export async function review(options: ReviewOptions): Promise<ReviewOutcome> {
         }
       })();
       const check = makeCitationChecker(range.repo, [range.headSha, range.baseSha]);
-      const rejected = [...report.rejected];
+      const { tour, dropped } = settleTour(report.tour, changedFiles(range));
+      const rejected = [...report.rejected, ...dropped];
       const probes: ProbeContext = { copy: copy.path, guard: reviewGuard(copy.path, range.repo), sandbox, timeoutMs: options.probeTimeoutMs ?? DEFAULT_PROBE_TIMEOUT_MS };
       const findings: (Finding & { thread?: string })[] = [];
       const keys = new Map(previous.pending.map(({ key, item }) => [key, item]));
@@ -281,7 +299,7 @@ export async function review(options: ReviewOptions): Promise<ReviewOutcome> {
         } else gaps.push(`${key} «${item.title}», de una revisión anterior, no se comprobó en este head`);
       }
       if (!execute) gaps.push("sin aislamiento del sistema (sandbox-exec o bwrap utilizable): revisión solo de lectura, sin tests ni sondas");
-      result = { status: "done", summary: report.summary, gaps, rejected, usage: agent.usage, findings, checks };
+      result = { status: "done", summary: report.summary, tour, gaps, rejected, usage: agent.usage, findings, checks };
     }
   } catch (error) {
     result = { status: signal.aborted ? "cancelled" : "failed", error: error instanceof Error ? error.message : String(error) };

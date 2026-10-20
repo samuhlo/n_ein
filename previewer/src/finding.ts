@@ -31,6 +31,17 @@ export type Probe = {
   reproduced: boolean;
 };
 
+/** Un paso del recorrido: una parte del cambio, en el orden en que conviene leerla. */
+export type TourStep = {
+  title: string;
+  /** Qué hace esta parte, en lenguaje llano. */
+  plain: string;
+  /** Por qué importa a quien usa el programa. */
+  why: string;
+  /** Archivos cambiados que forman esta parte, tal como los nombra el diff. */
+  files: string[];
+};
+
 export type Finding = {
   kind: Kind;
   severity: Severity;

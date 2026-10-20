@@ -143,6 +143,7 @@ store.close();
   const migrated = new ReviewStore(v1);
   const [kept] = migrated.findings("s");
   assert.deepEqual([kept?.title, kept?.thread, kept?.status, kept?.rating?.verdict], ["Antiguo", "f", "new", "vale"]);
+  assert.deepEqual(migrated.run("r")?.tour, [], "una revisión anterior al recorrido queda sin él");
   migrated.close();
 }
 

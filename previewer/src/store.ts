@@ -14,7 +14,7 @@ import { randomUUID } from "node:crypto";
 import { mkdirSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { channelDir } from "../../pi-package/models.ts";
-import type { Citation, Finding, Kind, Probe, Severity } from "./finding.ts";
+import type { Citation, Finding, Kind, Probe, Severity, TourStep } from "./finding.ts";
 
 export const VERDICTS = ["vale", "descartar", "investigar"] as const;
 export type Verdict = (typeof VERDICTS)[number];
@@ -46,6 +46,8 @@ export type Run = {
   status: RunStatus;
   error: string | null;
   summary: string;
+  /** Recorrido guiado del cambio, en orden de lectura. */
+  tour: TourStep[];
   gaps: string[];
   rejected: string[];
   usage: Usage | null;
@@ -75,6 +77,7 @@ export type RunResult = {
   status: Exclude<RunStatus, "running">;
   error?: string;
   summary?: string;
+  tour?: TourStep[];
   gaps?: string[];
   rejected?: string[];
   usage?: Usage;
@@ -83,7 +86,7 @@ export type RunResult = {
   checks?: { thread: string; outcome: Outcome; note: string; probe: Probe | null }[];
 };
 
-const SCHEMA = 2;
+const SCHEMA = 3;
 
 /** Base de datos del canal: `~/.n_ein/<canal>/previewer/previewer.db`. */
 export function storePath(packageRoot: string): string {
@@ -93,7 +96,7 @@ export function storePath(packageRoot: string): string {
 type SessionRow = { id: string; repo: string; branch: string; pr_url: string | null; base_sha: string | null; head_sha: string | null; created: string };
 type RunRow = {
   id: string; session_id: string; base_sha: string; head_sha: string; model: string; thinking: string; status: RunStatus;
-  error: string | null; summary: string; gaps: string; rejected: string; usage: string | null; started: string; ended: string | null;
+  error: string | null; summary: string; tour: string; gaps: string; rejected: string; usage: string | null; started: string; ended: string | null;
 };
 type FindingRow = {
   id: string; session_id: string; run_id: string; head_sha: string; kind: Kind; severity: Severity; title: string; plain: string;
@@ -111,7 +114,7 @@ function session(row: SessionRow): Session {
 function run(row: RunRow): Run {
   return {
     id: row.id, sessionId: row.session_id, baseSha: row.base_sha, headSha: row.head_sha, model: row.model, thinking: row.thinking,
-    status: row.status, error: row.error, summary: row.summary, gaps: JSON.parse(row.gaps), rejected: JSON.parse(row.rejected),
+    status: row.status, error: row.error, summary: row.summary, tour: JSON.parse(row.tour), gaps: JSON.parse(row.gaps), rejected: JSON.parse(row.rejected),
     usage: row.usage ? JSON.parse(row.usage) : null, started: row.started, ended: row.ended,
   };
 }
@@ -162,6 +165,7 @@ export class ReviewStore {
           run_id TEXT NOT NULL REFERENCES runs(id), thread TEXT NOT NULL REFERENCES findings(id),
           outcome TEXT NOT NULL, note TEXT NOT NULL DEFAULT '', probe TEXT, PRIMARY KEY (run_id, thread))`);
       }
+      if (version < 3) this.db.run("ALTER TABLE runs ADD COLUMN tour TEXT NOT NULL DEFAULT '[]'");
       this.db.run(`PRAGMA user_version = ${SCHEMA}`);
     })();
   }
@@ -238,9 +242,9 @@ export class ReviewStore {
     if (!current) throw new Error(`ejecución desconocida: ${runId}`);
     if (current.status !== "running") throw new Error(`la ejecución ${runId} ya terminó (${current.status})`);
     this.db.transaction(() => {
-      this.db.query(`UPDATE runs SET status = $status, error = $error, summary = $summary, gaps = $gaps,
+      this.db.query(`UPDATE runs SET status = $status, error = $error, summary = $summary, tour = $tour, gaps = $gaps,
         rejected = $rejected, usage = $usage, ended = $ended WHERE id = $id`).run({
-        id: runId, status: result.status, error: result.error ?? null, summary: result.summary ?? "",
+        id: runId, status: result.status, error: result.error ?? null, summary: result.summary ?? "", tour: JSON.stringify(result.tour ?? []),
         gaps: JSON.stringify(result.gaps ?? []), rejected: JSON.stringify(result.rejected ?? []),
         usage: result.usage ? JSON.stringify(result.usage) : null, ended: now(),
       });

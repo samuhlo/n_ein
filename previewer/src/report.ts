@@ -4,7 +4,7 @@
 // propuesta mal formada se aparta con su motivo en vez de tumbar la revisión.
 // =============================================================================
 
-import { KINDS, SEVERITIES, type Kind, type Severity } from "./finding.ts";
+import { KINDS, SEVERITIES, type Kind, type Severity, type TourStep } from "./finding.ts";
 
 export type ProposedFinding = {
   kind: Kind;
@@ -23,10 +23,12 @@ export type ProposedFinding = {
 /** Un hallazgo anterior que el revisor da por corregido en este head. */
 export type Resolution = { previous: string; note: string };
 
-export type Report = { summary: string; findings: ProposedFinding[]; resolved: Resolution[]; gaps: string[]; rejected: string[] };
+export type Report = { summary: string; tour: TourStep[]; findings: ProposedFinding[]; resolved: Resolution[]; gaps: string[]; rejected: string[] };
 
 /** Más avisos que esto suelen ser ruido; el resto se aparta, no se muestra. */
 export const MAX_FINDINGS = 10;
+/** Un recorrido más largo deja de ser una guía. */
+export const MAX_TOUR_STEPS = 12;
 
 type Fields = Record<string, unknown>;
 
@@ -76,5 +78,7 @@ export function parseReport(message: string): Report {
   });
   const resolved = (Array.isArray(value.resolved) ? value.resolved : []).flatMap((item): Resolution[] =>
     isFields(item) && text(item.previous) ? [{ previous: text(item.previous), note: text(item.note) }] : []);
-  return { summary: text(value.summary), findings, resolved, gaps: texts(value.gaps), rejected };
+  const tour = (Array.isArray(value.tour) ? value.tour : []).flatMap((item): TourStep[] =>
+    isFields(item) && text(item.title) && text(item.plain) ? [{ title: text(item.title), plain: text(item.plain), why: text(item.why), files: texts(item.files) }] : []);
+  return { summary: text(value.summary), tour: tour.slice(0, MAX_TOUR_STEPS), findings, resolved, gaps: texts(value.gaps), rejected };
 }
