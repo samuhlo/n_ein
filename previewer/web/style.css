@@ -1,0 +1,139 @@
+/* =============================================================================
+   [UI] ESTÉTICA N_EIN
+   La gramática de STYLE en la web: plano, sin recuadros, el aire separa y la
+   regla vertical agrupa. Un solo acento, el foco. Los colores llegan como
+   variables desde brand.json y el tema ein; aquí no se escribe ninguno.
+   ============================================================================= */
+
+* { box-sizing: border-box; }
+
+html {
+  background: var(--carbon);
+  color: var(--concrete);
+  font: 14px/1.6 ui-monospace, "SF Mono", "JetBrains Mono", Menlo, Consolas, monospace;
+  -webkit-text-size-adjust: 100%;
+}
+
+body { margin: 0; padding: 48px 16px 96px; }
+
+#app { max-width: 1080px; margin: 0 auto; }
+
+a { color: inherit; text-decoration: underline; text-decoration-color: var(--dark); text-underline-offset: 3px; }
+a:hover, a:focus-visible { text-decoration-color: var(--yellow); }
+:focus-visible { outline: 1px solid var(--yellow); outline-offset: 2px; }
+
+code, pre { font: inherit; }
+pre {
+  margin: 4px 0 12px;
+  padding: 8px 0 8px 12px;
+  border-left: 1px solid var(--dark);
+  overflow-x: auto;
+  color: var(--secondary);
+  white-space: pre;
+}
+
+h1, h2, h3, p, ol, ul, dl { margin: 0; }
+
+.section { margin: 64px 0 20px; font-size: 14px; font-weight: 700; letter-spacing: 0.04em; }
+.top .section { margin-top: 8px; }
+.slashes { color: var(--yellow); }
+.num { color: var(--dark); font-weight: 400; }
+
+.eyebrow, .meta, .key, .tags, .where, .path, .files, .group-label, .gaps, .rejected summary { color: var(--secondary); }
+.meta code { color: var(--concrete); }
+.live { margin-top: 12px; color: var(--yellow); }
+.warn { margin-top: 12px; color: var(--secondary); }
+.warn::before { content: "▏ "; color: var(--red); }
+
+/* // 001 recorrido */
+.summary { max-width: 72ch; margin-bottom: 28px; }
+.tour { list-style: none; padding: 0; display: grid; gap: 24px; }
+.tour li { padding-left: 16px; border-left: 1px solid var(--dark); max-width: 80ch; }
+.tour h3 { font-size: 14px; margin-bottom: 4px; }
+.tour .why { color: var(--secondary); margin-top: 4px; }
+.tour .files { margin-top: 6px; color: var(--dim); }
+
+/* // 002 hallazgos */
+.group { margin-bottom: 40px; }
+.group-label { margin-bottom: 16px; text-transform: lowercase; }
+details.group > summary { cursor: pointer; list-style: none; margin-bottom: 16px; }
+details.group > summary::before { content: "▸ "; color: var(--dark); }
+details.group[open] > summary::before { content: "▾ "; }
+
+.finding { padding: 4px 0 4px 16px; border-left: 1px solid var(--dark); margin-bottom: 32px; max-width: 88ch; }
+.finding.focused, .finding:focus-within { border-left-color: var(--yellow); }
+.finding:focus { outline: none; }
+.finding h3 { font-size: 15px; margin: 4px 0 6px; }
+.finding .plain { margin-bottom: 6px; }
+.finding .note { color: var(--secondary); margin-bottom: 6px; }
+.finding.status-resolved h3, .finding.status-resolved .plain { color: var(--secondary); }
+.finding.status-unchecked .status { color: var(--concrete); }
+.where { margin: 6px 0 10px; color: var(--dim); word-break: break-all; }
+
+.decide { display: flex; flex-wrap: wrap; align-items: center; gap: 6px 14px; }
+.verdict {
+  font: inherit; color: var(--secondary); background: none; border: 0; padding: 0; cursor: pointer;
+  text-decoration: underline; text-decoration-color: transparent; text-underline-offset: 3px;
+}
+.verdict:hover { color: var(--concrete); }
+.verdict[aria-pressed="true"] { color: var(--concrete); text-decoration-color: var(--concrete); }
+.verdict[aria-pressed="true"]::before { content: "✓ "; color: var(--dark); }
+.reason {
+  font: inherit; color: var(--concrete); background: none; border: 0; border-bottom: 1px solid var(--dark);
+  padding: 2px 0; min-width: 18ch; flex: 1 1 18ch; max-width: 40ch;
+}
+.reason::placeholder { color: var(--dim); }
+.pick { color: var(--secondary); cursor: pointer; white-space: nowrap; }
+.pick input { accent-color: var(--concrete); margin: 0 4px 0 0; vertical-align: -1px; }
+.pick:has(input:disabled) { color: var(--dim); cursor: default; }
+.finding.picked .pick { color: var(--concrete); }
+
+.finding details { margin-top: 12px; }
+.finding summary { cursor: pointer; color: var(--dim); list-style: none; }
+.finding summary::before { content: "▸ "; }
+.finding details[open] summary::before { content: "▾ "; }
+.finding dl { display: grid; grid-template-columns: max-content 1fr; gap: 4px 16px; margin: 12px 0; }
+.finding dt { color: var(--secondary); }
+.probe { margin-top: 8px; }
+.probe code { color: var(--concrete); }
+
+.gaps { list-style: none; padding: 0; display: grid; gap: 4px; max-width: 88ch; }
+.rejected { margin-top: 12px; }
+.rejected summary { cursor: pointer; list-style: none; }
+.rejected ul { color: var(--dim); margin-top: 8px; padding-left: 16px; }
+
+/* // 003 cambios */
+.file { margin-bottom: 40px; }
+.file summary.path { cursor: pointer; list-style: none; margin-bottom: 8px; color: var(--concrete); }
+.file summary.path::before { content: "▸ "; color: var(--dark); }
+.file details[open] > summary.path::before { content: "▾ "; }
+.file .count { color: var(--dim); }
+.diff { border-left: 1px solid var(--dark); overflow-x: auto; }
+.row { display: grid; grid-template-columns: 5ch 5ch 2ch max-content auto; align-items: baseline; min-width: max-content; }
+.row .n { color: var(--dark); text-align: right; padding-right: 1ch; user-select: none; }
+.row .sign { color: var(--dark); user-select: none; text-align: center; }
+.row code { white-space: pre; padding-right: 2ch; }
+.row.same code { color: var(--secondary); }
+.row.added .sign, .row.added code { color: var(--green); }
+.row.removed .sign, .row.removed code { color: var(--red); }
+.row.hunk { color: var(--dim); margin-top: 8px; }
+.row.hunk:first-child { margin-top: 0; }
+.row.cited { background: var(--selected); }
+.row.focused { background: var(--selected); outline: 1px solid var(--yellow); outline-offset: -1px; }
+.mark { color: var(--secondary); text-decoration: none; padding: 0 1ch; white-space: nowrap; }
+.mark:hover, .mark:focus-visible, .row.focused .mark { color: var(--yellow); }
+.alias { position: absolute; }
+
+/* barra de estado: diminuta y fija */
+.bar {
+  position: fixed; left: 0; right: 0; bottom: 0; padding: 10px 16px;
+  background: var(--carbon); border-top: 1px solid var(--dark); color: var(--secondary); text-align: center;
+}
+.bar.active { color: var(--concrete); }
+.bar.error { color: var(--concrete); }
+.bar.error::before { content: "▏ "; color: var(--red); }
+
+@media (max-width: 640px) {
+  body { padding-top: 32px; }
+  .row { grid-template-columns: 4ch 4ch 2ch max-content auto; }
+}

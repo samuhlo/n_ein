@@ -142,7 +142,7 @@ func collect(source, self string) ([]sourceFile, error) {
 	if err := add(launcher, "bin/n-ein"); err != nil {
 		return nil, err
 	}
-	for _, rel := range []string{"pi-package/extensions", "pi-package/themes", "pi-package/agents", "pi-package/claude-plugin", "previewer/src", "previewer/agent"} {
+	for _, rel := range []string{"pi-package/extensions", "pi-package/themes", "pi-package/agents", "pi-package/claude-plugin", "previewer/src", "previewer/agent", "previewer/web"} {
 		if err := walkFiles(filepath.Join(source, rel), source, add); err != nil {
 			return nil, err
 		}

@@ -29,6 +29,15 @@ previewer_status=0
 "$target/bin/n-ein-previewer" > /dev/null 2> "$test_dir/previewer-usage" || previewer_status=$?
 test "$previewer_status" -eq 64
 rg -q 'n-ein-previewer handoff' "$test_dir/previewer-usage"
+# Su servidor arranca desde la instalación y compila la web con lo que el paquete trae.
+bun -e '
+  const [target] = process.argv.slice(1);
+  const { ensureServer } = await import(target + "/previewer/src/open.ts");
+  const state = await ensureServer(target);
+  const page = await fetch(`http://127.0.0.1:${state.port}/app.js`);
+  process.kill(state.pid, "SIGTERM");
+  if (!page.ok || !(await page.text()).includes("previewer-token")) throw new Error("web del revisor sin compilar");
+' "$target"
 
 "$target/bin/n-ein" --project "$project" --view configuracion --once > "$test_dir/config-view"
 rg -q 'openai-codex/gpt-6-sol' "$test_dir/config-view"

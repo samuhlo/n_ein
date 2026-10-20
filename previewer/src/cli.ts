@@ -1,7 +1,8 @@
 // =============================================================================
 // [FLOW] ENTRADA PROVISIONAL DEL REVISOR
 // uso: n-ein-previewer review [--base REF] [--head REF] [--model P/M]
-//      [--thinking NIVEL] [--pr URL] [--json]
+//      [--thinking NIVEL] [--pr URL] [--no-open] [--json]
+//      n-ein-previewer open
 //      n-ein-previewer handoff [--json]
 // `nein previewer` la llevará al launcher; el agente usa bin/n-ein-previewer.
 // =============================================================================
@@ -11,6 +12,7 @@ import { parseArgs } from "node:util";
 import { review } from "./engine.ts";
 import { git } from "./git.ts";
 import { handoffBrief } from "./handoff.ts";
+import { ensureServer, reviewerLink } from "./open.ts";
 import { ReviewStore } from "./store.ts";
 
 const packageRoot = resolve(import.meta.dir, "../..");
@@ -24,28 +26,52 @@ const { values, positionals } = parseArgs({
     pr: { type: "string" },
     project: { type: "string" },
     json: { type: "boolean", default: false },
+    "no-open": { type: "boolean", default: false },
   },
 });
 
-const USAGE = "uso: n-ein-previewer review [--base REF] [--head REF] [--model P/M] [--thinking NIVEL] [--pr URL] [--json]\n       n-ein-previewer handoff [--json]\n";
-if (positionals[0] !== "review" && positionals[0] !== "handoff") {
+const USAGE = "uso: n-ein-previewer review [--base REF] [--head REF] [--model P/M] [--thinking NIVEL] [--pr URL] [--no-open] [--json]\n       n-ein-previewer open\n       n-ein-previewer handoff [--json]\n";
+if (positionals[0] !== "review" && positionals[0] !== "handoff" && positionals[0] !== "open") {
   process.stderr.write(USAGE);
   process.exit(64);
 }
 
+/** Repositorio, head y rama del proyecto; un head suelto se nombra como lo hace el motor, `detached@<sha>`. */
+function current(): { repo: string; head: string; branch: string } {
+  const repo = git(values.project ?? process.cwd(), "rev-parse", "--show-toplevel");
+  const head = git(repo, "rev-parse", "HEAD");
+  try {
+    return { repo, head, branch: git(repo, "symbolic-ref", "--quiet", "--short", "HEAD") };
+  } catch {
+    return { repo, head, branch: `detached@${head.slice(0, 12)}` };
+  }
+}
+
+async function link(sessionId: string): Promise<string> {
+  return reviewerLink(await ensureServer(packageRoot), sessionId);
+}
+
+if (positionals[0] === "open") {
+  try {
+    const { repo, branch } = current();
+    const store = ReviewStore.forPackage(packageRoot);
+    const session = store.findSession(repo, branch);
+    store.close();
+    if (!session) {
+      process.stdout.write(`No hay revisiones de ${branch}: lanza primero n-ein-previewer review.\n`);
+      process.exit(1);
+    }
+    process.stdout.write(`// 000  REVISOR · ${branch}\n▏ ${await link(session.id)}\n`);
+    process.exit(0);
+  } catch (error) {
+    process.stderr.write(`[ERR] :: OPEN_FAIL :: reason: ${error instanceof Error ? error.message : String(error)}\n`);
+    process.exit(1);
+  }
+}
+
 if (positionals[0] === "handoff") {
   try {
-    const cwd = values.project ?? process.cwd();
-    const repo = git(cwd, "rev-parse", "--show-toplevel");
-    const head = git(repo, "rev-parse", "HEAD");
-    // Igual que el motor: un head suelto se revisa como `detached@<sha>`.
-    const branch = (() => {
-      try {
-        return git(repo, "symbolic-ref", "--quiet", "--short", "HEAD");
-      } catch {
-        return `detached@${head.slice(0, 12)}`;
-      }
-    })();
+    const { repo, head, branch } = current();
     const store = ReviewStore.forPackage(packageRoot);
     const session = store.findSession(repo, branch);
     if (!session) {
@@ -71,7 +97,14 @@ try {
     packageRoot, cwd: values.project ?? process.cwd(), base: values.base, head: values.head, prUrl: values.pr,
     model: values.model, thinking: values.thinking, signal: controller.signal,
   });
-  if (values.json) process.stdout.write(`${JSON.stringify(outcome, null, 2)}\n`);
+  // El enlace abre la sesión de esta rama; si el servidor no arranca, la revisión ya está guardada igual.
+  const opened = outcome.run.status === "done" && !values["no-open"]
+    ? await link(outcome.session.id).catch((error: unknown) => {
+      process.stderr.write(`[WARN] :: OPEN_FAIL :: reason: ${error instanceof Error ? error.message : String(error)}\n`);
+      return null;
+    })
+    : null;
+  if (values.json) process.stdout.write(`${JSON.stringify({ ...outcome, link: opened }, null, 2)}\n`);
   else {
     const { run, findings } = outcome;
     console.log(`// 000  REVISIÓN ${run.status.toUpperCase()}`);
@@ -95,6 +128,7 @@ try {
     });
     for (const gap of run.gaps) console.log(`\n· pendiente: ${gap}`);
     if (run.rejected.length) console.log(`\n· apartados: ${run.rejected.length} (sin citas válidas o mal formados)`);
+    if (opened) console.log(`\n// 003  REVISOR\n▏ ${opened}`);
   }
   process.exit(outcome.run.status === "done" ? 0 : 1);
 } catch (error) {

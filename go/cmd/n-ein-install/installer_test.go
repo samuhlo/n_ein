@@ -113,6 +113,7 @@ func sourceFixture(t *testing.T) (source, self, target, data string) {
 	writeFixture(t, source, "pi-package/skills/intent/SKILL.md", "# Intent\n", 0o644)
 	writeFixture(t, source, "previewer/src/cli.ts", "export {}\n", 0o644)
 	writeFixture(t, source, "previewer/agent/reviewer.md", "# Reviewer\n", 0o644)
+	writeFixture(t, source, "previewer/web/main.ts", "export {}\n", 0o644)
 	writeFixture(t, source, "pi-package/skills/synced/foreign.txt", "generated cache\n", 0o644)
 	writeFixture(t, data, "auth.json", "private auth\n", 0o600)
 	writeFixture(t, data, "sessions/keep.jsonl", "session\n", 0o600)
