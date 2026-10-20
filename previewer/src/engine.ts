@@ -3,11 +3,14 @@
 // Una revisión fija base y head por SHA, crea una copia aparte, deja trabajar
 // al agente revisor y solo guarda lo que se sostiene: citas que existen en el
 // SHA y sondas que el propio motor vuelve a ejecutar antes de borrar la copia.
+// En una segunda revisión, cada hallazgo abierto se comprueba en el nuevo head:
+// sigue, resuelto o sin comprobar. Su sonda anterior vuelve a la copia y su
+// resultado pesa más que la palabra del agente.
 // =============================================================================
 
 import { spawn } from "node:child_process";
 import { existsSync, mkdirSync, readFileSync, writeFileSync } from "node:fs";
-import { basename, isAbsolute, join, relative, resolve } from "node:path";
+import { basename, dirname, isAbsolute, join, relative, resolve } from "node:path";
 import { channelDir, loadModels } from "../../pi-package/models.ts";
 import { makeCitationChecker } from "./citations.ts";
 import { createCopy, sweepCopies, type ReviewCopy } from "./copy.ts";
@@ -18,6 +21,8 @@ import { parseReport, type ProposedFinding } from "./report.ts";
 import { sandboxFor, type Sandbox } from "./sandbox.ts";
 import { piRunner, type AgentRunner } from "./runner.ts";
 import { ReviewStore, type Run, type RunResult, type Session, type StoredFinding } from "./store.ts";
+
+type Check = NonNullable<RunResult["checks"]>[number];
 
 export type ReviewOptions = {
   packageRoot: string;
@@ -38,7 +43,11 @@ export type ReviewOptions = {
   log?: (line: string) => void;
 };
 
+/** `findings`: todos los hilos de la sesión tras esta revisión, con su estado. */
 export type ReviewOutcome = { session: Session; run: Run; findings: StoredFinding[] };
+
+/** Hallazgos abiertos de revisiones anteriores; `key` es como los ve el agente (`P1`…). */
+export type Previous = { pending: { key: string; item: StoredFinding }[]; dismissed: StoredFinding[] };
 
 const DIFF_LIMIT = 80_000;
 const PROBE_OUTPUT_LIMIT = 4_000;
@@ -49,7 +58,29 @@ const DEFAULT_PROBE_TIMEOUT_MS = 2 * 60_000;
 const short = (sha: string): string => sha.slice(0, 12);
 const tail = (text: string, limit: number): string => (text.length > limit ? `…${text.slice(-limit)}` : text);
 
-export function reviewPrompt(range: Range, execute = true): string {
+function previousSection(previous: Previous, execute: boolean): string {
+  if (!previous.pending.length && !previous.dismissed.length) return "";
+  const rated = (item: StoredFinding): string =>
+    item.rating ? ` [Samu: ${item.rating.verdict}${item.rating.reason ? `, ${item.rating.reason}` : ""}]` : "";
+  const lines = previous.pending.map(({ key, item }) => {
+    const probe = item.probe ? `\n   Probe${item.probe.reproduced ? " (failed then: demonstrated)" : ""}: \`${item.probe.command}\`${item.probe.file ? ` (restored at ${item.probe.file})` : ""}` : "";
+    return `${key}. ${item.title}${rated(item)}\n   Condition: ${item.condition}\n   Cited: ${item.citations.map((c) => c.ref).join(", ")}${probe}`;
+  });
+  return [
+    lines.length ? [
+      "Earlier reviews of this branch left these findings open. For each one, decide whether this head still has it:",
+      "- still present: report it again in `findings` with `\"previous\": \"P<n>\"`, citing this head;",
+      "- fixed: add `{\"previous\": \"P<n>\", \"note\": \"plain explanation of what fixed it\"}` to `resolved`.",
+      execute ? "Run a restored probe again before deciding; p_reviewer reruns it too, and a probe that still fails keeps the finding open." : "",
+      lines.join("\n"),
+    ].filter(Boolean).join("\n") : "",
+    previous.dismissed.length
+      ? `Samu dismissed these earlier findings as not valid. Do not report them again unless this head makes them real in a new way:\n${previous.dismissed.map((item) => `- ${item.title}${rated(item)}`).join("\n")}`
+      : "",
+  ].filter(Boolean).join("\n\n");
+}
+
+export function reviewPrompt(range: Range, execute = true, previous: Previous = { pending: [], dismissed: [] }): string {
   const diff = diffOf(range);
   const truncated = diff.length > DIFF_LIMIT;
   return [
@@ -59,6 +90,7 @@ export function reviewPrompt(range: Range, execute = true): string {
     `Changed files:\n${diffOf(range, "--stat=200")}`,
     `Diff from base to head${truncated ? `, truncated at ${DIFF_LIMIT} characters: read the rest with \`git diff ${short(range.baseSha)} ${short(range.headSha)} -- <path>\`` : ""}:`,
     "```diff\n" + (truncated ? diff.slice(0, DIFF_LIMIT) : diff) + "\n```",
+    previousSection(previous, execute),
     execute ? "" : "This review is read-only: no OS sandbox is available, so you cannot run commands, tests or probes. Omit `probe` and list what you would have run in `gaps`.",
   ].filter(Boolean).join("\n\n");
 }
@@ -107,6 +139,20 @@ function runGrouped(file: string, args: string[], cwd: string, timeoutMs: number
 }
 
 /**
+ * Devuelve a la copia el archivo de una sonda anterior, solo si cabe entero, queda
+ * dentro de la copia y no pisa un archivo del head. Devuelve si lo escribió.
+ */
+function restoreProbe(copy: string, probe: Probe): boolean {
+  if (!probe.file || !probe.source || probe.source.startsWith("…")) return false;
+  const path = resolve(copy, probe.file);
+  const rel = relative(copy, path);
+  if (rel.startsWith("..") || isAbsolute(rel)) return false;
+  mkdirSync(dirname(path), { recursive: true });
+  writeFileSync(path, probe.source);
+  return true;
+}
+
+/**
  * Repite la sonda en la copia: un hallazgo «demostrado» lo es porque falló aquí,
  * no porque el agente lo diga. Pasa por la misma guardia y aislamiento que su bash.
  */
@@ -148,6 +194,13 @@ export async function review(options: ReviewOptions): Promise<ReviewOutcome> {
   mkdirSync(runDir, { recursive: true, mode: 0o700 });
   log(`[REVIEW] >> RUN_START :: run: ${run.id.slice(0, 8)} | head: ${short(range.headSha)} | base: ${short(range.baseSha)} | model: ${model}`);
 
+  // Lo abierto de revisiones anteriores; lo descartado por Samu solo se menciona para no repetirlo.
+  const open = store.findings(session.id).filter((item) => item.status !== "resolved");
+  const previous: Previous = {
+    pending: open.filter((item) => item.rating?.verdict !== "descartar").map((item, index) => ({ key: `P${index + 1}`, item })),
+    dismissed: open.filter((item) => item.rating?.verdict === "descartar"),
+  };
+
   for (const name of sweepCopies(range.repo)) log(`[REVIEW] :: COPY_SWEPT :: copy: ${name}`);
   const tipBefore = branchTip(range.repo, range.branch);
   const started = Date.now();
@@ -159,8 +212,12 @@ export async function review(options: ReviewOptions): Promise<ReviewOutcome> {
     const sandbox = options.sandbox ?? sandboxFor(copy.path, range.repo);
     const execute = sandbox.kind !== "none";
     if (!execute) log("[WARN] :: SANDBOX_NONE :: mode: read-only");
+    const reviewCopy = copy.path;
+    // BLINDAJE -> Una sonda anterior no pisa un archivo que el head ya tiene con ese nombre.
+    const restorable = new Set(previous.pending.filter(({ item }) => item.probe?.file && !existsSync(resolve(reviewCopy, item.probe.file))).map(({ item }) => item.thread));
+    for (const { item } of previous.pending) if (item.probe && restorable.has(item.thread) && !restoreProbe(reviewCopy, item.probe)) restorable.delete(item.thread);
     const agent = await (options.runner ?? piRunner(options.packageRoot))({
-      cwd: copy.path, origin: range.repo, prompt: reviewPrompt(range, execute), runDir, model, thinking, signal, execute,
+      cwd: copy.path, origin: range.repo, prompt: reviewPrompt(range, execute, previous), runDir, model, thinking, signal, execute,
       timeoutMs: options.timeoutMs ?? DEFAULT_TIMEOUT_MS,
     });
     if (signal.aborted) result = { status: "cancelled", error: "cancelada", usage: agent.usage };
@@ -178,7 +235,15 @@ export async function review(options: ReviewOptions): Promise<ReviewOutcome> {
       const check = makeCitationChecker(range.repo, [range.headSha, range.baseSha]);
       const rejected = [...report.rejected];
       const probes: ProbeContext = { copy: copy.path, guard: reviewGuard(copy.path, range.repo), sandbox, timeoutMs: options.probeTimeoutMs ?? DEFAULT_PROBE_TIMEOUT_MS };
-      const findings: Finding[] = [];
+      const findings: (Finding & { thread?: string })[] = [];
+      const keys = new Map(previous.pending.map(({ key, item }) => [key, item]));
+      const continued = new Set<string>();
+      // La sonda anterior se repite con su contenido original: el agente pudo tocarla en la copia.
+      const earlierProbe = async (item: StoredFinding): Promise<Probe | null> => {
+        if (!item.probe?.reproduced) return null;
+        if (item.probe.file && !(restorable.has(item.thread) && restoreProbe(reviewCopy, item.probe))) return null;
+        return rerunProbe(probes, { command: item.probe.command, file: item.probe.file });
+      };
       for (const item of report.findings) {
         const citations: Citation[] = [];
         for (const ref of item.citations) {
@@ -190,14 +255,33 @@ export async function review(options: ReviewOptions): Promise<ReviewOutcome> {
           rejected.push(`${item.title}: ninguna cita existe en el SHA revisado`);
           continue;
         }
-        const probe = item.probe ? await rerunProbe(probes, item.probe) : null;
+        const earlier = item.previous ? keys.get(item.previous) : undefined;
+        if (item.previous && (!earlier || continued.has(earlier.thread))) rejected.push(`${item.title}: referencia ${item.previous} desconocida o repetida; queda como nuevo`);
+        const thread = earlier && !continued.has(earlier.thread) ? earlier.thread : undefined;
+        if (thread) continued.add(thread);
+        // Si sigue y no trae sonda propia, la de antes sirve de prueba.
+        const probe = item.probe ? await rerunProbe(probes, item.probe) : earlier && thread ? await earlierProbe(earlier) : null;
         if (probe) log(`[REVIEW] :: PROBE :: finding: ${item.title.slice(0, 60)} | exit: ${probe.exitCode ?? "timeout"} | reproduced: ${probe.reproduced}`);
-        findings.push({ ...item, citations, probe });
+        findings.push({ ...item, citations, probe, thread });
       }
-      const gaps = execute
-        ? report.gaps
-        : [...report.gaps, "sin aislamiento del sistema (sandbox-exec o bwrap utilizable): revisión solo de lectura, sin tests ni sondas"];
-      result = { status: "done", summary: report.summary, gaps, rejected, usage: agent.usage, findings };
+      const gaps = [...report.gaps];
+      const checks: Check[] = [];
+      for (const { key, item } of previous.pending) {
+        if (continued.has(item.thread)) continue;
+        const claim = report.resolved.find((resolution) => resolution.previous === key);
+        const probe = await earlierProbe(item);
+        let check: Check | null = null;
+        if (probe?.reproduced)
+          check = { thread: item.thread, outcome: "persists", probe, note: claim ? `El revisor lo dio por resuelto, pero la sonda anterior sigue fallando. ${claim.note}`.trim() : "La sonda anterior sigue fallando en este head." };
+        else if (probe?.exitCode === 0) check = { thread: item.thread, outcome: "resolved", probe, note: claim?.note || "La sonda anterior ya no falla." };
+        else if (claim) check = { thread: item.thread, outcome: "resolved", probe, note: claim.note };
+        if (check) {
+          checks.push(check);
+          log(`[REVIEW] :: CHECK :: previous: ${key} | outcome: ${check.outcome} | probe: ${probe ? (probe.exitCode ?? "timeout") : "none"}`);
+        } else gaps.push(`${key} «${item.title}», de una revisión anterior, no se comprobó en este head`);
+      }
+      if (!execute) gaps.push("sin aislamiento del sistema (sandbox-exec o bwrap utilizable): revisión solo de lectura, sin tests ni sondas");
+      result = { status: "done", summary: report.summary, gaps, rejected, usage: agent.usage, findings, checks };
     }
   } catch (error) {
     result = { status: signal.aborted ? "cancelled" : "failed", error: error instanceof Error ? error.message : String(error) };
@@ -212,10 +296,11 @@ export async function review(options: ReviewOptions): Promise<ReviewOutcome> {
     result.gaps = [...(result.gaps ?? []), `la rama ${range.branch} cambió durante la revisión (${short(tipBefore ?? "?")} → ${short(tipAfter ?? "?")}); lo revisado es ${short(range.headSha)}`];
     log(`[WARN] :: BRANCH_MOVED :: branch: ${range.branch} | reviewed: ${short(range.headSha)}`);
   }
-  const findings = store.finishRun(run.id, result);
+  const added = store.finishRun(run.id, result);
+  const findings = store.findings(session.id);
   const seconds = Math.round((Date.now() - started) / 1000);
   if (result.status === "done")
-    log(`[REVIEW] ++ RUN_DONE :: findings: ${findings.length} | rejected: ${result.rejected?.length ?? 0} | seconds: ${seconds} | usd: ${(result.usage?.usd ?? 0).toFixed(2)}`);
+    log(`[REVIEW] ++ RUN_DONE :: findings: ${added.length} | resolved: ${findings.filter((item) => item.status === "resolved" && item.check?.runId === run.id).length} | rejected: ${result.rejected?.length ?? 0} | seconds: ${seconds} | usd: ${(result.usage?.usd ?? 0).toFixed(2)}`);
   else log(`[ERR] :: RUN_${result.status === "cancelled" ? "CANCEL" : "FAIL"} :: run: ${run.id.slice(0, 8)} | seconds: ${seconds} | reason: ${result.error}`);
   return { session: store.session(session.id) ?? session, run: store.run(run.id) ?? run, findings };
 }

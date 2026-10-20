@@ -16,9 +16,14 @@ export type ProposedFinding = {
   citations: string[];
   probe: { command: string; file: string | null } | null;
   verification: string;
+  /** Clave (`P1`…) del hallazgo de la revisión anterior que sigue presente. */
+  previous: string | null;
 };
 
-export type Report = { summary: string; findings: ProposedFinding[]; gaps: string[]; rejected: string[] };
+/** Un hallazgo anterior que el revisor da por corregido en este head. */
+export type Resolution = { previous: string; note: string };
+
+export type Report = { summary: string; findings: ProposedFinding[]; resolved: Resolution[]; gaps: string[]; rejected: string[] };
 
 /** Más avisos que esto suelen ser ruido; el resto se aparta, no se muestra. */
 export const MAX_FINDINGS = 10;
@@ -51,7 +56,10 @@ function proposed(value: unknown, index: number): ProposedFinding | string {
   let probe: ProposedFinding["probe"] = null;
   if (isFields(value.probe) && text(value.probe.command))
     probe = { command: text(value.probe.command), file: text(value.probe.file) || null };
-  return { kind: value.kind, severity: value.severity, title, plain, condition, consequence, citations, probe, verification: text(value.verification) };
+  return {
+    kind: value.kind, severity: value.severity, title, plain, condition, consequence, citations, probe,
+    verification: text(value.verification), previous: text(value.previous) || null,
+  };
 }
 
 export function parseReport(message: string): Report {
@@ -66,5 +74,7 @@ export function parseReport(message: string): Report {
     else if (findings.length >= MAX_FINDINGS) rejected.push(`${result.title}: supera el máximo de ${MAX_FINDINGS} avisos`);
     else findings.push(result);
   });
-  return { summary: text(value.summary), findings, gaps: texts(value.gaps), rejected };
+  const resolved = (Array.isArray(value.resolved) ? value.resolved : []).flatMap((item): Resolution[] =>
+    isFields(item) && text(item.previous) ? [{ previous: text(item.previous), note: text(item.note) }] : []);
+  return { summary: text(value.summary), findings, resolved, gaps: texts(value.gaps), rejected };
 }

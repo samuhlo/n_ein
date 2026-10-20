@@ -248,6 +248,54 @@ assert.equal(git("rev-parse", "main"), baseSha);
   assert.ok(readOnly.run.gaps.some((gap) => gap.includes("solo de lectura")));
 }
 
+// --- Segunda revisión sobre un head nuevo -------------------------------------------------------
+{
+  store.rate(pass.id, "descartar", "pasa, no es un fallo");
+  writeFileSync(join(repo, "text.ts"), "export function clip(text: string): string {\n  return text;\n}\n\n");
+  git("commit", "-qam", "fix: stop clipping");
+  const fixedSha = git("rev-parse", "HEAD");
+  const fixedShort = fixedSha.slice(0, 10);
+  let prompt = "";
+  const second = await review({
+    packageRoot, cwd: repo, store, model: "test/reviewer", log: () => {}, sandbox: injected, probeTimeoutMs: 1_000,
+    runner: async (request) => {
+      prompt = request.prompt;
+      const probe = join(request.cwd, ".previewer-probes/clip.sh");
+      assert.equal(readFileSync(probe, "utf8"), clip.probe?.source, "la sonda anterior vuelve a la copia");
+      // Aunque el agente la estropee, el motor repite la original.
+      writeFileSync(probe, "exit 1\n");
+      const keys = new Map([...request.prompt.matchAll(/^(P\d+)\. (.+?)(?: \[|$)/gm)].map((match) => [match[2], match[1]]));
+      return {
+        text: `\`\`\`json\n${JSON.stringify({
+          summary: "Ya no recorta.",
+          findings: [{ ...finding("La línea vacía sigue", [`text.ts@${fixedShort}:L4`]), previous: keys.get("Línea vacía final") }, { ...finding("Repite clave", [`text.ts@${fixedShort}:L1`]), previous: keys.get("Línea vacía final") }],
+          resolved: [{ previous: keys.get("Corta letras a la mitad"), note: "Devuelve el texto entero." }, { previous: keys.get("Sonda que deja un hijo"), note: "Creo que ya no pasa." }],
+          gaps: [],
+        })}\n\`\`\``,
+        usage: { input: 0, output: 0, cacheRead: 0, usd: 0 }, error: null,
+      };
+    },
+  });
+  assert.equal(second.run.status, "done", second.run.error ?? "");
+  assert.match(prompt, /Corta letras a la mitad \[Samu|Corta letras a la mitad\n/, "el hallazgo abierto va en el prompt");
+  assert.match(prompt, /restored at \.previewer-probes\/clip\.sh/);
+  assert.match(prompt, /Samu dismissed[\s\S]*Sonda que no falla \[Samu: descartar, pasa, no es un fallo\]/, "lo descartado se menciona para no repetirlo");
+  assert.doesNotMatch(prompt, /^P\d+\. Sonda que no falla/m);
+  const byTitle = new Map(second.findings.map((item) => [item.title, item]));
+  const resolvedClip = byTitle.get("Corta letras a la mitad");
+  assert.deepEqual([resolvedClip?.status, resolvedClip?.check?.probe?.exitCode, resolvedClip?.check?.note], ["resolved", 0, "Devuelve el texto entero."], "la sonda original ya no falla");
+  const stillParent = byTitle.get("Sonda que deja un hijo");
+  assert.deepEqual([stillParent?.status, stillParent?.current], ["persists", true], "una sonda que sigue fallando pesa más que el agente");
+  assert.match(stillParent?.check?.note ?? "", /sigue fallando/);
+  const blankAgain = byTitle.get("La línea vacía sigue");
+  assert.deepEqual([blankAgain?.status, blankAgain?.thread], ["persists", blank.thread]);
+  assert.equal(byTitle.get("Repite clave")?.status, "new", "una clave usada dos veces no continúa dos hilos");
+  assert.match(second.run.rejected.join("\n"), /Repite clave: referencia P\d+ desconocida o repetida/);
+  assert.equal(byTitle.get("Sonda que no falla")?.status, "unchecked");
+  assert.ok(second.run.gaps.some((gap) => gap.includes("«Sonda sin comando», de una revisión anterior, no se comprobó")));
+  assert.ok(!existsSync(copiesRoot(repo)));
+}
+
 // --- Nada que revisar --------------------------------------------------------------------------
 await assert.rejects(review({ packageRoot, cwd: repo, head: "main", store, model: "test/reviewer", log: () => {} }), /nada que revisar/);
 

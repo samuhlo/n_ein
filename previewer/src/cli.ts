@@ -42,11 +42,14 @@ try {
     console.log(`// 000  REVISIÓN ${run.status.toUpperCase()}`);
     if (run.error) console.log(`▏ ${run.error}`);
     if (run.summary) console.log(`\n${run.summary}`);
+    const label = { new: "nuevo", persists: "sigue", resolved: "resuelto", unchecked: "sin comprobar" } as const;
     findings.forEach((item, index) => {
-      const probe = item.probe ? (item.probe.reproduced ? " · sonda falla: demostrado" : " · sonda no reproduce") : "";
-      console.log(`\n${String(index + 1).padStart(2, "0")} ${item.severity} · ${item.kind} · ${item.title}${probe}`);
+      const probe = item.check?.probe ?? item.probe;
+      const shown = probe ? (probe.reproduced ? " · sonda falla: demostrado" : probe.exitCode === 0 ? " · sonda pasa" : " · sonda no reproduce") : "";
+      console.log(`\n${String(index + 1).padStart(2, "0")} ${label[item.status]} · ${item.severity} · ${item.kind} · ${item.title}${shown}`);
       console.log(`▏ ${item.plain}`);
-      for (const citation of item.citations) console.log(`▏ ${citation.ref}`);
+      if (item.check) console.log(`▏ ${item.check.note}`);
+      if (item.status !== "resolved") for (const citation of item.citations) console.log(`▏ ${citation.ref}`);
     });
     for (const gap of run.gaps) console.log(`\n· pendiente: ${gap}`);
     if (run.rejected.length) console.log(`\n· apartados: ${run.rejected.length} (sin citas válidas o mal formados)`);

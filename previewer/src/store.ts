@@ -4,6 +4,9 @@
 // ejecución. Vive en el hogar del canal, nunca en el repositorio revisado.
 // Las valoraciones de Samu van en su propia tabla: volver a analizar no las toca,
 // y un hallazgo de un head anterior no se borra, solo deja de estar vigente.
+// Cada hallazgo pertenece a un hilo (el id de su primera aparición): si una
+// revisión posterior lo ve otra vez, continúa el hilo y hereda valoración y
+// selección; si lo da por resuelto, el hilo se cierra con su comprobación.
 // =============================================================================
 
 import { Database } from "bun:sqlite";
@@ -17,6 +20,11 @@ export const VERDICTS = ["vale", "descartar", "investigar"] as const;
 export type Verdict = (typeof VERDICTS)[number];
 export type RunStatus = "running" | "done" | "failed" | "cancelled";
 export type Usage = { input: number; output: number; cacheRead: number; usd: number };
+/** Respecto a la última revisión terminada: nuevo, sigue, resuelto o sin comprobar desde un head anterior. */
+export type Status = "new" | "persists" | "resolved" | "unchecked";
+export type Outcome = "resolved" | "persists";
+/** Lo que una revisión posterior comprobó de un hilo sin volver a reportarlo. */
+export type Check = { runId: string; outcome: Outcome; note: string; probe: Probe | null };
 
 export type Session = {
   id: string;
@@ -52,8 +60,13 @@ export type StoredFinding = Finding & {
   sessionId: string;
   runId: string;
   headSha: string;
+  /** Id de la primera aparición; valoración y selección van por hilo. */
+  thread: string;
+  status: Status;
   /** Visto en el head vigente de la sesión. Uno antiguo sigue listado hasta que se decida. */
   current: boolean;
+  /** Última comprobación posterior a esta aparición: por qué está resuelto o sigue. */
+  check: Check | null;
   rating: Rating | null;
   selected: boolean;
 };
@@ -65,10 +78,12 @@ export type RunResult = {
   gaps?: string[];
   rejected?: string[];
   usage?: Usage;
-  findings?: Finding[];
+  /** `thread`: hilo de una revisión anterior que este hallazgo continúa. */
+  findings?: (Finding & { thread?: string })[];
+  checks?: { thread: string; outcome: Outcome; note: string; probe: Probe | null }[];
 };
 
-const SCHEMA = 1;
+const SCHEMA = 2;
 
 /** Base de datos del canal: `~/.n_ein/<canal>/previewer/previewer.db`. */
 export function storePath(packageRoot: string): string {
@@ -82,9 +97,10 @@ type RunRow = {
 };
 type FindingRow = {
   id: string; session_id: string; run_id: string; head_sha: string; kind: Kind; severity: Severity; title: string; plain: string;
-  condition: string; consequence: string; citations: string; probe: string | null; verification: string;
-  verdict: Verdict | null; reason: string | null; rated: string | null; selected: number | null; current_head: string | null;
+  condition: string; consequence: string; citations: string; probe: string | null; verification: string; thread: string;
+  verdict: Verdict | null; reason: string | null; rated: string | null; selected: number | null; run_order: number;
 };
+type CheckRow = { run_id: string; thread: string; outcome: Outcome; note: string; probe: string | null; run_order: number };
 
 const now = (): string => new Date().toISOString();
 
@@ -100,24 +116,17 @@ function run(row: RunRow): Run {
   };
 }
 
-function finding(row: FindingRow): StoredFinding {
+function finding(row: FindingRow, status: Status, check: Check | null): StoredFinding {
   const citations: Citation[] = JSON.parse(row.citations);
   const probe: Probe | null = row.probe ? JSON.parse(row.probe) : null;
   return {
     id: row.id, sessionId: row.session_id, runId: row.run_id, headSha: row.head_sha, kind: row.kind, severity: row.severity,
     title: row.title, plain: row.plain, condition: row.condition, consequence: row.consequence, citations, probe,
-    verification: row.verification, current: row.head_sha === row.current_head,
+    verification: row.verification, thread: row.thread, status, current: status === "new" || status === "persists", check,
     rating: row.verdict && row.rated ? { verdict: row.verdict, reason: row.reason, at: row.rated } : null,
     selected: row.selected === 1,
   };
 }
-
-const FINDING_SELECT = `
-  SELECT f.*, r.verdict, r.reason, r.at AS rated, s.selected, ses.head_sha AS current_head
-  FROM findings f
-  JOIN sessions ses ON ses.id = f.session_id
-  LEFT JOIN ratings r ON r.finding_id = f.id
-  LEFT JOIN selection s ON s.finding_id = f.id`;
 
 export class ReviewStore {
   readonly db: Database;
@@ -143,26 +152,39 @@ export class ReviewStore {
     if (version > SCHEMA) throw new Error(`previewer.db usa el esquema ${version}; esta versión entiende hasta ${SCHEMA}`);
     if (version === SCHEMA) return;
     this.db.transaction(() => {
-      this.db.run(`CREATE TABLE sessions (
-        id TEXT PRIMARY KEY, repo TEXT NOT NULL, branch TEXT NOT NULL, pr_url TEXT,
-        base_sha TEXT, head_sha TEXT, created TEXT NOT NULL, UNIQUE (repo, branch))`);
-      this.db.run(`CREATE TABLE runs (
-        id TEXT PRIMARY KEY, session_id TEXT NOT NULL REFERENCES sessions(id),
-        base_sha TEXT NOT NULL, head_sha TEXT NOT NULL, model TEXT NOT NULL, thinking TEXT NOT NULL,
-        status TEXT NOT NULL, error TEXT, summary TEXT NOT NULL DEFAULT '', gaps TEXT NOT NULL DEFAULT '[]',
-        rejected TEXT NOT NULL DEFAULT '[]', usage TEXT, started TEXT NOT NULL, ended TEXT)`);
-      this.db.run(`CREATE TABLE findings (
-        id TEXT PRIMARY KEY, session_id TEXT NOT NULL REFERENCES sessions(id), run_id TEXT NOT NULL REFERENCES runs(id),
-        head_sha TEXT NOT NULL, kind TEXT NOT NULL, severity TEXT NOT NULL, title TEXT NOT NULL, plain TEXT NOT NULL,
-        condition TEXT NOT NULL, consequence TEXT NOT NULL, citations TEXT NOT NULL, probe TEXT,
-        verification TEXT NOT NULL, position INTEGER NOT NULL)`);
-      this.db.run(`CREATE TABLE ratings (
-        finding_id TEXT PRIMARY KEY REFERENCES findings(id), verdict TEXT NOT NULL, reason TEXT, at TEXT NOT NULL)`);
-      this.db.run(`CREATE TABLE selection (
-        finding_id TEXT PRIMARY KEY REFERENCES findings(id), selected INTEGER NOT NULL, at TEXT NOT NULL)`);
-      this.db.run("CREATE INDEX findings_session ON findings (session_id, position)");
+      if (version < 1) this.schemaV1();
+      if (version < 2) {
+        this.db.run("ALTER TABLE findings ADD COLUMN thread TEXT NOT NULL DEFAULT ''");
+        this.db.run("UPDATE findings SET thread = id");
+        this.db.run("CREATE INDEX findings_thread ON findings (thread)");
+        // Desde aquí ratings.finding_id y selection.finding_id son el hilo: el id de su primera aparición.
+        this.db.run(`CREATE TABLE checks (
+          run_id TEXT NOT NULL REFERENCES runs(id), thread TEXT NOT NULL REFERENCES findings(id),
+          outcome TEXT NOT NULL, note TEXT NOT NULL DEFAULT '', probe TEXT, PRIMARY KEY (run_id, thread))`);
+      }
       this.db.run(`PRAGMA user_version = ${SCHEMA}`);
     })();
+  }
+
+  private schemaV1(): void {
+    this.db.run(`CREATE TABLE sessions (
+      id TEXT PRIMARY KEY, repo TEXT NOT NULL, branch TEXT NOT NULL, pr_url TEXT,
+      base_sha TEXT, head_sha TEXT, created TEXT NOT NULL, UNIQUE (repo, branch))`);
+    this.db.run(`CREATE TABLE runs (
+      id TEXT PRIMARY KEY, session_id TEXT NOT NULL REFERENCES sessions(id),
+      base_sha TEXT NOT NULL, head_sha TEXT NOT NULL, model TEXT NOT NULL, thinking TEXT NOT NULL,
+      status TEXT NOT NULL, error TEXT, summary TEXT NOT NULL DEFAULT '', gaps TEXT NOT NULL DEFAULT '[]',
+      rejected TEXT NOT NULL DEFAULT '[]', usage TEXT, started TEXT NOT NULL, ended TEXT)`);
+    this.db.run(`CREATE TABLE findings (
+      id TEXT PRIMARY KEY, session_id TEXT NOT NULL REFERENCES sessions(id), run_id TEXT NOT NULL REFERENCES runs(id),
+      head_sha TEXT NOT NULL, kind TEXT NOT NULL, severity TEXT NOT NULL, title TEXT NOT NULL, plain TEXT NOT NULL,
+      condition TEXT NOT NULL, consequence TEXT NOT NULL, citations TEXT NOT NULL, probe TEXT,
+      verification TEXT NOT NULL, position INTEGER NOT NULL)`);
+    this.db.run(`CREATE TABLE ratings (
+      finding_id TEXT PRIMARY KEY REFERENCES findings(id), verdict TEXT NOT NULL, reason TEXT, at TEXT NOT NULL)`);
+    this.db.run(`CREATE TABLE selection (
+      finding_id TEXT PRIMARY KEY REFERENCES findings(id), selected INTEGER NOT NULL, at TEXT NOT NULL)`);
+    this.db.run("CREATE INDEX findings_session ON findings (session_id, position)");
   }
 
   /** Abre la sesión de una rama o la crea; el enlace a la PR se actualiza si llega uno. */
@@ -223,15 +245,31 @@ export class ReviewStore {
         usage: result.usage ? JSON.stringify(result.usage) : null, ended: now(),
       });
       if (result.status !== "done") return;
+      const threads = new Set(this.db.query<{ thread: string }, { id: string }>(
+        "SELECT DISTINCT thread FROM findings WHERE session_id = $id").all({ id: current.sessionId }).map((row) => row.thread));
+      const used = new Set<string>();
+      // BLINDAJE -> Solo se continúa un hilo de esta sesión, y una vez por revisión; lo demás abre hilo propio.
+      const continues = (thread: string | undefined): thread is string => !!thread && threads.has(thread) && !used.has(thread);
       const insert = this.db.query(`INSERT INTO findings (id, session_id, run_id, head_sha, kind, severity, title, plain,
-        condition, consequence, citations, probe, verification, position)
-        VALUES ($id, $session, $run, $head, $kind, $severity, $title, $plain, $condition, $consequence, $citations, $probe, $verification, $position)`);
-      (result.findings ?? []).forEach((item, position) => insert.run({
-        id: randomUUID(), session: current.sessionId, run: runId, head: current.headSha, kind: item.kind, severity: item.severity,
-        title: item.title, plain: item.plain, condition: item.condition, consequence: item.consequence,
-        citations: JSON.stringify(item.citations), probe: item.probe ? JSON.stringify(item.probe) : null,
-        verification: item.verification, position,
-      }));
+        condition, consequence, citations, probe, verification, position, thread)
+        VALUES ($id, $session, $run, $head, $kind, $severity, $title, $plain, $condition, $consequence, $citations, $probe, $verification, $position, $thread)`);
+      (result.findings ?? []).forEach((item, position) => {
+        const id = randomUUID();
+        const thread = continues(item.thread) ? item.thread : id;
+        used.add(thread);
+        insert.run({
+          id, session: current.sessionId, run: runId, head: current.headSha, kind: item.kind, severity: item.severity,
+          title: item.title, plain: item.plain, condition: item.condition, consequence: item.consequence,
+          citations: JSON.stringify(item.citations), probe: item.probe ? JSON.stringify(item.probe) : null,
+          verification: item.verification, position, thread,
+        });
+      });
+      const check = this.db.query(`INSERT INTO checks (run_id, thread, outcome, note, probe) VALUES ($run, $thread, $outcome, $note, $probe)`);
+      for (const item of result.checks ?? []) {
+        if (!continues(item.thread)) continue;
+        used.add(item.thread);
+        check.run({ run: runId, thread: item.thread, outcome: item.outcome, note: item.note, probe: item.probe ? JSON.stringify(item.probe) : null });
+      }
       // BLINDAJE -> Si una revisión posterior ya terminó, esta llega tarde y no le quita la vigencia.
       this.db.query(`UPDATE sessions SET base_sha = $base, head_sha = $head WHERE id = $id AND NOT EXISTS (
         SELECT 1 FROM runs later WHERE later.session_id = $id AND later.status = 'done'
@@ -241,28 +279,60 @@ export class ReviewStore {
     return this.findings(current.sessionId).filter((item) => item.runId === runId);
   }
 
-  /** Todos los hallazgos de la sesión, del más reciente al más antiguo; los antiguos llevan `current: false`. */
+  /**
+   * Un hallazgo por hilo, en su última aparición, del más reciente al más antiguo.
+   * Nada desaparece: lo resuelto y lo no comprobado siguen listados con su estado.
+   */
   findings(sessionId: string): StoredFinding[] {
-    return this.db.query<FindingRow, { id: string }>(`${FINDING_SELECT}
-      JOIN runs ru ON ru.id = f.run_id WHERE f.session_id = $id ORDER BY ru.rowid DESC, f.position`).all({ id: sessionId }).map(finding);
+    const rows = this.db.query<FindingRow, { id: string }>(`
+      SELECT f.*, r.verdict, r.reason, r.at AS rated, s.selected, ru.rowid AS run_order
+      FROM findings f
+      JOIN runs ru ON ru.id = f.run_id
+      LEFT JOIN ratings r ON r.finding_id = f.thread
+      LEFT JOIN selection s ON s.finding_id = f.thread
+      WHERE f.session_id = $id ORDER BY ru.rowid DESC, f.position`).all({ id: sessionId });
+    const checks = this.db.query<CheckRow, { id: string }>(`
+      SELECT c.*, ru.rowid AS run_order FROM checks c JOIN runs ru ON ru.id = c.run_id
+      WHERE ru.session_id = $id ORDER BY ru.rowid DESC`).all({ id: sessionId });
+    // La vigente es la última revisión terminada: la misma regla que mueve el head de la sesión.
+    const latest = this.db.query<{ run_order: number }, { id: string }>(
+      "SELECT rowid AS run_order FROM runs WHERE session_id = $id AND status = 'done' ORDER BY rowid DESC LIMIT 1").get({ id: sessionId });
+    const seen = new Map<string, number>();
+    for (const row of rows) seen.set(row.thread, (seen.get(row.thread) ?? 0) + 1);
+    const result: StoredFinding[] = [];
+    const listed = new Set<string>();
+    for (const row of rows) {
+      if (listed.has(row.thread)) continue;
+      listed.add(row.thread);
+      const later = checks.find((item) => item.thread === row.thread && item.run_order > row.run_order);
+      const check: Check | null = later ? { runId: later.run_id, outcome: later.outcome, note: later.note, probe: later.probe ? JSON.parse(later.probe) : null } : null;
+      let status: Status = "unchecked";
+      if (row.run_order === latest?.run_order) status = (seen.get(row.thread) ?? 0) > 1 ? "persists" : "new";
+      else if (later?.outcome === "resolved") status = "resolved";
+      else if (later?.outcome === "persists" && later.run_order === latest?.run_order) status = "persists";
+      result.push(finding(row, status, check));
+    }
+    return result;
   }
 
+  /** El estado actual del hilo al que pertenece `id`, en su última aparición. */
   finding(id: string): StoredFinding | null {
-    const row = this.db.query<FindingRow, { id: string }>(`${FINDING_SELECT} WHERE f.id = $id`).get({ id });
-    return row ? finding(row) : null;
+    const row = this.db.query<{ session_id: string; thread: string }, { id: string }>(
+      "SELECT session_id, thread FROM findings WHERE id = $id").get({ id });
+    return row ? (this.findings(row.session_id).find((item) => item.thread === row.thread) ?? null) : null;
   }
 
   rate(findingId: string, verdict: Verdict, reason: string | null = null): StoredFinding {
     if (!VERDICTS.includes(verdict)) throw new Error(`valoración desconocida: ${verdict}`);
-    this.require(findingId);
+    const { thread } = this.require(findingId);
     this.db.transaction(() => {
       this.db.query(`INSERT INTO ratings (finding_id, verdict, reason, at) VALUES ($id, $verdict, $reason, $at)
         ON CONFLICT (finding_id) DO UPDATE SET verdict = excluded.verdict, reason = excluded.reason, at = excluded.at`)
-        .run({ id: findingId, verdict, reason: reason?.trim() || null, at: now() });
+        .run({ id: thread, verdict, reason: reason?.trim() || null, at: now() });
       // BLINDAJE -> Descartar un hallazgo lo saca de lo que vuelve a n_ein.
-      if (verdict === "descartar") this.db.query("DELETE FROM selection WHERE finding_id = $id").run({ id: findingId });
+      if (verdict === "descartar") this.db.query("DELETE FROM selection WHERE finding_id = $id").run({ id: thread });
     })();
-    return this.finding(findingId)!;
+    return this.require(findingId);
   }
 
   select(findingId: string, selected: boolean): StoredFinding {
@@ -271,14 +341,14 @@ export class ReviewStore {
       throw new Error("un hallazgo descartado no se puede enviar a corregir");
     if (selected)
       this.db.query(`INSERT INTO selection (finding_id, selected, at) VALUES ($id, 1, $at)
-        ON CONFLICT (finding_id) DO UPDATE SET selected = 1, at = excluded.at`).run({ id: findingId, at: now() });
-    else this.db.query("DELETE FROM selection WHERE finding_id = $id").run({ id: findingId });
-    return this.finding(findingId)!;
+        ON CONFLICT (finding_id) DO UPDATE SET selected = 1, at = excluded.at`).run({ id: item.thread, at: now() });
+    else this.db.query("DELETE FROM selection WHERE finding_id = $id").run({ id: item.thread });
+    return this.require(findingId);
   }
 
-  /** Lo que Samu eligió para que n_ein corrija. */
+  /** Lo que Samu eligió para que n_ein corrija y aún no está resuelto. */
   selection(sessionId: string): StoredFinding[] {
-    return this.findings(sessionId).filter((item) => item.selected);
+    return this.findings(sessionId).filter((item) => item.selected && item.status !== "resolved");
   }
 
   private require(findingId: string): StoredFinding {
