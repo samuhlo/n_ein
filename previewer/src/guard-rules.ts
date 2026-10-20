@@ -4,18 +4,41 @@
 // la extensión del agente y el motor al repetir sondas.
 // =============================================================================
 
-import { existsSync, realpathSync } from "node:fs";
-import { dirname, isAbsolute, relative, resolve } from "node:path";
+import { existsSync, lstatSync, readlinkSync, realpathSync } from "node:fs";
+import { basename, dirname, isAbsolute, relative, resolve } from "node:path";
 
 /** Git que publica, trae o cambia la configuración o el árbol de worktrees. */
 const OUTWARD_GIT = /\bgit\b[^|;&\n]*\b(push|pull|fetch|remote|clone|worktree|config|submodule)\b/;
 /** `gh` publicaría en GitHub en nombre de Samu. */
 const GITHUB_CLI = /(^|[\s;&|(])gh\s/;
 
-function canonical(path: string): string {
+const MAX_LINKS = 40;
+
+function present(path: string): boolean {
+  try {
+    lstatSync(path);
+    return true;
+  } catch {
+    return false;
+  }
+}
+
+/**
+ * Ruta real de un destino que quizá no existe todavía. Sigue también enlaces
+ * rotos: `write` sobre un enlace a un archivo inexistente crearía ese archivo
+ * donde apunta el enlace, no dentro de la copia.
+ */
+function canonical(path: string, depth = 0): string {
+  if (depth > MAX_LINKS) throw new Error(`demasiados enlaces simbólicos: ${path}`);
   let ancestor = path;
-  while (!existsSync(ancestor) && dirname(ancestor) !== ancestor) ancestor = dirname(ancestor);
-  return resolve(realpathSync(ancestor), relative(ancestor, path));
+  const rest: string[] = [];
+  while (!present(ancestor) && dirname(ancestor) !== ancestor) {
+    rest.unshift(basename(ancestor));
+    ancestor = dirname(ancestor);
+  }
+  if (lstatSync(ancestor).isSymbolicLink() && !existsSync(ancestor))
+    return canonical(resolve(dirname(ancestor), readlinkSync(ancestor), ...rest), depth + 1);
+  return resolve(realpathSync(ancestor), ...rest);
 }
 
 function inside(root: string, path: string): boolean {

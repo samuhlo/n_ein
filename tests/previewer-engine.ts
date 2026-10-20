@@ -1,7 +1,7 @@
 import { strict as assert } from "node:assert";
 import { execFileSync, spawnSync } from "node:child_process";
-import { existsSync, mkdirSync, mkdtempSync, readFileSync, realpathSync, writeFileSync } from "node:fs";
-import { tmpdir } from "node:os";
+import { existsSync, mkdirSync, mkdtempSync, readFileSync, realpathSync, symlinkSync, writeFileSync } from "node:fs";
+import { homedir, tmpdir } from "node:os";
 import { join, resolve } from "node:path";
 import { reviewGuard } from "../previewer/src/guard-rules.ts";
 import { copiesRoot, createCopy, sweepCopies } from "../previewer/src/copy.ts";
@@ -27,7 +27,7 @@ git("add", ".");
 git("commit", "-qm", "base");
 const baseSha = git("rev-parse", "HEAD");
 git("switch", "-qc", "feat/clip");
-writeFileSync(join(repo, "text.ts"), "export function clip(text: string): string {\n  return text.slice(0, 3);\n}\n");
+writeFileSync(join(repo, "text.ts"), "export function clip(text: string): string {\n  return text.slice(0, 3);\n}\n\n");
 git("commit", "-qam", "feat: clip to three units");
 const headSha = git("rev-parse", "HEAD");
 writeFileSync(join(repo, "scratch.txt"), "cambio local de Samu\n");
@@ -48,9 +48,10 @@ const logBefore = git("log", "--all", "--format=%H %D");
   assert.equal(decide("bash", { command: "bun test && git diff refs/previewer/base HEAD" }, copy.path), undefined);
   assert.equal(execFileSync("git", ["remote"], { cwd: copy.path, encoding: "utf8" }).trim(), "", "la copia no tiene remotos");
   // Un `cd` relativo esquiva la guardia de texto; el aislamiento del sistema, no.
-  const sandbox = sandboxFor(repo);
-  if (process.platform === "darwin") assert.equal(sandbox.kind, "sandbox-exec");
-  if (sandbox.kind !== "none") {
+  const sandbox = sandboxFor(copy.path, repo);
+  // Dentro de otro sandbox-exec (una revisión de esta rama) no se puede anidar: lo dice y sigue.
+  if (sandbox.kind === "none") console.log("[PEND] :: SANDBOX_TEST :: reason: no usable OS sandbox here");
+  else {
     const escape = "cd ../../project && echo hacked > hacked.txt";
     assert.equal(decide("bash", { command: escape }, copy.path), undefined, "la guardia de texto no lo ve");
     const { file, args } = sandbox.wrap(escape);
@@ -58,7 +59,17 @@ const logBefore = git("log", "--all", "--format=%H %D");
     assert.ok(!existsSync(join(repo, "hacked.txt")), "el repositorio de Samu es de solo lectura");
     const inside = sandbox.wrap("echo ok > probe.txt");
     assert.equal(spawnSync(inside.file, inside.args, { cwd: copy.path }).status, 0, "la copia sí se escribe");
+    const elsewhere = join(homedir(), `.nein-previewer-escape-${process.pid}`);
+    const away = sandbox.wrap(`echo hacked > ${elsewhere}`);
+    assert.notEqual(spawnSync(away.file, away.args, { cwd: copy.path }).status, 0);
+    assert.ok(!existsSync(elsewhere), "fuera de copia, temporales y cachés no se escribe");
   }
+  // Un enlace roto hacia el original no cuela una escritura «dentro» de la copia.
+  symlinkSync(join(repo, "planted.txt"), join(copy.path, "planted.txt"));
+  assert.ok(decide("write", { path: "planted.txt" }, copy.path), "write sigue el enlace roto");
+  mkdirSync(join(copy.path, "nested"));
+  symlinkSync(join(repo, "ghost-dir"), join(copy.path, "nested/link"));
+  assert.ok(decide("write", { path: "nested/link/new.ts" }, copy.path), "también a través de un directorio enlazado roto");
   const objects = execFileSync("find", [join(copy.path, ".git/objects"), "-type", "f", "-links", "+1"], { encoding: "utf8" }).trim();
   assert.equal(objects, "", "ningún objeto comparte fichero con el original");
   copy.remove();
@@ -117,6 +128,8 @@ const outcome = await review({
         finding("SHA ajeno", ["text.ts@0123456789:L1"]),
         { ...finding("Tipo raro", [`text.ts@${short}:L1`]), kind: "opinion" },
         finding("Sonda que sale de la copia", [`text.ts@${short}:L1`], { command: `cat ${repo}/text.ts; exit 1`, file: null }),
+        finding("Línea vacía final", [`text.ts@${short}:L4`, `text.ts@${short}:L5`]),
+        finding("Sonda sin comando", [`text.ts@${short}:L1`], { command: "no-such-probe-binary --check", file: null }),
         finding("Sonda que no falla", [`text.ts@${baseSha.slice(0, 8)}:L2`], { command: "bash .previewer-probes/pass.sh", file: ".previewer-probes/pass.sh" }),
       ]),
       usage: { input: 100, output: 20, cacheRead: 0, usd: 0.12 },
@@ -129,9 +142,12 @@ assert.equal(outcome.run.status, "done", outcome.run.error ?? "");
 assert.equal(outcome.run.headSha, headSha);
 assert.equal(outcome.run.baseSha, baseSha, "la base por defecto es el ancestro común con main");
 assert.equal(outcome.session.branch, "feat/clip");
-assert.deepEqual(outcome.findings.map((f) => f.title), ["Corta letras a la mitad", "Sonda que sale de la copia", "Sonda que no falla"]);
-const [clip, outside, pass] = outcome.findings;
-assert.ok(clip && outside && pass);
+assert.deepEqual(outcome.findings.map((f) => f.title), ["Corta letras a la mitad", "Sonda que sale de la copia", "Línea vacía final", "Sonda sin comando", "Sonda que no falla"]);
+const [clip, outside, blank, missing, pass] = outcome.findings;
+assert.ok(clip && outside && blank && missing && pass);
+assert.deepEqual(blank.citations.map((c) => c.ref), [`text.ts@${short}:L4`], "la línea vacía final existe; la siguiente no");
+assert.equal(missing.probe?.exitCode, 127);
+assert.equal(missing.probe?.reproduced, false, "un comando inexistente no demuestra el fallo");
 assert.equal(outside.probe?.reproduced, false, "el motor no repite una sonda que la guardia rechaza");
 assert.match(outside.probe?.output ?? "", /no ejecutada/);
 assert.deepEqual(clip.citations.map((c) => [c.ref, c.text]), [[`text.ts@${short}:L2`, "  return text.slice(0, 3);"]]);
@@ -167,7 +183,7 @@ assert.equal(git("rev-parse", "main"), baseSha);
   assert.equal(failed.run.status, "failed");
   assert.match(failed.run.error ?? "", /modelo caído/);
   assert.ok(cwd && !existsSync(cwd));
-  assert.equal(store.findings(failed.session.id).length, 3, "un fallo no borra ni añade hallazgos");
+  assert.equal(store.findings(failed.session.id).length, 5, "un fallo no borra ni añade hallazgos");
 }
 
 // --- Informe ilegible: falla con su texto guardado --------------------------------------

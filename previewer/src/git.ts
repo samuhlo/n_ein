@@ -47,9 +47,13 @@ export function resolveRange(cwd: string, options: { base?: string; head?: strin
   return { repo, branch: branch === "HEAD" ? "" : branch, baseSha, headSha };
 }
 
-/** Contenido de un archivo en un commit, o null si no existía ahí. */
+/** Contenido literal de un archivo en un commit, o null si no existía ahí. Sin recortar: las citas cuentan sus líneas. */
 export function fileAt(repo: string, sha: string, path: string): string | null {
-  return tryGit(repo, "show", `${sha}:${path}`);
+  try {
+    return execFileSync("git", ["show", `${sha}:${path}`], { cwd: repo, encoding: "utf8", maxBuffer: 64 << 20, stdio: ["ignore", "pipe", "pipe"] });
+  } catch {
+    return null;
+  }
 }
 
 export function commitsOf(range: Range): string {

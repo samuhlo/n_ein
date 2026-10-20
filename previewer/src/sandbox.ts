@@ -1,13 +1,17 @@
 // =============================================================================
 // [AUTH] AISLAMIENTO DEL SISTEMA
 // La guardia de texto no ve un `cd ../..`: el sistema operativo sí. Cada comando
-// del revisor y cada sonda corren con el repositorio de Samu en solo lectura:
-// `sandbox-exec` en macOS, `bwrap` en Linux si está instalado. Sin ninguno,
-// queda la guardia de texto y la revisión lo dice como pendiente.
+// del revisor y cada sonda solo pueden escribir en la copia, los temporales y
+// las cachés de herramientas (instalar dependencias, compilar): el resto del
+// disco, incluido el repositorio de Samu, queda en solo lectura. `sandbox-exec`
+// en macOS, `bwrap` en Linux si está instalado. Sin ninguno, o dentro de otro
+// aislamiento que no deja anidar, queda la guardia de texto y la revisión lo dice.
 // =============================================================================
 
 import { spawn, spawnSync } from "node:child_process";
 import { existsSync, realpathSync } from "node:fs";
+import { homedir, tmpdir } from "node:os";
+import { join } from "node:path";
 import type { BashOperations } from "@earendil-works/pi-coding-agent";
 
 export type Sandbox = { kind: "sandbox-exec" | "bwrap" | "none"; wrap: (command: string) => { file: string; args: string[] } };
@@ -20,19 +24,39 @@ function findBwrap(): string | null {
   return found.status === 0 && found.stdout.trim() ? found.stdout.trim() : null;
 }
 
-export function sandboxFor(origin: string): Sandbox {
-  const paths = [...new Set([origin, realpathSync(origin)])];
+/** Dónde puede escribir el revisor además de su copia. Solo las rutas que existen, ya resueltas. */
+function writablePaths(copy: string): string[] {
+  const home = homedir();
+  const candidates = [
+    copy, tmpdir(), "/tmp", "/private/tmp", "/private/var/folders", "/dev",
+    join(home, ".bun"), join(home, ".cache"), join(home, ".npm"), join(home, "Library/Caches"),
+    join(home, "go"), join(process.env.N_EIN_HOME || join(home, ".n_ein"), "cache"),
+    // Cachés de Go que fija scripts/check.sh de n_ein.
+    join(process.env.N_EIN_HOME || join(home, ".n_ein"), "dev/go-cache"),
+  ];
+  return [...new Set(candidates.filter((path) => existsSync(path)).map((path) => realpathSync(path)))];
+}
+
+const usable = (file: string, args: string[]): boolean => spawnSync(file, [...args, "/usr/bin/true"], { stdio: "ignore" }).status === 0;
+
+export function sandboxFor(copy: string, origin: string): Sandbox {
   const plain = (command: string) => ({ file: "/bin/bash", args: ["-c", command] });
   if (process.env.N_EIN_PREVIEWER_SANDBOX === "none") return { kind: "none", wrap: plain };
+  const writable = writablePaths(copy);
+  // BLINDAJE -> El original se cierra al final aunque viva bajo una ruta permitida (un temporal, una caché).
+  const closed = [...new Set([origin, realpathSync(origin)])];
   if (process.platform === "darwin" && existsSync(SANDBOX_EXEC)) {
     const quote = (path: string): string => `"${path.replace(/["\\]/g, "\\$&")}"`;
-    const profile = `(version 1)(allow default)(deny file-write* ${paths.map((path) => `(subpath ${quote(path)})`).join(" ")})`;
-    return { kind: "sandbox-exec", wrap: (command) => ({ file: SANDBOX_EXEC, args: ["-p", profile, "/bin/bash", "-c", command] }) };
+    // En SBPL gana la última regla que coincide: primero se niega toda escritura, después se abre lo permitido.
+    const subpaths = (paths: string[]): string => paths.map((path) => `(subpath ${quote(path)})`).join(" ");
+    const profile = `(version 1)(allow default)(deny file-write*)(allow file-write* ${subpaths(writable)})(deny file-write* ${subpaths(closed)})`;
+    const args = ["-p", profile];
+    if (usable(SANDBOX_EXEC, args)) return { kind: "sandbox-exec", wrap: (command) => ({ file: SANDBOX_EXEC, args: [...args, "/bin/bash", "-c", command] }) };
   }
   const bwrap = process.platform === "linux" ? findBwrap() : null;
   if (bwrap) {
-    const readOnly = paths.flatMap((path) => ["--ro-bind", path, path]);
-    return { kind: "bwrap", wrap: (command) => ({ file: bwrap, args: ["--dev-bind", "/", "/", ...readOnly, "/bin/bash", "-c", command] }) };
+    const args = ["--ro-bind", "/", "/", "--dev", "/dev", "--proc", "/proc", ...writable.filter((path) => path !== "/dev").flatMap((path) => ["--bind", path, path]), ...closed.flatMap((path) => ["--ro-bind", path, path])];
+    if (usable(bwrap, args)) return { kind: "bwrap", wrap: (command) => ({ file: bwrap, args: [...args, "/bin/bash", "-c", command] }) };
   }
   return { kind: "none", wrap: plain };
 }

@@ -86,6 +86,9 @@ function rerunProbe(context: ProbeContext, proposed: NonNullable<ProposedFinding
   });
   const output = tail(`${result.stdout ?? ""}${result.stderr ?? ""}`.trim(), PROBE_OUTPUT_LIMIT);
   const exitCode = result.error || result.signal ? null : result.status;
+  // BLINDAJE -> 126 y 127 son «no se pudo ejecutar» y «comando inexistente»: la sonda no llegó a comprobar nada.
+  if (exitCode === 126 || exitCode === 127)
+    return { command: proposed.command, file, source, exitCode, output: `la sonda no pudo ejecutarse\n${output}`, reproduced: false };
   return { command: proposed.command, file, source, exitCode, output, reproduced: exitCode !== null && exitCode !== 0 };
 }
 
@@ -128,7 +131,7 @@ export async function review(options: ReviewOptions): Promise<ReviewOutcome> {
       })();
       const check = makeCitationChecker(range.repo, [range.headSha, range.baseSha]);
       const rejected = [...report.rejected];
-      const sandbox = sandboxFor(range.repo);
+      const sandbox = sandboxFor(copy.path, range.repo);
       const probes: ProbeContext = { copy: copy.path, guard: reviewGuard(copy.path, range.repo), sandbox, timeoutMs: options.probeTimeoutMs ?? DEFAULT_PROBE_TIMEOUT_MS };
       const findings: Finding[] = [];
       for (const item of report.findings) {
@@ -147,7 +150,7 @@ export async function review(options: ReviewOptions): Promise<ReviewOutcome> {
         findings.push({ ...item, citations, probe });
       }
       const gaps = sandbox.kind === "none"
-        ? [...report.gaps, "sin aislamiento del sistema (sandbox-exec o bwrap): solo la guardia de texto protegía el repositorio"]
+        ? [...report.gaps, "sin aislamiento del sistema (sandbox-exec o bwrap utilizable): solo la guardia de texto limitaba dónde escribía el revisor"]
         : report.gaps;
       result = { status: "done", summary: report.summary, gaps, rejected, usage: agent.usage, findings };
     }

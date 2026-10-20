@@ -17,7 +17,11 @@ export function makeCitationChecker(repo: string, allowed: readonly string[]): (
   const files = new Map<string, string[] | null>();
   const linesOf = (sha: string, path: string): string[] | null => {
     const key = `${sha}:${path}`;
-    if (!files.has(key)) files.set(key, fileAt(repo, sha, path)?.split("\n") ?? null);
+    if (!files.has(key)) {
+      const content = fileAt(repo, sha, path);
+      // El salto de línea final cierra la última línea; no abre otra.
+      files.set(key, content === null ? null : (content.endsWith("\n") ? content.slice(0, -1) : content).split("\n"));
+    }
     return files.get(key) ?? null;
   };
   return (raw: string): CitationCheck => {

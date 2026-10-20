@@ -14,6 +14,6 @@ export default function (pi: ExtensionAPI): void {
   const origin = process.env.N_EIN_PREVIEWER_ORIGIN;
   if (!copy || !origin) throw new Error("the reviewer guard requires its review copy");
   const decide = reviewGuard(copy, origin);
-  pi.registerTool(createBashToolDefinition(copy, { operations: sandboxedOperations(sandboxFor(origin)) }));
+  pi.registerTool(createBashToolDefinition(copy, { operations: sandboxedOperations(sandboxFor(copy, origin)) }));
   pi.on("tool_call", (event, ctx) => decide(event.toolName, event.input, ctx.cwd));
 }
