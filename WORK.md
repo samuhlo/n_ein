@@ -8,7 +8,7 @@ Resultado: Samu revisa el trabajo de n_ein en una página local, entiende qué c
 
 ## Autorización
 
-Acuerdo confirmado con `intent` el 20 de octubre: «Confirmo, guardalo». Samu pidió solo guardarlo en esta rama; **implementar no está autorizado todavía**. Sin push ni PR hasta que lo pida.
+Acuerdo confirmado con `intent` el 20 de octubre: «Confirmo, guardalo». El mismo día Samu autorizó implementarlo: «Vamos a empezar a trabajar en p_reviewer y incorporarlo a n_ein». Sin push ni PR hasta que lo pida.
 
 ## Decisiones
 
@@ -18,7 +18,7 @@ Acuerdo confirmado con `intent` el 20 de octubre: «Confirmo, guardalo». Samu p
 - **Rama local** con base y head fijados por SHA; la PR, si existe, es un enlace. No depende de `gh` y sirve antes de abrir la PR.
 - **Vuelta por la conversación.** Samu dice «aplica la revisión»; el agente lee la selección con `nein previewer handoff` y la trabaja como encargo normal (tareas en `WORK.md`, commit por tarea). La web nunca escribe en el repositorio; funciona en Pi y en Claude.
 - **Motor: el agente de n_ein sin interfaz**, en solo lectura respecto a la rama y con CodeGraph para seguir consumidores fuera del diff. El banco del tramo 1 compara revisor de la misma familia que el autor frente a otra familia (Sol ↔ Opus) antes de fijar el valor por defecto; Samu acepta el gasto de cuota de Claude.
-- **Ejecuta en copia aparte:** tests del proyecto y sondas desechables en un worktree en `<repo>-worktrees/` (no `/tmp`, por CodeGraph), fijado al head, sin commits ni push, borrado al terminar.
+- **Ejecuta en copia aparte:** tests del proyecto y sondas desechables en una copia en `<repo>-worktrees/` (no `/tmp`, por CodeGraph), fijada al head, sin commits ni push, borrada al terminar. *Ajuste técnico del 20 de octubre:* la copia es un clon local sin remotos ni hardlinks, no un `git worktree`, porque un worktree comparte ramas con el original. Bash y sondas corren bajo aislamiento del sistema (`sandbox-exec` en macOS, `bwrap` en Linux) que solo deja escribir en la copia, temporales y cachés; sin aislamiento utilizable, la revisión es solo de lectura y lo dice.
 - **Voz docente.** Recorrido guiado (qué cambia, por qué importa, en qué orden mirarlo) en lenguaje que entendería un niño; detalle técnico (SHA, citas, salida de tests) plegado.
 - **Lanzamiento:** al cerrar un encargo o abrir una PR, n_ein propone en una línea «¿Abro el revisor?»; Samu también lo abre a mano. Nunca automático: cuesta modelo y tiempo.
 - **Stack:** TypeScript con Bun gestionado, `bun:sqlite`, `Bun.serve`; sin LangGraph (el ritmo lo marca Samu; n_ein ya aporta el bucle de agente). Lo instala el instalador de Go; la web se compila en el build de la release.
@@ -51,7 +51,7 @@ Aplazado: modo mixto (hallazgos fiables directos a n_ein cuando el banco lo just
 
 Tramo 1, revisor completo:
 
-- [ ] T1 · Motor — dada una rama con base/head fijados, crea el worktree, ejecuta el agente sin interfaz y devuelve hallazgos estructurados con citas validadas y sonda cuando la haya. Blocked by: none.
+- [x] T1 · Motor — dada una rama con base/head fijados, crea el worktree, ejecuta el agente sin interfaz y devuelve hallazgos estructurados con citas validadas y sonda cuando la haya. Blocked by: none.
   - Citas inexistentes en el SHA se rechazan, no se muestran.
   - El worktree se borra también si el agente falla o se cancela.
 - [x] T2 · Sesiones — almacén `bun:sqlite` en el hogar del canal: sesión, hallazgos, valoraciones, selección y vigencia por head. Blocked by: none.
@@ -68,8 +68,20 @@ Tramo 2, afinado:
 
 ## Evidencia
 
-Solo documentación de diseño en esta rama; sin código ni comprobaciones todavía.
+- Código en `previewer/`: `src/store.ts` (T2), `src/engine.ts` con `git.ts`, `copy.ts`, `citations.ts`, `report.ts`, `runner.ts`, `sandbox.ts`, `guard-rules.ts`; agente en `agent/reviewer.md` y `agent/guard.ts`. Entrada provisional `bun previewer/src/cli.ts review` hasta T7.
+- `tests/previewer-store.ts` y `tests/previewer-engine.ts` (agente falso, sin inferencia) en `scripts/check.sh`; `previewer/` entra en `typecheck-agents.ts`. `./scripts/check.sh` completo pasó el 20 de octubre sobre `cfe2baa`; los dos tests y el typecheck, sobre `c16f47f`.
+- Cuatro revisiones reales de esta rama con `openai-codex/gpt-6-sol` alto (canal dev):
+
+  | Head | Resultado | Tiempo | Coste | Hallazgos | Con sonda reproducida |
+  |---|---|---:|---:|---:|---:|
+  | `c8e6d04` | done | 252 s | 0,53 $ | 3 | 3 |
+  | `e8054f1` | done | 209 s | 0,55 $ | 4 | 3 |
+  | `cfe2baa` | failed: el sistema se bloqueó a los 5 min por otra ejecución; venció el límite y borró la copia | 6410 s | — | — | — |
+  | `cfe2baa` | done | 311 s | 0,55 $ | 4 | 3 |
+
+  Los 11 hallazgos eran válidos al revisarlos (valoración del autor, no de Samu) y están corregidos en `e8054f1`, `cfe2baa` y `c16f47f`: guardia esquivable con `cd` relativo, sondas fuera de la guardia, carrera entre revisiones, enlace roto, escritura fuera de la copia, sonda con código 127, líneas vacías finales, falta de aislamiento, procesos de sonda vivos, test dependiente del aislamiento y archivo vacío. Ninguna cita rechazada en las tres revisiones completas. Tras cada una, `git status` y las ramas del repositorio no cambiaron y la copia no quedaba.
+- Pendiente de observar: `bwrap` en Omarchy (no probado en Linux) y una revisión del head `c16f47f`.
 
 ## Siguiente paso
 
-Samu abre una sesión limpia. Implementar requiere su autorización expresa; con ella, empezar por T1 y T2.
+T1 y T2 terminados. Siguen T3 (recorrido), T5 (traspaso) y T6 (segunda revisión), que ya no tienen bloqueos; T8 (banco) también puede empezar.
