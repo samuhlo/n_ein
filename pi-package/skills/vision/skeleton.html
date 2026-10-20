@@ -1,0 +1,100 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>TOPIC · sketches</title>
+<style>
+:root { --bg: #f4f4f2; --paper: #fff; --ink: #222; --mid: #8a8a86; --line: #c9c9c4; --fill: #e6e6e2; --accent: #2f6fde; }
+@media (prefers-color-scheme: dark) { :root { --bg: #18181a; --paper: #222225; --ink: #e8e8e4; --mid: #8f8f8a; --line: #45454a; --fill: #303034; --accent: #6b9cff; } }
+* { box-sizing: border-box; }
+body { margin: 0; background: var(--bg); color: var(--ink); font: 15px/1.45 system-ui, sans-serif; }
+.bar { position: sticky; top: 0; z-index: 1; display: flex; flex-wrap: wrap; gap: 4px 16px; align-items: center; padding: 10px 16px; background: var(--paper); border-bottom: 1px solid var(--line); }
+#tabs { display: flex; flex-wrap: wrap; gap: 4px; }
+#tabs a { padding: 3px 10px; border-radius: 99px; color: var(--mid); text-decoration: none; }
+#tabs a[aria-current] { background: var(--ink); color: var(--paper); }
+main { padding: 24px 16px 64px; }
+.sheet { display: none; max-width: 1100px; margin: 0 auto; }
+.sheet.on { display: block; }
+.sheet > h2 { margin: 0 0 4px; font-size: 18px; }
+.sheet > p { margin: 0 0 16px; color: var(--mid); }
+.frame { background: var(--paper); border: 1px solid var(--line); border-radius: 8px; padding: 16px; display: flex; flex-direction: column; gap: 12px; }
+.frame.phone { width: 360px; max-width: 100%; min-height: 640px; border-radius: 24px; }
+.row { display: flex; gap: 12px; align-items: center; flex-wrap: wrap; }
+.col { display: flex; flex-direction: column; gap: 12px; flex: 1; min-width: 0; align-self: flex-start; }
+.grow { flex: 1; }
+.box { border: 1.5px dashed var(--line); border-radius: 6px; padding: 12px; color: var(--mid); min-height: 48px; }
+.card { border: 1px solid var(--line); border-radius: 6px; padding: 12px; display: flex; flex-direction: column; gap: 8px; }
+.nav { display: flex; gap: 16px; align-items: center; padding-bottom: 12px; border-bottom: 1px solid var(--line); }
+.img { background: repeating-linear-gradient(45deg, var(--fill) 0 8px, transparent 8px 16px); border: 1px solid var(--line); border-radius: 6px; min-height: 120px; }
+.line { height: 10px; border-radius: 5px; background: var(--fill); }
+.line.short { width: 40%; } .line.mid { width: 70%; }
+.input { border: 1px solid var(--line); border-radius: 6px; padding: 8px 10px; color: var(--mid); }
+.btn { display: inline-block; border: 1px solid var(--ink); border-radius: 6px; padding: 7px 14px; color: var(--ink); text-decoration: none; }
+.btn.primary { background: var(--accent); border-color: var(--accent); color: #fff; }
+.muted { color: var(--mid); }
+.tag { display: inline-block; padding: 1px 8px; border-radius: 99px; background: var(--fill); font-size: 13px; }
+.pin { display: inline-grid; place-items: center; width: 20px; height: 20px; border-radius: 50%; background: var(--ink); color: var(--paper); font-size: 12px; font-weight: 600; vertical-align: middle; }
+.notes { margin: 16px 0 0; padding: 12px 16px 12px 36px; background: var(--paper); border-left: 3px solid var(--accent); border-radius: 0 6px 6px 0; }
+.notes li + li { margin-top: 4px; }
+.flow { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; }
+.node { border: 1.5px solid var(--ink); border-radius: 6px; padding: 8px 12px; background: var(--paper); }
+.node.alt { border-style: dashed; }
+.arrow { color: var(--mid); }
+.arrow::after { content: "→"; }
+.entities { display: flex; flex-wrap: wrap; gap: 16px; align-items: flex-start; }
+.entity { min-width: 200px; border: 1.5px solid var(--ink); border-radius: 6px; background: var(--paper); }
+.entity > b { display: block; padding: 6px 12px; border-bottom: 1px solid var(--line); }
+.entity > ul { list-style: none; margin: 0; padding: 6px 12px; }
+.entity small { color: var(--mid); }
+</style>
+</head>
+<body>
+<header class="bar"><strong>TOPIC</strong><nav id="tabs"></nav></header>
+<main>
+
+<section class="sheet" id="s1" data-tab="1 · Screen">
+  <h2>1 · Screen name</h2>
+  <p>What this screen is for, in one line.</p>
+  <div class="frame">
+    <div class="nav"><b>Product</b><span class="muted">Section</span><span class="grow"></span><a class="btn primary" href="#s2">Primary action</a></div>
+    <div class="row">
+      <div class="col"><div class="box">Main area <span class="pin">1</span></div><div class="line mid"></div><div class="line short"></div></div>
+      <div class="col" style="flex: 0 0 240px"><div class="card"><b>Side panel</b><div class="line"></div></div></div>
+    </div>
+  </div>
+  <ol class="notes"><li>What the user should notice here, or the open question this sheet asks.</li></ol>
+</section>
+
+<section class="sheet" id="s2" data-tab="2 · Flow">
+  <h2>2 · Main flow</h2>
+  <p>From the first step to the result.</p>
+  <div class="flow"><span class="node">Start</span><span class="arrow"></span><span class="node">Step</span><span class="arrow"></span><span class="node alt">Optional step</span><span class="arrow"></span><span class="node">Result</span></div>
+  <div class="entities" style="margin-top: 24px">
+    <div class="entity"><b>Entity</b><ul><li>field <small>type</small></li><li>other_id <small>→ Other</small></li></ul></div>
+    <div class="entity"><b>Other</b><ul><li>field <small>type</small></li></ul></div>
+  </div>
+</section>
+
+</main>
+<script>
+// Las pestañas salen de las propias secciones y el hash guarda la vista: recargar tras una edición no pierde el sitio.
+const sheets = [...document.querySelectorAll(".sheet")];
+const tabs = document.getElementById("tabs");
+for (const sheet of sheets) {
+  const link = document.createElement("a");
+  link.href = "#" + sheet.id;
+  link.textContent = sheet.dataset.tab || sheet.id;
+  tabs.append(link);
+}
+function show() {
+  const current = sheets.find((sheet) => "#" + sheet.id === location.hash) || sheets[0];
+  for (const sheet of sheets) sheet.classList.toggle("on", sheet === current);
+  for (const link of tabs.children) link.toggleAttribute("aria-current", link.hash === "#" + current.id);
+  scrollTo(0, 0);
+}
+addEventListener("hashchange", show);
+show();
+</script>
+</body>
+</html>

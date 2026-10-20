@@ -16,6 +16,22 @@ for (const name of readdirSync(skillsDir)) {
   assert.ok(typeof meta.description === "string" && meta.description.length > 0 && meta.description.length <= 1024, `${name}: descripción ausente o larga`);
 }
 
+// vision solo la arranca el usuario: el modelo no ve su descripción, así que el flujo es lo único que le permite sugerirla.
+const visionDir = join(skillsDir, "vision");
+const vision = readFileSync(join(visionDir, "SKILL.md"), "utf8");
+assert.equal(Bun.YAML.parse(vision.split("---")[1])["disable-model-invocation"], true, "vision: debe ser de invocación manual");
+assert.match(readFileSync(join(root, "pi-package/flow.md"), "utf8"), /`vision`/, "flow.md debe sugerir vision");
+const sketch = readFileSync(join(visionDir, "SKETCH.md"), "utf8");
+for (const [file, text] of [["SKILL.md", vision], ["SKETCH.md", sketch]]) {
+  for (const [, link] of text.matchAll(/\]\(([^)#]+)\)/g)) {
+    assert.ok(statSync(join(visionDir, link), { throwIfNoEntry: false })?.isFile(), `vision/${file} enlaza ${link}, que no existe`);
+  }
+}
+// Los bocetos se abren desde disco y se guardan en el repositorio: el esqueleto no puede depender de la red.
+const skeleton = readFileSync(join(visionDir, "skeleton.html"), "utf8");
+assert.doesNotMatch(skeleton, /(?:src|href)\s*=\s*["']?(?:https?:)?\/\/|url\(\s*["']?(?:https?:)?\/\/|@import/i, "vision/skeleton.html carga recursos externos");
+assert.match(skeleton, /<section class="sheet" id="[^"]+" data-tab="[^"]+">/, "vision/skeleton.html debe traer hojas de ejemplo");
+
 // n_ein es un producto para cualquiera: lo que se instala habla del usuario, no de una persona concreta.
 const shipped = ["pi-package", "bin"].flatMap(function walk(dir: string): string[] {
   const full = join(root, dir);
