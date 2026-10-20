@@ -85,7 +85,7 @@ func sourceFixture(t *testing.T) (source, self, target, data string) {
 	data = filepath.Join(root, "user-data")
 	self = writeFixture(t, root, "self-binary", "installer", 0o755)
 	writeFixture(t, source, "dist/n-ein", "launcher", 0o755)
-	for _, rel := range []string{"bin/nein", "bin/nein-setup", "bin/n-ein-dev", "bin/n-ein-claude-dev", "bin/n-ein-prepare-pi", "bin/n-ein-codegraph", "bin/n-ein-todo"} {
+	for _, rel := range []string{"bin/nein", "bin/nein-setup", "bin/n-ein-dev", "bin/n-ein-claude-dev", "bin/n-ein-prepare-pi", "bin/n-ein-codegraph", "bin/n-ein-todo", "bin/n-ein-previewer"} {
 		writeFixture(t, source, rel, "#!/bin/sh\nexit 0\n", 0o755)
 	}
 	writeFixture(t, source, "brand.json", `{"colors":{"yellow":"#FFCA40"}}`, 0o644)
@@ -111,6 +111,8 @@ func sourceFixture(t *testing.T) (source, self, target, data string) {
 	writeFixture(t, source, "pi-package/claude-plugin/.claude-plugin/types/claude-code/index.d.ts", "// generado\n", 0o644)
 	writeFixture(t, source, "pi-package/claude-plugin/hooks/register.tsx", "export const register = () => {}\n", 0o644)
 	writeFixture(t, source, "pi-package/skills/intent/SKILL.md", "# Intent\n", 0o644)
+	writeFixture(t, source, "previewer/src/cli.ts", "export {}\n", 0o644)
+	writeFixture(t, source, "previewer/agent/reviewer.md", "# Reviewer\n", 0o644)
 	writeFixture(t, source, "pi-package/skills/synced/foreign.txt", "generated cache\n", 0o644)
 	writeFixture(t, data, "auth.json", "private auth\n", 0o600)
 	writeFixture(t, data, "sessions/keep.jsonl", "session\n", 0o600)

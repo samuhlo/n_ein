@@ -206,6 +206,13 @@ export class ReviewStore {
     return session(row);
   }
 
+  /** La sesión de una rama, sin crearla: leer no deja rastro. */
+  findSession(repo: string, branch: string): Session | null {
+    const row = this.db.query<SessionRow, { repo: string; branch: string }>(
+      "SELECT * FROM sessions WHERE repo = $repo AND branch = $branch").get({ repo, branch });
+    return row ? session(row) : null;
+  }
+
   session(id: string): Session | null {
     const row = this.db.query<SessionRow, { id: string }>("SELECT * FROM sessions WHERE id = $id").get({ id });
     return row ? session(row) : null;

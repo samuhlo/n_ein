@@ -125,7 +125,7 @@ func collect(source, self string) ([]sourceFile, error) {
 		return nil
 	}
 	for _, rel := range []string{
-		"brand.json", "runtime.json", "bin/nein", "bin/nein-setup", "bin/n-ein-dev", "bin/n-ein-claude-dev", "bin/n-ein-prepare-pi", "bin/n-ein-codegraph", "bin/n-ein-todo",
+		"brand.json", "runtime.json", "bin/nein", "bin/nein-setup", "bin/n-ein-dev", "bin/n-ein-claude-dev", "bin/n-ein-prepare-pi", "bin/n-ein-codegraph", "bin/n-ein-todo", "bin/n-ein-previewer",
 		"pi-runtime/package.json", "pi-runtime/bun.lock", "claude-runtime/package.json", "claude-runtime/bun.lock", "pi-package/package.json", "pi-package/persona.md", "pi-package/pi-only.md", "pi-package/flow.md", "pi-package/models.ts", "pi-package/router.ts", "pi-package/lang.ts", "pi-package/memory.ts", "pi-package/NOTICE.md",
 	} {
 		if err := add(filepath.Join(source, rel), rel); err != nil {
@@ -142,7 +142,7 @@ func collect(source, self string) ([]sourceFile, error) {
 	if err := add(launcher, "bin/n-ein"); err != nil {
 		return nil, err
 	}
-	for _, rel := range []string{"pi-package/extensions", "pi-package/themes", "pi-package/agents", "pi-package/claude-plugin"} {
+	for _, rel := range []string{"pi-package/extensions", "pi-package/themes", "pi-package/agents", "pi-package/claude-plugin", "previewer/src", "previewer/agent"} {
 		if err := walkFiles(filepath.Join(source, rel), source, add); err != nil {
 			return nil, err
 		}

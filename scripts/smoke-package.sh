@@ -23,6 +23,12 @@ printf '# Smoke de paquete\n' > "$project/README.md"
 cmp "$candidate/package-manifest.json" "$target/package-manifest.json"
 test ! -e "$candidate/docs"
 test ! -e "$candidate/node_modules"
+# El revisor instalado arranca y resuelve sus imports; sin orden responde con el uso.
+test ! -e "$candidate/tests"
+previewer_status=0
+"$target/bin/n-ein-previewer" > /dev/null 2> "$test_dir/previewer-usage" || previewer_status=$?
+test "$previewer_status" -eq 64
+rg -q 'n-ein-previewer handoff' "$test_dir/previewer-usage"
 
 "$target/bin/n-ein" --project "$project" --view configuracion --once > "$test_dir/config-view"
 rg -q 'openai-codex/gpt-6-sol' "$test_dir/config-view"

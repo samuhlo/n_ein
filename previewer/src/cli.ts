@@ -1,13 +1,17 @@
 // =============================================================================
 // [FLOW] ENTRADA PROVISIONAL DEL REVISOR
-// uso: bun previewer/src/cli.ts review [--base REF] [--head REF] [--model P/M]
+// uso: n-ein-previewer review [--base REF] [--head REF] [--model P/M]
 //      [--thinking NIVEL] [--pr URL] [--json]
-// `nein previewer` la sustituirá cuando el launcher la incorpore.
+//      n-ein-previewer handoff [--json]
+// `nein previewer` la llevará al launcher; el agente usa bin/n-ein-previewer.
 // =============================================================================
 
 import { resolve } from "node:path";
 import { parseArgs } from "node:util";
 import { review } from "./engine.ts";
+import { git } from "./git.ts";
+import { handoffBrief } from "./handoff.ts";
+import { ReviewStore } from "./store.ts";
 
 const packageRoot = resolve(import.meta.dir, "../..");
 const { values, positionals } = parseArgs({
@@ -23,9 +27,40 @@ const { values, positionals } = parseArgs({
   },
 });
 
-if (positionals[0] !== "review") {
-  process.stderr.write("uso: bun previewer/src/cli.ts review [--base REF] [--head REF] [--model P/M] [--thinking NIVEL] [--pr URL] [--json]\n");
+const USAGE = "uso: n-ein-previewer review [--base REF] [--head REF] [--model P/M] [--thinking NIVEL] [--pr URL] [--json]\n       n-ein-previewer handoff [--json]\n";
+if (positionals[0] !== "review" && positionals[0] !== "handoff") {
+  process.stderr.write(USAGE);
   process.exit(64);
+}
+
+if (positionals[0] === "handoff") {
+  try {
+    const cwd = values.project ?? process.cwd();
+    const repo = git(cwd, "rev-parse", "--show-toplevel");
+    const head = git(repo, "rev-parse", "HEAD");
+    // Igual que el motor: un head suelto se revisa como `detached@<sha>`.
+    const branch = (() => {
+      try {
+        return git(repo, "symbolic-ref", "--quiet", "--short", "HEAD");
+      } catch {
+        return `detached@${head.slice(0, 12)}`;
+      }
+    })();
+    const store = ReviewStore.forPackage(packageRoot);
+    const session = store.findSession(repo, branch);
+    if (!session) {
+      process.stdout.write(`No p_reviewer session exists for ${branch}. Nothing to apply: offer to open the reviewer first.\n`);
+      process.exit(0);
+    }
+    const selection = store.selection(session.id);
+    if (values.json) process.stdout.write(`${JSON.stringify({ session, selection }, null, 2)}\n`);
+    else process.stdout.write(handoffBrief(session, selection, head));
+    store.close();
+    process.exit(0);
+  } catch (error) {
+    process.stderr.write(`[ERR] :: HANDOFF_FAIL :: reason: ${error instanceof Error ? error.message : String(error)}\n`);
+    process.exit(1);
+  }
 }
 
 const controller = new AbortController();
