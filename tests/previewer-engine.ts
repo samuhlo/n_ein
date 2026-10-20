@@ -6,7 +6,7 @@ import { join, resolve } from "node:path";
 import { reviewGuard } from "../previewer/src/guard-rules.ts";
 import { copiesRoot, createCopy, sweepCopies } from "../previewer/src/copy.ts";
 import { review } from "../previewer/src/engine.ts";
-import { sandboxFor } from "../previewer/src/sandbox.ts";
+import { sandboxFor, type Sandbox } from "../previewer/src/sandbox.ts";
 import { parseReport } from "../previewer/src/report.ts";
 import { summarizeEvents, type AgentRequest, type AgentResult } from "../previewer/src/runner.ts";
 import { ReviewStore } from "../previewer/src/store.ts";
@@ -28,6 +28,8 @@ git("commit", "-qm", "base");
 const baseSha = git("rev-parse", "HEAD");
 git("switch", "-qc", "feat/clip");
 writeFileSync(join(repo, "text.ts"), "export function clip(text: string): string {\n  return text.slice(0, 3);\n}\n\n");
+writeFileSync(join(repo, "empty.txt"), "");
+git("add", "empty.txt");
 git("commit", "-qam", "feat: clip to three units");
 const headSha = git("rev-parse", "HEAD");
 writeFileSync(join(repo, "scratch.txt"), "cambio local de Samu\n");
@@ -108,14 +110,18 @@ const finding = (title: string, citations: string[], probe?: unknown) => ({
 
 // --- Revisión completa con un agente falso -------------------------------------------
 const store = new ReviewStore(join(scratch, "previewer.db"));
+// El aislamiento real se prueba arriba; aquí se inyecta para que el test valga también dentro de otro sandbox.
+const injected: Sandbox = { kind: "injected", wrap: (command) => ({ file: "/bin/bash", args: ["-c", command] }) };
+const late = join(scratch, "late-after-timeout"), orphan = join(scratch, "late-after-exit");
 let seen: AgentRequest | undefined;
 const outcome = await review({
-  packageRoot, cwd: repo, store, model: "test/reviewer", thinking: "high", log: () => {},
+  packageRoot, cwd: repo, store, model: "test/reviewer", thinking: "high", log: () => {}, sandbox: injected, probeTimeoutMs: 1_000,
   runner: async (request): Promise<AgentResult> => {
     seen = request;
     assert.equal(execFileSync("git", ["rev-parse", "HEAD"], { cwd: request.cwd, encoding: "utf8" }).trim(), headSha, "la copia está en el head");
     assert.ok(!existsSync(join(request.cwd, "scratch.txt")), "la copia no arrastra cambios locales");
     assert.ok(request.prompt.includes("text.slice(0, 3)"), "el prompt lleva el diff");
+    assert.equal(request.execute, true);
     // Aunque el revisor mueva ramas dentro de su copia, el original no se entera.
     execFileSync("git", ["branch", "-f", "main", "HEAD"], { cwd: request.cwd });
     mkdirSync(join(request.cwd, ".previewer-probes"));
@@ -130,6 +136,9 @@ const outcome = await review({
         finding("Sonda que sale de la copia", [`text.ts@${short}:L1`], { command: `cat ${repo}/text.ts; exit 1`, file: null }),
         finding("Línea vacía final", [`text.ts@${short}:L4`, `text.ts@${short}:L5`]),
         finding("Sonda sin comando", [`text.ts@${short}:L1`], { command: "no-such-probe-binary --check", file: null }),
+        finding("Cita a un archivo vacío", [`empty.txt@${short}:L1`]),
+        finding("Sonda que se agota", [`text.ts@${short}:L1`], { command: `(sleep 2; touch ${late}) & sleep 10`, file: null }),
+        finding("Sonda que deja un hijo", [`text.ts@${short}:L1`], { command: `(sleep 2; touch ${orphan}) & exit 1`, file: null }),
         finding("Sonda que no falla", [`text.ts@${baseSha.slice(0, 8)}:L2`], { command: "bash .previewer-probes/pass.sh", file: ".previewer-probes/pass.sh" }),
       ]),
       usage: { input: 100, output: 20, cacheRead: 0, usd: 0.12 },
@@ -142,9 +151,15 @@ assert.equal(outcome.run.status, "done", outcome.run.error ?? "");
 assert.equal(outcome.run.headSha, headSha);
 assert.equal(outcome.run.baseSha, baseSha, "la base por defecto es el ancestro común con main");
 assert.equal(outcome.session.branch, "feat/clip");
-assert.deepEqual(outcome.findings.map((f) => f.title), ["Corta letras a la mitad", "Sonda que sale de la copia", "Línea vacía final", "Sonda sin comando", "Sonda que no falla"]);
-const [clip, outside, blank, missing, pass] = outcome.findings;
-assert.ok(clip && outside && blank && missing && pass);
+assert.deepEqual(outcome.findings.map((f) => f.title), ["Corta letras a la mitad", "Sonda que sale de la copia", "Línea vacía final", "Sonda sin comando", "Sonda que se agota", "Sonda que deja un hijo", "Sonda que no falla"]);
+const [clip, outside, blank, missing, timedOut, parent, pass] = outcome.findings;
+assert.ok(clip && outside && blank && missing && timedOut && parent && pass);
+assert.equal(timedOut.probe?.exitCode, null, "agotada no es un fallo demostrado");
+assert.equal(timedOut.probe?.reproduced, false);
+assert.equal(parent.probe?.reproduced, true);
+await Bun.sleep(2_500);
+assert.ok(!existsSync(late), "lo que lanzó una sonda agotada no sigue vivo");
+assert.ok(!existsSync(orphan), "ni lo que dejó en segundo plano una sonda terminada");
 assert.deepEqual(blank.citations.map((c) => c.ref), [`text.ts@${short}:L4`], "la línea vacía final existe; la siguiente no");
 assert.equal(missing.probe?.exitCode, 127);
 assert.equal(missing.probe?.reproduced, false, "un comando inexistente no demuestra el fallo");
@@ -162,6 +177,7 @@ assert.match(rejected, /L99 rechazada/);
 assert.match(rejected, /Cita inventada: ninguna cita/);
 assert.match(rejected, /SHA ajeno/);
 assert.match(rejected, /Tipo raro: tipo desconocido/);
+assert.match(rejected, /Cita a un archivo vacío: cita .* rechazada \(el archivo tiene 0 líneas\)/);
 assert.deepEqual(outcome.run.gaps, ["no hay tests"]);
 assert.equal(outcome.run.usage?.usd, 0.12);
 assert.ok(!existsSync(seen.cwd), "la copia se borra al terminar");
@@ -183,7 +199,7 @@ assert.equal(git("rev-parse", "main"), baseSha);
   assert.equal(failed.run.status, "failed");
   assert.match(failed.run.error ?? "", /modelo caído/);
   assert.ok(cwd && !existsSync(cwd));
-  assert.equal(store.findings(failed.session.id).length, 5, "un fallo no borra ni añade hallazgos");
+  assert.equal(store.findings(failed.session.id).length, 7, "un fallo no borra ni añade hallazgos");
 }
 
 // --- Informe ilegible: falla con su texto guardado --------------------------------------
@@ -212,6 +228,24 @@ assert.equal(git("rev-parse", "main"), baseSha);
   });
   assert.equal(cancelled.run.status, "cancelled");
   assert.ok(cwd && !existsSync(cwd));
+}
+
+// --- Sin aislamiento del sistema: solo lectura ---------------------------------------------
+{
+  let request: AgentRequest | undefined;
+  const marker = join(scratch, "ran-without-sandbox");
+  const readOnly = await review({
+    packageRoot, cwd: repo, store, model: "test/reviewer", log: () => {}, sandbox: { kind: "none", wrap: injected.wrap },
+    runner: async (seenRequest) => {
+      request = seenRequest;
+      return { text: report([finding("Con sonda", [`text.ts@${short}:L2`], { command: `touch ${marker}; exit 1`, file: null })]), usage: { input: 0, output: 0, cacheRead: 0, usd: 0 }, error: null };
+    },
+  });
+  assert.equal(request?.execute, false, "sin aislamiento el agente no recibe bash ni escritura");
+  assert.match(request?.prompt ?? "", /read-only/);
+  assert.equal(readOnly.findings[0]?.probe?.reproduced, false);
+  assert.ok(!existsSync(marker), "el motor tampoco ejecuta la sonda");
+  assert.ok(readOnly.run.gaps.some((gap) => gap.includes("solo de lectura")));
 }
 
 // --- Nada que revisar --------------------------------------------------------------------------

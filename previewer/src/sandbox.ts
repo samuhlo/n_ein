@@ -14,7 +14,7 @@ import { homedir, tmpdir } from "node:os";
 import { join } from "node:path";
 import type { BashOperations } from "@earendil-works/pi-coding-agent";
 
-export type Sandbox = { kind: "sandbox-exec" | "bwrap" | "none"; wrap: (command: string) => { file: string; args: string[] } };
+export type Sandbox = { kind: "sandbox-exec" | "bwrap" | "injected" | "none"; wrap: (command: string) => { file: string; args: string[] } };
 
 const SANDBOX_EXEC = "/usr/bin/sandbox-exec";
 const KILL_GRACE_MS = 5_000;

@@ -20,7 +20,8 @@ export function makeCitationChecker(repo: string, allowed: readonly string[]): (
     if (!files.has(key)) {
       const content = fileAt(repo, sha, path);
       // El salto de línea final cierra la última línea; no abre otra.
-      files.set(key, content === null ? null : (content.endsWith("\n") ? content.slice(0, -1) : content).split("\n"));
+      // Un archivo vacío no tiene ninguna línea que citar.
+      files.set(key, content === null ? null : content === "" ? [] : (content.endsWith("\n") ? content.slice(0, -1) : content).split("\n"));
     }
     return files.get(key) ?? null;
   };

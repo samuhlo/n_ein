@@ -5,7 +5,7 @@
 // SHA y sondas que el propio motor vuelve a ejecutar antes de borrar la copia.
 // =============================================================================
 
-import { spawnSync } from "node:child_process";
+import { spawn } from "node:child_process";
 import { existsSync, mkdirSync, readFileSync, writeFileSync } from "node:fs";
 import { basename, isAbsolute, join, relative, resolve } from "node:path";
 import { channelDir, loadModels } from "../../pi-package/models.ts";
@@ -33,6 +33,8 @@ export type ReviewOptions = {
   signal?: AbortSignal;
   timeoutMs?: number;
   probeTimeoutMs?: number;
+  /** Solo para tests: sustituye el aislamiento detectado. Sin aislamiento la revisión es de solo lectura. */
+  sandbox?: Sandbox;
   log?: (line: string) => void;
 };
 
@@ -47,7 +49,7 @@ const DEFAULT_PROBE_TIMEOUT_MS = 2 * 60_000;
 const short = (sha: string): string => sha.slice(0, 12);
 const tail = (text: string, limit: number): string => (text.length > limit ? `…${text.slice(-limit)}` : text);
 
-export function reviewPrompt(range: Range): string {
+export function reviewPrompt(range: Range, execute = true): string {
   const diff = diffOf(range);
   const truncated = diff.length > DIFF_LIMIT;
   return [
@@ -57,16 +59,58 @@ export function reviewPrompt(range: Range): string {
     `Changed files:\n${diffOf(range, "--stat=200")}`,
     `Diff from base to head${truncated ? `, truncated at ${DIFF_LIMIT} characters: read the rest with \`git diff ${short(range.baseSha)} ${short(range.headSha)} -- <path>\`` : ""}:`,
     "```diff\n" + (truncated ? diff.slice(0, DIFF_LIMIT) : diff) + "\n```",
-  ].join("\n\n");
+    execute ? "" : "This review is read-only: no OS sandbox is available, so you cannot run commands, tests or probes. Omit `probe` and list what you would have run in `gaps`.",
+  ].filter(Boolean).join("\n\n");
 }
 
 type ProbeContext = { copy: string; guard: ReturnType<typeof reviewGuard>; sandbox: Sandbox; timeoutMs: number };
+type Execution = { exitCode: number | null; output: string };
+
+/** Ejecuta en su propio grupo de procesos y lo mata entero al acabar: nada de la sonda sobrevive a la revisión. */
+function runGrouped(file: string, args: string[], cwd: string, timeoutMs: number): Promise<Execution> {
+  return new Promise((done) => {
+    const child = spawn(file, args, { cwd, detached: true, stdio: ["ignore", "pipe", "pipe"] });
+    let output = "";
+    let timedOut = false;
+    const collect = (chunk: Buffer): void => {
+      output = tail(output + chunk.toString("utf8"), PROBE_OUTPUT_LIMIT * 2);
+    };
+    const killGroup = (): void => {
+      try {
+        if (child.pid !== undefined) process.kill(-child.pid, "SIGKILL");
+      } catch {
+        // El grupo ya no existe.
+      }
+    };
+    const timer = setTimeout(() => {
+      timedOut = true;
+      killGroup();
+    }, timeoutMs);
+    child.stdout.on("data", collect);
+    child.stderr.on("data", collect);
+    child.once("error", (error) => {
+      clearTimeout(timer);
+      done({ exitCode: null, output: error.message });
+    });
+    let exit: { code: number | null; signal: NodeJS.Signals | null } = { code: null, signal: null };
+    child.once("exit", (code, signal) => {
+      exit = { code, signal };
+      clearTimeout(timer);
+      // BLINDAJE -> Lo que la sonda dejó en segundo plano muere con ella; si no, retendría la salida abierta.
+      killGroup();
+    });
+    child.once("close", () => {
+      clearTimeout(timer);
+      done({ exitCode: timedOut || exit.signal ? null : exit.code, output: tail(output.trim(), PROBE_OUTPUT_LIMIT) });
+    });
+  });
+}
 
 /**
  * Repite la sonda en la copia: un hallazgo «demostrado» lo es porque falló aquí,
  * no porque el agente lo diga. Pasa por la misma guardia y aislamiento que su bash.
  */
-function rerunProbe(context: ProbeContext, proposed: NonNullable<ProposedFinding["probe"]>): Probe {
+async function rerunProbe(context: ProbeContext, proposed: NonNullable<ProposedFinding["probe"]>): Promise<Probe> {
   const { copy } = context;
   let source: string | null = null;
   let file: string | null = null;
@@ -78,14 +122,12 @@ function rerunProbe(context: ProbeContext, proposed: NonNullable<ProposedFinding
       if (existsSync(path)) source = tail(readFileSync(path, "utf8"), PROBE_SOURCE_LIMIT);
     }
   }
+  const skipped = (reason: string): Probe => ({ command: proposed.command, file, source, exitCode: null, output: `no ejecutada: ${reason}`, reproduced: false });
+  if (context.sandbox.kind === "none") return skipped("sin aislamiento del sistema no se ejecuta nada");
   const blocked = context.guard("bash", { command: proposed.command }, copy);
-  if (blocked) return { command: proposed.command, file, source, exitCode: null, output: `no ejecutada: ${blocked.reason}`, reproduced: false };
+  if (blocked) return skipped(blocked.reason);
   const { file: bin, args } = context.sandbox.wrap(proposed.command);
-  const result = spawnSync(bin, args, {
-    cwd: copy, encoding: "utf8", timeout: context.timeoutMs, maxBuffer: 16 << 20, stdio: ["ignore", "pipe", "pipe"],
-  });
-  const output = tail(`${result.stdout ?? ""}${result.stderr ?? ""}`.trim(), PROBE_OUTPUT_LIMIT);
-  const exitCode = result.error || result.signal ? null : result.status;
+  const { exitCode, output } = await runGrouped(bin, args, copy, context.timeoutMs);
   // BLINDAJE -> 126 y 127 son «no se pudo ejecutar» y «comando inexistente»: la sonda no llegó a comprobar nada.
   if (exitCode === 126 || exitCode === 127)
     return { command: proposed.command, file, source, exitCode, output: `la sonda no pudo ejecutarse\n${output}`, reproduced: false };
@@ -113,8 +155,12 @@ export async function review(options: ReviewOptions): Promise<ReviewOutcome> {
   let result: RunResult;
   try {
     copy = createCopy(range.repo, range, run.id.slice(0, 8));
+    // BLINDAJE -> Sin aislamiento del sistema no se ejecuta nada: la guardia de texto sola no basta.
+    const sandbox = options.sandbox ?? sandboxFor(copy.path, range.repo);
+    const execute = sandbox.kind !== "none";
+    if (!execute) log("[WARN] :: SANDBOX_NONE :: mode: read-only");
     const agent = await (options.runner ?? piRunner(options.packageRoot))({
-      cwd: copy.path, origin: range.repo, prompt: reviewPrompt(range), runDir, model, thinking, signal,
+      cwd: copy.path, origin: range.repo, prompt: reviewPrompt(range, execute), runDir, model, thinking, signal, execute,
       timeoutMs: options.timeoutMs ?? DEFAULT_TIMEOUT_MS,
     });
     if (signal.aborted) result = { status: "cancelled", error: "cancelada", usage: agent.usage };
@@ -131,7 +177,6 @@ export async function review(options: ReviewOptions): Promise<ReviewOutcome> {
       })();
       const check = makeCitationChecker(range.repo, [range.headSha, range.baseSha]);
       const rejected = [...report.rejected];
-      const sandbox = sandboxFor(copy.path, range.repo);
       const probes: ProbeContext = { copy: copy.path, guard: reviewGuard(copy.path, range.repo), sandbox, timeoutMs: options.probeTimeoutMs ?? DEFAULT_PROBE_TIMEOUT_MS };
       const findings: Finding[] = [];
       for (const item of report.findings) {
@@ -145,13 +190,13 @@ export async function review(options: ReviewOptions): Promise<ReviewOutcome> {
           rejected.push(`${item.title}: ninguna cita existe en el SHA revisado`);
           continue;
         }
-        const probe = item.probe ? rerunProbe(probes, item.probe) : null;
+        const probe = item.probe ? await rerunProbe(probes, item.probe) : null;
         if (probe) log(`[REVIEW] :: PROBE :: finding: ${item.title.slice(0, 60)} | exit: ${probe.exitCode ?? "timeout"} | reproduced: ${probe.reproduced}`);
         findings.push({ ...item, citations, probe });
       }
-      const gaps = sandbox.kind === "none"
-        ? [...report.gaps, "sin aislamiento del sistema (sandbox-exec o bwrap utilizable): solo la guardia de texto limitaba dónde escribía el revisor"]
-        : report.gaps;
+      const gaps = execute
+        ? report.gaps
+        : [...report.gaps, "sin aislamiento del sistema (sandbox-exec o bwrap utilizable): revisión solo de lectura, sin tests ni sondas"];
       result = { status: "done", summary: report.summary, gaps, rejected, usage: agent.usage, findings };
     }
   } catch (error) {

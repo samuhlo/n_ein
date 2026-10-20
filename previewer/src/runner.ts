@@ -24,6 +24,8 @@ export type AgentRequest = {
   thinking: string;
   signal: AbortSignal;
   timeoutMs: number;
+  /** Con aislamiento del sistema puede ejecutar tests y sondas; sin él, solo lee. */
+  execute: boolean;
 };
 
 export type AgentResult = { text: string; usage: Usage; error: string | null };
@@ -93,7 +95,7 @@ export function piRunner(packageRoot: string): AgentRunner {
     const args = [
       "-p", "--mode", "json",
       "--no-extensions", "--no-skills", "--no-themes", "--no-prompt-templates",
-      "--tools", [READ_TOOLS, PROBE_TOOLS, codegraph ? "codegraph_explore" : ""].filter(Boolean).join(","),
+      "--tools", [READ_TOOLS, request.execute ? PROBE_TOOLS : "", codegraph ? "codegraph_explore" : ""].filter(Boolean).join(","),
       "-e", join(packageRoot, "previewer/agent/guard.ts"),
       "-e", join(packageRoot, "pi-package/extensions/codegraph.ts"),
       "--model", request.model, "--thinking", request.thinking,

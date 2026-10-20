@@ -14,6 +14,9 @@ export default function (pi: ExtensionAPI): void {
   const origin = process.env.N_EIN_PREVIEWER_ORIGIN;
   if (!copy || !origin) throw new Error("the reviewer guard requires its review copy");
   const decide = reviewGuard(copy, origin);
-  pi.registerTool(createBashToolDefinition(copy, { operations: sandboxedOperations(sandboxFor(copy, origin)) }));
+  const sandbox = sandboxFor(copy, origin);
+  // BLINDAJE -> El motor ya quita bash sin aislamiento; si aun así llega aquí, no se ejecuta sin él.
+  if (sandbox.kind !== "none") pi.registerTool(createBashToolDefinition(copy, { operations: sandboxedOperations(sandbox) }));
+  else pi.on("tool_call", (event) => (event.toolName === "bash" ? { block: true, reason: "No OS sandbox: this review is read-only." } : undefined));
   pi.on("tool_call", (event, ctx) => decide(event.toolName, event.input, ctx.cwd));
 }
