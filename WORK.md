@@ -16,10 +16,11 @@ Acuerdo confirmado con `intent` el 20 de octubre: «Confirmo, guardalo». El mis
 - **Solo trabajo de n_ein.** PR de otras personas fuera de alcance, no aplazadas: así hay bucle con el autor y se puede ejecutar código propio.
 - **Samu en medio.** Valora cada hallazgo (vale / descartar / investigar, con motivo opcional) y solo lo seleccionado vuelve a n_ein. Evita corregir falsas alarmas; sus valoraciones son datos etiquetados para medir.
 - **Rama local** con base y head fijados por SHA; la PR, si existe, es un enlace. No depende de `gh` y sirve antes de abrir la PR.
-- **Vuelta por la conversación.** Samu dice «aplica la revisión»; el agente lee la selección con `nein previewer handoff` y la trabaja como encargo normal (tareas en `WORK.md`, commit por tarea). La web nunca escribe en el repositorio; funciona en Pi y en Claude.
+- **Vuelta por la conversación.** Samu dice «aplica la revisión»; el agente lee la selección con `nein previewer handoff` y la trabaja como encargo normal (tareas en `WORK.md`, commit por tarea). La web nunca escribe en el repositorio; funciona en Pi y en Claude. *Ajuste técnico del 20 de octubre:* el agente llama a `"$N_EIN_ROOT/bin/n-ein-previewer" handoff` desde la skill `previewer`, como `to-pi` con `n-ein-prepare-pi`, porque dentro de una sesión `nein` puede apuntar a otra instalación; `nein previewer` queda para Samu con T7.
 - **Motor: el agente de n_ein sin interfaz**, en solo lectura respecto a la rama y con CodeGraph para seguir consumidores fuera del diff. El banco del tramo 1 compara revisor de la misma familia que el autor frente a otra familia (Sol ↔ Opus) antes de fijar el valor por defecto; Samu acepta el gasto de cuota de Claude.
 - **Ejecuta en copia aparte:** tests del proyecto y sondas desechables en una copia en `<repo>-worktrees/` (no `/tmp`, por CodeGraph), fijada al head, sin commits ni push, borrada al terminar. *Ajuste técnico del 20 de octubre:* la copia es un clon local sin remotos ni hardlinks, no un `git worktree`, porque un worktree comparte ramas con el original. Bash y sondas corren bajo aislamiento del sistema (`sandbox-exec` en macOS, `bwrap` en Linux) que solo deja escribir en la copia, temporales y cachés; sin aislamiento utilizable, la revisión es solo de lectura y lo dice.
-- **Voz docente.** Recorrido guiado (qué cambia, por qué importa, en qué orden mirarlo) en lenguaje que entendería un niño; detalle técnico (SHA, citas, salida de tests) plegado.
+- **Voz docente.** Recorrido guiado (qué cambia, por qué importa, en qué orden mirarlo) en lenguaje que entendería un niño; detalle técnico (SHA, citas, salida de tests) plegado. El recorrido sale de la misma ejecución del revisor, que ya leyó todo; el motor solo admite archivos del diff, cada uno una vez, y lo que no explique va a un paso final «Archivos sin explicar».
+- **Segunda revisión por hilos (técnica, 20 de octubre).** Cada hallazgo pertenece a un hilo, el id de su primera aparición; valoración y selección van por hilo y no se pierden al revisar otra vez. La revisión siguiente recibe los hilos abiertos (`P1`…), con sus sondas restauradas en la copia, y dice si siguen o están resueltos. Si la sonda anterior sigue fallando, el hilo sigue aunque el agente lo dé por resuelto; si ya pasa, queda resuelto. Lo que nadie comprueba queda «sin comprobar»: deja de estar vigente pero sigue en la selección, marcado en el traspaso para reproducirlo antes de tocar código. Lo descartado se le menciona al revisor solo para que no lo repita.
 - **Lanzamiento:** al cerrar un encargo o abrir una PR, n_ein propone en una línea «¿Abro el revisor?»; Samu también lo abre a mano. Nunca automático: cuesta modelo y tiempo.
 - **Stack:** TypeScript con Bun gestionado, `bun:sqlite`, `Bun.serve`; sin LangGraph (el ritmo lo marca Samu; n_ein ya aporta el bucle de agente). Lo instala el instalador de Go; la web se compila en el build de la release.
 - **La skill `review` no cambia** y su informe no se entrega al revisor, para que mire sin ideas previas.
@@ -55,11 +56,12 @@ Tramo 1, revisor completo:
   - Citas inexistentes en el SHA se rechazan, no se muestran.
   - El worktree se borra también si el agente falla o se cancela.
 - [x] T2 · Sesiones — almacén `bun:sqlite` en el hogar del canal: sesión, hallazgos, valoraciones, selección y vigencia por head. Blocked by: none.
-- [ ] T3 · Recorrido — resumen llano del cambio y partes en orden de lectura, con voz docente. Blocked by: T1.
+- [x] T3 · Recorrido — resumen llano del cambio y partes en orden de lectura, con voz docente. Blocked by: T1.
 - [ ] T4 · Web — recorrido, diff con marcas, panel de hallazgo, valoración y selección, con estética n_ein; servidor local. Blocked by: T2, T3.
-- [ ] T5 · Traspaso — `nein previewer handoff`, «aplica la revisión» en Pi y Claude, y la propuesta «¿Abro el revisor?» en el flujo. Blocked by: T2.
-- [ ] T6 · Segunda revisión — sobre el nuevo head: resuelto / sigue / nuevo, sin perder valoraciones. Blocked by: T1, T2.
+- [x] T5 · Traspaso — `nein previewer handoff`, «aplica la revisión» en Pi y Claude, y la propuesta «¿Abro el revisor?» en el flujo. Blocked by: T2.
+- [x] T6 · Segunda revisión — sobre el nuevo head: resuelto / sigue / nuevo, sin perder valoraciones. Blocked by: T1, T2.
 - [ ] T7 · Launcher e instalador — `nein previewer`, entrada en el Panel, web compilada en la release, comprobación en `doctor`; macOS y Omarchy. Blocked by: T4.
+  - Ya hecho con T5: el paquete incluye `previewer/src`, `previewer/agent` y `bin/n-ein-previewer`, y el smoke del paquete lo arranca instalado.
 - [ ] T8 · Banco mínimo — 6 casos de lang-pr-review + unos 6 fallos reales TS/Vue (Ein, Planificador, n_ein) reconstruidos antes del arreglo, cambios correctos para falsas alarmas, parte reservada; compara misma familia frente a otra. Blocked by: T1.
 
 Tramo 2, afinado:
@@ -68,20 +70,25 @@ Tramo 2, afinado:
 
 ## Evidencia
 
-- Código en `previewer/`: `src/store.ts` (T2), `src/engine.ts` con `git.ts`, `copy.ts`, `citations.ts`, `report.ts`, `runner.ts`, `sandbox.ts`, `guard-rules.ts`; agente en `agent/reviewer.md` y `agent/guard.ts`. Entrada provisional `bun previewer/src/cli.ts review` hasta T7.
-- `tests/previewer-store.ts` y `tests/previewer-engine.ts` (agente falso, sin inferencia) en `scripts/check.sh`; `previewer/` entra en `typecheck-agents.ts`. `./scripts/check.sh` completo pasó el 20 de octubre sobre `cfe2baa`; los dos tests y el typecheck, sobre `c16f47f`.
+- Código en `previewer/`: `src/store.ts` (T2, hilos y comprobaciones de T6, esquema 3), `src/engine.ts` con `git.ts`, `copy.ts`, `citations.ts`, `report.ts`, `runner.ts`, `sandbox.ts`, `guard-rules.ts`; recorrido en `settleTour` (T3); traspaso en `src/handoff.ts` (T5); agente en `agent/reviewer.md` y `agent/guard.ts`. Entrada `bin/n-ein-previewer review|handoff` hasta `nein previewer` (T7); skill `previewer` y propuesta de cierre en `pi-package/flow.md`.
+- `tests/previewer-store.ts`, `tests/previewer-engine.ts` y `tests/previewer-handoff.ts` (sin inferencia) en `scripts/check.sh`; `previewer/` entra en `typecheck-agents.ts` y en la regla de `tests/skills.ts` de no nombrar a una persona concreta. La migración v1 → v2 se probó también sobre la base real del canal dev, con copia previa. `./scripts/check.sh` completo pasó el 20 de octubre sobre `9f30069`.
+- Aceptación de T5 con agente real, en un proyecto desechable con tres hallazgos sembrados (dos seleccionados, uno descartado): tras «aplica la revisión», Pi (`openai-codex/gpt-6-sol`) y Claude crearon exactamente las dos tareas seleccionadas, reprodujeron cada fallo en rojo antes de arreglarlo, hicieron un commit por tarea, no tocaron el descartado y cerraron ofreciendo «¿Abro el revisor?».
 - Cuatro revisiones reales de esta rama con `openai-codex/gpt-6-sol` alto (canal dev):
 
   | Head | Resultado | Tiempo | Coste | Hallazgos | Con sonda reproducida |
   |---|---|---:|---:|---:|---:|
   | `c8e6d04` | done | 252 s | 0,53 $ | 3 | 3 |
   | `e8054f1` | done | 209 s | 0,55 $ | 4 | 3 |
-  | `cfe2baa` | failed: el sistema se bloqueó a los 5 min por otra ejecución; venció el límite y borró la copia | 6410 s | — | — | — |
+  | `cfe2baa` | failed: el sistema se bloqueó a los 5 min por otra ejecución; venció el límite y borró la copia | 6410 s | 0,39 $ | — | — |
   | `cfe2baa` | done | 311 s | 0,55 $ | 4 | 3 |
+  | `a6f926a` | done | 213 s | 0,49 $ | 2 | 2 |
+  | `9a62aa8` (primera segunda revisión) | done | 118 s | 0,26 $ | 2 nuevos + 3 siguen | 2; 10 resueltos, 8 con su sonda anterior pasando |
+  | `e3dd4ee` (primera con recorrido) | done | 111 s | 0,21 $ | 1 sigue + 2 siguen por sonda | 1 resuelto con su sonda; recorrido de 7 pasos que cubre los 19 archivos sin paso «Archivos sin explicar» |
 
-  Los 11 hallazgos eran válidos al revisarlos (valoración del autor, no de Samu) y están corregidos en `e8054f1`, `cfe2baa` y `c16f47f`: guardia esquivable con `cd` relativo, sondas fuera de la guardia, carrera entre revisiones, enlace roto, escritura fuera de la copia, sonda con código 127, líneas vacías finales, falta de aislamiento, procesos de sonda vivos, test dependiente del aislamiento y archivo vacío. Ninguna cita rechazada en las tres revisiones completas. Tras cada una, `git status` y las ramas del repositorio no cambiaron y la copia no quedaba.
-- Pendiente de observar: `bwrap` en Omarchy (no probado en Linux) y una revisión del head `c16f47f`.
+  Los 11 hallazgos de las tres primeras revisiones completas eran válidos al revisarlos (valoración del autor, no de Samu) y están corregidos en `e8054f1`, `cfe2baa` y `c16f47f`: guardia esquivable con `cd` relativo, sondas fuera de la guardia, carrera entre revisiones, enlace roto, escritura fuera de la copia, sonda con código 127, líneas vacías finales, falta de aislamiento, procesos de sonda vivos, test dependiente del aislamiento y archivo vacío. Ninguna cita rechazada en las tres revisiones completas. Tras cada una, `git status` y las ramas del repositorio no cambiaron y la copia no quedaba.
+  De las tres siguientes, el autor corrigió dos hallazgos nuevos (`AGENTS.md` cargado como instrucciones, en `881d5c7`; restaurar una sonda a través de un enlace, en `e3dd4ee`). Otros dos hilos antiguos siguen abiertos solo porque sus sondas prueban la guardia de texto por separado, que ya no es la protección real; son candidatos a descartar. El hilo «un hallazgo no confirmado sigue seleccionado» queda como decisión de Samu (ver «Segunda revisión por hilos»).
+- Pendiente de observar: `bwrap` en Omarchy (no probado en Linux).
 
 ## Siguiente paso
 
-T1 y T2 terminados. Siguen T3 (recorrido), T5 (traspaso) y T6 (segunda revisión), que ya no tienen bloqueos; T8 (banco) también puede empezar.
+T1, T2, T3, T5 y T6 terminados. Sigue T4 (web), ya sin bloqueos; T8 (banco) también puede empezar. Decisión abierta para Samu: si un hallazgo seleccionado que la última revisión no comprobó debe seguir en el traspaso, marcado, como ahora, o salir de él.
