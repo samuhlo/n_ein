@@ -92,9 +92,10 @@ export function piRunner(packageRoot: string): AgentRunner {
     };
     if (codegraph) env.N_EIN_CODEGRAPH_BIN = codegraph;
     else delete env.N_EIN_CODEGRAPH_BIN;
+    // BLINDAJE -> AGENTS.md, CLAUDE.md y la configuración local los escribe la rama revisada: son datos, no instrucciones.
     const args = [
       "-p", "--mode", "json",
-      "--no-extensions", "--no-skills", "--no-themes", "--no-prompt-templates",
+      "--no-extensions", "--no-skills", "--no-themes", "--no-prompt-templates", "--no-context-files", "--no-approve",
       "--tools", [READ_TOOLS, request.execute ? PROBE_TOOLS : "", codegraph ? "codegraph_explore" : ""].filter(Boolean).join(","),
       "-e", join(packageRoot, "previewer/agent/guard.ts"),
       "-e", join(packageRoot, "pi-package/extensions/codegraph.ts"),
