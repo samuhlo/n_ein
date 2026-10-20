@@ -9,7 +9,7 @@
 // =============================================================================
 
 import { spawn } from "node:child_process";
-import { existsSync, mkdirSync, readFileSync, writeFileSync } from "node:fs";
+import { existsSync, lstatSync, mkdirSync, readFileSync, writeFileSync } from "node:fs";
 import { basename, dirname, isAbsolute, join, relative, resolve } from "node:path";
 import { channelDir, loadModels } from "../../pi-package/models.ts";
 import { makeCitationChecker } from "./citations.ts";
@@ -56,6 +56,15 @@ const DEFAULT_TIMEOUT_MS = 20 * 60_000;
 const DEFAULT_PROBE_TIMEOUT_MS = 2 * 60_000;
 
 const short = (sha: string): string => sha.slice(0, 12);
+/** Como existsSync, pero un enlace roto también cuenta: ahí hay algo del head. */
+const lexists = (path: string): boolean => {
+  try {
+    lstatSync(path);
+    return true;
+  } catch {
+    return false;
+  }
+};
 const tail = (text: string, limit: number): string => (text.length > limit ? `…${text.slice(-limit)}` : text);
 
 function previousSection(previous: Previous, execute: boolean): string {
@@ -95,7 +104,7 @@ export function reviewPrompt(range: Range, execute = true, previous: Previous = 
   ].filter(Boolean).join("\n\n");
 }
 
-type ProbeContext = { copy: string; guard: ReturnType<typeof reviewGuard>; sandbox: Sandbox; timeoutMs: number };
+type ProbeContext = { copy: string; guard: Guard; sandbox: Sandbox; timeoutMs: number };
 type Execution = { exitCode: number | null; output: string };
 
 /** Ejecuta en su propio grupo de procesos y lo mata entero al acabar: nada de la sonda sobrevive a la revisión. */
@@ -155,15 +164,17 @@ export function settleTour(proposed: TourStep[], changed: string[]): { tour: Tou
   return { tour, dropped };
 }
 
+type Guard = ReturnType<typeof reviewGuard>;
+
 /**
- * Devuelve a la copia el archivo de una sonda anterior, solo si cabe entero, queda
- * dentro de la copia y no pisa un archivo del head. Devuelve si lo escribió.
+ * Devuelve a la copia el archivo de una sonda anterior, solo si cabe entero y queda
+ * dentro de la copia. Devuelve si lo escribió.
  */
-function restoreProbe(copy: string, probe: Probe): boolean {
+function restoreProbe(copy: string, guard: Guard, probe: Probe): boolean {
   if (!probe.file || !probe.source || probe.source.startsWith("…")) return false;
+  // BLINDAJE -> El motor escribe sin aislamiento: un enlace en esa ruta (del head o del agente) lo sacaría de la copia.
+  if (guard("write", { path: probe.file }, copy)) return false;
   const path = resolve(copy, probe.file);
-  const rel = relative(copy, path);
-  if (rel.startsWith("..") || isAbsolute(rel)) return false;
   mkdirSync(dirname(path), { recursive: true });
   writeFileSync(path, probe.source);
   return true;
@@ -230,9 +241,10 @@ export async function review(options: ReviewOptions): Promise<ReviewOutcome> {
     const execute = sandbox.kind !== "none";
     if (!execute) log("[WARN] :: SANDBOX_NONE :: mode: read-only");
     const reviewCopy = copy.path;
+    const guard = reviewGuard(reviewCopy, range.repo);
     // BLINDAJE -> Una sonda anterior no pisa un archivo que el head ya tiene con ese nombre.
-    const restorable = new Set(previous.pending.filter(({ item }) => item.probe?.file && !existsSync(resolve(reviewCopy, item.probe.file))).map(({ item }) => item.thread));
-    for (const { item } of previous.pending) if (item.probe && restorable.has(item.thread) && !restoreProbe(reviewCopy, item.probe)) restorable.delete(item.thread);
+    const restorable = new Set(previous.pending.filter(({ item }) => item.probe?.file && !lexists(resolve(reviewCopy, item.probe.file))).map(({ item }) => item.thread));
+    for (const { item } of previous.pending) if (item.probe && restorable.has(item.thread) && !restoreProbe(reviewCopy, guard, item.probe)) restorable.delete(item.thread);
     const agent = await (options.runner ?? piRunner(options.packageRoot))({
       cwd: copy.path, origin: range.repo, prompt: reviewPrompt(range, execute, previous), runDir, model, thinking, signal, execute,
       timeoutMs: options.timeoutMs ?? DEFAULT_TIMEOUT_MS,
@@ -252,14 +264,14 @@ export async function review(options: ReviewOptions): Promise<ReviewOutcome> {
       const check = makeCitationChecker(range.repo, [range.headSha, range.baseSha]);
       const { tour, dropped } = settleTour(report.tour, changedFiles(range));
       const rejected = [...report.rejected, ...dropped];
-      const probes: ProbeContext = { copy: copy.path, guard: reviewGuard(copy.path, range.repo), sandbox, timeoutMs: options.probeTimeoutMs ?? DEFAULT_PROBE_TIMEOUT_MS };
+      const probes: ProbeContext = { copy: reviewCopy, guard, sandbox, timeoutMs: options.probeTimeoutMs ?? DEFAULT_PROBE_TIMEOUT_MS };
       const findings: (Finding & { thread?: string })[] = [];
       const keys = new Map(previous.pending.map(({ key, item }) => [key, item]));
       const continued = new Set<string>();
       // La sonda anterior se repite con su contenido original: el agente pudo tocarla en la copia.
       const earlierProbe = async (item: StoredFinding): Promise<Probe | null> => {
         if (!item.probe?.reproduced) return null;
-        if (item.probe.file && !(restorable.has(item.thread) && restoreProbe(reviewCopy, item.probe))) return null;
+        if (item.probe.file && !(restorable.has(item.thread) && restoreProbe(reviewCopy, guard, item.probe))) return null;
         return rerunProbe(probes, { command: item.probe.command, file: item.probe.file });
       };
       for (const item of report.findings) {

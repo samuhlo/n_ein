@@ -303,6 +303,36 @@ assert.equal(git("rev-parse", "main"), baseSha);
   assert.ok(!existsSync(copiesRoot(repo)));
 }
 
+// --- Restaurar una sonda no sigue un enlace hacia fuera de la copia -----------------------------
+{
+  const quiet = (text: string) => async (): Promise<AgentResult> => ({ text, usage: { input: 0, output: 0, cacheRead: 0, usd: 0 }, error: null });
+  const planted = join(repo, "planted-by-restore.sh");
+  const head = git("rev-parse", "HEAD").slice(0, 10);
+  const linked = await review({
+    packageRoot, cwd: repo, store, model: "test/reviewer", log: () => {}, sandbox: injected, probeTimeoutMs: 1_000,
+    runner: async (request) => {
+      mkdirSync(join(request.cwd, ".previewer-probes"), { recursive: true });
+      writeFileSync(join(request.cwd, ".previewer-probes/link.sh"), "exit 1\n");
+      return quiet(report([finding("Con archivo de sonda", [`text.ts@${head}:L1`], { command: "bash .previewer-probes/link.sh", file: ".previewer-probes/link.sh" })]))();
+    },
+  });
+  assert.equal(linked.findings.find((item) => item.title === "Con archivo de sonda")?.probe?.reproduced, true);
+  const after = await review({
+    packageRoot, cwd: repo, store, model: "test/reviewer", log: () => {}, sandbox: injected, probeTimeoutMs: 1_000,
+    runner: async (request) => {
+      const probe = join(request.cwd, ".previewer-probes/link.sh");
+      assert.equal(readFileSync(probe, "utf8"), "exit 1\n");
+      // El agente cambia la sonda por un enlace al repositorio de Samu antes de que el motor la repita.
+      execFileSync("rm", [probe]);
+      symlinkSync(planted, probe);
+      return quiet(report([]))();
+    },
+  });
+  assert.equal(after.run.status, "done", after.run.error ?? "");
+  assert.ok(!existsSync(planted), "la restauración no escribe a través del enlace");
+  assert.equal(after.findings.find((item) => item.title === "Con archivo de sonda")?.status, "unchecked");
+}
+
 // --- Nada que revisar --------------------------------------------------------------------------
 await assert.rejects(review({ packageRoot, cwd: repo, head: "main", store, model: "test/reviewer", log: () => {} }), /nada que revisar/);
 
