@@ -1,0 +1,16 @@
+{
+  "defects": [
+    {
+      "id": "end-after-21",
+      "condition": "con 4 o 5 horas diarias, franjasDisponibles ofrece horas de inicio hasta (21 - horasDiarias):45, porque el límite solo mira la hora entera y el bucle de minutos llega a :45",
+      "consequence": "se puede elegir un inicio cuya hora de fin pasa de las 21:00 (por ejemplo 17:45 con 4 horas termina a las 21:45)",
+      "evidence_paths": [
+        "app/components/StepDates.vue"
+      ],
+      "fixed_by": "67b0f014046817abb856bfbbc32ffc973b445fc4"
+    }
+  ],
+  "context_gaps": [],
+  "reference_marker": "REFERENCE_ONLY_DO_NOT_SEND_TO_REVIEWER",
+  "scope": "Defectos de referencia conocidos; no lista exhaustiva de todo posible hallazgo válido."
+}

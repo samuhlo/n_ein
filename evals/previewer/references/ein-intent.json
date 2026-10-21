@@ -1,0 +1,17 @@
+{
+  "defects": [
+    {
+      "id": "intent-args-dropped",
+      "condition": "el usuario escribe la petición junto al comando, por ejemplo `/ein:intent quiero exportar a PDF`",
+      "consequence": "el handler de Pi recibe los argumentos como `_args` y los descarta: buildIntentKickoff() no recibe la petición y el protocolo arranca sin ella",
+      "evidence_paths": [
+        "ein-pi/agent/extensions/ein-intent.ts",
+        "ein-pi/agent/lib/intent-channel.ts"
+      ],
+      "fixed_by": "5c488cfecae28a23ff81f8c51a62c0fe34e8e3e7"
+    }
+  ],
+  "context_gaps": [],
+  "reference_marker": "REFERENCE_ONLY_DO_NOT_SEND_TO_REVIEWER",
+  "scope": "Defectos de referencia conocidos; no lista exhaustiva de todo posible hallazgo válido."
+}

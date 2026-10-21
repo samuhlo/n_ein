@@ -70,6 +70,7 @@ try {
         join(root, "previewer/src/*.ts"),
         join(root, "previewer/agent/*.ts"),
         join(root, "previewer/web/*.ts"),
+        join(root, "evals/previewer/*.ts"),
       ],
     }),
   );

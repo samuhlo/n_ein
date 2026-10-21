@@ -1,0 +1,31 @@
+{
+  "defects": [
+    {
+      "id": "quote-consumer-break",
+      "condition": "checkout indexa total en el resultado de make_quote",
+      "consequence": "El resultado entero provoca TypeError y el pago no puede continuar",
+      "evidence_paths": [
+        "pricing.py",
+        "checkout.py"
+      ]
+    }
+  ],
+  "probes": [
+    {
+      "module": "checkout",
+      "function": "checkout",
+      "args": [
+        1200
+      ],
+      "base": {
+        "value": 1200
+      },
+      "head": {
+        "error": "TypeError"
+      }
+    }
+  ],
+  "context_gaps": [],
+  "reference_marker": "REFERENCE_ONLY_DO_NOT_SEND_TO_REVIEWER",
+  "scope": "Defectos de referencia conocidos; no lista exhaustiva de todo posible hallazgo válido."
+}

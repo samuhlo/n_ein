@@ -1,0 +1,17 @@
+{
+  "defects": [
+    {
+      "id": "receipt-overflows-row",
+      "condition": "el recibo de una herramienta muestra una ruta o etiqueta con caracteres anchos (CJK), un salto de línea o una secuencia de escape que no es CSI (OSC, C1), o el terminal es muy estrecho",
+      "consequence": "la fila se mide en puntos de código y no en columnas, y oneLine solo quita secuencias CSI y controles C0: la línea puede superar el ancho del terminal, partirse o arrastrar escapes, y Pi exige que cada línea quepa en su ancho",
+      "evidence_paths": [
+        "pi-package/extensions/receipts.ts",
+        "pi-package/extensions/tools-view.ts"
+      ],
+      "fixed_by": "0bc41f1f03e5a5b102376d52d0e989e1a1b4cab7"
+    }
+  ],
+  "context_gaps": [],
+  "reference_marker": "REFERENCE_ONLY_DO_NOT_SEND_TO_REVIEWER",
+  "scope": "Defectos de referencia conocidos; no lista exhaustiva de todo posible hallazgo válido."
+}

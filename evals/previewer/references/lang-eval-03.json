@@ -1,0 +1,25 @@
+{
+  "defects": [],
+  "probes": [
+    {
+      "module": "dates",
+      "function": "display_date",
+      "args": [
+        "2026-10-07T00:30:00+02:00"
+      ],
+      "base": {
+        "value": "2026-10-07"
+      },
+      "head": {
+        "value": "2026-10-07"
+      }
+    }
+  ],
+  "context_gaps": [
+    "Formato aceptado por la integración",
+    "Zona horaria de presentación"
+  ],
+  "rubric": "Pedir formato y zona es apropiado; no hay base para afirmar que la fecha ya es incorrecta.",
+  "reference_marker": "REFERENCE_ONLY_DO_NOT_SEND_TO_REVIEWER",
+  "scope": "Defectos de referencia conocidos; no lista exhaustiva de todo posible hallazgo válido."
+}

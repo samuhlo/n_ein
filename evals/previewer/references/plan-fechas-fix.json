@@ -1,0 +1,7 @@
+{
+  "defects": [],
+  "context_gaps": [],
+  "note": "Arreglo posterior de plan-fechas: exige una fecha ISO real de 10 caracteres. No se conoce ningún defecto introducido.",
+  "reference_marker": "REFERENCE_ONLY_DO_NOT_SEND_TO_REVIEWER",
+  "scope": "Defectos de referencia conocidos; no lista exhaustiva de todo posible hallazgo válido."
+}

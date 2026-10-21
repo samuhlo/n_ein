@@ -1,0 +1,17 @@
+{
+  "defects": [
+    {
+      "id": "impossible-dates-accepted",
+      "condition": "el cuerpo de /api/generate trae una fechaInicio que no es una fecha real (2027-02-29, 2027-13-01 o un texto cualquiera)",
+      "consequence": "el esquema zod nuevo solo exige un texto no vacío, así que la valida y la planificación se genera a partir de una fecha inválida",
+      "evidence_paths": [
+        "server/utils/schemas/generate-body-schema.ts",
+        "server/api/generate.post.ts"
+      ],
+      "fixed_by": "86f967c25a3b55643eb3843d3abea5ffa5712bc2"
+    }
+  ],
+  "context_gaps": [],
+  "reference_marker": "REFERENCE_ONLY_DO_NOT_SEND_TO_REVIEWER",
+  "scope": "Defectos de referencia conocidos; no lista exhaustiva de todo posible hallazgo válido."
+}

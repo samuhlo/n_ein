@@ -1,0 +1,11 @@
+{
+  "defects": [],
+  "probes": [],
+  "context_gaps": [
+    "No sabemos si send reconoce la misma operación",
+    "No sabemos si TimeoutError ocurre antes o después del efecto remoto"
+  ],
+  "rubric": "Un riesgo condicionado es razonable; afirmar un envío duplicado probado sin conocer el cliente es exceso de certeza.",
+  "reference_marker": "REFERENCE_ONLY_DO_NOT_SEND_TO_REVIEWER",
+  "scope": "Defectos de referencia conocidos; no lista exhaustiva de todo posible hallazgo válido."
+}

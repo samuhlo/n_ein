@@ -1,0 +1,53 @@
+{
+  "defects": [],
+  "probes": [
+    {
+      "module": "average",
+      "function": "average",
+      "args": [
+        []
+      ],
+      "base": {
+        "error": "ZeroDivisionError"
+      },
+      "head": {
+        "value": null
+      }
+    },
+    {
+      "module": "average",
+      "function": "average",
+      "args": [
+        [
+          0,
+          0
+        ]
+      ],
+      "base": {
+        "value": 0.0
+      },
+      "head": {
+        "value": 0.0
+      }
+    },
+    {
+      "module": "average",
+      "function": "average",
+      "args": [
+        [
+          2,
+          4
+        ]
+      ],
+      "base": {
+        "value": 3.0
+      },
+      "head": {
+        "value": 3.0
+      }
+    }
+  ],
+  "context_gaps": [],
+  "reference_marker": "REFERENCE_ONLY_DO_NOT_SEND_TO_REVIEWER",
+  "scope": "Defectos de referencia conocidos; no lista exhaustiva de todo posible hallazgo válido."
+}
