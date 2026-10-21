@@ -2,6 +2,7 @@
 // [BENCH] BANCO DEL REVISOR
 // uso: bun evals/previewer/bench.ts run --split dev|reserved|all [--case ID]...
 //        [--model P/M] [--thinking NIVEL] [--label NOMBRE]
+//      bun evals/previewer/bench.ts run --resume <ejecución>
 //      bun evals/previewer/bench.ts grade <ejecución> [--judge opus|pi:P/M]
 //      bun evals/previewer/bench.ts agree <ejecución> <juez> <juez>
 //      bun evals/previewer/bench.ts build <caso> <carpeta>
@@ -113,17 +114,27 @@ async function run(argv: string[]): Promise<void> {
     args: argv,
     options: {
       split: { type: "string", default: "dev" }, case: { type: "string", multiple: true },
-      model: { type: "string" }, thinking: { type: "string" }, label: { type: "string" },
+      model: { type: "string" }, thinking: { type: "string" }, label: { type: "string" }, resume: { type: "string" },
     },
   });
+  // Reanudar repite solo lo que no terminó, con el modelo y los casos de la ejecución original.
+  if (values.resume) {
+    const meta: { cases: string[]; model: string | null; thinking: string | null } = JSON.parse(readFileSync(join(values.resume, "run.json"), "utf8"));
+    const done = (id: string): boolean => {
+      const path = join(values.resume ?? "", "results", `${id}.json`);
+      return existsSync(path) && JSON.parse(readFileSync(path, "utf8")).status === "done";
+    };
+    Object.assign(values, { case: meta.cases.filter((id) => !done(id)), model: meta.model ?? undefined, thinking: meta.thinking ?? undefined });
+    if (!values.case?.length) throw new Error(`${values.resume}: no queda nada por revisar`);
+  }
   const chosen = manifest.cases.filter((item) =>
     values.case?.length ? values.case.includes(item.id) : values.split === "all" || item.split === values.split);
   if (!chosen.length) throw new Error(`ningún caso para ${values.split}${values.case ? ` / ${values.case.join(",")}` : ""}`);
   const label = values.label ?? (values.model ?? "por-defecto").replace(/[^\w.-]+/g, "_");
   const stamp = new Date().toISOString().slice(0, 16).replace(/[-:T]/g, "");
-  const out = join(channelDir(root), "bench", "previewer", `${stamp}-${label}`);
+  const out = values.resume ? resolve(values.resume) : join(channelDir(root), "bench", "previewer", `${stamp}-${label}`);
   mkdirSync(join(out, "results"), { recursive: true });
-  writeFileSync(join(out, "run.json"), JSON.stringify({
+  if (!values.resume) writeFileSync(join(out, "run.json"), JSON.stringify({
     corpus: manifest.version, split: values.split, cases: chosen.map((item) => item.id), model: values.model ?? null,
     thinking: values.thinking ?? null, commit: git(root, "rev-parse", "HEAD"), started: new Date().toISOString(),
   }, null, 2));
@@ -134,7 +145,7 @@ async function run(argv: string[]): Promise<void> {
   for (const item of chosen) {
     if (controller.signal.aborted) break;
     const repo = join(out, "repos", item.id);
-    materialize(item, repo);
+    if (!existsSync(repo)) materialize(item, repo);
     const started = Date.now();
     log(`[BENCH] :: CASE_START :: case: ${item.id} | split: ${item.split} | category: ${item.category}`);
     let result: Result;

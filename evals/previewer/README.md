@@ -24,8 +24,10 @@ Cada fallo real se tomó de un `fix` del historial y del commit que introdujo la
 ## Uso
 
 ```sh
-bun evals/previewer/bench.ts run --split dev [--model openai-codex/gpt-6-sol] [--thinking high]
-bun evals/previewer/bench.ts grade ~/.n_ein/dev/bench/previewer/<ejecución>
+bun evals/previewer/bench.ts run --split dev [--model openai-codex/gpt-6-sol | claude-code/claude-opus-5-5] [--thinking high]
+bun evals/previewer/bench.ts run --resume ~/.n_ein/dev/bench/previewer/<ejecución>   # repite lo que no terminó
+bun evals/previewer/bench.ts grade ~/.n_ein/dev/bench/previewer/<ejecución> [--judge pi:openai-codex/gpt-6-sol]
+bun evals/previewer/bench.ts agree ~/.n_ein/dev/bench/previewer/<ejecución> opus pi:openai-codex/gpt-6-sol
 bun evals/previewer/bench.ts build plan-horario <carpeta>   # mirar un caso sin revisarlo
 ```
 
