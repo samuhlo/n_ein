@@ -88,12 +88,16 @@ function contamination(runDir: string, item: Case): string[] {
   if (item.source.kind === "git") forbidden.push(expand(item.source.repo));
   const hits = new Set<string>();
   for (const line of readFileSync(path, "utf8").split("\n")) {
-    if (!line.includes('"tool_execution_start"')) continue;
+    if (!line.includes('"tool_execution_start"') && !line.includes('"tool_use"')) continue;
     try {
-      const event: { type?: string; args?: unknown } = JSON.parse(line);
-      if (event.type !== "tool_execution_start") continue;
-      const args = JSON.stringify(event.args ?? "");
-      for (const needle of forbidden) if (args.includes(needle)) hits.add(`${needle} :: ${args.slice(0, 200)}`);
+      // Pi anuncia cada herramienta con `tool_execution_start`; Claude Code, con bloques `tool_use` del asistente.
+      const event: { type?: string; args?: unknown; message?: { content?: { type?: string; input?: unknown }[] } } = JSON.parse(line);
+      const calls = event.type === "tool_execution_start" ? [event.args]
+        : event.type === "assistant" ? (event.message?.content ?? []).filter((part) => part.type === "tool_use").map((part) => part.input) : [];
+      for (const call of calls) {
+        const args = JSON.stringify(call ?? "");
+        for (const needle of forbidden) if (args.includes(needle)) hits.add(`${needle} :: ${args.slice(0, 200)}`);
+      }
     } catch {
       // Una línea cortada no invalida el resto.
     }
