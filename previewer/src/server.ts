@@ -129,7 +129,7 @@ export async function createHandler(options: HandlerOptions): Promise<(request: 
       if (sessionMatch[2]) {
         const runs = options.store.runs(id);
         if (!options.store.session(id)) return fail(404, "sesión desconocida");
-        return json({ version: runs.map((item) => `${item.id}:${item.status}`).join(",") });
+        return json({ version: `${runs.map((item) => `${item.id}:${item.status}`).join(",")}|${options.store.decisions(id)}` });
       }
       const data = view(id);
       return data ? json(data) : fail(404, "sesión desconocida");

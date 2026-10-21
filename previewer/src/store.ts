@@ -357,6 +357,16 @@ export class ReviewStore {
     return this.require(findingId);
   }
 
+  /** Cambia con cada valoración o selección de la sesión: una pestaña abierta nota lo que se decidió en otra. */
+  decisions(sessionId: string): string {
+    const row = this.db.query<{ count: number; last: string | null }, { id: string }>(`
+      SELECT COUNT(*) AS count, MAX(at) AS last FROM (
+        SELECT r.at FROM ratings r JOIN findings f ON f.id = r.finding_id WHERE f.session_id = $id
+        UNION ALL
+        SELECT s.at FROM selection s JOIN findings f ON f.id = s.finding_id WHERE f.session_id = $id)`).get({ id: sessionId });
+    return `${row?.count ?? 0}@${row?.last ?? ""}`;
+  }
+
   /** Lo que el usuario eligió para que n_ein corrija y aún no está resuelto. */
   selection(sessionId: string): StoredFinding[] {
     return this.findings(sessionId).filter((item) => item.selected && item.status !== "resolved");
