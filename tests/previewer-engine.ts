@@ -8,7 +8,7 @@ import { copiesRoot, createCopy, sweepCopies } from "../previewer/src/copy.ts";
 import { review } from "../previewer/src/engine.ts";
 import { sandboxFor, type Sandbox } from "../previewer/src/sandbox.ts";
 import { parseReport } from "../previewer/src/report.ts";
-import { summarizeClaudeEvents, summarizeEvents, type AgentRequest, type AgentResult } from "../previewer/src/runner.ts";
+import { summarizeEvents, type AgentRequest, type AgentResult } from "../previewer/src/runner.ts";
 import { ReviewStore } from "../previewer/src/store.ts";
 
 const packageRoot = resolve(import.meta.dir, "..");
@@ -94,14 +94,6 @@ const logBefore = git("log", "--all", "--format=%H %D");
     JSON.stringify({ type: "message_end", message: { role: "assistant", content: [{ type: "toolCall" }], usage: { input: 1, output: 1, cacheRead: 0, cost: { total: 0.05 } } } }),
     JSON.stringify({ type: "message_end", message: { role: "assistant", content: [{ type: "text", text: "final" }] } }),
   ];
-  // Claude Code: el texto y el coste vienen en el evento `result`; sin él, la revisión falló.
-  const claude = summarizeClaudeEvents([
-    JSON.stringify({ type: "assistant", message: { content: [{ type: "tool_use", name: "Read", input: { file_path: "a.ts" } }] } }),
-    JSON.stringify({ type: "result", subtype: "success", is_error: false, result: "informe", total_cost_usd: 0.4, usage: { input_tokens: 7, output_tokens: 3, cache_read_input_tokens: 20 } }),
-  ]);
-  assert.deepEqual(claude, { text: "informe", usage: { input: 7, output: 3, cacheRead: 20, usd: 0.4 }, error: null });
-  assert.match(summarizeClaudeEvents(["{}"]).error ?? "", /sin resultado/);
-  assert.match(summarizeClaudeEvents([JSON.stringify({ type: "result", subtype: "error_max_turns", is_error: true, result: "" })]).error ?? "", /error_max_turns/);
   const summary = summarizeEvents(lines);
   assert.equal(summary.text, "final");
   assert.deepEqual(summary.usage, { input: 11, output: 3, cacheRead: 5, usd: 0.3 });
@@ -119,7 +111,7 @@ const finding = (title: string, citations: string[], probe?: unknown) => ({
 // --- Revisión completa con un agente falso -------------------------------------------
 const store = new ReviewStore(join(scratch, "previewer.db"));
 // El aislamiento real se prueba arriba; aquí se inyecta para que el test valga también dentro de otro sandbox.
-const injected: Sandbox = { kind: "injected", wrap: (command) => ({ file: "/bin/bash", args: ["-c", command] }), run: (file, args) => ({ file, args }) };
+const injected: Sandbox = { kind: "injected", wrap: (command) => ({ file: "/bin/bash", args: ["-c", command] }) };
 const late = join(scratch, "late-after-timeout"), orphan = join(scratch, "late-after-exit");
 let seen: AgentRequest | undefined;
 const outcome = await review({

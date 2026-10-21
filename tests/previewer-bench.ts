@@ -1,5 +1,5 @@
 // [CHECK] El banco del revisor sin modelo: la reconstrucción no deja ver el arreglo
-// y la contaminación se detecta en los eventos de Pi y de Claude Code.
+// y la contaminación se detecta en las herramientas que usó el revisor.
 import { strict as assert } from "node:assert";
 import { execFileSync } from "node:child_process";
 import { mkdirSync, mkdtempSync, readFileSync, realpathSync, writeFileSync } from "node:fs";
@@ -50,12 +50,12 @@ const events = [
   { type: "tool_execution_start", toolName: "read", args: { path: join(repo, "clip.ts") } },
   { type: "message_update", text: `menciona ${source} sin usarlo` },
   { type: "tool_execution_start", toolName: "bash", args: { command: `git -C ${source} log` } },
-  { type: "assistant", message: { content: [{ type: "tool_use", name: "Read", input: { file_path: "/x/evals/previewer/references/demo.json" } }] } },
+  { type: "tool_execution_start", toolName: "read", args: { path: "/x/evals/previewer/references/demo.json" } },
 ];
 writeFileSync(join(runDir, "events.jsonl"), events.map((event) => JSON.stringify(event)).join("\n"));
 const hits = contamination(runDir, item);
 assert.equal(hits.length, 2, hits.join("\n"));
-assert.ok(hits.some((hit) => hit.startsWith(source)), "Pi: un comando sobre el repositorio de origen");
-assert.ok(hits.some((hit) => hit.startsWith("evals/previewer")), "Claude Code: leer las referencias");
+assert.ok(hits.some((hit) => hit.startsWith(source)), "un comando sobre el repositorio de origen");
+assert.ok(hits.some((hit) => hit.startsWith("evals/previewer")), "leer las referencias");
 
 console.log("previewer bench: OK");

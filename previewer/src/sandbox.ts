@@ -14,9 +14,7 @@ import { homedir, tmpdir } from "node:os";
 import { join } from "node:path";
 import type { BashOperations } from "@earendil-works/pi-coding-agent";
 
-type Invocation = { file: string; args: string[] };
-/** `wrap` mete un comando de bash en el aislamiento; `run`, un programa entero con sus hijos (Claude Code). */
-export type Sandbox = { kind: "sandbox-exec" | "bwrap" | "injected" | "none"; wrap: (command: string) => Invocation; run: (file: string, args: string[]) => Invocation };
+export type Sandbox = { kind: "sandbox-exec" | "bwrap" | "injected" | "none"; wrap: (command: string) => { file: string; args: string[] } };
 
 const SANDBOX_EXEC = "/usr/bin/sandbox-exec";
 const KILL_GRACE_MS = 5_000;
@@ -27,7 +25,7 @@ function findBwrap(): string | null {
 }
 
 /** Dónde puede escribir el revisor además de su copia. Solo las rutas que existen, ya resueltas. */
-function writablePaths(copy: string, extra: string[]): string[] {
+function writablePaths(copy: string): string[] {
   const home = homedir();
   const candidates = [
     copy, tmpdir(), "/tmp", "/private/tmp", "/private/var/folders", "/dev",
@@ -35,18 +33,16 @@ function writablePaths(copy: string, extra: string[]): string[] {
     join(home, "go"), join(process.env.N_EIN_HOME || join(home, ".n_ein"), "cache"),
     // Cachés de Go que fija scripts/check.sh de n_ein.
     join(process.env.N_EIN_HOME || join(home, ".n_ein"), "dev/go-cache"),
-    ...extra,
   ];
   return [...new Set(candidates.filter((path) => existsSync(path)).map((path) => realpathSync(path)))];
 }
 
 const usable = (file: string, args: string[]): boolean => spawnSync(file, [...args, "/usr/bin/true"], { stdio: "ignore" }).status === 0;
 
-/** `extra`: rutas que además necesita escribir el programa aislado, como la configuración de Claude Code. */
-export function sandboxFor(copy: string, origin: string, extra: string[] = []): Sandbox {
-  const none: Sandbox = { kind: "none", wrap: (command) => ({ file: "/bin/bash", args: ["-c", command] }), run: (file, args) => ({ file, args }) };
-  if (process.env.N_EIN_PREVIEWER_SANDBOX === "none") return none;
-  const writable = writablePaths(copy, extra);
+export function sandboxFor(copy: string, origin: string): Sandbox {
+  const plain = (command: string) => ({ file: "/bin/bash", args: ["-c", command] });
+  if (process.env.N_EIN_PREVIEWER_SANDBOX === "none") return { kind: "none", wrap: plain };
+  const writable = writablePaths(copy);
   // BLINDAJE -> El original se cierra al final aunque viva bajo una ruta permitida (un temporal, una caché).
   const closed = [...new Set([origin, realpathSync(origin)])];
   if (process.platform === "darwin" && existsSync(SANDBOX_EXEC)) {
@@ -55,19 +51,14 @@ export function sandboxFor(copy: string, origin: string, extra: string[] = []): 
     const subpaths = (paths: string[]): string => paths.map((path) => `(subpath ${quote(path)})`).join(" ");
     const profile = `(version 1)(allow default)(deny file-write*)(allow file-write* ${subpaths(writable)})(deny file-write* ${subpaths(closed)})`;
     const args = ["-p", profile];
-    if (usable(SANDBOX_EXEC, args)) return confined("sandbox-exec", SANDBOX_EXEC, args);
+    if (usable(SANDBOX_EXEC, args)) return { kind: "sandbox-exec", wrap: (command) => ({ file: SANDBOX_EXEC, args: [...args, "/bin/bash", "-c", command] }) };
   }
   const bwrap = process.platform === "linux" ? findBwrap() : null;
   if (bwrap) {
     const args = ["--ro-bind", "/", "/", "--dev", "/dev", "--proc", "/proc", ...writable.filter((path) => path !== "/dev").flatMap((path) => ["--bind", path, path]), ...closed.flatMap((path) => ["--ro-bind", path, path])];
-    if (usable(bwrap, args)) return confined("bwrap", bwrap, args);
+    if (usable(bwrap, args)) return { kind: "bwrap", wrap: (command) => ({ file: bwrap, args: [...args, "/bin/bash", "-c", command] }) };
   }
-  return none;
-}
-
-function confined(kind: "sandbox-exec" | "bwrap", file: string, prefix: string[]): Sandbox {
-  const run = (program: string, args: string[]): Invocation => ({ file, args: [...prefix, program, ...args] });
-  return { kind, run, wrap: (command) => run("/bin/bash", ["-c", command]) };
+  return { kind: "none", wrap: plain };
 }
 
 /** Bash de Pi a través del aislamiento; para el grupo entero al cancelar o agotar el tiempo. */

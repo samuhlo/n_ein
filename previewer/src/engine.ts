@@ -11,7 +11,7 @@
 import { spawn } from "node:child_process";
 import { existsSync, lstatSync, mkdirSync, readFileSync, realpathSync, writeFileSync } from "node:fs";
 import { basename, dirname, isAbsolute, join, relative, resolve } from "node:path";
-import { channelDir, loadModels } from "../../pi-package/models.ts";
+import { channelDir } from "../../pi-package/models.ts";
 import { makeCitationChecker } from "./citations.ts";
 import { createCopy, sweepCopies, type ReviewCopy } from "./copy.ts";
 import type { Citation, Finding, Probe, TourStep } from "./finding.ts";
@@ -19,7 +19,7 @@ import { branchTip, changedFiles, commitsOf, diffOf, resolveRange, type Range } 
 import { reviewGuard } from "./guard-rules.ts";
 import { parseReport, type ProposedFinding } from "./report.ts";
 import { sandboxFor, type Sandbox } from "./sandbox.ts";
-import { CLAUDE_CODE, claudeRunner, piRunner, type AgentRunner } from "./runner.ts";
+import { piRunner, type AgentRunner } from "./runner.ts";
 import { ReviewStore, type Run, type RunResult, type Session, type StoredFinding } from "./store.ts";
 
 type Check = NonNullable<RunResult["checks"]>[number];
@@ -49,6 +49,8 @@ export type ReviewOutcome = { session: Session; run: Run; findings: StoredFindin
 /** Hallazgos abiertos de revisiones anteriores; `key` es como los ve el agente (`P1`…). */
 export type Previous = { pending: { key: string; item: StoredFinding }[]; dismissed: StoredFinding[] };
 
+/** Decisión del usuario (21 de octubre): revisa siempre Sol 6.1, sin seguir el modelo de riesgo del router. */
+export const REVIEWER = { model: "openai-codex/gpt-6.1-sol", thinking: "high" };
 const DIFF_LIMIT = 80_000;
 const PROBE_OUTPUT_LIMIT = 4_000;
 const PROBE_SOURCE_LIMIT = 20_000;
@@ -214,9 +216,8 @@ export async function review(options: ReviewOptions): Promise<ReviewOutcome> {
   const log = options.log ?? ((line: string) => process.stderr.write(`${line}\n`));
   const range = resolveRange(options.cwd, { base: options.base, head: options.head });
   const store = options.store ?? ReviewStore.forPackage(options.packageRoot);
-  const routed = loadModels(options.packageRoot).routing.riesgo;
-  const model = options.model ?? routed.model;
-  const thinking = options.thinking ?? (options.model ? "high" : routed.thinking);
+  const model = options.model ?? REVIEWER.model;
+  const thinking = options.thinking ?? REVIEWER.thinking;
   const signal = options.signal ?? new AbortController().signal;
   const session = store.openSession({ repo: range.repo, branch: range.branch || `detached@${short(range.headSha)}`, prUrl: options.prUrl });
   const run = store.startRun({ sessionId: session.id, baseSha: range.baseSha, headSha: range.headSha, model, thinking });
@@ -247,7 +248,7 @@ export async function review(options: ReviewOptions): Promise<ReviewOutcome> {
     // BLINDAJE -> Una sonda anterior no pisa un archivo que el head ya tiene con ese nombre.
     const restorable = new Set(previous.pending.filter(({ item }) => item.probe?.file && !lexists(resolve(reviewCopy, item.probe.file))).map(({ item }) => item.thread));
     for (const { item } of previous.pending) if (item.probe && restorable.has(item.thread) && !restoreProbe(reviewCopy, guard, item.probe)) restorable.delete(item.thread);
-    const agent = await (options.runner ?? (model.startsWith(CLAUDE_CODE) ? claudeRunner : piRunner)(options.packageRoot))({
+    const agent = await (options.runner ?? piRunner(options.packageRoot))({
       cwd: copy.path, origin: range.repo, prompt: reviewPrompt(range, execute, previous), runDir, model, thinking, signal, execute,
       timeoutMs: options.timeoutMs ?? DEFAULT_TIMEOUT_MS,
     });

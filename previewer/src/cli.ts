@@ -1,7 +1,6 @@
 // =============================================================================
 // [FLOW] ENTRADA DEL REVISOR
-// uso: n-ein-previewer review [--base REF] [--head REF] [--model P/M]
-//      [--thinking NIVEL] [--pr URL] [--no-open] [--json]
+// uso: n-ein-previewer review [--base REF] [--head REF] [--pr URL] [--no-open] [--json]
 //      n-ein-previewer open | handoff [--json] | status | check
 // El usuario entra por `nein previewer` o el Panel; el agente, por bin/n-ein-previewer.
 // `status` y `check` son para el Panel y `doctor`: leen, no revisan ni crean nada.
@@ -25,8 +24,6 @@ const { values, positionals } = parseArgs({
   options: {
     base: { type: "string" },
     head: { type: "string" },
-    model: { type: "string" },
-    thinking: { type: "string" },
     pr: { type: "string" },
     project: { type: "string" },
     json: { type: "boolean", default: false },
@@ -34,7 +31,7 @@ const { values, positionals } = parseArgs({
   },
 });
 
-const USAGE = "uso: n-ein-previewer review [--base REF] [--head REF] [--model P/M] [--thinking NIVEL] [--pr URL] [--no-open] [--json]\n       n-ein-previewer open\n       n-ein-previewer handoff [--json]\n       n-ein-previewer status | check\n";
+const USAGE = "uso: n-ein-previewer review [--base REF] [--head REF] [--pr URL] [--no-open] [--json]\n       n-ein-previewer open\n       n-ein-previewer handoff [--json]\n       n-ein-previewer status | check\n";
 const VERBS = ["review", "open", "handoff", "status", "check"];
 if (!VERBS.includes(positionals[0] ?? "")) {
   process.stderr.write(USAGE);
@@ -151,7 +148,7 @@ for (const signal of ["SIGINT", "SIGTERM"] as const) process.once(signal, () => 
 try {
   const outcome = await review({
     packageRoot, cwd: values.project ?? process.cwd(), base: values.base, head: values.head, prUrl: values.pr,
-    model: values.model, thinking: values.thinking, signal: controller.signal,
+    signal: controller.signal,
   });
   // El enlace abre la sesión de esta rama; si el servidor no arranca, la revisión ya está guardada igual.
   const opened = outcome.run.status === "done" && !values["no-open"]
