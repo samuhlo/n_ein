@@ -333,6 +333,31 @@ assert.equal(git("rev-parse", "main"), baseSha);
   assert.equal(after.findings.find((item) => item.title === "Con archivo de sonda")?.status, "unchecked");
 }
 
+// --- Leer una sonda no sigue un enlace hacia fuera de la copia ---------------------------------
+{
+  const secret = join(scratch, "private.txt");
+  writeFileSync(secret, "clave privada\n");
+  const head = git("rev-parse", "HEAD").slice(0, 10);
+  const leaked = await review({
+    packageRoot, cwd: repo, store, model: "test/reviewer", log: () => {}, sandbox: injected, probeTimeoutMs: 1_000,
+    runner: async (request) => {
+      mkdirSync(join(request.cwd, ".previewer-probes"), { recursive: true });
+      symlinkSync(secret, join(request.cwd, ".previewer-probes/leak.sh"));
+      // También a través de una carpeta enlazada.
+      symlinkSync(scratch, join(request.cwd, ".previewer-probes/dir"));
+      return { text: report([
+        finding("Sonda enlazada", [`text.ts@${head}:L1`], { command: "exit 1", file: ".previewer-probes/leak.sh" }),
+        finding("Carpeta enlazada", [`text.ts@${head}:L1`], { command: "exit 1", file: ".previewer-probes/dir/private.txt" }),
+      ]), usage: { input: 0, output: 0, cacheRead: 0, usd: 0 }, error: null };
+    },
+  });
+  for (const title of ["Sonda enlazada", "Carpeta enlazada"]) {
+    const probe = leaked.findings.find((item) => item.title === title)?.probe;
+    assert.equal(probe?.reproduced, true, title);
+    assert.equal(probe?.source, null, `${title}: el contenido de fuera de la copia no se guarda`);
+  }
+}
+
 // --- Nada que revisar --------------------------------------------------------------------------
 await assert.rejects(review({ packageRoot, cwd: repo, head: "main", store, model: "test/reviewer", log: () => {} }), /nada que revisar/);
 

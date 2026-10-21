@@ -9,7 +9,7 @@
 // =============================================================================
 
 import { spawn } from "node:child_process";
-import { existsSync, lstatSync, mkdirSync, readFileSync, writeFileSync } from "node:fs";
+import { existsSync, lstatSync, mkdirSync, readFileSync, realpathSync, writeFileSync } from "node:fs";
 import { basename, dirname, isAbsolute, join, relative, resolve } from "node:path";
 import { channelDir, loadModels } from "../../pi-package/models.ts";
 import { makeCitationChecker } from "./citations.ts";
@@ -193,7 +193,9 @@ async function rerunProbe(context: ProbeContext, proposed: NonNullable<ProposedF
     const rel = relative(copy, path);
     if (!rel.startsWith("..") && !isAbsolute(rel)) {
       file = rel;
-      if (existsSync(path)) source = tail(readFileSync(path, "utf8"), PROBE_SOURCE_LIMIT);
+      // BLINDAJE -> Un enlace (en el archivo o en una carpeta) llevaría a guardar y enseñar un archivo de fuera de la copia.
+      const real = existsSync(path) ? relative(realpathSync(copy), realpathSync(path)) : "..";
+      if (!real.startsWith("..") && !isAbsolute(real)) source = tail(readFileSync(path, "utf8"), PROBE_SOURCE_LIMIT);
     }
   }
   const skipped = (reason: string): Probe => ({ command: proposed.command, file, source, exitCode: null, output: `no ejecutada: ${reason}`, reproduced: false });
