@@ -19,7 +19,7 @@ import { branchTip, changedFiles, commitsOf, diffOf, resolveRange, type Range } 
 import { reviewGuard } from "./guard-rules.ts";
 import { parseReport, type ProposedFinding } from "./report.ts";
 import { sandboxFor, type Sandbox } from "./sandbox.ts";
-import { piRunner, type AgentRunner } from "./runner.ts";
+import { CLAUDE_CODE, claudeRunner, piRunner, type AgentRunner } from "./runner.ts";
 import { ReviewStore, type Run, type RunResult, type Session, type StoredFinding } from "./store.ts";
 
 type Check = NonNullable<RunResult["checks"]>[number];
@@ -247,7 +247,7 @@ export async function review(options: ReviewOptions): Promise<ReviewOutcome> {
     // BLINDAJE -> Una sonda anterior no pisa un archivo que el head ya tiene con ese nombre.
     const restorable = new Set(previous.pending.filter(({ item }) => item.probe?.file && !lexists(resolve(reviewCopy, item.probe.file))).map(({ item }) => item.thread));
     for (const { item } of previous.pending) if (item.probe && restorable.has(item.thread) && !restoreProbe(reviewCopy, guard, item.probe)) restorable.delete(item.thread);
-    const agent = await (options.runner ?? piRunner(options.packageRoot))({
+    const agent = await (options.runner ?? (model.startsWith(CLAUDE_CODE) ? claudeRunner : piRunner)(options.packageRoot))({
       cwd: copy.path, origin: range.repo, prompt: reviewPrompt(range, execute, previous), runDir, model, thinking, signal, execute,
       timeoutMs: options.timeoutMs ?? DEFAULT_TIMEOUT_MS,
     });
