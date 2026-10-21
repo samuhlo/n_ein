@@ -1,6 +1,6 @@
 # Banco del revisor, primera medición (T8)
 
-21 de octubre de 2026. Corpus `t8-15-v1` (`evals/previewer/`), congelado antes de medir. Dos revisores con el mismo motor y el mismo prompt:
+21 de octubre de 2026. Corpus `t8-15-v1` (`evals/previewer/`), congelado antes de medir. Dos revisores con el mismo motor y el mismo prompt (y después Sol 6.1, el elegido; ver su sección):
 
 - **Sol:** `openai-codex/gpt-6-sol` alto por Pi, el valor por defecto.
 - **Opus:** `claude-code/claude-opus-5-5` por Claude Code, con el proceso entero dentro de `sandbox-exec` y sin `CLAUDE.md` ni ajustes. La suscripción de Claude solo se usa desde Claude Code.
@@ -15,6 +15,8 @@ Dos jueces sin herramientas y sin saber qué modelo revisó: Opus por Claude Cod
 | Opus | dev | 4/4 | 15/15 · 15/15 | 0 | 73 / 199 s | 3,79 $ |
 | Sol | reserved | 3/4 | 10/10 · 9/10 | 0 · 1 | 92 / 204 s | 1,53 $ |
 | Opus | reserved | 3/4 | 13/13 · 12/13 | 0 · 1 | 110 / 500 s | 5,06 $ |
+| **Sol 6.1** | dev | 4/4 | 7/7 · 7/7 | 0 | 74 / 356 s | 1,07 $ (los 15 casos: 1,99 $) |
+| **Sol 6.1** | reserved | **2/4** | 7/7 · 7/7 | 0 | 83 / 202 s | |
 
 En los 8 fallos conocidos, Sol encuentra 6 y Opus 7. La única diferencia es `nein-worker`, de `dev`: Sol no vio que el error del modelo se quedaba fuera del texto. Ninguno de los dos encontró `plan-fechas`, de `reserved`: el esquema zod nuevo acepta fechas imposibles. Los dos revisaron esa zona y señalaron otros fallos reales, pero no ese.
 
@@ -28,6 +30,19 @@ En `reserved`, los dos cumplen los umbrales de WORK.md:
 Opus estuvo cerca del límite de tiempo en `nein-receipts`: 500 s.
 
 El coste es la estimación de cada herramienta al precio de la API. Con suscripción no se cobra aparte, pero consume cuota: la primera pasada de Opus por `reserved` se cortó al llegar al límite de sesión del plan de Claude y se completó después con `--resume`.
+
+## Sol 6.1, el revisor elegido
+
+Después de medir, el usuario fijó el revisor en Sol 6.1 (`openai-codex/gpt-6.1-sol`, esfuerzo alto) y descartó Claude. Las filas de Sol 6.1 se midieron después, con los mismos 15 casos (`202610211306-sol61-all`).
+
+Sol 6.1 es más callado: da 14 avisos frente a los 23 de Sol 6.0, todos válidos según los dos jueces (que coinciden en todo), y ninguno en los cambios correctos.
+
+En `dev` encuentra los 4 fallos, incluido `nein-worker`, que se le escapó a Sol 6.0. En `reserved` encuentra 2 de 4, **por debajo del umbral del 70 %**:
+
+- `plan-fechas`: como los demás revisores, no ve las fechas imposibles; señala otros dos fallos reales de la misma zona.
+- `ein-notice`: avisa del fallo hermano que introduce el mismo commit (doctor recomienda revisar una configuración que nunca leyó), pero no del aviso silenciado.
+
+Con 4 fallos por parte, la diferencia con Sol 6.0 (3/4) es un caso. El umbral de detección queda pendiente de T9, con más casos y las valoraciones reales.
 
 ## Fiabilidad de la medición
 
