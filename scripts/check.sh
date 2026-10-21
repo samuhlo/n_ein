@@ -51,6 +51,7 @@ bun run tests/previewer-store.ts
 bun run tests/previewer-engine.ts
 bun run tests/previewer-handoff.ts
 bun run tests/previewer-web.ts
+bun run tests/previewer-bench.ts
 
 (
   cd go

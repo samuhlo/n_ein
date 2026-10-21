@@ -2,7 +2,8 @@
 // [BENCH] BANCO DEL REVISOR
 // uso: bun evals/previewer/bench.ts run --split dev|reserved|all [--case ID]...
 //        [--model P/M] [--thinking NIVEL] [--label NOMBRE]
-//      bun evals/previewer/bench.ts grade <ejecución> [--judge MODELO]
+//      bun evals/previewer/bench.ts grade <ejecución> [--judge opus|pi:P/M]
+//      bun evals/previewer/bench.ts agree <ejecución> <juez> <juez>
 //      bun evals/previewer/bench.ts build <caso> <carpeta>
 // Cada caso se reconstruye como un repositorio nuevo de dos commits, base y
 // cambio: sin la historia posterior, el arreglo no se puede leer. Las
@@ -26,7 +27,7 @@ const DIFF_LIMIT = 60_000;
 type Source =
   | { kind: "dir"; path: string; message: string }
   | { kind: "git"; repo: string; base: string; head: string; fix?: string };
-type Case = { id: string; split: "dev" | "reserved"; category: "bug" | "correct" | "context"; origin: string; source: Source };
+export type Case = { id: string; split: "dev" | "reserved"; category: "bug" | "correct" | "context"; origin: string; source: Source };
 type Defect = { id: string; condition: string; consequence: string; evidence_paths: string[] };
 type Reference = { defects: Defect[]; context_gaps: string[]; rubric?: string; note?: string };
 type Shown = Pick<StoredFinding, "kind" | "severity" | "title" | "plain" | "condition" | "consequence"> & {
@@ -52,7 +53,7 @@ function commitAll(repo: string, message: string): void {
 }
 
 /** Base en `main`, el cambio en `change`: lo mismo que vería el revisor en una rama real. */
-function materialize(item: Case, repo: string): void {
+export function materialize(item: Case, repo: string): void {
   mkdirSync(repo, { recursive: true });
   git(repo, "init", "-q", "-b", "main");
   git(repo, "config", "user.name", "n_ein bench");
@@ -81,7 +82,7 @@ function materialize(item: Case, repo: string): void {
 // --- Contaminación -----------------------------------------------------------------------------
 
 /** Herramientas que nombran las referencias o los repositorios de origen, donde está el arreglo. */
-function contamination(runDir: string, item: Case): string[] {
+export function contamination(runDir: string, item: Case): string[] {
   const path = join(runDir, "events.jsonl");
   if (!existsSync(path)) return [];
   const forbidden = [REFERENCE_MARKER, "evals/previewer", "lang-pr-review", join(root, "evals")];
@@ -218,14 +219,29 @@ function judgePrompt(item: Case, ref: Reference, result: Result, diff: string): 
   ].filter((line) => line !== "").join("\n");
 }
 
+/** Opus por Claude Code o, con `pi:<proveedor/modelo>`, un juez de otra familia por Pi; ninguno usa herramientas. */
 function judge(prompt: string, cwd: string, model: string): Verdict {
-  const response = spawnSync("claude", ["-p", "--model", model, "--output-format", "json", "--tools", "", "--strict-mcp-config", "--no-session-persistence", "--setting-sources", "project"], {
-    input: prompt, encoding: "utf8", maxBuffer: 64 << 20, cwd, timeout: 15 * 60_000,
-  });
-  writeFileSync(join(cwd, "raw.json"), response.stdout ?? "");
-  const text: string = JSON.parse(response.stdout).result;
+  let text: string;
+  if (model.startsWith("pi:")) {
+    const pi = process.env.N_EIN_PI_BIN || join(process.env.N_EIN_HOME || join(homedir(), ".n_ein"), "runtimes/pi", JSON.parse(readFileSync(join(root, "runtime.json"), "utf8")).pi.version, "bin/pi");
+    const response = spawnSync(pi, ["-p", "--no-tools", "--no-extensions", "--no-skills", "--no-context-files", "--no-session", "--model", model.slice(3), "--thinking", "high", prompt], {
+      encoding: "utf8", maxBuffer: 64 << 20, cwd, timeout: 15 * 60_000,
+      env: { ...process.env, PI_CODING_AGENT_DIR: process.env.N_EIN_AGENT_DIR || join(channelDir(root), "pi-agent"), PI_OFFLINE: "1", PI_SKIP_VERSION_CHECK: "1" },
+    });
+    writeFileSync(join(cwd, "raw.txt"), response.stdout ?? "");
+    text = response.stdout ?? "";
+  } else {
+    const response = spawnSync("claude", ["-p", "--model", model, "--output-format", "json", "--tools", "", "--strict-mcp-config", "--no-session-persistence", "--setting-sources", "project"], {
+      input: prompt, encoding: "utf8", maxBuffer: 64 << 20, cwd, timeout: 15 * 60_000,
+    });
+    writeFileSync(join(cwd, "raw.json"), response.stdout ?? "");
+    text = JSON.parse(response.stdout).result;
+  }
   return JSON.parse(text.slice(text.indexOf("{"), text.lastIndexOf("}") + 1));
 }
+
+/** Cada juez guarda aparte: el de por defecto en `grade/`, los demás en `grade-<juez>/`. */
+const gradeDir = (out: string, model: string): string => join(out, model === "opus" ? "grade" : `grade-${model.replace(/[^\w.-]+/g, "_")}`);
 
 function grade(argv: string[]): void {
   const { values, positionals } = parseArgs({ args: argv, allowPositionals: true, options: { judge: { type: "string", default: "opus" } } });
@@ -237,7 +253,7 @@ function grade(argv: string[]): void {
     const item = manifest.cases.find((candidate) => candidate.id === result.case);
     if (!item) throw new Error(`caso desconocido: ${result.case}`);
     const ref = reference(item.id);
-    const dir = join(out, "grade", item.id);
+    const dir = join(gradeDir(out, values.judge), item.id);
     mkdirSync(dir, { recursive: true });
     const cached = join(dir, "verdict.json");
     let verdict: Verdict;
@@ -253,12 +269,12 @@ function grade(argv: string[]): void {
     }
     rows.push({ item, result, verdict, ref });
   }
-  const report = summarize(out, rows);
-  writeFileSync(join(out, "report.md"), report);
+  const report = summarize(out, rows, values.judge);
+  writeFileSync(join(gradeDir(out, values.judge), "report.md"), report);
   console.log(report);
 }
 
-function summarize(out: string, rows: { item: Case; result: Result; verdict: Verdict; ref: Reference }[]): string {
+function summarize(out: string, rows: { item: Case; result: Result; verdict: Verdict; ref: Reference }[], judgeModel: string): string {
   const meta = JSON.parse(readFileSync(join(out, "run.json"), "utf8"));
   const count = (verdict: Verdict, kind: "valid" | "invalid" | "unclear"): number => verdict.findings.filter((item) => item.verdict === kind).length;
   const defects = rows.flatMap(({ verdict }) => verdict.defects);
@@ -274,7 +290,7 @@ function summarize(out: string, rows: { item: Case; result: Result; verdict: Ver
   const lines = [
     `# Banco del revisor · ${model} · ${meta.split}`,
     "",
-    `Corpus ${meta.corpus} · commit ${String(meta.commit).slice(0, 7)} · ${rows.length} casos · ${out}`,
+    `Corpus ${meta.corpus} · commit ${String(meta.commit).slice(0, 7)} · ${rows.length} casos · juez ${judgeModel} · ${out}`,
     "",
     "| Caso | Parte | Tipo | Estado | Tiempo | Coste | Hallazgos | Válidos / inválidos / dudosos | Defectos encontrados |",
     "|---|---|---|---|---:|---:|---:|---|---|",
@@ -303,12 +319,40 @@ function summarize(out: string, rows: { item: Case; result: Result; verdict: Ver
   return `${lines.join("\n")}\n`;
 }
 
+/** Cuánto coinciden dos jueces: si un juez solo está de acuerdo consigo mismo, su cifra no vale. */
+function agree(argv: string[]): void {
+  const [out, first, second] = argv;
+  if (!out || !first || !second) throw new Error("uso: agree <ejecución> <juez> <juez>");
+  let defects = 0, defectsSame = 0, findings = 0, findingsSame = 0;
+  const differences: string[] = [];
+  for (const id of readdirSync(gradeDir(out, first))) {
+    const a = join(gradeDir(out, first), id, "verdict.json"), b = join(gradeDir(out, second), id, "verdict.json");
+    if (!existsSync(a) || !existsSync(b)) continue;
+    const left: Verdict = JSON.parse(readFileSync(a, "utf8")), right: Verdict = JSON.parse(readFileSync(b, "utf8"));
+    for (const defect of left.defects) {
+      const other = right.defects.find((item) => item.id === defect.id);
+      defects++;
+      if ((defect.found_by.length > 0) === ((other?.found_by.length ?? 0) > 0)) defectsSame++;
+      else differences.push(`${id} · defecto ${defect.id}: ${first} ${defect.found_by.length ? "encontrado" : "no"} / ${second} ${other?.found_by.length ? "encontrado" : "no"}`);
+    }
+    for (const finding of left.findings) {
+      const other = right.findings.find((item) => item.n === finding.n);
+      findings++;
+      if (other?.verdict === finding.verdict) findingsSame++;
+      else differences.push(`${id} · hallazgo ${finding.n}: ${first} ${finding.verdict} / ${second} ${other?.verdict ?? "—"} · ${other?.why ?? ""}`);
+    }
+  }
+  console.log(`Defectos: ${defectsSame}/${defects} iguales · Hallazgos: ${findingsSame}/${findings} iguales`);
+  for (const line of differences) console.log(`- ${line}`);
+}
+
 // --- Entrada -----------------------------------------------------------------------------------
 
 const [verb, ...rest] = process.argv.slice(2);
-try {
+if (import.meta.main) try {
   if (verb === "run") await run(rest);
   else if (verb === "grade") grade(rest);
+  else if (verb === "agree") agree(rest);
   else if (verb === "build" && rest.length === 2) {
     // Reconstruye un caso sin revisarlo: para mirar qué recibe el revisor.
     const item = manifest.cases.find((candidate) => candidate.id === rest[0]);
@@ -317,7 +361,7 @@ try {
     console.log(git(resolve(rest[1] ?? ""), "log", "--format=%h %s", "--all"));
   }
   else {
-    process.stderr.write("uso: bun evals/previewer/bench.ts run --split dev|reserved|all [--case ID]... [--model P/M] [--thinking NIVEL] [--label NOMBRE]\n       bun evals/previewer/bench.ts grade <ejecución> [--judge MODELO]\n");
+    process.stderr.write("uso: bun evals/previewer/bench.ts run --split dev|reserved|all [--case ID]... [--model P/M] [--thinking NIVEL] [--label NOMBRE]\n       bun evals/previewer/bench.ts grade <ejecución> [--judge opus|pi:P/M]\n       bun evals/previewer/bench.ts agree <ejecución> <juez> <juez>\n       bun evals/previewer/bench.ts build <caso> <carpeta>\n");
     process.exit(64);
   }
 } catch (error) {
