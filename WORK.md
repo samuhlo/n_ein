@@ -64,7 +64,7 @@ Tramo 1, revisor completo:
 - [ ] T7 · Launcher e instalador — `nein previewer`, entrada en el Panel, web compilada en la release, comprobación en `doctor`; macOS y Omarchy. Blocked by: T4.
   - Hecho en macOS: el paquete incluye el revisor y su web; `nein previewer`, la entrada «Revisor» del Panel y la línea `// 003 REVISOR` de `doctor --runtime`. La web compila al arrancar (ajuste en «Stack»).
   - Falta la prueba en Omarchy: `bwrap`, el Panel y `doctor` en Linux.
-- [ ] T8 · Banco mínimo — 6 casos de lang-pr-review + unos 6 fallos reales TS/Vue (Ein, Planificador, n_ein) reconstruidos antes del arreglo, cambios correctos para falsas alarmas, parte reservada; compara misma familia frente a otra. Blocked by: T1.
+- [x] T8 · Banco mínimo — 6 casos de lang-pr-review + unos 6 fallos reales TS/Vue (Ein, Planificador, n_ein) reconstruidos antes del arreglo, cambios correctos para falsas alarmas, parte reservada; compara misma familia frente a otra. Blocked by: T1.
 
 Tramo 2, afinado:
 
@@ -92,18 +92,13 @@ Tramo 2, afinado:
   Los 11 hallazgos de las tres primeras revisiones completas eran válidos al revisarlos (valoración del autor, no de Samu) y están corregidos en `e8054f1`, `cfe2baa` y `c16f47f`: guardia esquivable con `cd` relativo, sondas fuera de la guardia, carrera entre revisiones, enlace roto, escritura fuera de la copia, sonda con código 127, líneas vacías finales, falta de aislamiento, procesos de sonda vivos, test dependiente del aislamiento y archivo vacío. Ninguna cita rechazada en las tres revisiones completas. Tras cada una, `git status` y las ramas del repositorio no cambiaron y la copia no quedaba.
   De las tres siguientes, el autor corrigió dos hallazgos nuevos (`AGENTS.md` cargado como instrucciones, en `881d5c7`; restaurar una sonda a través de un enlace, en `e3dd4ee`). Otros dos hilos antiguos siguen abiertos solo porque sus sondas prueban la guardia de texto por separado, que ya no es la protección real; son candidatos a descartar. La revisión de `9eb71ea` encontró dos fallos nuevos, los dos válidos y corregidos con su test en rojo antes del arreglo: leer el archivo de una sonda seguía enlaces y podía guardar un archivo privado de fuera de la copia (`f10944c`), y otra pestaña abierta no veía las decisiones tomadas en una (`ec1edeb`). El hilo «un hallazgo no confirmado sigue seleccionado» queda como decisión de Samu (ver «Segunda revisión por hilos»).
 - Launcher y doctor (T7): `go/cmd/n-ein/previewer.go` con `previewer_test.go` (cada estado de la rama da su nota y su acción); `checkPreviewer` en `n-ein-install`, con test de un revisor que falla. `tests/previewer-handoff.ts` cubre `status`: no crea el almacén, cuenta vigentes, sin comprobar y seleccionados, ve el head nuevo y no ofrece revisar la base. El smoke del paquete llama `nein previewer check` desde el launcher instalado. A mano en esta rama, el Panel muestra «Revisor · volver a revisar», porque el head avanzó desde `e3dd4ee`. `./scripts/check.sh` completo pasó.
-- Banco (T8, en curso, 21 de octubre): `evals/previewer/` con 15 casos congelados (8 fallos conocidos: 6 reales de Ein, Planificador y n_ein, comprobados con `git blame`, y 2 de lang-pr-review; 4 cambios correctos; 2 de contexto), partes `dev` y `reserved`. Opus revisa por Claude Code (`claude-code/claude-opus-5-5`, proceso entero en `sandbox-exec`, sin `CLAUDE.md` ni ajustes), porque la suscripción de Claude solo se usa desde Claude Code. Juez Opus y juez Sol coinciden en todos los defectos y en 26 de 27 avisos de `dev`; ninguno marca inválidos casi nunca, así que la precisión necesita las valoraciones reales (T9).
-
-  | Revisor | Parte | Fallos encontrados | Avisos válidos | Falsas alarmas | Mediana / máximo | Coste estimado |
-  |---|---|---:|---:|---:|---:|---:|
-  | Sol (`openai-codex/gpt-6-sol`) | dev | 3/4 (falla `nein-worker`) | 11/11 + 1 dudoso | 0 | 118 / 241 s | 1,39 $ |
-  | Opus (Claude Code) | dev | 4/4 | 15/15 | 0 | 73 / 199 s | 3,79 $ |
-  | Sol | reserved (juez Sol) | 3/4 (falla `plan-fechas`) | 9/10 | 1 (`ein-notice-fix`) | 92 / 204 s | 1,53 $ |
-  | Opus | reserved | incompleto: 5/8 casos, cortado por el límite de sesión de Claude | — | — | — | — |
-
-  Sin contaminación en ninguna ejecución. Falta: completar Opus en `reserved` (`nein-receipts`, `ein-notice`, `ein-notice-fix`) y calificarlo, calificar Sol `reserved` también con el juez Opus, escribir `evals/results/` y decidir con Samu el revisor por defecto.
+- Banco (T8, 21 de octubre): `evals/previewer/` con 15 casos congelados, partidos en `dev` y `reserved`. Son 8 fallos conocidos (6 reales de Ein, el Planificador y n_ein, comprobados con `git blame`, y 2 de lang-pr-review), 4 cambios correctos y 2 casos de contexto. Opus revisa por Claude Code (`claude-code/claude-opus-5-5`), con el proceso entero en `sandbox-exec` y sin `CLAUDE.md` ni ajustes. Informe completo en `evals/results/2026-10-21-previewer-bench.md`.
+  - **Resultado:** en `reserved`, Sol y Opus encuentran 3 de 4 fallos y cumplen los umbrales. En los 8 fallos, Sol encuentra 6 y Opus 7.
+  - **Coste y tiempo:** Opus cuesta unas tres veces más en estimación y consume cuota del plan de Claude, que se agotó una vez durante el banco. Su revisión más lenta tardó 500 s, frente a 241 s la de Sol.
+  - **Jueces:** coinciden en 47 de 50 avisos y casi nunca marcan inválidos, así que la precisión espera a las valoraciones reales (T9).
+  - **Sin contaminación** en ninguna ejecución.
 - Pendiente de observar: `bwrap` en Omarchy (no probado en Linux).
 
 ## Siguiente paso
 
-T1 a T6 terminados; T7 hecho en macOS, falta la prueba en Omarchy. Sigue T8 (banco). Decisión abierta para Samu: si un hallazgo seleccionado que la última revisión no comprobó debe seguir en el traspaso, marcado, como ahora, o salir de él.
+T1 a T6 y T8 terminados; T7 hecho en macOS, falta la prueba en Omarchy. Decisión abierta para Samu: revisor por defecto. Recomendación: seguir con Sol y dejar Opus por Claude Code como opción (`--model claude-code/claude-opus-5-5`) para cambios de riesgo, porque encuentra casi lo mismo, tarda menos y no gasta la cuota de Claude. Sigue T9 con uso real. Decisión abierta para Samu: si un hallazgo seleccionado que la última revisión no comprobó debe seguir en el traspaso, marcado, como ahora, o salir de él.
