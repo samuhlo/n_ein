@@ -15,8 +15,8 @@ Dos jueces sin herramientas y sin saber qué modelo revisó: Opus por Claude Cod
 | Opus | dev | 4/4 | 15/15 · 15/15 | 0 | 73 / 199 s | 3,79 $ |
 | Sol | reserved | 3/4 | 10/10 · 9/10 | 0 · 1 | 92 / 204 s | 1,53 $ |
 | Opus | reserved | 3/4 | 13/13 · 12/13 | 0 · 1 | 110 / 500 s | 5,06 $ |
-| **Sol 6.1** | dev | 4/4 | 7/7 · 7/7 | 0 | 74 / 356 s | 1,07 $ (los 15 casos: 1,99 $) |
-| **Sol 6.1** | reserved | **2/4** | 7/7 · 7/7 | 0 | 83 / 202 s | |
+| **Sol 6.1** | dev | 4/4 | 8/8 · 8/8 | 0 | 74 / 356 s | 1,04 $ |
+| **Sol 6.1** | reserved | **2/4** | 6/6 · 6/6 | 0 | 85 / 202 s | 0,95 $ |
 
 En los 8 fallos conocidos, Sol encuentra 6 y Opus 7. La única diferencia es `nein-worker`, de `dev`: Sol no vio que el error del modelo se quedaba fuera del texto. Ninguno de los dos encontró `plan-fechas`, de `reserved`: el esquema zod nuevo acepta fechas imposibles. Los dos revisaron esa zona y señalaron otros fallos reales, pero no ese.
 
