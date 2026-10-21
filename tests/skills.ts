@@ -33,7 +33,7 @@ assert.doesNotMatch(skeleton, /(?:src|href)\s*=\s*["']?(?:https?:)?\/\/|url\(\s*
 assert.match(skeleton, /<section class="sheet" id="[^"]+" data-tab="[^"]+">/, "vision/skeleton.html debe traer hojas de ejemplo");
 
 // n_ein es un producto para cualquiera: lo que se instala habla del usuario, no de una persona concreta.
-const shipped = ["pi-package", "bin"].flatMap(function walk(dir: string): string[] {
+const shipped = ["pi-package", "bin", "previewer"].flatMap(function walk(dir: string): string[] {
   const full = join(root, dir);
   return readdirSync(full).flatMap((entry) => {
     const path = join(full, entry);

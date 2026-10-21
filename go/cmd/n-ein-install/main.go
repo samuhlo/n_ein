@@ -253,7 +253,29 @@ func checkRuntime(root string, output io.Writer) error {
 		return fmt.Errorf("versión de Pi incompatible: esperada %s, observada %s", config.Pi.Version, actual)
 	}
 	say(output, "// 001 RUNTIME · Pi %s · Bun disponible · autenticación no comprobada\n", actual)
-	return checkCodeGraph(config.CodeGraph.Version, output)
+	if err := checkCodeGraph(config.CodeGraph.Version, output); err != nil {
+		return err
+	}
+	return checkPreviewer(root, output)
+}
+
+// checkPreviewer pregunta al revisor instalado: el aislamiento se detecta con la misma lógica que usa al revisar.
+// Sin aislamiento no falla, porque el revisor sigue sirviendo en solo lectura; una web que no compila, sí.
+func checkPreviewer(root string, output io.Writer) error {
+	ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
+	defer cancel()
+	data, err := exec.CommandContext(ctx, filepath.Join(root, "bin", "n-ein-previewer"), "check").Output()
+	if err != nil {
+		detail := err.Error()
+		if exit, ok := err.(*exec.ExitError); ok && len(exit.Stderr) > 0 {
+			detail = strings.TrimSpace(string(exit.Stderr))
+		}
+		return fmt.Errorf("revisor no disponible: %s", detail)
+	}
+	if line := strings.TrimSpace(string(data)); line != "" {
+		say(output, "%s", line)
+	}
+	return nil
 }
 
 // checkCodeGraph exige el índice de código: sin él, los agentes vuelven al grep a ciegas.

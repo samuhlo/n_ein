@@ -1,0 +1,21 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+# [FLOW] ENTRADA DEL REVISOR
+# Revisar una rama y traspasar lo seleccionado. Lee el mismo canal que el
+# launcher para que la sesión del agente y la de la revisión sean la misma.
+repo_dir="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd -P)"
+# El paquete instalado encuentra sus dependencias sin pedir cambios globales de PATH.
+if [[ -x "$repo_dir/bin/n-ein-install" ]]; then
+  runtime_path="$("$repo_dir/bin/n-ein-install" runtime-path --source "$repo_dir")" || exit 69
+  export PATH="$runtime_path"
+fi
+channel="dev"
+if [[ -f "$repo_dir/.n-ein-channel" ]]; then IFS= read -r channel < "$repo_dir/.n-ein-channel"; fi
+case "$channel" in dev|preview|stable) ;; *) printf '[ERR] :: CHANNEL_BAD :: value: %s\n' "$channel" >&2; exit 64 ;; esac
+export N_EIN_CHANNEL="$channel"
+if ! command -v bun >/dev/null 2>&1; then
+  printf '[ERR] :: BUN_MISSING :: required: runtime.json\n' >&2
+  exit 69
+fi
+exec bun "$repo_dir/previewer/src/cli.ts" "$@"

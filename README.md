@@ -101,6 +101,7 @@ El paquete de Pi lleva el catálogo de skills, la voz y el TODO de `WORK.md`. Co
 ```bash
 nein                                  # portada: estado del proyecto, sesiones y sistema
 nein --project . --runtime pi         # abre directamente, con el bloqueo del árbol
+nein previewer [review]               # abre (o hace) la revisión de la rama actual
 n-ein-install doctor --channel preview --runtime   # diagnostica la instalación
 n-ein-install restore --channel preview            # vuelve al backup anterior
 ./scripts/hotfix-preview.sh plan|apply|rollback    # aplica un commit comprobado a la preview

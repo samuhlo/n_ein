@@ -29,7 +29,7 @@ export GOMODCACHE="$HOME/.n_ein/dev/go-cache/mod"
 export GOCACHE="$HOME/.n_ein/dev/go-cache/build"
 export GOPATH="$HOME/.n_ein/dev/go-cache/path"
 
-bash -n bin/nein bin/nein-setup bin/n-ein-codegraph bin/n-ein-dev bin/n-ein-claude-dev bin/n-ein-prepare-pi scripts/check.sh scripts/smoke-package.sh scripts/build-preview.sh scripts/hotfix-preview.sh scripts/verify-hotfix-branch.sh
+bash -n bin/nein bin/nein-setup bin/n-ein-codegraph bin/n-ein-dev bin/n-ein-claude-dev bin/n-ein-prepare-pi bin/n-ein-previewer scripts/check.sh scripts/smoke-package.sh scripts/build-preview.sh scripts/hotfix-preview.sh scripts/verify-hotfix-branch.sh
 tests/launcher.sh
 tests/handoff-launcher.sh
 tests/reverse-launcher.sh
@@ -47,6 +47,10 @@ bun run tests/skills.ts
 bun run tests/router.ts
 bun run tests/context.ts
 bun run tests/bench.ts
+bun run tests/previewer-store.ts
+bun run tests/previewer-engine.ts
+bun run tests/previewer-handoff.ts
+bun run tests/previewer-web.ts
 
 (
   cd go

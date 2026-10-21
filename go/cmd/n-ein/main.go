@@ -64,7 +64,8 @@ func run(args []string) error {
 	if *workerCwd != "" {
 		return fmt.Errorf("--worker-cwd requiere --worker-host o --worker-probe")
 	}
-	if flags.NArg() != 0 && *runtime == "" {
+	previewer := *runtime == "" && flags.Arg(0) == "previewer"
+	if flags.NArg() != 0 && *runtime == "" && !previewer {
 		return fmt.Errorf("argumentos inesperados: %v", flags.Args())
 	}
 	if *runtime != "" && *once {
@@ -89,6 +90,9 @@ func run(args []string) error {
 	}
 	if *runtime != "" {
 		return launchRuntime(packageRoot, absProject, *runtime, flags.Args())
+	}
+	if previewer {
+		return launchPreviewer(packageRoot, absProject, flags.Args()[1:])
 	}
 	state := loadState(packageRoot, absProject)
 	view := viewIndex(*viewName)
@@ -129,6 +133,9 @@ func run(args []string) error {
 		cmd.Dir = absProject
 		cmd.Stdin, cmd.Stdout, cmd.Stderr = os.Stdin, os.Stdout, os.Stderr
 		return cmd.Run()
+	}
+	if verb, ok := strings.CutPrefix(selected.launch, "previewer:"); ok {
+		return launchPreviewer(packageRoot, absProject, []string{verb})
 	}
 	runtimeName := selected.launch
 	launchArgs := []string{}

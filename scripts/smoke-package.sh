@@ -23,6 +23,24 @@ printf '# Smoke de paquete\n' > "$project/README.md"
 cmp "$candidate/package-manifest.json" "$target/package-manifest.json"
 test ! -e "$candidate/docs"
 test ! -e "$candidate/node_modules"
+# El revisor instalado arranca y resuelve sus imports; sin orden responde con el uso.
+test ! -e "$candidate/tests"
+previewer_status=0
+"$target/bin/n-ein-previewer" > /dev/null 2> "$test_dir/previewer-usage" || previewer_status=$?
+test "$previewer_status" -eq 64
+rg -q 'n-ein-previewer handoff' "$test_dir/previewer-usage"
+# Su servidor arranca desde la instalación y compila la web con lo que el paquete trae.
+bun -e '
+  const [target] = process.argv.slice(1);
+  const { ensureServer } = await import(target + "/previewer/src/open.ts");
+  const state = await ensureServer(target);
+  const page = await fetch(`http://127.0.0.1:${state.port}/app.js`);
+  process.kill(state.pid, "SIGTERM");
+  if (!page.ok || !(await page.text()).includes("previewer-token")) throw new Error("web del revisor sin compilar");
+' "$target"
+# `nein previewer` llega al revisor instalado; su diagnóstico es el que muestra doctor --runtime.
+"$target/bin/n-ein" --project "$project" previewer check > "$test_dir/previewer-check"
+rg -q '^// 003 REVISOR · .* · web compila$' "$test_dir/previewer-check"
 
 "$target/bin/n-ein" --project "$project" --view configuracion --once > "$test_dir/config-view"
 rg -q 'openai-codex/gpt-6-sol' "$test_dir/config-view"

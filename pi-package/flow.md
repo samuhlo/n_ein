@@ -19,6 +19,8 @@ Every request runs through this workflow without the user asking for it. Small w
    - any remaining risk, with its reason;
    - what is still pending, and the next step.
 
+   When the job leaves its own commits on a work branch, or you have just opened a PR, end with one line offering to open p_reviewer (in Spanish, «¿Abro el revisor?»). Never open it unasked: it costs a model run and minutes. The `previewer` skill says how.
+
 **When the user corrects the plan**, keep the current job and summarize only the decision that changed, the affected acceptance and any work it invalidates. Preserve unaffected decisions and finished work. Apply a clear authorized correction without re-interviewing; ask only when it creates a material unresolved choice. Update the existing guide in place so a later session can distinguish the revised agreement from the superseded one.
 
 **On resume**, read `WORK.md` in full and check it against Git and the code before going on. If they disagree, trust what Git and the code show, fix the document in your next commit and say so in one line; ask only when the disagreement changes what the user asked for.
