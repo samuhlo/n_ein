@@ -1,0 +1,16 @@
+{
+  "defects": [
+    {
+      "id": "model-error-hidden",
+      "condition": "el trabajador termina con un error del modelo (run.error, tomado de errorMessage) y sin texto final",
+      "consequence": "el resultado que recibe el agente principal dice «Sin respuesta final.» y no menciona el error: el fallo del modelo queda oculto y el trabajo parcial parece una respuesta vacía",
+      "evidence_paths": [
+        "pi-package/extensions/worker.ts"
+      ],
+      "fixed_by": "81414aba7105cd738aa27de3b3ac93c8fe137ac2"
+    }
+  ],
+  "context_gaps": [],
+  "reference_marker": "REFERENCE_ONLY_DO_NOT_SEND_TO_REVIEWER",
+  "scope": "Defectos de referencia conocidos; no lista exhaustiva de todo posible hallazgo válido."
+}

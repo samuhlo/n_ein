@@ -1,0 +1,47 @@
+{
+  "defects": [],
+  "probes": [
+    {
+      "module": "timeouts",
+      "function": "resolve_timeout",
+      "args": [
+        null
+      ],
+      "base": {
+        "value": 30
+      },
+      "head": {
+        "value": 30
+      }
+    },
+    {
+      "module": "timeouts",
+      "function": "resolve_timeout",
+      "args": [
+        0
+      ],
+      "base": {
+        "value": 0
+      },
+      "head": {
+        "value": 0
+      }
+    },
+    {
+      "module": "timeouts",
+      "function": "resolve_timeout",
+      "args": [
+        5
+      ],
+      "base": {
+        "value": 5
+      },
+      "head": {
+        "value": 5
+      }
+    }
+  ],
+  "context_gaps": [],
+  "reference_marker": "REFERENCE_ONLY_DO_NOT_SEND_TO_REVIEWER",
+  "scope": "Defectos de referencia conocidos; no lista exhaustiva de todo posible hallazgo válido."
+}

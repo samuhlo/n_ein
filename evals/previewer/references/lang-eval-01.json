@@ -1,0 +1,51 @@
+{
+  "defects": [
+    {
+      "id": "owner-bypass",
+      "condition": "Un usuario autenticado no es propietario ni administrador",
+      "consequence": "can_delete permite borrar recursos ajenos",
+      "evidence_paths": [
+        "permissions.py"
+      ]
+    }
+  ],
+  "probes": [
+    {
+      "module": "permissions",
+      "function": "can_delete",
+      "args": [
+        {
+          "id": 7,
+          "is_admin": false
+        },
+        8
+      ],
+      "base": {
+        "value": false
+      },
+      "head": {
+        "value": true
+      }
+    },
+    {
+      "module": "permissions",
+      "function": "can_delete",
+      "args": [
+        {
+          "id": 7,
+          "is_admin": false
+        },
+        7
+      ],
+      "base": {
+        "value": true
+      },
+      "head": {
+        "value": true
+      }
+    }
+  ],
+  "context_gaps": [],
+  "reference_marker": "REFERENCE_ONLY_DO_NOT_SEND_TO_REVIEWER",
+  "scope": "Defectos de referencia conocidos; no lista exhaustiva de todo posible hallazgo válido."
+}

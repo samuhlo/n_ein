@@ -1,0 +1,16 @@
+{
+  "defects": [
+    {
+      "id": "notice-masked-when-partial",
+      "condition": "el veredicto colapsado del advisor es `unavailable` porque una fuente se omitió (por ejemplo, binary sin comprobar), pero otra fuente tiene una actualización fresca",
+      "consequence": "renderPiEinAdvisorNotice sale antes con `status !== \"update-available\"`, el filtro por componente queda inalcanzable y el aviso de actualización se silencia aunque haya una aplicable",
+      "evidence_paths": [
+        "ein-pi/agent/lib/ein-update-notice.ts"
+      ],
+      "fixed_by": "a30fa56574e4c6ec6ab02de4ceff4e2a927c7437"
+    }
+  ],
+  "context_gaps": [],
+  "reference_marker": "REFERENCE_ONLY_DO_NOT_SEND_TO_REVIEWER",
+  "scope": "Defectos de referencia conocidos; no lista exhaustiva de todo posible hallazgo válido."
+}
