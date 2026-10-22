@@ -50,7 +50,7 @@ Fuentes actuales: Gentle Shell `69c9b5ae265a60ffaf1dc9e0efc1afdac966f300`, Matt 
 | `codegraph.ts`, `bin/n-ein-codegraph`, memoria e idioma | Cwd e índice propios de cada worktree; mismas convenciones e idioma. El hijo debe disponer de estas capacidades sin compartir el índice mutable de otro árbol por accidente. |
 | `evals/bench/conversation.ts`, `continuity.ts`, `scripts/check.sh` y empaquetado | Extender recorridos existentes, comprobar el artefacto instalado y separar tests deterministas de evaluaciones con modelos. |
 
-Las rutas anteriores se inspeccionaron en la base local. El bloqueo actual protege sesiones que pasan por el launcher y conserva un descriptor en el shell. No supervisa por sí solo a cualquier escritor externo. Las sesiones de hijos tendrán que pasar por la misma frontera de propiedad.
+Las rutas anteriores se inspeccionaron en la base local, que bloqueaba las sesiones del launcher por árbol y conservaba un descriptor en el shell. Desde el 21 de octubre ese bloqueo se reserva a los trabajadores del equipo experimental; las conversaciones que abre el usuario son independientes. La propiedad de los hijos no supervisa por sí sola a cualquier escritor externo.
 
 ## Diseño propuesto
 
