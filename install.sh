@@ -2,7 +2,7 @@
 set -euo pipefail
 # [FLOW] ENTRADA PÚBLICA
 # Solo descarga un instalador fijado; Go resuelve el canal y verifica el paquete.
-bootstrap_tag="v0.3.0-alpha.3"
+bootstrap_tag="v0.3.0-alpha.4"
 channel=""
 version=""
 dry=0
@@ -11,7 +11,7 @@ while [[ $# -gt 0 ]]; do
     --channel) [[ $# -ge 2 ]] || { echo 'falta canal' >&2; exit 64; }; channel="$2"; shift 2 ;;
     --version) [[ $# -ge 2 ]] || { echo 'falta versión' >&2; exit 64; }; version="$2"; shift 2 ;;
     --dry-run) dry=1; shift ;;
-    --help|-h) echo 'n_ein: install.sh [--channel preview|stable] [--version 0.3.0-alpha.3] [--dry-run]  (sin canal: stable, o preview si aún no hay stable)'; exit 0 ;;
+    --help|-h) echo 'n_ein: install.sh [--channel preview|stable] [--version 0.3.0-alpha.4] [--dry-run]  (sin canal: stable, o preview si aún no hay stable)'; exit 0 ;;
     *) echo "opción desconocida: $1" >&2; exit 64 ;;
   esac
 done
