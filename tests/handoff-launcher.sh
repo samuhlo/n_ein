@@ -71,6 +71,7 @@ bun -e '
   if (args[args.indexOf("--effort") + 1] !== "xhigh") throw new Error("Claude no recibió el esfuerzo de models.json");
   if (!settings.statusLine.command.endsWith("bin/n-ein-todo\" --statusline")) throw new Error("Claude sin barra de TODO: " + settings.statusLine.command);
   if (settings.attribution?.commit !== "" || settings.attribution?.pr !== "") throw new Error("Claude firmaría commits y PR como coautor: " + JSON.stringify(settings.attribution));
+  if (!settings.claudeMdExcludes?.includes(process.env.HOME + "/.claude/CLAUDE.md")) throw new Error("Claude cargaría el CLAUDE.md global en vez de las preferencias de n_ein: " + JSON.stringify(settings.claudeMdExcludes));
   if (mcp.command !== bin || mcp.args.join(" ") !== "serve --mcp" || mcp.env.DO_NOT_TRACK !== "1") throw new Error("MCP de CodeGraph mal declarado");
   if (hook !== JSON.stringify(bin) + " prompt-hook") throw new Error("hook de CodeGraph mal declarado: " + hook);
   if (args[args.indexOf("--plugin-dir") + 1] !== process.argv[3] + "/pi-package/claude-plugin") throw new Error("Claude sin el plugin de n_ein");

@@ -80,7 +80,16 @@ Tomadas por Samu el 22 de octubre, tras leer esta medición.
   - Para apagarlos todos existe el ajuste `disableClaudeAiConnectors` o la variable `ENABLE_CLAUDEAI_MCP_SERVERS`.
   - Comprobado en el binario de Claude Code, no en documentación publicada.
   - Ya cargan sus esquemas solo cuando hacen falta, mediante la búsqueda de herramientas. Lo que cuesta en cada turno es la lista de nombres.
-- **`~/.claude/CLAUDE.md`: sigue entrando.** Es lo único que lleva a Claude las reglas globales de Samu (atribución en commits, Bun, TypeScript estricto, sin emojis); las preferencias de n_ein no las incluyen.
+- **`~/.claude/CLAUDE.md`: ya no entra en las sesiones de n_ein.** Primero se decidió mantenerlo, porque era lo único que llevaba a Claude las reglas globales de Samu (atribución en commits, Bun, TypeScript estricto, sin emojis). Esa decisión se revisó el mismo día, al comprobar dos cosas:
+  - Pi nunca lo recibe. Pi 1.0.2 busca `AGENTS.md` o `CLAUDE.md` en su carpeta de configuración y en cada carpeta, desde el proyecto hacia arriba, pero no entra en `.claude/` (`dist/core/resource-loader.js`, líneas 115–190).
+  - Claude solo lo recibía en proyectos bajo `~`.
+- **Cómo quedan ahora las reglas.**
+  - Se pasaron a `~/.n_ein/preferences.md`, en la sección «Code conventions», que llega a los dos runtimes.
+  - Quedaron fuera las tres reglas que chocan con el flujo o dependen de una herramienta: no añadir tests sin que se pidan, preguntar ante dos enfoques válidos y usar siempre Context7.
+  - `bin/n-ein-claude-dev` pasa `claudeMdExcludes` con `~/.claude/CLAUDE.md` y `~/.claude/rules/**`.
+  - Comprobado con el Claude real, 2.1.308: en la sesión `e4b74750` la petición ya no contiene «Global Rules for Claude Code» y sí contiene «Code conventions».
+  - Copias de seguridad de los dos archivos del usuario: `*.bak-2026-10-22`.
+- **Antes de excluirlo, se limpió también el archivo global.**
   - Se quitó el bloque de CodeGraph que gestiona gentle-ai (`<!-- gentle-ai:codegraph-guidance -->`), de 3.093 caracteres. Mandaba inicializar el índice con `gentle-ai codegraph init` y contradecía el bloque de CodeGraph del propio CLAUDE.md. n_ein ya inicializa el índice con `bin/n-ein-codegraph`.
   - El archivo pasa de 8.596 a 5.503 caracteres. La copia anterior está en `~/.claude/CLAUDE.md.bak-2026-10-22`.
   - Si se vuelve a ejecutar el instalador de gentle-ai para Claude, el bloque puede reaparecer.
@@ -89,6 +98,5 @@ Tomadas por Samu el 22 de octubre, tras leer esta medición.
 ## Pendiente
 
 - **Activar los conectores según el proyecto de forma automática:** propuesta abierta, sin implementar.
-- **Reglas globales en Pi:** comprobar si las sesiones de Pi reciben las reglas de `~/.claude/CLAUDE.md`. Si no, decidir si pasan a `~/.n_ein/preferences.md`.
 - **`Artifact`:** decidir si su esquema compensa en el recorrido ordinario.
 - **Sesiones largas de Claude:** casi no hay grabadas, así que el reparto de su arrastre no es representativo.
