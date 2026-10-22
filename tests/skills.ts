@@ -21,6 +21,10 @@ const visionDir = join(skillsDir, "vision");
 const vision = readFileSync(join(visionDir, "SKILL.md"), "utf8");
 assert.equal(Bun.YAML.parse(vision.split("---")[1])["disable-model-invocation"], true, "vision: debe ser de invocación manual");
 assert.match(readFileSync(join(root, "pi-package/flow.md"), "utf8"), /`vision`/, "flow.md debe sugerir vision");
+// commit tampoco la lanza el modelo, para que nunca sustituya al commit por tarea; el flujo la sugiere ante cambios sueltos.
+const commit = readFileSync(join(skillsDir, "commit", "SKILL.md"), "utf8");
+assert.equal(Bun.YAML.parse(commit.split("---")[1])["disable-model-invocation"], true, "commit: debe ser de invocación manual");
+assert.match(readFileSync(join(root, "pi-package/flow.md"), "utf8"), /suggest the `commit` skill/, "flow.md debe sugerir commit ante cambios sueltos");
 const sketch = readFileSync(join(visionDir, "SKETCH.md"), "utf8");
 for (const [file, text] of [["SKILL.md", vision], ["SKETCH.md", sketch]]) {
   for (const [, link] of text.matchAll(/\]\(([^)#]+)\)/g)) {
