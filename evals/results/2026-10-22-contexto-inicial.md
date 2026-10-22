@@ -71,10 +71,24 @@ El reparto de tokens se aproxima por caracteres: los esquemas JSON se tokenizan 
   - **En Claude**, lo que la cuenta y la carpeta personal añaden al contexto fijo de cada sesión.
 - **Las dos tocan comportamiento o configuración del usuario.** Necesitan decisión y comprobación aparte; esta medición no las cambia.
 
+## Decisiones
+
+Tomadas por Samu el 22 de octubre, tras leer esta medición.
+
+- **Conectores de claude.ai: se quedan.** Ayudan según el proyecto: Neon se usa mucho; Vercel, menos.
+  - Claude Code 2.1.308 ya permite apagar uno solo por proyecto desde `/mcp`. Lo guarda en `disabledMcpServers`, dentro de la entrada del proyecto en `.claude.json`. Con n_ein, ese archivo vive en su propio `CLAUDE_CONFIG_DIR`.
+  - Para apagarlos todos existe el ajuste `disableClaudeAiConnectors` o la variable `ENABLE_CLAUDEAI_MCP_SERVERS`.
+  - Comprobado en el binario de Claude Code, no en documentación publicada.
+  - Ya cargan sus esquemas solo cuando hacen falta, mediante la búsqueda de herramientas. Lo que cuesta en cada turno es la lista de nombres.
+- **`~/.claude/CLAUDE.md`: sigue entrando.** Es lo único que lleva a Claude las reglas globales de Samu (atribución en commits, Bun, TypeScript estricto, sin emojis); las preferencias de n_ein no las incluyen.
+  - Se quitó el bloque de CodeGraph que gestiona gentle-ai (`<!-- gentle-ai:codegraph-guidance -->`), de 3.093 caracteres. Mandaba inicializar el índice con `gentle-ai codegraph init` y contradecía el bloque de CodeGraph del propio CLAUDE.md. n_ein ya inicializa el índice con `bin/n-ein-codegraph`.
+  - El archivo pasa de 8.596 a 5.503 caracteres. La copia anterior está en `~/.claude/CLAUDE.md.bak-2026-10-22`.
+  - Si se vuelve a ejecutar el instalador de gentle-ai para Claude, el bloque puede reaparecer.
+- **CodeGraph en Pi: no se recorta.** Su respuesta completa es justo lo que evita lecturas y búsquedas posteriores.
+
 ## Pendiente
 
-- **Conectores de claude.ai en Claude:** decidir si deben estar disponibles. Si no, comprobar el mecanismo; la documentación consultada vía Context7 no lo confirmó.
-- **`~/.claude/CLAUDE.md`:** decidir si debe entrar en las sesiones de n_ein.
+- **Activar los conectores según el proyecto de forma automática:** propuesta abierta, sin implementar.
+- **Reglas globales en Pi:** comprobar si las sesiones de Pi reciben las reglas de `~/.claude/CLAUDE.md`. Si no, decidir si pasan a `~/.n_ein/preferences.md`.
 - **`Artifact`:** decidir si su esquema compensa en el recorrido ordinario.
-- **CodeGraph en Pi:** medir si respuestas más cortas mantienen la calidad antes de cambiar el tope.
 - **Sesiones largas de Claude:** casi no hay grabadas, así que el reparto de su arrastre no es representativo.
