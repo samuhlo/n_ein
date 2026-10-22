@@ -1,4 +1,6 @@
-import { expect, test } from "claude-code/testing";
+import { expect, mock, test } from "claude-code/testing";
+import type { Engine } from "claude-code/testing";
+import type { On, SessionRateLimit } from "claude-code";
 
 const BASH = {
   tool_use_id: "t1",
@@ -69,4 +71,95 @@ test("un grupo de varias llamadas cuenta sus verbos", async ($) => {
   const read = { tool: "Read", input: { file_path: "/x/a.ts" }, isRunning: false, isErrored: false, isInterrupted: false };
   const ui = await $.ui.mount({ plugin: "n-ein", surface: "terminal", component: "ToolGroup", props: { calls: [read, read], isActive: false, isExpanded: false }, viewport });
   expect(JSON.stringify(await ui.drawn())).toContain("lee 2");
+});
+
+// --- Medidores del pie -------------------------------------------------------------------------
+const NOW = Date.parse("2026-10-22T10:00:00Z");
+const HOUR = 3_600_000;
+const LIMITS: SessionRateLimit[] = [
+  { kind: "five_hour", percentUsed: 58, resetsAt: new Date(NOW + 2 * HOUR + 10 * 60_000).toISOString() },
+  { kind: "seven_day", percentUsed: 23.5, resetsAt: new Date(NOW + 76 * HOUR).toISOString() },
+];
+const USAGE = { input_tokens: 200, output_tokens: 340, cache_read_input_tokens: 41_000, cache_creation_input_tokens: 3800, model: "claude-opus-5-5" };
+
+/** Lo que hay debajo del plugin: reloj, store, consumo de la sesión y lo que dibuja el motor. */
+function world(on: On, rateLimits: SessionRateLimit[] = LIMITS) {
+  const clock = mock.clock(on, { now: NOW });
+  const store: Record<string, unknown> = {};
+  on("store.get", ($, e) => ({ value: store[e.key] }));
+  on("store.set", ($, e) => {
+    store[e.key] = JSON.parse(JSON.stringify(e.value));
+    return { value: undefined };
+  });
+  on("session.start", ($, e) => ({ cwd: e.cwd }));
+  on("session.cwd", () => ({ value: "/repo" }));
+  on("env.get", () => ({ value: "/home/samu" }));
+  on("command.register", ($, e) => ({ value: { command: e.name } }));
+  on("session.usage", () => ({ value: { startedAt: NOW, context: { window: 200_000 }, rateLimits } as never }));
+  on("session.measure", ($, e) => ({ changed: e.changed }));
+  on("turn.complete", ($, e) => ({ text: e.answer }));
+  on("ui.render", ($, e) => {
+    const { Box, Text } = $.ui.resolve(e);
+    // Como el motor: la cola va tras la línea, separada con « · ».
+    if ("hint" in e.props) return <Text>{e.props.hint + ("tail" in e.props && e.props.tail ? ` · ${e.props.tail}` : "")}</Text>;
+    return <Box key="engine" />;
+  });
+  return { clock, store };
+}
+
+const start = ($: Engine) => $.session.start({ cwd: "/repo", surface: "terminal", isInteractive: true });
+const footer = ($: Engine, columns = 160) =>
+  $.ui.mount({ plugin: "n-ein", surface: "terminal", component: "SessionMode", props: { modes: [] }, viewport: { columns, rows: 30 } });
+const hint = ($: Engine) =>
+  $.ui.mount({ plugin: "n-ein", surface: "terminal", component: "PromptHint", props: { isDraft: false, isWorking: false, hint: "? for shortcuts" } });
+const turnEnd = ($: Engine, usage?: typeof USAGE, agentId?: string) =>
+  $.turn.complete({ answer: "", durationMs: 1, isAborted: false, turnId: "t1", reason: "answer", usage, agentId });
+
+test("el pie enseña las dos ventanas de la suscripción con su reinicio", async ($, on) => {
+  world(on);
+  await start($);
+  const drawn = JSON.stringify(await (await footer($)).drawn());
+  expect(drawn).toContain("5h");
+  expect(drawn).toContain(" 58%");
+  expect(drawn).toContain(" ↻ 2h 10m");
+  expect(drawn).toContain("sem");
+});
+
+test("en un terminal estrecho el medidor cede antes que desbordar", async ($, on) => {
+  world(on);
+  await start($);
+  const drawn = JSON.stringify(await (await footer($, 120)).drawn());
+  expect(drawn).toContain(" 58%");
+  expect(drawn).not.toContain("━");
+  expect(JSON.stringify(await (await footer($, 90)).drawn())).not.toContain("5h");
+});
+
+test("fuera de suscripción el pie se queda como está", async ($, on) => {
+  world(on, []);
+  await start($);
+  expect(JSON.stringify(await (await footer($)).drawn())).not.toContain("5h");
+});
+
+test("una medición nueva mueve el medidor y queda para la próxima sesión", async ($, on) => {
+  const w = world(on, []);
+  await start($);
+  await $.session.measure({ context: { window: 200_000 }, rateLimits: [{ ...LIMITS[0], percentUsed: 91 }], changed: ["rateLimits"] } as never);
+  expect(JSON.stringify(await (await footer($)).drawn())).toContain(" 91%");
+  expect(Array.isArray(w.store.limits)).toBe(true);
+});
+
+test("tras un turno, la línea de ayuda lleva sus tokens y los de la sesión", async ($, on) => {
+  world(on);
+  await start($);
+  await turnEnd($, USAGE);
+  await turnEnd($, { ...USAGE, cache_read_input_tokens: 0, cache_creation_input_tokens: 0, input_tokens: 1000, output_tokens: 60 });
+  await turnEnd($, USAGE, "subagente");
+  const ui = await hint($);
+  expect(await ui.find({ text: "? for shortcuts · turno ↑1.0k ↓60 · sesión ↑46.0k ↓400" })).toBeDefined();
+});
+
+test("antes del primer turno la línea de ayuda no cambia", async ($, on) => {
+  world(on);
+  await start($);
+  expect(await (await hint($)).find({ text: "? for shortcuts" })).toBeDefined();
 });

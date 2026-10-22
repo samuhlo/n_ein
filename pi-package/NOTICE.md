@@ -28,6 +28,12 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 ```
 
+## Medidores del plugin de Claude y skill `commit`
+
+`claude-plugin/hooks/meter-core.ts` y sus hooks en `register.tsx` adaptan `sub-meter` y `token-meter` de [better-claude](https://github.com/midudev/better-claude) (revisión `96967abb0b26bd26e32947fcdf89ce154ef30fe0`), de Miguel Ángel Durán (midudev), con licencia MIT: el mismo texto de licencia de arriba, con `Copyright (c) 2026 Miguel Ángel Durán (midudev)`.
+
+La skill `commit` toma la idea del comando `commit` del mismo repositorio (grupos lógicos, una sola pregunta, sin atribución); no reproduce su texto.
+
 ## Flujo de trabajo
 
 El flujo de n_ein (`flow.md`) se inspira en el Organic Driven Development de [Gentle Shell](https://github.com/Gentleman-Programming/gentle-shell) (licencia MIT); no reproduce su texto. Los nombres y logos de Gentle Shell no se usan.
