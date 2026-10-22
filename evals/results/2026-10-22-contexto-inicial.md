@@ -86,6 +86,8 @@ Tomadas por Samu el 22 de octubre, tras leer esta medición.
 - **Cómo quedan ahora las reglas.**
   - Se pasaron a `~/.n_ein/preferences.md`, en la sección «Code conventions», que llega a los dos runtimes.
   - Quedaron fuera las tres reglas que chocan con el flujo o dependen de una herramienta: no añadir tests sin que se pidan, preguntar ante dos enfoques válidos y usar siempre Context7.
+  - Se afinaron el mismo día. Cambios en las reglas de código: el lockfile del proyecto manda sobre Bun, los checks se pasan arreglando la causa (sin `@ts-ignore` ni desactivar o borrar tests) y los secretos no se suben al repositorio.
+  - Se añadió una sección «Evidence and authorization» con dos reglas de gentle-ai: verificar antes de dar la razón o afirmar algo (`internal/assets/generic/persona-neutral.md`) y no tocar servicios remotos sin autorización explícita (`internal/assets/generic/remote-authorization-contract.md`).
   - `bin/n-ein-claude-dev` pasa `claudeMdExcludes` con `~/.claude/CLAUDE.md` y `~/.claude/rules/**`.
   - Comprobado con el Claude real, 2.1.308: en la sesión `e4b74750` la petición ya no contiene «Global Rules for Claude Code» y sí contiene «Code conventions».
   - Copias de seguridad de los dos archivos del usuario: `*.bak-2026-10-22`.
