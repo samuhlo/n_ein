@@ -76,9 +76,11 @@ La memoria duradera del proyecto vive en su glosario, decisiones y referencias d
 
 Para reducir la relectura del contexto, Pi sustituye búsquedas recuperables por una nota tras la primera edición y lecturas de código tras un commit con tareas pendientes. Conserva documentación Markdown y referencias de skills, también leídas por shell, errores y resultados de comprobaciones. Los comandos mixtos o dinámicos y los scripts sin llamadas conocidas se conservan; consultar el historial de Git no activa el recorte. Este mecanismo reduce contexto, pero su ahorro y calidad se miden por encargos completos, no por el tamaño retirado.
 
-### Un árbol, una sesión
+### Varias sesiones en el mismo proyecto
 
-El launcher mantiene un bloqueo del árbol durante la sesión y su recorrido de relevo. Una segunda sesión abierta desde `nein` en el mismo árbol recibe `RUNTIME_BUSY` antes de arrancar el runtime; otros árboles pueden trabajar a la vez. El shell hereda el bloqueo para conservarlo si muere el launcher y el sistema lo libera al terminar. Para abrir directamente con esa protección: `nein --project <proyecto> --runtime pi -- <argumentos de Pi>` (o `--runtime claude`). Los lanzadores shell de desarrollo y los escritores externos no adquieren ese bloqueo: deben coordinarse antes del relevo.
+Puedes abrir varias conversaciones de Pi o Claude con `nein` en el mismo proyecto, desde terminales distintas. También puedes abrirlas directamente: `nein --project <proyecto> --runtime pi -- <argumentos de Pi>` (o `--runtime claude`). Cada relevo espera a que termine su propia sesión de origen; las otras conversaciones pueden seguir abiertas. Las sesiones comparten los archivos del proyecto: coordina los cambios que se solapen o usa worktrees para trabajos independientes.
+
+`Ctrl+Z` suspende un proceso; no lo cierra. `fg` permite recuperarlo desde la terminal que lo suspendió, pero no desde otra. Esa suspensión no impide abrir una conversación nueva. Para continuar la conversación suspendida, vuelve a su terminal y recupérala, o termina ese proceso antes de retomar su historial en otra sesión.
 
 ### Relevo Pi ↔ Claude
 

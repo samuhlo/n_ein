@@ -1,8 +1,8 @@
 // =============================================================================
-// [FLOW] UN RUNTIME POR ÁRBOL
-// El launcher conserva el bloqueo durante el recorrido Pi↔Claude. El sistema
-// operativo lo libera al cerrar el descriptor, incluso si muere el launcher.
-// No se borra el archivo: recrearlo permitiría bloquear inodos distintos.
+// [FLOW] SESIONES INDEPENDIENTES
+// El usuario puede abrir varias conversaciones en el mismo proyecto. El relevo
+// espera a su propio runtime en los lanzadores shell. Los bloqueos de este
+// archivo se reservan a la propiedad de trabajadores del equipo experimental.
 // =============================================================================
 package main
 
@@ -38,6 +38,7 @@ func acquireLeaseAt(dir, project string) (*os.File, error) {
 	if err := os.MkdirAll(dir, 0o700); err != nil {
 		return nil, err
 	}
+	// BLINDAJE -> No borrar el archivo: recrearlo permitiría bloquear inodos distintos.
 	lease, err := os.OpenFile(filepath.Join(dir, "n_ein-runtime.lock"), os.O_CREATE|os.O_RDWR, 0o600)
 	if err != nil {
 		return nil, err
@@ -45,7 +46,7 @@ func acquireLeaseAt(dir, project string) (*os.File, error) {
 	if err := syscall.Flock(int(lease.Fd()), syscall.LOCK_EX|syscall.LOCK_NB); err != nil {
 		_ = lease.Close()
 		if err == syscall.EWOULDBLOCK {
-			return nil, fmt.Errorf("RUNTIME_BUSY: ya hay una sesión de n_ein en este árbol; ciérrala o usa su relevo: %s", project)
+			return nil, fmt.Errorf("RUNTIME_BUSY: el árbol sigue ocupado por otro proceso; no se puede asignar al trabajador: %s", project)
 		}
 		return nil, fmt.Errorf("bloqueo del runtime: %w", err)
 	}
@@ -59,15 +60,8 @@ func launchRuntime(packageRoot, project, runtime string, args []string) error {
 	} else if runtime != "pi" {
 		return fmt.Errorf("runtime desconocido: %s", runtime)
 	}
-	lease, err := acquireProjectLease(project)
-	if err != nil {
-		return err
-	}
-	defer lease.Close()
 	cmd := exec.Command(filepath.Join(packageRoot, "bin", name), args...)
 	cmd.Dir = project
 	cmd.Stdin, cmd.Stdout, cmd.Stderr = os.Stdin, os.Stdout, os.Stderr
-	// BLINDAJE -> El shell conserva el descriptor durante el relevo y si muere el padre.
-	cmd.ExtraFiles = []*os.File{lease}
 	return cmd.Run()
 }

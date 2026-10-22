@@ -16,6 +16,8 @@ Las secciones cronológicas siguientes registran cómo se llegó aquí. Las prop
 
 ## Acordado explícitamente
 
+El 21 de octubre Samu aclaró que debe poder abrir varias sesiones de Claude o Pi en el mismo proyecto, aunque otra siga abierta o suspendida en una terminal distinta. Se retira la exclusión general por árbol del launcher. El criterio de un agente por encargo se aplica a cada conversación; el relevo sigue esperando a su propio origen y sus herramientas, y el equipo experimental conserva la propiedad de sus trabajadores.
+
 | Decisión | Consecuencia |
 |---|---|
 | Crear proyecto independiente `n_ein` | El plan anterior de refactorizar Ein in situ deja de gobernar la ejecución. |
