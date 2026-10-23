@@ -2,7 +2,6 @@ package main
 
 import (
 	"encoding/json"
-	"math"
 	"net/http"
 	"os"
 	"path/filepath"
@@ -95,16 +94,10 @@ func withUpdate(state appState, version string) appState {
 	return state
 }
 
-// bounce es la altura del aviso en filas (0–2): tres botes que se apagan y una pausa, en bucle.
-func bounce(seconds float64) int {
-	const period, bouncing = 4.0, 1.5
-	t := math.Mod(seconds, period)
-	if t >= bouncing {
-		return 0
-	}
-	step := bouncing / 3
-	k := math.Floor(t / step)
-	phase := (t - k*step) / step
-	height := 2.4 * math.Pow(0.55, k) * math.Sin(math.Pi*phase)
-	return int(math.Round(height))
+// blinkSeconds es lo que dura el parpadeo; después el aviso queda fijo y la portada deja de redibujarse.
+const blinkSeconds = 1.2
+
+// blink dice si el aviso se ve: aparece, se apaga y vuelve dos veces, y se queda.
+func blink(seconds float64) bool {
+	return seconds >= blinkSeconds || int(seconds/0.3)%2 == 0
 }

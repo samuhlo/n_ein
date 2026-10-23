@@ -43,8 +43,10 @@ type uiModel struct {
 	started time.Time
 	now     time.Time
 	intro   bool
-	// update es la versión nueva del canal, cuando la hay; mantiene viva la animación del aviso.
-	update string
+	// update es la versión nueva del canal, cuando la hay. noticeAt marca cuándo se vio el
+	// aviso por primera vez: el parpadeo cuenta desde ahí, no desde la apertura.
+	update   string
+	noticeAt time.Time
 }
 
 func newUIModel(state appState, view int, intro bool) uiModel {
@@ -122,7 +124,8 @@ func (m uiModel) Update(message tea.Msg) (tea.Model, tea.Cmd) {
 		if m.intro && m.now.Sub(m.started).Seconds() >= brand.IntroSeconds {
 			m.intro = false
 		}
-		if m.intro || m.update != "" {
+		m = m.showNotice(m.now)
+		if m.intro || m.blinking() {
 			return m, tick()
 		}
 		return m, nil
@@ -137,14 +140,17 @@ func (m uiModel) Update(message tea.Msg) (tea.Model, tea.Cmd) {
 		if ticking {
 			return m, nil
 		}
+		m = m.showNotice(time.Now())
 		return m, tick()
 	}
 	key, ok := message.(tea.KeyPressMsg)
 	if !ok {
 		return m, nil
 	}
-	// Cualquier tecla asienta el Panel: la apertura nunca hace esperar.
+	// Cualquier tecla asienta el Panel: la apertura nunca hace esperar. El tic de la
+	// apertura que ya viene en camino sigue con el parpadeo si el aviso llegó durante ella.
 	m.intro = false
+	m = m.showNotice(time.Now())
 	value := key.String()
 	if m.focus {
 		switch value {
@@ -205,13 +211,25 @@ func (m uiModel) Update(message tea.Msg) (tea.Model, tea.Cmd) {
 	return m, nil
 }
 
+// showNotice arranca el parpadeo la primera vez que el aviso puede verse: con la portada asentada.
+func (m uiModel) showNotice(at time.Time) uiModel {
+	if m.update != "" && !m.intro && m.noticeAt.IsZero() {
+		m.noticeAt, m.now = at, at
+	}
+	return m
+}
+
+func (m uiModel) blinking() bool {
+	return !m.noticeAt.IsZero() && m.now.Sub(m.noticeAt).Seconds() < blinkSeconds
+}
+
 func (m uiModel) View() tea.View {
 	painter := brand.Painter{Color: brand.Enabled()}
 	elapsed := brand.IntroSeconds
 	if m.intro {
 		elapsed = m.now.Sub(m.started).Seconds()
 	}
-	frame := screen{width: m.width, height: m.height, elapsed: elapsed, update: m.update, lift: bounce(m.now.Sub(m.started).Seconds())}
+	frame := screen{width: m.width, height: m.height, elapsed: elapsed, update: m.update, blinkOff: !blink(m.now.Sub(m.noticeAt).Seconds())}
 	view := tea.NewView(render(m.state, m.view, m.row, m.filter, m.focus, painter, frame))
 	view.AltScreen = true
 	if painter.Color {
@@ -222,11 +240,11 @@ func (m uiModel) View() tea.View {
 
 // screen es lo que la pintura necesita del terminal; ancho 0 significa salida sin TTY.
 type screen struct {
-	width   int
-	height  int
-	elapsed float64
-	update  string // versión nueva, si la hay
-	lift    int    // altura del aviso en su bote, 0–2
+	width    int
+	height   int
+	elapsed  float64
+	update   string // versión nueva, si la hay
+	blinkOff bool   // el aviso está en la parte apagada de su parpadeo
 }
 
 func (s screen) total() int {
@@ -301,15 +319,12 @@ func renderHome(state appState, selected int, p brand.Painter, s screen) string 
 		home := state.home
 		context := strings.Join([]string{home.name, home.branch, home.changes}, " · ")
 		b.WriteString(center(p.Fg(brand.Muted, clip(context, total-4)), total) + "\n\n")
-		// El aviso bota dentro de tres filas propias: el menú no se mueve con él.
+		// El aviso tiene su fila: al apagarse en el parpadeo deja el hueco y el menú no se mueve.
 		if s.update != "" {
-			badge := center(p.Bold(p.Fg(brand.Yellow, "▲ nueva versión "+s.update))+p.Fg(brand.Faint, " · u actualizar"), total)
-			for y := 2; y >= 0; y-- {
-				if y == s.lift {
-					b.WriteString(badge)
-				}
-				b.WriteString("\n")
+			if !s.blinkOff {
+				b.WriteString(center(p.Bold(p.Fg(brand.Yellow, "▲ nueva versión "+s.update))+p.Fg(brand.Faint, " · u actualizar"), total))
 			}
+			b.WriteString("\n\n")
 		}
 	} else {
 		b.WriteString("\n\n\n")
@@ -342,6 +357,9 @@ func renderHome(state appState, selected int, p brand.Painter, s screen) string 
 	}
 	b.WriteString("\n")
 	b.WriteString(center(p.Fg(brand.Faint, "tab vistas · j/k mover · enter abrir · q salir"), total) + "\n")
+	if version := state.home.version; settled && version != "" {
+		b.WriteString(center(p.Fg(brand.Faint, clip("n_ein "+version+" · "+state.home.channel, total-4)), total) + "\n")
+	}
 	return b.String()
 }
 
