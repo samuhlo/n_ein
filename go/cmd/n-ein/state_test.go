@@ -126,6 +126,11 @@ func TestRuntimeViewUsesConfiguredBinariesAndRejectsWrongPiVersion(t *testing.T)
 	if state.views[0].rows[0].action != "" || !strings.Contains(state.views[0].rows[0].value, "0.87.1") {
 		t.Fatalf("La portada ofreció Pi incompatible: %#v", state.views[0].rows[0])
 	}
+	// El modelo se elige dentro de Pi y allí se ve: la portada no lo repite junto a Pi.
+	write(t, pi, "#!/bin/sh\nprintf '0.87.1\\n'\n")
+	if row := loadState(root, project).views[0].rows[0]; row.action != "pi" || row.value != "" {
+		t.Fatalf("La portada anota algo junto a Pi disponible: %#v", row)
+	}
 	if state.views[0].rows[1].action != "claude" {
 		t.Fatalf("La portada ocultó Claude configurado: %#v", state.views[0].rows[1])
 	}

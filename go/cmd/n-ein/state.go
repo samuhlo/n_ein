@@ -427,9 +427,10 @@ func loadState(root, project string) appState {
 		return row{label, known(choice.Model) + " · " + known(choice.Thinking), modelSources[key], ""}
 	}
 	principal := modelSelection{Model: config.Pi.Model, Thinking: config.Pi.Thinking}
-	piNote := piLabel
-	if piAction != "" {
-		piNote = strings.TrimPrefix(known(config.Pi.Model), "openai-codex/") + " · " + known(config.Pi.Thinking)
+	// Como Claude: la nota solo explica por qué no se puede abrir. El modelo se elige y se ve dentro.
+	piNote := ""
+	if piAction == "" {
+		piNote = piLabel
 	}
 	claudeNote := ""
 	if claudeAction == "" {
