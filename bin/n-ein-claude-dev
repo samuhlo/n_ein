@@ -87,14 +87,17 @@ fi
 # por argumentos, así que ~/.claude y su MCP global no se tocan.
 # Los commits y PR del flujo son trabajo del usuario: sin la coautoría que Claude Code añade por
 # defecto. Se usa la forma de objeto porque versiones antiguas rechazan `false`.
+# BLINDAJE -> Claude encuentra ~/.claude/CLAUDE.md al subir carpetas si el proyecto vive bajo ~, y en
+# ningún otro caso; Pi nunca. Las reglas del usuario llegan a los dos por preferences.md.
 "$repo_dir/bin/n-ein-codegraph"
 codegraph_bin="$("$repo_dir/bin/n-ein-codegraph" --bin 2>/dev/null)"
 export DO_NOT_TRACK=1
 { IFS= read -r mcp_config && IFS= read -r claude_settings; } < <(bun -e '
-  const [todo, bin] = process.argv.slice(1);
+  const [todo, bin, home] = process.argv.slice(1);
   const settings = {
     statusLine: { type: "command", command: JSON.stringify(todo) + " --statusline", padding: 0 },
     attribution: { commit: "", pr: "" },
+    claudeMdExcludes: [home + "/.claude/CLAUDE.md", home + "/.claude/rules/**"],
   };
   let mcp = "";
   if (bin) {
@@ -102,7 +105,7 @@ export DO_NOT_TRACK=1
     settings.hooks = { UserPromptSubmit: [{ hooks: [{ type: "command", command: JSON.stringify(bin) + " prompt-hook" }] }] };
   }
   console.log(mcp + "\n" + JSON.stringify(settings));
-' "$repo_dir/bin/n-ein-todo" "$codegraph_bin") || { printf '[ERR] :: CLAUDE_SETTINGS :: reason: bun\n' >&2; exit 69; }
+' "$repo_dir/bin/n-ein-todo" "$codegraph_bin" "$HOME") || { printf '[ERR] :: CLAUDE_SETTINGS :: reason: bun\n' >&2; exit 69; }
 if [[ -n "$mcp_config" ]]; then claude_args+=(--mcp-config "$mcp_config"); fi
 claude_args+=(--settings "$claude_settings")
 
