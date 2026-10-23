@@ -71,16 +71,49 @@ func TestUpdateNoticeKeepsFocusAndOffersU(t *testing.T) {
 	}
 }
 
-func TestBounceRisesAndRests(t *testing.T) {
-	peak := 0
-	for ms := 0; ms < 1500; ms += 20 {
-		h := bounce(float64(ms) / 1000)
-		if h < 0 || h > 2 {
-			t.Fatalf("altura fuera de las tres filas: %d", h)
+func TestNoticeBlinksTwiceThenStays(t *testing.T) {
+	changes := 0
+	for ms, last := 0, true; ms < 2000; ms += 20 {
+		on := blink(float64(ms) / 1000)
+		if on != last {
+			changes++
 		}
-		peak = max(peak, h)
+		last = on
 	}
-	if peak != 2 || bounce(3) != 0 {
-		t.Fatalf("el aviso no bota y descansa: pico %d, reposo %d", peak, bounce(3))
+	if changes != 4 || !blink(0) || !blink(5) {
+		t.Fatalf("el aviso debe apagarse y volver dos veces y quedarse fijo: %d cambios", changes)
+	}
+}
+
+func TestNoticeKeepsMenuStillAndStopsTicking(t *testing.T) {
+	state := appState{
+		menu:  []menuItem{{"Pi", "", "p", "pi"}},
+		home:  homeContext{name: "demo", channel: "preview", version: "0.1.0"},
+		views: []panel{{0, "INICIO", []row{{"Pi", "", "p", "pi"}}}},
+	}
+	on := renderHome(state, 0, brand.Painter{}, screen{elapsed: brand.IntroSeconds, update: "0.2.0"})
+	off := renderHome(state, 0, brand.Painter{}, screen{elapsed: brand.IntroSeconds, update: "0.2.0", blinkOff: true})
+	if strings.Contains(off, "nueva versión") || strings.Count(on, "\n") != strings.Count(off, "\n") {
+		t.Fatalf("el parpadeo mueve la portada:\n%s\n---\n%s", on, off)
+	}
+	row := func(drawn string) int { return strings.Count(drawn[:strings.Index(drawn, "▸ Pi")], "\n") }
+	if row(on) != row(off) {
+		t.Fatal("el menú cambia de sitio con el parpadeo")
+	}
+	m := newUIModel(state, homeView, false)
+	updated, cmd := m.Update(updateFound("0.2.0"))
+	if cmd == nil {
+		t.Fatal("el aviso no arranca su parpadeo")
+	}
+	m = updated.(uiModel)
+	if _, cmd = m.Update(introTick(m.noticeAt.Add(2 * time.Second))); cmd != nil {
+		t.Fatal("el aviso sigue animándose después de parpadear")
+	}
+}
+
+func TestHomeShowsInstalledVersion(t *testing.T) {
+	state := appState{home: homeContext{name: "demo", channel: "preview", version: "0.3.0-alpha.5"}}
+	if drawn := renderHome(state, 0, brand.Painter{}, screen{elapsed: brand.IntroSeconds}); !strings.Contains(drawn, "n_ein 0.3.0-alpha.5 · preview") {
+		t.Fatalf("la portada no dice qué versión está instalada:\n%s", drawn)
 	}
 }
