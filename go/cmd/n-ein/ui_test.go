@@ -81,7 +81,7 @@ func TestNullDeviceIsNotATerminal(t *testing.T) {
 
 func homeState() appState {
 	menu := []menuItem{
-		{"Pi", "gpt-6-sol · high", "p", "pi"},
+		{"Pi", "", "p", "pi"},
 		{"Claude Code", "", "c", "claude"},
 		{"Codex", "sin adaptador", "", ""},
 		{"Elegir una sesión", "2 recientes", "s", "view:2"},
