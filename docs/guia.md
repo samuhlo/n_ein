@@ -101,7 +101,7 @@ tar -xzf n-ein-0.1.0-preview.3-darwin-arm64.tar.gz
 nein
 ```
 
-El primer arranque de Pi en preview requiere `/login` en `~/.n_ein/preview/pi-agent`; esa autenticación no se copia desde desarrollo ni desde Ein. Sobre una preview anterior, `nein-setup` actualiza con backup y `n-ein-install restore --channel preview` vuelve al anterior. Al abrir, el launcher consulta en segundo plano la última release de su canal (como mucho una vez cada seis horas). Si hay una más nueva, un aviso bota en la portada y aparece `u Actualizar`: descarga y verifica la release como el curl, instala con backup y vuelve a abrir la portada. Cierra antes las sesiones de n_ein abiertas en otras terminales. Notas de cada versión en [docs/releases](releases/).
+El primer arranque de Pi en preview requiere `/login` en `~/.n_ein/preview/pi-agent`; esa autenticación no se copia desde desarrollo ni desde Ein. Sobre una preview anterior, `nein-setup` actualiza con backup y `n-ein-install restore --channel preview` vuelve al anterior. Al abrir, el launcher consulta en segundo plano la última release de su canal (como mucho una vez cada seis horas). Si hay una más nueva, un aviso parpadea dos veces en la portada, se queda fijo y aparece `u Actualizar`: descarga y verifica la release como el curl, instala con backup y vuelve a abrir la portada. Cierra antes las sesiones de n_ein abiertas en otras terminales. Notas de cada versión en [docs/releases](releases/).
 
 ### Entrada `nein` con Pi gestionado
 

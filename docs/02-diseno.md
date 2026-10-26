@@ -294,7 +294,7 @@ Se conservan como producto. Se portan sus **comportamientos** (como casos de ace
 | Configuración | modo, TDD, Hypa, CodeGraph, persona | modelo y esfuerzo efectivos del principal y del trabajador; `/nein:models` en Pi los edita por canal, más el esfuerzo de Claude |
 | Sesiones | recientes con la última petición | recientes de todos los runtimes declarados |
 | Sistema | actualizaciones y diagnóstico | igual |
-| Runtime | elegir Pi o Claude y lanzar | es la **portada**: marca, contexto y menú Pi (`p`), Claude Code (`c`), Codex sin adaptador, sesiones (`s`) y estado (`e`) |
+| Runtime | elegir Pi o Claude y lanzar | es la **portada**: marca, contexto, menú Pi (`p`), Claude Code (`c`), Codex sin adaptador, sesiones (`s`) y estado (`e`), y al pie la versión instalada y su canal |
 
 Se mantienen atajos (`tab`, `j/k`, `g/G`, `f` o `/`, `enter`, `q`), `--once`, `--project` y `--no-intro`; sin terminal interactiva pinta una vez y sale. Cada fila de las vistas declara su fuente. La portada sustituye a Runtime porque lo primero que se viene a hacer es abrir un agente; antes quedaba en la quinta pestaña y la pantalla inicial no tenía nada seleccionable. `--view runtime` sigue abriendo la portada.
 
