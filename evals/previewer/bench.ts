@@ -19,6 +19,8 @@ import { parseArgs } from "node:util";
 import { channelDir } from "../../pi-package/models.ts";
 import { review } from "../../previewer/src/engine.ts";
 import { ReviewStore, type StoredFinding } from "../../previewer/src/store.ts";
+import type { Probe } from "../../previewer/src/finding.ts";
+import { probeLabel } from "../../previewer/src/probe-result.ts";
 
 const root = resolve(import.meta.dir, "../..");
 const here = import.meta.dir;
@@ -33,7 +35,7 @@ type Defect = { id: string; condition: string; consequence: string; evidence_pat
 type Reference = { defects: Defect[]; context_gaps: string[]; rubric?: string; note?: string };
 type Shown = Pick<StoredFinding, "kind" | "severity" | "title" | "plain" | "condition" | "consequence"> & {
   citations: { ref: string; text: string }[];
-  probe: { command: string; exitCode: number | null; reproduced: boolean } | null;
+  probe: Pick<Probe, "command" | "exitCode" | "reproduced" | "outcome" | "reason" | "baseline"> | null;
 };
 type Result = {
   case: string; model: string; thinking: string; status: string; error: string | null; seconds: number; usd: number;
@@ -158,7 +160,8 @@ async function run(argv: string[]): Promise<void> {
           kind: finding.kind, severity: finding.severity, title: finding.title, plain: finding.plain,
           condition: finding.condition, consequence: finding.consequence,
           citations: finding.citations.map((citation) => ({ ref: citation.ref, text: citation.text })),
-          probe: finding.probe ? { command: finding.probe.command, exitCode: finding.probe.exitCode, reproduced: finding.probe.reproduced } : null,
+          probe: finding.probe ? { command: finding.probe.command, exitCode: finding.probe.exitCode, reproduced: finding.probe.reproduced,
+            outcome: finding.probe.outcome, reason: finding.probe.reason, baseline: finding.probe.baseline } : null,
         })),
         gaps: outcome.run.gaps, rejected: outcome.run.rejected.length, contamination: contamination(runDir, item), runDir,
       };
@@ -188,7 +191,7 @@ function judgePrompt(item: Case, ref: Reference, result: Result, diff: string): 
     `### Hallazgo ${index + 1} · ${finding.kind} · ${finding.severity}`,
     `Título: ${finding.title}`, `Explicación: ${finding.plain}`, `Condición: ${finding.condition}`, `Consecuencia: ${finding.consequence}`,
     ...finding.citations.map((citation) => `Cita ${citation.ref}:\n${citation.text}`),
-    finding.probe ? `Sonda: \`${finding.probe.command}\` · ${finding.probe.reproduced ? "falló: fallo demostrado" : `código ${finding.probe.exitCode ?? "tiempo agotado"}`}` : "Sonda: ninguna",
+    finding.probe ? `Sonda: \`${finding.probe.command}\` · ${probeLabel(finding.probe)} · ${finding.probe.reason ?? "sin resultado explícito guardado"}` : "Sonda: ninguna",
   ].join("\n")).join("\n\n");
   const known = ref.defects.length
     ? ref.defects.map((defect) => `- ${defect.id}: si ${defect.condition}, entonces ${defect.consequence} (en ${defect.evidence_paths.join(", ")})`).join("\n")

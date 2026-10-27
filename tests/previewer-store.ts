@@ -4,6 +4,7 @@ import { tmpdir } from "node:os";
 import { join } from "node:path";
 import type { Finding } from "../previewer/src/finding.ts";
 import { ReviewStore, storePath } from "../previewer/src/store.ts";
+import { probeState } from "../previewer/src/probe-result.ts";
 
 const sample = (title: string): Finding => ({
   kind: "bug",
@@ -145,6 +146,28 @@ store.close();
   assert.deepEqual([kept?.title, kept?.thread, kept?.status, kept?.rating?.verdict], ["Antiguo", "f", "new", "vale"]);
   assert.deepEqual(migrated.run("r")?.tour, [], "una revisión anterior al recorrido queda sin él");
   migrated.close();
+}
+
+// La actualización semántica conserva las decisiones y no convierte un exit antiguo en prueba explícita.
+{
+  const path = join(mkdtempSync(join(tmpdir(), "nein-previewer-v3-")), "previewer.db");
+  const old = new ReviewStore(path);
+  const session = old.openSession({ repo: "/old", branch: "change" });
+  const run = old.startRun({ sessionId: session.id, baseSha: "b", headSha: "h", model: "m/x", thinking: "high" });
+  const [item] = old.finishRun(run.id, { status: "done", findings: [{ ...sample("Histórico"), probe: {
+    command: "exit 1", file: null, source: null, exitCode: 1, output: "old assertion", reproduced: true,
+  } }] });
+  old.rate(item!.id, "vale", "decisión anterior"); old.select(item!.id, true);
+  old.db.run("PRAGMA user_version = 3");
+  old.close();
+  const upgraded = new ReviewStore(path);
+  const kept = upgraded.finding(item!.id)!;
+  assert.equal(kept.rating?.reason, "decisión anterior");
+  assert.equal(kept.selected, true);
+  assert.equal(probeState(kept.probe!), "inconclusive");
+  assert.equal((upgraded.db.query("PRAGMA user_version").get() as { user_version: number }).user_version, 4,
+    "un lector v3 rechaza los nuevos datos en vez de llamar arreglo a not_applicable + exit 0");
+  upgraded.close();
 }
 
 console.log("previewer store: OK");

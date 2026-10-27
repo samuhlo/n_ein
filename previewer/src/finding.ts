@@ -20,15 +20,28 @@ export type Citation = {
   text: string;
 };
 
-/** Sonda: comando que sale con error cuando el fallo existe. El motor la repite antes de borrar la copia. */
-export type Probe = {
+export type ProbeOutcome = "reproduced" | "passed" | "not_applicable" | "error" | "inconclusive" | "not_run";
+export type ProbeSpec = {
   command: string;
   file: string | null;
+  protocol?: "nein-probe-v1";
+  check?: string;
+  compareBase?: boolean;
+};
+export type ProbeAssessment = { outcome: ProbeOutcome; reason: string };
+export type ProbeBaseline = ProbeAssessment & { sha: string; exitCode: number | null; output: string };
+
+/** Resultado de la comprobación, distinto del estado del proceso que la ejecutó. */
+export type Probe = ProbeSpec & {
   /** Contenido de la sonda: la copia se borra, esto queda para que el usuario la lea. */
   source: string | null;
   exitCode: number | null;
   output: string;
   reproduced: boolean;
+  /** Opcionales para poder leer sin migrar las sondas históricas. */
+  outcome?: ProbeOutcome;
+  reason?: string;
+  baseline?: ProbeBaseline;
 };
 
 /** Un paso del recorrido: una parte del cambio, en el orden en que conviene leerla. */

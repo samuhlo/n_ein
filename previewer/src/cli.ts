@@ -11,6 +11,7 @@ import { tmpdir } from "node:os";
 import { join, resolve } from "node:path";
 import { parseArgs } from "node:util";
 import { review } from "./engine.ts";
+import { probeLabel } from "./probe-result.ts";
 import { git, resolveRange } from "./git.ts";
 import { handoffBrief } from "./handoff.ts";
 import { ensureServer, reviewerLink } from "./open.ts";
@@ -173,9 +174,11 @@ try {
     const label = { new: "nuevo", persists: "sigue", resolved: "resuelto", unchecked: "sin comprobar" } as const;
     findings.forEach((item, index) => {
       const probe = item.check?.probe ?? item.probe;
-      const shown = probe ? (probe.reproduced ? " · sonda falla: demostrado" : probe.exitCode === 0 ? " · sonda pasa" : " · sonda no reproduce") : "";
+      const shown = probe ? ` · ${probeLabel(probe)}` : "";
       console.log(`\n${String(index + 1).padStart(2, "0")} ${label[item.status]} · ${item.severity} · ${item.kind} · ${item.title}${shown}`);
       console.log(`▏ ${item.plain}`);
+      if (probe?.reason) console.log(`▏ ${probe.reason}`);
+      if (probe?.baseline) console.log(`▏ base ${probe.baseline.sha.slice(0, 12)}: ${probeLabel({ ...probe, ...probe.baseline })} · ${probe.baseline.reason}`);
       if (item.check) console.log(`▏ ${item.check.note}`);
       if (item.status !== "resolved") for (const citation of item.citations) console.log(`▏ ${citation.ref}`);
     });

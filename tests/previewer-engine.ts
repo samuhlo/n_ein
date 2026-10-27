@@ -129,11 +129,11 @@ const outcome = await review({
     // Aunque el revisor mueva ramas dentro de su copia, el original no se entera.
     execFileSync("git", ["branch", "-f", "main", "HEAD"], { cwd: request.cwd });
     mkdirSync(join(request.cwd, ".previewer-probes"));
-    writeFileSync(join(request.cwd, ".previewer-probes/clip.sh"), "grep -q 'slice(0, 3)' text.ts && exit 1 || exit 0\n");
+    writeFileSync(join(request.cwd, ".previewer-probes/clip.sh"), "if grep -q 'slice(0, 3)' text.ts; then echo 'NEIN_PROBE_RESULT {\"check\":\"clip\",\"outcome\":\"reproduced\",\"reason\":\"text is truncated\"}'; exit 1; else echo 'NEIN_PROBE_RESULT {\"check\":\"clip\",\"outcome\":\"passed\",\"reason\":\"text is preserved\"}'; fi\n");
     writeFileSync(join(request.cwd, ".previewer-probes/pass.sh"), "exit 0\n");
     return {
       text: report([
-        finding("Corta letras a la mitad", [`text.ts@${short}:L2`, `text.ts@${short}:L99`], { command: "bash .previewer-probes/clip.sh", file: ".previewer-probes/clip.sh" }),
+        finding("Corta letras a la mitad", [`text.ts@${short}:L2`, `text.ts@${short}:L99`], { command: "bash .previewer-probes/clip.sh", file: ".previewer-probes/clip.sh", protocol: "nein-probe-v1", check: "clip" }),
         finding("Cita inventada", [`missing.ts@${short}:L1`]),
         finding("SHA ajeno", ["text.ts@0123456789:L1"]),
         { ...finding("Tipo raro", [`text.ts@${short}:L1`]), kind: "opinion" },
@@ -164,7 +164,7 @@ const [clip, outside, blank, missing, timedOut, parent, pass] = outcome.findings
 assert.ok(clip && outside && blank && missing && timedOut && parent && pass);
 assert.equal(timedOut.probe?.exitCode, null, "agotada no es un fallo demostrado");
 assert.equal(timedOut.probe?.reproduced, false);
-assert.equal(parent.probe?.reproduced, true);
+assert.equal(parent.probe?.reproduced, false);
 await Bun.sleep(2_500);
 assert.ok(!existsSync(late), "lo que lanzó una sonda agotada no sigue vivo");
 assert.ok(!existsSync(orphan), "ni lo que dejó en segundo plano una sonda terminada");
@@ -294,10 +294,10 @@ assert.equal(git("rev-parse", "main"), baseSha);
   assert.doesNotMatch(prompt, /^P\d+\. Sonda que no falla/m);
   const byTitle = new Map(second.findings.map((item) => [item.title, item]));
   const resolvedClip = byTitle.get("Corta letras a la mitad");
-  assert.deepEqual([resolvedClip?.status, resolvedClip?.check?.probe?.exitCode, resolvedClip?.check?.note], ["resolved", 0, "Devuelve el texto entero."], "la sonda original ya no falla");
+  assert.deepEqual([resolvedClip?.status, resolvedClip?.check?.probe?.exitCode, resolvedClip?.check?.note], ["resolved", 0, "La comprobación explícita de la sonda se ha superado."], "la sonda original ya no falla");
   const stillParent = byTitle.get("Sonda que deja un hijo");
-  assert.deepEqual([stillParent?.status, stillParent?.current], ["persists", true], "una sonda que sigue fallando pesa más que el agente");
-  assert.match(stillParent?.check?.note ?? "", /sigue fallando/);
+  assert.deepEqual([stillParent?.status, stillParent?.current], ["unchecked", false], "un exit 1 sin comprobación explícita no fuerza que el fallo siga");
+  assert.match(stillParent?.check?.note ?? "", /inconcluso/);
   const blankAgain = byTitle.get("La línea vacía sigue");
   assert.deepEqual([blankAgain?.status, blankAgain?.thread], ["persists", blank.thread]);
   assert.equal(byTitle.get("Repite clave")?.status, "new", "una clave usada dos veces no continúa dos hilos");
@@ -320,7 +320,7 @@ assert.equal(git("rev-parse", "main"), baseSha);
       return quiet(report([finding("Con archivo de sonda", [`text.ts@${head}:L1`], { command: "bash .previewer-probes/link.sh", file: ".previewer-probes/link.sh" })]))();
     },
   });
-  assert.equal(linked.findings.find((item) => item.title === "Con archivo de sonda")?.probe?.reproduced, true);
+  assert.equal(linked.findings.find((item) => item.title === "Con archivo de sonda")?.probe?.reproduced, false);
   const after = await review({
     packageRoot, cwd: repo, store, model: "test/reviewer", log: () => {}, sandbox: injected, probeTimeoutMs: 1_000,
     runner: async (request) => {
@@ -357,7 +357,7 @@ assert.equal(git("rev-parse", "main"), baseSha);
   });
   for (const title of ["Sonda enlazada", "Carpeta enlazada"]) {
     const probe = leaked.findings.find((item) => item.title === title)?.probe;
-    assert.equal(probe?.reproduced, true, title);
+    assert.equal(probe?.reproduced, false, title);
     assert.equal(probe?.source, null, `${title}: el contenido de fuera de la copia no se guarda`);
   }
 }
@@ -381,6 +381,24 @@ assert.equal(git("rev-parse", "main"), baseSha);
 }
 
 // --- Nada que revisar --------------------------------------------------------------------------
+{
+  const controller = new AbortController();
+  const lateProbe = join(scratch, "after-probe-abort");
+  const head = git("rev-parse", "HEAD").slice(0, 10);
+  const stopped = await review({
+    packageRoot, cwd: repo, store, model: "test/reviewer", signal: controller.signal, sandbox: injected, log: () => {},
+    runner: async () => {
+      setTimeout(() => controller.abort(), 100);
+      return { text: report([finding("Cancelar sonda", [`text.ts@${head}:L1`], {
+        command: `(sleep 1; touch ${lateProbe}) & sleep 10`, file: null,
+      })]), usage: { input: 0, output: 0, cacheRead: 0, usd: 0 }, error: null };
+    },
+  });
+  assert.equal(stopped.run.status, "cancelled");
+  await Bun.sleep(1_200);
+  assert.ok(!existsSync(lateProbe), "cancelar durante las sondas mata también sus hijos");
+}
+
 await assert.rejects(review({ packageRoot, cwd: repo, head: "main", store, model: "test/reviewer", log: () => {} }), /nada que revisar/);
 
 store.close();

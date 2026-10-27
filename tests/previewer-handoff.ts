@@ -51,7 +51,7 @@ assert.match(handoff(), /No p_reviewer session exists for feat\/x/);
 const store = new ReviewStore(db);
 const session = store.openSession({ repo, branch: "feat/x" });
 const first = store.startRun({ sessionId: session.id, baseSha: "base", headSha: head, model: "m/x", thinking: "high" });
-const probe = { command: "bash .previewer-probes/a.sh", file: ".previewer-probes/a.sh", source: "grep -q 'a = 2' a.ts && exit 1", exitCode: 1, output: "", reproduced: true };
+const probe = { command: "bash .previewer-probes/a.sh", file: ".previewer-probes/a.sh", source: "grep -q 'a = 2' a.ts && exit 1", exitCode: 1, output: "", reproduced: true, outcome: "reproduced" as const, protocol: "nein-probe-v1" as const, check: "a" };
 const [kept, skipped, quiet, fixed] = store.finishRun(first.id, { status: "done", findings: [sample("Sigue", probe), sample("No elegido"), sample("Callado"), sample("Arreglado")] });
 assert.ok(kept && skipped && quiet && fixed);
 
@@ -79,7 +79,7 @@ assert.doesNotMatch(brief, /No elegido|Arreglado/);
 assert.match(brief, /Add no other tasks/);
 assert.match(brief, /## 2\. Callado\n\nStatus: NOT checked by the latest review: reproduce it before changing any code/, "lo no comprobado se avisa");
 assert.match(brief, /User's rating: investigar \(no sé si pasa en Linux\)/);
-assert.match(brief, /Probe: `bash \.previewer-probes\/a\.sh` failed with exit 1: defect demonstrated/);
+assert.match(brief, /Probe: `bash \.previewer-probes\/a\.sh` defect reproduced \(exit 1\)/);
 assert.match(brief, /grep -q 'a = 2' a\.ts && exit 1/, "la sonda viaja entera para usarla como test en rojo");
 assert.match(brief, /export const a = 2;/, "y el código citado");
 assert.doesNotMatch(brief, /branch is now at/);

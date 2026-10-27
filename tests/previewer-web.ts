@@ -82,6 +82,15 @@ store.rate(plain.id, "descartar");
   assert.match(page, /<span class="slashes">\/\/<\/span> <span class="num">001<\/span>  QUÉ CAMBIA/);
   assert.match(page, /Los nombres se ven cortados\./);
   const card = page.slice(page.indexOf(`id="f-${evil.id}"`), page.indexOf("</article>", page.indexOf(`id="f-${evil.id}"`)));
+  assert.match(card, /resultado inconcluso/, "una sonda histórica no adquiere garantías al actualizar la interfaz");
+  assert.doesNotMatch(card, /demostrado/);
+  const explicit = text(renderPage({ ...views, findings: views.findings.map(f => ({ ...f, probe: f.probe ? { ...f.probe,
+    outcome: "not_applicable" as const, reason: "El backup ahora contiene el archivo.",
+    baseline: { sha: baseSha, outcome: "passed" as const, reason: "La base conserva los datos.", exitCode: 0, output: "ok" },
+  } : null })) }));
+  assert.match(explicit, /el escenario ya no aplica/);
+  assert.match(explicit, /El backup ahora contiene el archivo/);
+  assert.match(explicit, /comprobación en la base/);
   assert.ok(card.indexOf("Explicación llana") < card.indexOf("<details>"), "la explicación llana se ve sin desplegar");
   assert.ok(card.indexOf("si el texto es largo") > card.indexOf("<details>"), "la condición técnica va plegada");
   assert.match(card, new RegExp(`href="#l-0-a-2">text\\.ts@${headSha.slice(0, 7)}:L2`), "la cita enlaza su línea del diff");

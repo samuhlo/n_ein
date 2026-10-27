@@ -6,6 +6,7 @@
 // =============================================================================
 
 import type { Probe } from "../src/finding.ts";
+import { probeLabel, probeState as evidenceState } from "../src/probe-result.ts";
 import type { Run, Session, Status, StoredFinding, Verdict } from "../src/store.ts";
 import { marksFor, rowMarks, splitDiff, type FileDiff, type Mark, type Row } from "./diff.ts";
 import { html, type Html } from "./html.ts";
@@ -27,6 +28,7 @@ export type SessionView = {
 
 const WORDS = {
   es: {
+    lang: "es", baseline: "comprobación en la base",
     title: "REVISIÓN", tour: "QUÉ CAMBIA", findings: "HALLAZGOS", changes: "CAMBIOS",
     reviews: (n: number) => `${n} ${n === 1 ? "revisión" : "revisiones"}`,
     running: "hay una revisión en curso; esta página se actualiza sola al terminar",
@@ -41,7 +43,6 @@ const WORDS = {
     valid: "¿es válido?", reason: "motivo (opcional)", pick: "enviar a n_ein",
     detail: "detalle técnico", condition: "condición", consequence: "consecuencia", cited: "citas",
     probe: "sonda", check: "última comprobación", unproven: "falta comprobar", seenAt: "visto en",
-    demonstrated: "demostrado", passes: "pasa", notReproduced: "no reproduce", notRun: "no ejecutada",
     output: "salida", gap: "pendiente", rejected: (n: number) => `apartados: ${n} (sin citas válidas o mal formados)`,
     noLines: "sin líneas de texto que mostrar",
     picked: (n: number) => n === 0
@@ -49,6 +50,7 @@ const WORDS = {
       : `${n} para corregir · di «aplica la revisión» en n_ein`,
   },
   en: {
+    lang: "en", baseline: "base check",
     title: "REVIEW", tour: "WHAT CHANGES", findings: "FINDINGS", changes: "CHANGES",
     reviews: (n: number) => `${n} ${n === 1 ? "review" : "reviews"}`,
     running: "a review is running; this page updates itself when it ends",
@@ -63,7 +65,6 @@ const WORDS = {
     valid: "is it valid?", reason: "reason (optional)", pick: "send to n_ein",
     detail: "technical detail", condition: "condition", consequence: "consequence", cited: "citations",
     probe: "probe", check: "latest check", unproven: "still unproven", seenAt: "seen at",
-    demonstrated: "demonstrated", passes: "passes", notReproduced: "does not reproduce", notRun: "not run",
     output: "output", gap: "pending", rejected: (n: number) => `set aside: ${n} (no valid citations or malformed)`,
     noLines: "no text lines to show",
     picked: (n: number) => n === 0
@@ -85,10 +86,7 @@ function heading(index: number, title: string): Html {
 }
 
 function probeState(probe: Probe, words: Words): string {
-  if (probe.reproduced) return words.demonstrated;
-  if (probe.exitCode === 0) return words.passes;
-  if (probe.output.startsWith("no ejecutada")) return words.notRun;
-  return words.notReproduced;
+  return probeLabel(probe, words.lang);
 }
 
 /** Ancla de la línea que una cita marca en el diff, si cae en él. */
@@ -97,8 +95,10 @@ const anchor = (file: number, side: Mark["side"], line: number): string => `l-${
 function probeBlock(probe: Probe, words: Words): Html {
   return html`<div class="probe">
     <p><span class="key">${words.probe}</span> <code>${probe.command}</code> · ${probeState(probe, words)}${probe.exitCode !== null ? ` · exit ${probe.exitCode}` : ""}</p>
+    ${probe.reason ? html`<p>${probe.reason}</p>` : null}
     ${probe.file && probe.source ? html`<p class="path">${probe.file}</p><pre><code>${probe.source}</code></pre>` : null}
     ${probe.output ? html`<p class="key">${words.output}</p><pre><code>${probe.output}</code></pre>` : null}
+    ${probe.baseline ? html`<p class="key">${words.baseline} · ${short(probe.baseline.sha)} · ${probeLabel({ ...probe, ...probe.baseline }, words.lang)}</p><p>${probe.baseline.reason}</p><pre><code>${probe.baseline.output}</code></pre>` : null}
   </div>`;
 }
 
@@ -114,6 +114,7 @@ function findingBlock(item: StoredFinding, index: number, words: Words, places: 
     <p class="tags"><span class="num">${number(index)}</span> · ${words.severity[item.severity]} · ${words.kind[item.kind]} · <span class="status">${words.status[item.status]}</span>${probe ? ` · ${words.probe}: ${probeState(probe, words)}` : ""}</p>
     <h3>${item.title}</h3>
     <p class="plain">${item.plain}</p>
+    ${probe && !["reproduced", "passed"].includes(evidenceState(probe)) ? html`<p class="note">${probe.reason ?? (words.lang === "es" ? "La sonda antigua no identifica la condición comprobada. Hay que verificarla antes de concluir." : "The legacy probe does not identify the checked condition. Verify it before drawing a conclusion.")}</p>` : null}
     ${item.check ? html`<p class="note">${item.check.note}</p>` : null}
     <p class="where">${refs.map((ref, i) => (i ? html` · ${ref}` : ref))}</p>
     <div class="decide" role="group" aria-label="${words.valid}">

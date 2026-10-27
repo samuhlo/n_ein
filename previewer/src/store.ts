@@ -22,7 +22,7 @@ export type RunStatus = "running" | "done" | "failed" | "cancelled";
 export type Usage = { input: number; output: number; cacheRead: number; usd: number };
 /** Respecto a la última revisión terminada: nuevo, sigue, resuelto o sin comprobar desde un head anterior. */
 export type Status = "new" | "persists" | "resolved" | "unchecked";
-export type Outcome = "resolved" | "persists";
+export type Outcome = "resolved" | "persists" | "unchecked";
 /** Lo que una revisión posterior comprobó de un hilo sin volver a reportarlo. */
 export type Check = { runId: string; outcome: Outcome; note: string; probe: Probe | null };
 
@@ -86,7 +86,9 @@ export type RunResult = {
   checks?: { thread: string; outcome: Outcome; note: string; probe: Probe | null }[];
 };
 
-const SCHEMA = 3;
+// La v4 cambia el significado de la evidencia y añade comprobaciones «unchecked».
+// Un lector antiguo no debe interpretar not_applicable + exit 0 como un arreglo.
+const SCHEMA = 4;
 
 /** Base de datos del canal: `~/.n_ein/<canal>/previewer/previewer.db`. */
 export function storePath(packageRoot: string): string {

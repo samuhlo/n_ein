@@ -6,6 +6,7 @@
 // =============================================================================
 
 import type { Session, StoredFinding } from "./store.ts";
+import { probeLabel } from "./probe-result.ts";
 
 const short = (sha: string): string => sha.slice(0, 12);
 const fence = (text: string, lang = ""): string => {
@@ -27,10 +28,13 @@ function item(finding: StoredFinding, index: number): string {
   for (const citation of finding.citations) lines.push(`  - ${citation.ref}`, fence(citation.text).replace(/^/gm, "    "));
   const probe = finding.check?.probe ?? finding.probe;
   if (probe) {
-    const result = probe.reproduced ? `failed with exit ${probe.exitCode}: defect demonstrated` : probe.exitCode === 0 ? "passed" : `did not reproduce (${probe.exitCode ?? "timeout"})`;
+    const result = `${probeLabel(probe, "en")} (exit ${probe.exitCode ?? "none"})`;
     lines.push(`- Probe: \`${probe.command}\` ${result}`);
+    if (probe.reason) lines.push(`  Assessment: ${probe.reason}`);
+    if (probe.protocol) lines.push(`  Protocol: ${probe.protocol}; check: ${probe.check}`);
     if (probe.file && probe.source) lines.push(`  ${probe.file}:`, fence(probe.source).replace(/^/gm, "    "));
     if (probe.output) lines.push("  Output:", fence(probe.output).replace(/^/gm, "    "));
+    if (probe.baseline) lines.push(`  Base ${probe.baseline.sha}: ${probeLabel({ ...probe, ...probe.baseline }, "en")}. ${probe.baseline.reason}`);
   }
   if (finding.check) lines.push(`- Latest check: ${finding.check.note}`);
   if (finding.verification) lines.push(`- Still unproven: ${finding.verification}`);
@@ -49,7 +53,7 @@ export function handoffBrief(session: Session, selection: StoredFinding[], headN
     "",
     "Work them as one ordinary job:",
     "1. Add one task per finding below to `WORK.md`, in this order and with these titles. Add no other tasks: findings that are not listed here are not part of this job.",
-    "2. For each task, reproduce the defect first. A demonstrated probe is your red test; move it into the project's tests when it fits. Then fix it, run the checks and commit the task.",
+    "2. For each task, reproduce the defect first. Check that the probe exercises the claimed condition; an execution error or an inapplicable scenario is not a red test. Preserve its explicit result protocol and make it a project regression test when it fits. Then fix it, run the checks and commit the task.",
     "3. If a finding does not reproduce or turns out to be wrong, change no code for it. Report it back with your evidence; that is a valid outcome.",
     "4. When the job is closed, offer in one line to open the reviewer again for a second review.",
     "",
