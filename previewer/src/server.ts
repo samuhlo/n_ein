@@ -12,6 +12,7 @@ import { loadLang } from "../../pi-package/lang.ts";
 import { channelDir } from "../../pi-package/models.ts";
 import { git } from "./git.ts";
 import { ReviewStore, VERDICTS, type Verdict } from "./store.ts";
+import { ChainStore } from "./chains.ts";
 import type { SessionView } from "../web/view.ts";
 
 const WEB = resolve(import.meta.dir, "../web");
@@ -67,11 +68,13 @@ export async function createHandler(options: HandlerOptions): Promise<(request: 
     return given.length === expected.length && timingSafeEqual(given, expected);
   };
 
-  const view = (sessionId: string): SessionView | null => {
+  const view = (sessionId: string, inspect?: string | null): SessionView | null => {
     const session = options.store.session(sessionId);
     if (!session) return null;
     const runs = options.store.runs(sessionId);
-    const run = runs.filter((item) => item.status === "done").at(-1) ?? null;
+    const run = inspect ? runs.find(item => item.id === inspect && item.status === "done") ?? null
+      : runs.filter((item) => item.status === "done").at(-1) ?? null;
+    if (inspect && !run) return null;
     const latest = runs.at(-1) ?? null;
     let patch = "";
     if (run) {
@@ -87,9 +90,11 @@ export async function createHandler(options: HandlerOptions): Promise<(request: 
       }
     }
     return {
-      session, run, latest: latest && latest.id !== run?.id ? latest : null,
+      session, run, latest: !inspect && latest && latest.id !== run?.id ? latest : null,
       runs: { count: runs.length, usd: runs.reduce((sum, item) => sum + (item.usage?.usd ?? 0), 0) },
-      findings: options.store.findings(sessionId), patch, lang: loadLang(options.packageRoot).chat,
+      findings: options.store.findings(sessionId, inspect ?? undefined), patch, lang: loadLang(options.packageRoot).chat,
+      chain: new ChainStore(options.store).view(sessionId), historical: !!inspect,
+      reviewLabel: run ? new ChainStore(options.store).location(run.id) : null,
     };
   };
 
@@ -129,9 +134,10 @@ export async function createHandler(options: HandlerOptions): Promise<(request: 
       if (sessionMatch[2]) {
         const runs = options.store.runs(id);
         if (!options.store.session(id)) return fail(404, "sesión desconocida");
-        return json({ version: `${runs.map((item) => `${item.id}:${item.status}`).join(",")}|${options.store.decisions(id)}` });
+        const chain = new ChainStore(options.store).view(id);
+        return json({ version: `${runs.map((item) => `${item.id}:${item.status}`).join(",")}|${options.store.decisions(id)}|${chain ? JSON.stringify([chain.revisionId, chain.busy, chain.drift]) : ""}` });
       }
-      const data = view(id);
+      const data = view(id, url.searchParams.get("run"));
       return data ? json(data) : fail(404, "sesión desconocida");
     }
     const action = /^\/api\/findings\/([\w-]+)\/(rate|select)$/.exec(url.pathname);

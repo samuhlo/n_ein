@@ -102,12 +102,16 @@ El paquete de Pi lleva el catálogo de skills, la voz y el TODO de `WORK.md`. Co
 nein                                  # portada: estado del proyecto, sesiones y sistema
 nein --project . --runtime pi         # abre directamente, con el bloqueo del árbol
 nein previewer [review]               # abre (o hace) la revisión de la rama actual
+nein previewer chain --file serie.json # revisa los tramos y después su integración
+nein previewer open --chain nombre    # vuelve al balance de una cadena
 n-ein-install doctor --channel preview --runtime   # diagnostica la instalación
 n-ein-install restore --channel preview            # vuelve al backup anterior
 ./scripts/hotfix-preview.sh plan|apply|rollback    # aplica un commit comprobado a la preview
 ```
 
 El revisor distingue un fallo reproducido, una comprobación superada y un escenario que ya no aplica. Una sonda que no permite concluir deja el hallazgo sin comprobar y conserva tu selección. Al revisar después de un arreglo, indica si lo confirmó una sonda o la inspección del código con citas actuales.
+
+Puedes pedirle al agente «revisa esta cadena de PR»: prepara las referencias y valida el orden antes de iniciar las revisiones. La cadena conserva un único hilo por problema identificado, sus decisiones y el historial de comprobaciones; al terminar revisa el conjunto integrado. La vista distingue el balance actual de los informes históricos y señala si las ramas se han movido. [Formato y funcionamiento](docs/12-cadenas-revisor.md).
 
 Dentro de Pi:
 

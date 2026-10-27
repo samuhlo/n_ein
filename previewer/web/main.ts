@@ -11,6 +11,7 @@ import { renderPage, type SessionView } from "./view.ts";
 const POLL_MS = 10_000;
 const app = document.getElementById("app");
 const sessionId = decodeURIComponent(location.pathname.split("/")[2] ?? "");
+const inspectedRun = new URL(location.href).searchParams.get("run");
 
 function readToken(): string {
   const fromHash = new URLSearchParams(location.hash.slice(1)).get("t");
@@ -65,6 +66,11 @@ function paint(): void {
     if (id && input.value !== saved) drafts.set(id, input.value);
   }
   app.innerHTML = text(renderPage(view));
+  // Los enlaces internos funcionan también si el navegador no permite sessionStorage.
+  for (const anchor of app.querySelectorAll<HTMLAnchorElement>("a[data-review-link]")) {
+    const target = new URL(anchor.href, location.href);
+    if (target.origin === location.origin) { target.hash = `t=${token}`; anchor.href = target.href; }
+  }
   for (const details of app.querySelectorAll("details")) {
     const was = open.get(key(details));
     if (was !== undefined) details.open = was;
@@ -103,7 +109,7 @@ async function load(): Promise<void> {
     return;
   }
   try {
-    view = await api<SessionView>(`/api/sessions/${encodeURIComponent(sessionId)}`);
+    view = await api<SessionView>(`/api/sessions/${encodeURIComponent(sessionId)}${inspectedRun ? `?run=${encodeURIComponent(inspectedRun)}` : ""}`);
     document.documentElement.lang = view.lang;
     version = await api<{ version: string }>(`/api/sessions/${encodeURIComponent(sessionId)}/version`).then((data) => data.version);
     paint();

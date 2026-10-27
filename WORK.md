@@ -103,6 +103,17 @@ Tramo 2, afinado:
 
 ## Siguiente paso
 
+### Cadenas e integración — autorizado el 27 de octubre
+
+Samu acepta «cadenas y revisión de integración juntas» con «Venga, pues dale». Trabajo en `feat/previewer-chains`, desde `42493af`, conservando el revisor ordinario y su modelo fijo. Sin modificar Prelo, publicar ni actualizar la instalación personal.
+
+- [x] C1 · Fijar una cadena lineal por referencias locales y metadatos de PR opcionales; validar todas las bases y heads antes de ejecutar modelos. Guardar snapshots y progreso para reanudar sin repetir tramos completos.
+- [x] C2 · Compartir los hilos entre tramos, preservar valoraciones/selección, evitar duplicados identificados y registrar dónde se detectó, siguió o resolvió cada problema. Una detección no demuestra por sí sola el commit que lo introdujo.
+- [x] C3 · Pasada final de integración desde la base inicial al último head, con las garantías de evidencia del tramo anterior. Mostrar claramente revisiones parciales y la vigencia al final de la cadena en web, CLI y traspaso.
+- [ ] C4 · Verificar reanudación, cambios de refs, concurrencia en la misma cadena, trazabilidad y aislamiento con pruebas deterministas, casos de Prelo y un recorrido con Sol 6.1 real. Registrar evidencia y completar checks.
+
+Decisiones de implementación: entrada mediante manifiesto preparado por el agente (nombre, base y lista ordenada de heads con nombres/enlaces opcionales); no depender de GitHub ni inferir una cadena de todas las ramas del repo. Una sesión por cadena, snapshots inmutables y una ejecución secuencial por snapshot; el bloqueo afecta solo a esa cadena, no al proyecto. Los mismos SHA y versión de revisor reutilizan lo completado; repetir explícitamente o cambiar el snapshot vuelve a revisar. La web conserva las decisiones y no lanza inferencia ni escribe código.
+
 ### Siguiente tramo autorizado: evidencia y segunda revisión
 
 Tras la valoración del banco de Prelo, Samu respondió «Pues dale, vamos con ello» a la propuesta de priorizar la evidencia y el recorrido detectar → reproducir → corregir → confirmar. Se implementa ese tramo en `feat/previewer-evidence-loop`; el resto de líneas de mejora conserva su carácter de propuesta. Sin cambios a Prelo ni a la instalación personal, sin push ni publicación.

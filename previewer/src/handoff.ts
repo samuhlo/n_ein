@@ -7,6 +7,7 @@
 
 import type { Session, StoredFinding } from "./store.ts";
 import { probeLabel } from "./probe-result.ts";
+import type { ChainView } from "./chains.ts";
 
 const short = (sha: string): string => sha.slice(0, 12);
 const fence = (text: string, lang = ""): string => {
@@ -21,9 +22,11 @@ const STATUS: Record<StoredFinding["status"], string> = {
   resolved: "resolved",
 };
 
-function item(finding: StoredFinding, index: number): string {
+function item(finding: StoredFinding, index: number, chain?: ChainView | null): string {
   const lines = [`## ${index + 1}. ${finding.title}`, "", `Status: ${STATUS[finding.status]} · ${finding.kind} · ${finding.severity} · reviewed at ${short(finding.headSha)}`];
   if (finding.rating) lines.push(`User's rating: ${finding.rating.verdict}${finding.rating.reason ? ` (${finding.rating.reason})` : ""}`);
+  const history = chain?.history[finding.thread];
+  if (history?.length) lines.push(`Chain history: ${history.map(event => `${event.stage} [snapshot ${event.revision}, ${short(event.headSha)}]: ${event.outcome}`).join(" → ")}`);
   lines.push("", finding.plain, "", `- Condition: ${finding.condition}`, `- Consequence: ${finding.consequence}`, "- Cited:");
   for (const citation of finding.citations) lines.push(`  - ${citation.ref}`, fence(citation.text).replace(/^/gm, "    "));
   const probe = finding.check?.probe ?? finding.probe;
@@ -42,13 +45,22 @@ function item(finding: StoredFinding, index: number): string {
 }
 
 /** Texto para el agente: instrucciones en inglés, contenido en el idioma de la conversación. */
-export function handoffBrief(session: Session, selection: StoredFinding[], headNow: string | null): string {
+export function handoffBrief(session: Session, selection: StoredFinding[], headNow: string | null, chain?: ChainView | null): string {
+  const target = chain?.stages.at(-1);
+  const chainContext = chain && target ? [
+    `Chain: ${chain.name}, snapshot ${chain.revision}. Integration ${chain.complete ? "reviewed" : "NOT completed; these are partial results"}.`,
+    `Target work: ${target.head} at ${target.headSha}. This chain session name is not a Git branch.`,
+    chain.lastReviewed ? `Last evidence: ${chain.lastReviewed.stage}, snapshot ${chain.lastReviewed.revision}, ${chain.lastReviewed.headSha}.` : "No stage has completed yet.",
+    chain.drift.length ? `Refs moved since the snapshot: ${chain.drift.join(", ")}. Do not present this as a review of their new tips.` : "",
+    "Before editing, establish the appropriate work branch at the final chain head (or its intended successor), preserving existing work. Reproduce the selected findings there. Do not edit an earlier PR merely because it is checked out.",
+  ].filter(Boolean).join("\n") + "\n\n" : "";
   if (!selection.length)
-    return `Nothing is selected in p_reviewer for ${session.branch}. Ask the user to choose the findings to fix in the reviewer first; do not pick any yourself.\n`;
+    return chainContext + `Nothing is selected in p_reviewer for ${session.branch}. Ask the user to choose the findings to fix in the reviewer first; do not pick any yourself.\n`;
   const moved = headNow && session.headSha && headNow !== session.headSha ? ` The branch is now at ${short(headNow)}: check each finding against the current code.` : "";
   return [
     `# p_reviewer selection · ${session.branch}`,
     "",
+    chainContext,
     `The user selected ${selection.length} finding${selection.length === 1 ? "" : "s"} in p_reviewer and asked you to apply the review. Latest reviewed head: ${short(session.headSha ?? "?")}.${moved}`,
     "",
     "Work them as one ordinary job:",
@@ -57,7 +69,7 @@ export function handoffBrief(session: Session, selection: StoredFinding[], headN
     "3. If a finding does not reproduce or turns out to be wrong, change no code for it. Report it back with your evidence; that is a valid outcome.",
     "4. When the job is closed, offer in one line to open the reviewer again for a second review.",
     "",
-    selection.map(item).join("\n\n"),
+    selection.map((finding, index) => item(finding, index, chain)).join("\n\n"),
     "",
   ].join("\n");
 }

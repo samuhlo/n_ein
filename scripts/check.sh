@@ -53,6 +53,7 @@ bun run tests/previewer-engine.ts
 bun run tests/previewer-probes.ts
 bun run tests/previewer-probe-protocol.ts
 bun run tests/previewer-evidence-loop.ts
+bun run tests/previewer-chains.ts
 bun run tests/previewer-handoff.ts
 bun run tests/previewer-web.ts
 bun run tests/previewer-bench.ts

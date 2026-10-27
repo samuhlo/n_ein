@@ -89,7 +89,7 @@ export type RunResult = {
 
 // La v4 cambia el significado de la evidencia y añade comprobaciones «unchecked».
 // Un lector antiguo no debe interpretar not_applicable + exit 0 como un arreglo.
-const SCHEMA = 4;
+const SCHEMA = 5;
 
 /** Base de datos del canal: `~/.n_ein/<canal>/previewer/previewer.db`. */
 export function storePath(packageRoot: string): string {
@@ -142,6 +142,7 @@ export class ReviewStore {
     this.db = new Database(path, { create: true, strict: true });
     this.db.run("PRAGMA journal_mode = WAL");
     this.db.run("PRAGMA foreign_keys = ON");
+    this.db.run("PRAGMA busy_timeout = 5000");
     this.migrate();
   }
 
@@ -169,6 +170,18 @@ export class ReviewStore {
           outcome TEXT NOT NULL, note TEXT NOT NULL DEFAULT '', probe TEXT, PRIMARY KEY (run_id, thread))`);
       }
       if (version < 3) this.db.run("ALTER TABLE runs ADD COLUMN tour TEXT NOT NULL DEFAULT '[]'");
+      if (version < 5) {
+        this.db.run(`CREATE TABLE chains (
+          session_id TEXT PRIMARY KEY REFERENCES sessions(id), name TEXT NOT NULL,
+          lease_pid INTEGER, lease_token TEXT)`);
+        this.db.run(`CREATE TABLE chain_revisions (
+          id TEXT PRIMARY KEY, session_id TEXT NOT NULL REFERENCES chains(session_id),
+          ordinal INTEGER NOT NULL, fingerprint TEXT NOT NULL, plan TEXT NOT NULL, created TEXT NOT NULL,
+          UNIQUE(session_id, ordinal))`);
+        this.db.run(`CREATE TABLE chain_runs (
+          revision_id TEXT NOT NULL REFERENCES chain_revisions(id), position INTEGER NOT NULL,
+          run_id TEXT PRIMARY KEY REFERENCES runs(id))`);
+      }
       this.db.run(`PRAGMA user_version = ${SCHEMA}`);
     })();
   }
@@ -225,12 +238,29 @@ export class ReviewStore {
     return this.db.query<SessionRow, []>("SELECT * FROM sessions ORDER BY rowid DESC").all().map(session);
   }
 
-  startRun(input: { sessionId: string; baseSha: string; headSha: string; model: string; thinking: string }): Run {
+  startRun(input: { sessionId: string; baseSha: string; headSha: string; model: string; thinking: string;
+    chain?: { revisionId: string; position: number; token: string } }): Run {
     const id = randomUUID();
-    this.db.query(`INSERT INTO runs (id, session_id, base_sha, head_sha, model, thinking, status, started)
-      VALUES ($id, $session, $base, $head, $model, $thinking, 'running', $started)`).run({
-      id, session: input.sessionId, base: input.baseSha, head: input.headSha, model: input.model, thinking: input.thinking, started: now(),
-    });
+    this.db.transaction(() => {
+      if (input.chain) {
+        const revision = this.db.query<{ session_id: string; plan: string; lease_token: string | null }, [string]>(
+          "SELECT r.session_id,r.plan,c.lease_token FROM chain_revisions r JOIN chains c ON c.session_id=r.session_id WHERE r.id=?").get(input.chain.revisionId);
+        const stage = revision ? JSON.parse(revision.plan).stages[input.chain.position] : null;
+        if (!revision || revision.session_id !== input.sessionId || revision.lease_token !== input.chain.token
+          || !stage || stage.baseSha !== input.baseSha || stage.headSha !== input.headSha)
+          throw new Error("el tramo no pertenece al snapshot o a la ejecución activa de la cadena");
+        const attempts = this.db.query<{ position: number; status: RunStatus }, [string]>(
+          "SELECT c.position,r.status FROM chain_runs c JOIN runs r ON r.id=c.run_id WHERE c.revision_id=? ORDER BY r.rowid DESC").all(input.chain.revisionId);
+        if (attempts.some(a => a.position === input.chain!.position && a.status === "done")) throw new Error("el tramo ya está completado; repetir requiere otro snapshot");
+        for (let before = 0; before < input.chain.position; before++)
+          if (attempts.find(a => a.position === before)?.status !== "done") throw new Error("los tramos anteriores deben terminar antes de continuar");
+      }
+      this.db.query(`INSERT INTO runs (id, session_id, base_sha, head_sha, model, thinking, status, started)
+        VALUES ($id, $session, $base, $head, $model, $thinking, 'running', $started)`).run({
+        id, session: input.sessionId, base: input.baseSha, head: input.headSha, model: input.model, thinking: input.thinking, started: now(),
+      });
+      if (input.chain) this.db.query("INSERT INTO chain_runs VALUES (?,?,?)").run(input.chain.revisionId, input.chain.position, id);
+    }).immediate();
     return this.run(id)!;
   }
 
@@ -297,20 +327,24 @@ export class ReviewStore {
    * Un hallazgo por hilo, en su última aparición, del más reciente al más antiguo.
    * Nada desaparece: lo resuelto y lo no comprobado siguen listados con su estado.
    */
-  findings(sessionId: string): StoredFinding[] {
-    const rows = this.db.query<FindingRow, { id: string }>(`
+  findings(sessionId: string, throughRunId?: string): StoredFinding[] {
+    const cutoff = throughRunId ? this.db.query<{ n: number }, [string, string]>(
+      "SELECT rowid AS n FROM runs WHERE id=? AND session_id=? AND status='done'").get(throughRunId, sessionId)?.n : Number.MAX_SAFE_INTEGER;
+    if (cutoff === undefined) throw new Error("la revisión histórica no pertenece a esta sesión o no terminó");
+    const args = { id: sessionId, cutoff };
+    const rows = this.db.query<FindingRow, typeof args>(`
       SELECT f.*, r.verdict, r.reason, r.at AS rated, s.selected, ru.rowid AS run_order
       FROM findings f
       JOIN runs ru ON ru.id = f.run_id
       LEFT JOIN ratings r ON r.finding_id = f.thread
       LEFT JOIN selection s ON s.finding_id = f.thread
-      WHERE f.session_id = $id ORDER BY ru.rowid DESC, f.position`).all({ id: sessionId });
-    const checks = this.db.query<CheckRow, { id: string }>(`
+      WHERE f.session_id = $id AND ru.rowid <= $cutoff ORDER BY ru.rowid DESC, f.position`).all(args);
+    const checks = this.db.query<CheckRow, typeof args>(`
       SELECT c.*, ru.rowid AS run_order FROM checks c JOIN runs ru ON ru.id = c.run_id
-      WHERE ru.session_id = $id ORDER BY ru.rowid DESC`).all({ id: sessionId });
+      WHERE ru.session_id = $id AND ru.rowid <= $cutoff ORDER BY ru.rowid DESC`).all(args);
     // La vigente es la última revisión terminada: la misma regla que mueve el head de la sesión.
-    const latest = this.db.query<{ run_order: number }, { id: string }>(
-      "SELECT rowid AS run_order FROM runs WHERE session_id = $id AND status = 'done' ORDER BY rowid DESC LIMIT 1").get({ id: sessionId });
+    const latest = this.db.query<{ run_order: number }, typeof args>(
+      "SELECT rowid AS run_order FROM runs WHERE session_id = $id AND status = 'done' AND rowid <= $cutoff ORDER BY rowid DESC LIMIT 1").get(args);
     const seen = new Map<string, number>();
     for (const row of rows) seen.set(row.thread, (seen.get(row.thread) ?? 0) + 1);
     const result: StoredFinding[] = [];

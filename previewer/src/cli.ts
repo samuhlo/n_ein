@@ -6,7 +6,7 @@
 // `status` y `check` son para el Panel y `doctor`: leen, no revisan ni crean nada.
 // =============================================================================
 
-import { existsSync, mkdirSync, mkdtempSync, rmSync } from "node:fs";
+import { existsSync, mkdirSync, mkdtempSync, readFileSync, rmSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join, resolve } from "node:path";
 import { parseArgs } from "node:util";
@@ -18,6 +18,7 @@ import { ensureServer, reviewerLink } from "./open.ts";
 import { sandboxFor } from "./sandbox.ts";
 import { bundle } from "./server.ts";
 import { ReviewStore, storePath } from "./store.ts";
+import { ChainStore, planChain, reviewChain } from "./chains.ts";
 
 const packageRoot = resolve(import.meta.dir, "../..");
 const { values, positionals } = parseArgs({
@@ -27,16 +28,25 @@ const { values, positionals } = parseArgs({
     head: { type: "string" },
     pr: { type: "string" },
     project: { type: "string" },
+    file: { type: "string" },
+    chain: { type: "string" },
+    plan: { type: "boolean", default: false },
+    again: { type: "boolean", default: false },
     json: { type: "boolean", default: false },
     "no-open": { type: "boolean", default: false },
   },
 });
 
-const USAGE = "uso: n-ein-previewer review [--base REF] [--head REF] [--pr URL] [--no-open] [--json]\n       n-ein-previewer open\n       n-ein-previewer handoff [--json]\n       n-ein-previewer status | check\n";
-const VERBS = ["review", "open", "handoff", "status", "check"];
+const USAGE = "uso: n-ein-previewer review [--base REF] [--head REF] [--pr URL] [--no-open] [--json]\n       n-ein-previewer chain --file MANIFIESTO [--plan] [--again] [--no-open] [--json]\n       n-ein-previewer chains\n       n-ein-previewer open [--chain NOMBRE]\n       n-ein-previewer handoff [--chain NOMBRE] [--json]\n       n-ein-previewer status [--chain NOMBRE]\n       n-ein-previewer check\n";
+const VERBS = ["review", "chain", "chains", "open", "handoff", "status", "check"];
 if (!VERBS.includes(positionals[0] ?? "")) {
   process.stderr.write(USAGE);
   process.exit(64);
+}
+if ((values.chain && !["open", "handoff", "status"].includes(positionals[0]!))
+  || ((values.file || values.plan || values.again) && positionals[0] !== "chain")
+  || (positionals[0] === "chain" && (values.base || values.head || values.pr))) {
+  process.stderr.write(USAGE); process.exit(64);
 }
 
 /** Repositorio, head y rama del proyecto; un head suelto se nombra como lo hace el motor, `detached@<sha>`. */
@@ -54,14 +64,48 @@ async function link(sessionId: string): Promise<string> {
   return reviewerLink(await ensureServer(packageRoot), sessionId);
 }
 
+if (positionals[0] === "chains") {
+  try {
+    const path = storePath(packageRoot);
+    const store = existsSync(path) ? new ReviewStore(path) : null;
+    const rows = store ? new ChainStore(store).list(current().repo) : [];
+    console.log(JSON.stringify(rows, null, 2)); store?.close(); process.exit(0);
+  } catch (error) { console.error(String(error)); process.exit(1); }
+}
+
+if (positionals[0] === "chain") {
+  const controller = new AbortController();
+  for (const signal of ["SIGINT", "SIGTERM"] as const) process.once(signal, () => controller.abort());
+  try {
+    if (!values.file) throw new Error("indica el manifiesto con --file");
+    const definition: unknown = JSON.parse(readFileSync(values.file, "utf8"));
+    const cwd = values.project ?? process.cwd();
+    if (values.plan) { console.log(JSON.stringify(planChain(cwd, definition), null, 2)); process.exit(0); }
+    const result = await reviewChain({ packageRoot, cwd, definition, again: values.again, signal: controller.signal });
+    const opened = !values["no-open"] ? await link(result.session.id).catch(error => { console.error(`[WARN] :: OPEN_FAIL :: ${String(error)}`); return null; }) : null;
+    if (values.json) console.log(JSON.stringify({ ...result, link: opened }, null, 2));
+    else {
+      console.log(`// 000 CADENA · ${result.chain.name} · ${result.chain.complete ? "integración revisada" : "parcial: integración pendiente"}`);
+      result.chain.stages.forEach((stage, i) => console.log(`▏ ${i + 1}. ${stage.name} · ${stage.status} · ${stage.baseSha.slice(0, 12)} → ${stage.headSha.slice(0, 12)}${stage.error ? ` · ${stage.error}` : ""}`));
+      if (result.chain.drift.length) console.log(`▏ referencias cambiadas desde el snapshot: ${result.chain.drift.join(", ")}`);
+      result.findings.forEach(f => {
+        const history = result.chain.history[f.thread] ?? [];
+        console.log(`\n${f.status} · ${f.title}\n▏ ${f.plain}\n▏ ${history.map(e => `${e.stage}: ${e.outcome}`).join(" → ")}`);
+      });
+      if (opened) console.log(`\n// 001 REVISOR\n▏ ${opened}`);
+    }
+    process.exit(result.chain.complete && !controller.signal.aborted ? 0 : 1);
+  } catch (error) { console.error(`[ERR] :: CHAIN_FAIL :: ${String(error)}`); process.exit(1); }
+}
+
 if (positionals[0] === "open") {
   try {
     const { repo, branch } = current();
     const store = ReviewStore.forPackage(packageRoot);
-    const session = store.findSession(repo, branch);
+    const session = values.chain ? new ChainStore(store).find(repo, values.chain) : store.findSession(repo, branch);
     store.close();
     if (!session) {
-      process.stdout.write(`No hay revisiones de ${branch}: pide una con «review».\n`);
+      process.stdout.write(`No hay revisiones de ${values.chain ? `la cadena ${values.chain}` : branch}: pide una con «${values.chain ? "chain --file" : "review"}».\n`);
       process.exit(1);
     }
     process.stdout.write(`// 000  REVISOR · ${branch}\n▏ ${await link(session.id)}\n`);
@@ -78,15 +122,18 @@ if (positionals[0] === "status") {
     const { repo, head, branch } = current();
     let reason = "";
     try {
+      if (!values.chain)
       resolveRange(repo);
     } catch (error) {
       reason = error instanceof Error ? error.message : String(error);
     }
     const path = storePath(packageRoot);
     const store = existsSync(path) ? new ReviewStore(path) : null;
-    const session = store?.findSession(repo, branch) ?? null;
+    const session = store ? values.chain ? new ChainStore(store).find(repo, values.chain) : store.findSession(repo, branch) : null;
+    const chain = session && store && values.chain ? new ChainStore(store).view(session.id) : null;
+    if (values.chain && !chain) reason = "cadena no registrada";
     const findings = session && store ? store.findings(session.id) : [];
-    const reviewed = session && store ? (store.runs(session.id).filter((run) => run.status === "done").at(-1)?.headSha ?? null) : null;
+    const reviewed = values.chain && !chain?.complete ? null : session && store ? (store.runs(session.id).filter((run) => run.status === "done").at(-1)?.headSha ?? null) : null;
     store?.close();
     const open = findings.filter((item) => item.rating?.verdict !== "descartar");
     process.stdout.write(`${JSON.stringify({
@@ -94,6 +141,7 @@ if (positionals[0] === "status") {
       current: open.filter((item) => item.current).length,
       unchecked: open.filter((item) => item.status === "unchecked").length,
       selected: findings.filter((item) => item.selected && item.status !== "resolved").length,
+      ...(values.chain ? { chain } : {}),
     })}\n`);
     process.exit(0);
   } catch (error) {
@@ -127,14 +175,15 @@ if (positionals[0] === "handoff") {
   try {
     const { repo, head, branch } = current();
     const store = ReviewStore.forPackage(packageRoot);
-    const session = store.findSession(repo, branch);
+    const session = values.chain ? new ChainStore(store).find(repo, values.chain) : store.findSession(repo, branch);
     if (!session) {
-      process.stdout.write(`No p_reviewer session exists for ${branch}. Nothing to apply: offer to open the reviewer first.\n`);
+      process.stdout.write(`No p_reviewer session exists for ${values.chain ? `chain:${values.chain}` : branch}. Nothing to apply: offer to open the reviewer first.\n`);
       process.exit(0);
     }
     const selection = store.selection(session.id);
-    if (values.json) process.stdout.write(`${JSON.stringify({ session, selection }, null, 2)}\n`);
-    else process.stdout.write(handoffBrief(session, selection, head));
+    const chain = values.chain ? new ChainStore(store).view(session.id) : null;
+    if (values.json) process.stdout.write(`${JSON.stringify({ session, selection, ...(chain ? { chain } : {}) }, null, 2)}\n`);
+    else process.stdout.write(handoffBrief(session, selection, head, chain));
     store.close();
     process.exit(0);
   } catch (error) {

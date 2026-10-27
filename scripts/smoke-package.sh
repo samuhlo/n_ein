@@ -42,6 +42,23 @@ bun -e '
 "$target/bin/n-ein" --project "$project" previewer check > "$test_dir/previewer-check"
 rg -q '^// 003 REVISOR · .* · web compila$' "$test_dir/previewer-check"
 
+# La ruta nueva también funciona desde el paquete, antes de crear sesiones o llamar al modelo.
+git init -q -b main "$project"
+git -C "$project" config user.name "Package smoke"
+git -C "$project" config user.email "smoke@local"
+git -C "$project" add README.md
+git -C "$project" -c commit.gpgsign=false commit -qm base
+git -C "$project" switch -qc first
+printf 'first\n' > "$project/change.txt"
+git -C "$project" add change.txt
+git -C "$project" -c commit.gpgsign=false commit -qm first
+git -C "$project" switch -qc second
+printf 'second\n' > "$project/change.txt"
+git -C "$project" -c commit.gpgsign=false commit -qam second
+printf '%s\n' '{"name":"smoke","base":"main","steps":[{"head":"first"},{"head":"second"}]}' > "$test_dir/chain.json"
+"$target/bin/n-ein" --project "$project" previewer chain --file "$test_dir/chain.json" --plan > "$test_dir/chain-plan.json"
+bun -e 'const p=await Bun.file(process.argv[1]).json(); if(p.stages.length!==3 || p.stages[2].kind!=="integration") throw new Error("missing installed chain integration");' "$test_dir/chain-plan.json"
+
 "$target/bin/n-ein" --project "$project" --view configuracion --once > "$test_dir/config-view"
 rg -q 'openai-codex/gpt-6-sol' "$test_dir/config-view"
 rg -q 'openai-codex/gpt-6-luna' "$test_dir/config-view"
