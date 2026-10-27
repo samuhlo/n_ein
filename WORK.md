@@ -107,10 +107,12 @@ Tramo 2, afinado:
 
 Samu pide «sacases la nueva versión de nein con los cambios» y un prompt para que otro agente corrija los fallos de Prelo. Esto autoriza integrar y publicar la release, incluyendo push, PR, merge y tag necesarios. Se mantiene preview; no se actualiza la instalación personal ni se corrige Prelo desde este encargo.
 
-- [ ] R1 · Preparar versión, bootstrap y notas, comprobar migración con copia SQLite y renovación del servidor local antiguo; verificar el candidato.
-- [ ] R2 · Pasar la matriz CI, integrar en main y publicar el tag con sus adjuntos verificados y el bootstrap de Pages.
-- [ ] R3 · Verificar la release publicada y entregar en la conversación el prompt de Prelo, con fallos vigentes, evidencia y límites.
+- [x] R1 · Preparar versión, bootstrap y notas, comprobar migración con copia SQLite y renovación del servidor local antiguo; verificar el candidato.
+- [x] R2 · Pasar la matriz CI, integrar en main y publicar el tag con sus adjuntos verificados y el bootstrap de Pages.
+- [x] R3 · Verificar la release publicada y entregar en la conversación el prompt de Prelo, con fallos vigentes, evidencia y límites.
 
+
+Publicación completada: [v0.4.0-alpha.1](https://github.com/samuhlo/n_ein/releases/tag/v0.4.0-alpha.1), prerelease del canal preview, commit `b2f2e04`. PR #21 integrada tras [matriz verde](https://github.com/samuhlo/n_ein/actions/runs/40550853663); [workflow del tag](https://github.com/samuhlo/n_ein/actions/runs/40553351883) completo, incluidos publicación y Pages. Los nueve adjuntos descargados se verificaron con `verify-release-assets.py`; el bootstrap público coincide byte a byte y su dry-run selecciona la versión correcta. Se añadió copia SQLite coherente antes de migrar y renovación del servidor local de otra versión. No se actualizó la instalación personal ni se tocó Prelo. El prompt de corrección se entrega en la conversación, basado en el head `4bdf1e0` y separando defectos vigentes, arreglos posteriores y dudas de contrato.
 
 ### Cadenas e integración — autorizado el 27 de octubre
 
