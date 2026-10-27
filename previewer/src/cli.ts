@@ -108,7 +108,7 @@ if (positionals[0] === "open") {
       process.stdout.write(`No hay revisiones de ${values.chain ? `la cadena ${values.chain}` : branch}: pide una con «${values.chain ? "chain --file" : "review"}».\n`);
       process.exit(1);
     }
-    process.stdout.write(`// 000  REVISOR · ${branch}\n▏ ${await link(session.id)}\n`);
+    process.stdout.write(`// 000  REVISOR · ${values.chain ? `cadena · ${values.chain}` : branch}\n▏ ${await link(session.id)}\n`);
     process.exit(0);
   } catch (error) {
     process.stderr.write(`[ERR] :: OPEN_FAIL :: reason: ${error instanceof Error ? error.message : String(error)}\n`);

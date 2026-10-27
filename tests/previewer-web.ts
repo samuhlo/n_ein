@@ -7,11 +7,39 @@ import type { Finding } from "../previewer/src/finding.ts";
 import { ensureServer, reviewerLink } from "../previewer/src/open.ts";
 import { createHandler } from "../previewer/src/server.ts";
 import { ReviewStore } from "../previewer/src/store.ts";
+import { runInNewContext } from "node:vm";
 import { marksFor, rowMarks, splitDiff } from "../previewer/web/diff.ts";
 import { html, text } from "../previewer/web/html.ts";
 import { renderPage } from "../previewer/web/view.ts";
 
 const root = resolve(import.meta.dir, "..");
+
+// El JS real debe conservar el tramo histórico al limpiar el token y al actualizar por polling.
+{
+  const built = await Bun.build({ entrypoints: [join(root, "previewer/web/main.ts")], target: "browser" });
+  assert.equal(built.success, true);
+  const location = new URL("http://127.0.0.1:4321/s/demo?run=old#t=private-token");
+  const app = { innerHTML: "", textContent: "", querySelectorAll: () => [], querySelector: () => null };
+  const requests: string[] = [];
+  let poll: (() => void) | undefined, version = 0;
+  const view = { session: { id: "demo", repo: "/repo", branch: "change", prUrl: null }, run: null, latest: null,
+    findings: [], patch: "", lang: "es", runs: { count: 0, usd: 0 }, historical: true };
+  runInNewContext(await built.outputs[0]!.text(), {
+    URL, URLSearchParams, location, HTMLElement: class {},
+    sessionStorage: { setItem() {}, getItem() { return null; } },
+    history: { replaceState(_state: unknown, _title: string, path: string) { location.href = new URL(path, location.origin).href; } },
+    document: { getElementById: () => app, querySelectorAll: () => [], addEventListener() {}, activeElement: null, documentElement: {}, hidden: false },
+    window: { addEventListener() {}, scrollY: 0, scrollTo() {} },
+    setInterval(callback: () => void) { poll = callback; return 1; },
+    fetch: async (path: string) => { requests.push(path); return { ok: true, json: async () => path.endsWith("/version") ? { version: String(++version) } : view }; },
+  });
+  await new Promise(resolve => setTimeout(resolve, 0));
+  assert.equal(location.hash, "");
+  assert.equal(location.search, "?run=old", "quitar el token no borra el tramo seleccionado");
+  poll!(); await new Promise(resolve => setTimeout(resolve, 0));
+  assert.deepEqual(requests.filter(path => !path.endsWith("/version")), ["/api/sessions/demo?run=old", "/api/sessions/demo?run=old"],
+    "una actualización no transforma una vista histórica en el balance actual");
+}
 const scratch = realpathSync(mkdtempSync(join(tmpdir(), "nein-previewer-web-")));
 process.env.N_EIN_HOME = join(scratch, "home");
 process.env.N_EIN_CHANNEL = "dev";

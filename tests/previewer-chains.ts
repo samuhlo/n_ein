@@ -152,6 +152,10 @@ assert.equal(resumed.chain.revision, 3);
 assert.equal(resumed.chain.complete, true);
 assert.equal(store.run(stopped.id)?.status, "failed");
 assert.match(store.run(stopped.id)?.error ?? "", /interrumpida/);
+store.db.query("UPDATE chains SET lease_pid=?,lease_token=? WHERE session_id=?")
+  .run(process.pid, JSON.stringify({ nonce: "abandoned", identity: "different old process" }), completed.session.id);
+const reusedPid = await reviewChain({ ...options, runner });
+assert.equal(reusedPid.chain.complete, true, "un PID reutilizado no deja bloqueada una cadena abandonada");
 
 git("switch", "-qc", "four"); commit(0, "append another stage");
 const extended = await reviewChain({ ...options, definition: { ...definition, steps: [...definition.steps, { name: "PR 4", head: "four" }] }, runner });
@@ -164,11 +168,12 @@ assert.equal(extended.findings[0]?.rating?.reason, "decisión conservada entre t
 // La integración puede aportar un hallazgo que no existía en los informes incrementales.
 const integration = await reviewChain({ ...options, definition: { ...definition, name: "Integración propia" }, runner: async req => {
   const isFinal = req.prompt.includes("final integration review");
-  return { text: JSON.stringify({ summary: "fixture", findings: isFinal ? [{ kind: "question", severity: "low", title: "Contrato del conjunto",
-    plain: "Decisión del fixture", condition: "conjunto", consequence: "necesita una decisión", citations: [`value.cjs@${three}:L1`], verification: "" }] : [] }),
+  return { text: JSON.stringify({ summary: "fixture", findings: isFinal ? ["case-a", "case-b"].map(check => ({ kind: "question", severity: "low", title: "Contrato del conjunto",
+    plain: "Decisión del fixture", condition: "conjunto", consequence: "necesita una decisión", citations: [`value.cjs@${three}:L1`], verification: "",
+    probe: { command: "exit 0", file: null, protocol: "nein-probe-v1", check } })) : [] }),
     error: null, usage: { input: 0, output: 0, cacheRead: 0, usd: 0 } };
 } });
-assert.equal(integration.findings.length, 1);
+assert.equal(integration.findings.length, 2, "comprobaciones distintas no se fusionan por compartir una explicación genérica");
 assert.equal(integration.chain.history[integration.findings[0]!.thread]?.[0]?.kind, "integration");
 assert.equal(integration.chain.history[integration.findings[0]!.thread]?.[0]?.stage, "Integración");
 const controller = new AbortController();

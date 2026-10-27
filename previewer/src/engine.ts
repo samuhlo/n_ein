@@ -110,7 +110,9 @@ function chainPrompt(chain: NonNullable<ReviewOptions["chain"]>): string {
 }
 
 /** Coincidencia conservadora: nunca juntar problemas solo porque sus títulos se parecen. */
-function sameIssue(a: Pick<Finding, "kind" | "condition" | "consequence" | "citations">, b: Pick<Finding, "kind" | "condition" | "consequence" | "citations">): boolean {
+type IssueEvidence = Pick<Finding, "kind" | "condition" | "consequence" | "citations"> & { probe?: { check?: string } | null };
+function sameIssue(a: IssueEvidence, b: IssueEvidence): boolean {
+  if (a.probe?.check && b.probe?.check && a.probe.check !== b.probe.check) return false;
   const words = (value: string) => value.trim().replace(/\s+/g, " ");
   const cited = (value: typeof a) => value.citations.map(c => JSON.stringify([c.path, c.text])).sort().join("\n");
   return a.kind === b.kind && words(a.condition) === words(b.condition) && words(a.consequence) === words(b.consequence)

@@ -12,6 +12,7 @@ const POLL_MS = 10_000;
 const app = document.getElementById("app");
 const sessionId = decodeURIComponent(location.pathname.split("/")[2] ?? "");
 const inspectedRun = new URL(location.href).searchParams.get("run");
+const viewPath = `/api/sessions/${encodeURIComponent(sessionId)}${inspectedRun ? `?run=${encodeURIComponent(inspectedRun)}` : ""}`;
 
 function readToken(): string {
   const fromHash = new URLSearchParams(location.hash.slice(1)).get("t");
@@ -24,7 +25,7 @@ function readToken(): string {
 }
 const token = readToken();
 // BLINDAJE -> El token no se queda en la barra ni en el historial: quien vea la URL no puede escribir.
-if (location.hash.includes("t=")) history.replaceState(null, "", location.pathname);
+if (location.hash.includes("t=")) history.replaceState(null, "", location.pathname + location.search);
 
 let view: SessionView | null = null;
 let version = "";
@@ -109,7 +110,7 @@ async function load(): Promise<void> {
     return;
   }
   try {
-    view = await api<SessionView>(`/api/sessions/${encodeURIComponent(sessionId)}${inspectedRun ? `?run=${encodeURIComponent(inspectedRun)}` : ""}`);
+    view = await api<SessionView>(viewPath);
     document.documentElement.lang = view.lang;
     version = await api<{ version: string }>(`/api/sessions/${encodeURIComponent(sessionId)}/version`).then((data) => data.version);
     paint();
@@ -177,7 +178,7 @@ setInterval(() => {
     .then(async (data) => {
       if (data.version === version) return;
       version = data.version;
-      view = await api<SessionView>(`/api/sessions/${encodeURIComponent(sessionId)}`);
+      view = await api<SessionView>(viewPath);
       paint();
     })
     .catch(() => {});

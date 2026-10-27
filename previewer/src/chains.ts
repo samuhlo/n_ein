@@ -4,6 +4,7 @@
 // los tramos se revisan en orden y la integración mira el conjunto al final.
 // =============================================================================
 import { createHash, randomUUID } from "node:crypto";
+import { execFileSync } from "node:child_process";
 import { readFileSync } from "node:fs";
 import { join } from "node:path";
 import { git } from "./git.ts";
@@ -63,9 +64,21 @@ export function planChain(cwd: string, input: unknown): ChainPlan {
   return { name: label(input.name, "nombre de cadena"), repo, stages };
 }
 
-function alive(pid: number | null): boolean {
+function processIdentity(pid: number): string | null {
+  try {
+    return execFileSync("ps", ["-p", String(pid), "-o", "lstart="], { encoding: "utf8", timeout: 1000,
+      stdio: ["ignore", "pipe", "ignore"], env: { ...process.env, LC_ALL: "C", TZ: "UTC" } }).trim() || null;
+  } catch { return null; }
+}
+function alive(pid: number | null, token: string | null): boolean {
   if (!pid) return false;
-  try { process.kill(pid, 0); return true; } catch (e) { return (e as NodeJS.ErrnoException).code === "EPERM"; }
+  try { process.kill(pid, 0); } catch (e) { return (e as NodeJS.ErrnoException).code === "EPERM"; }
+  // Un PID puede pertenecer a otro proceso después de un cierre o reinicio.
+  // Si no se puede verificar su identidad, no se roba el lease a un proceso vivo.
+  let expected: unknown;
+  try { expected = token ? JSON.parse(token).identity : null; } catch { expected = null; }
+  const actual = typeof expected === "string" ? processIdentity(pid) : null;
+  return !actual || !expected || actual === expected;
 }
 type RevisionRow = { id: string; session_id: string; ordinal: number; fingerprint: string; plan: string };
 const revision = (r: RevisionRow): ChainRevision => ({ id: r.id, sessionId: r.session_id, ordinal: r.ordinal, fingerprint: r.fingerprint, plan: JSON.parse(r.plan) });
@@ -102,8 +115,8 @@ export class ChainStore {
     return this.store.db.transaction(() => {
       const session = this.store.openSession({ repo: plan.repo, branch: `chain:${plan.name}` });
       this.store.db.query("INSERT INTO chains(session_id,name) VALUES (?,?) ON CONFLICT(session_id) DO NOTHING").run(session.id, plan.name);
-      const owner = this.store.db.query<{ lease_pid: number | null }, [string]>("SELECT lease_pid FROM chains WHERE session_id=?").get(session.id)!;
-      if (alive(owner.lease_pid)) throw new Error(`la cadena «${plan.name}» ya tiene una revisión activa`);
+      const owner = this.store.db.query<{ lease_pid: number | null; lease_token: string | null }, [string]>("SELECT lease_pid,lease_token FROM chains WHERE session_id=?").get(session.id)!;
+      if (alive(owner.lease_pid, owner.lease_token)) throw new Error(`la cadena «${plan.name}» ya tiene una revisión activa`);
       this.store.db.query("UPDATE runs SET status='failed',error='ejecución de cadena interrumpida',ended=? WHERE session_id=? AND status='running'")
         .run(new Date().toISOString(), session.id);
       let current = this.latest(session.id);
@@ -112,7 +125,7 @@ export class ChainStore {
         this.store.db.query("INSERT INTO chain_revisions VALUES (?,?,?,?,?,?)")
           .run(current.id, session.id, current.ordinal, fingerprint, JSON.stringify(plan), new Date().toISOString());
       }
-      const token = randomUUID();
+      const token = JSON.stringify({ nonce: randomUUID(), identity: processIdentity(process.pid) });
       this.store.db.query("UPDATE chains SET lease_pid=?,lease_token=? WHERE session_id=?").run(process.pid, token, session.id);
       return { session, revision: current, token };
     }).immediate();
@@ -152,7 +165,7 @@ export class ChainStore {
       events.push({ runId: event.run_id, revision: location.revision, position: location.position, stage: location.stage.name,
         kind: location.stage.kind, headSha: location.stage.headSha, outcome, note: event.note });
     }
-    const owner = this.store.db.query<{ lease_pid: number | null }, [string]>("SELECT lease_pid FROM chains WHERE session_id=?").get(sessionId)!;
+    const owner = this.store.db.query<{ lease_pid: number | null; lease_token: string | null }, [string]>("SELECT lease_pid,lease_token FROM chains WHERE session_id=?").get(sessionId)!;
     const last = runs.filter(r => r.status === "done").at(-1);
     const lastPlace = last ? place.get(last.id) : null;
     const drift: string[] = [];
@@ -163,7 +176,7 @@ export class ChainStore {
       }
     }
     return { name: snapshot.plan.name, revision: snapshot.ordinal, revisionId: snapshot.id,
-      complete: stages.every(s => s.status === "done"), busy: alive(owner.lease_pid), stages, history,
+      complete: stages.every(s => s.status === "done"), busy: alive(owner.lease_pid, owner.lease_token), stages, history,
       lastReviewed: last && lastPlace ? { stage: lastPlace.stage.name, revision: lastPlace.revision, headSha: last.headSha } : null,
       drift: [...new Set(drift)] };
   }
