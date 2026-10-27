@@ -6,7 +6,7 @@
 // =============================================================================
 
 import { spawn, spawnSync } from "node:child_process";
-import { createWriteStream, mkdirSync } from "node:fs";
+import { createWriteStream, mkdirSync, realpathSync } from "node:fs";
 import { homedir } from "node:os";
 import { join } from "node:path";
 import { langDirective, loadLang } from "../../pi-package/lang.ts";
@@ -39,6 +39,17 @@ const INDEX_TIMEOUT_MS = 5 * 60_000;
 type Event = Record<string, unknown>;
 const isRecord = (value: unknown): value is Event => typeof value === "object" && value !== null && !Array.isArray(value);
 const num = (value: unknown): number => (typeof value === "number" && Number.isFinite(value) ? value : 0);
+
+/** Un init fallido puede dejar disponible el índice del padre: no se entrega al revisor. */
+export function isCopyIndex(status: string, copy: string): boolean {
+  try {
+    const value = JSON.parse(status);
+    return value.initialized === true && typeof value.projectPath === "string"
+      && realpathSync(value.projectPath) === realpathSync(copy);
+  } catch {
+    return false;
+  }
+}
 
 /** Texto final del agente, coste acumulado y error de parada, a partir de los eventos JSON de Pi. */
 export function summarizeEvents(lines: readonly string[]): AgentResult {
@@ -79,7 +90,14 @@ export function piRunner(packageRoot: string): AgentRunner {
     // BLINDAJE -> La copia necesita su propio índice: el del original describe otros bytes.
     const indexer = join(packageRoot, "bin/n-ein-codegraph");
     spawnSync(indexer, [], { cwd: request.cwd, stdio: ["ignore", "ignore", "inherit"], timeout: INDEX_TIMEOUT_MS });
-    const codegraph = spawnSync(indexer, ["--bin"], { cwd: request.cwd, encoding: "utf8" }).stdout?.trim() ?? "";
+    let codegraph = spawnSync(indexer, ["--bin"], { cwd: request.cwd, encoding: "utf8" }).stdout?.trim() ?? "";
+    if (codegraph) {
+      const status = spawnSync(codegraph, ["status", "--json", request.cwd], { cwd: request.cwd, encoding: "utf8", timeout: 30_000 });
+      if (status.status !== 0 || !isCopyIndex(status.stdout ?? "", request.cwd)) {
+        process.stderr.write("[WARN] :: CODEGRAPH_SKIP :: reason: review copy has no verified index | fallback: grep/read\n");
+        codegraph = "";
+      }
+    }
 
     const env: NodeJS.ProcessEnv = {
       ...process.env,

@@ -41,7 +41,8 @@ esac
 
 status="$("$codegraph_bin" status --json "$project" 2>/dev/null)"
 # Un estado vacío o ilegible no autoriza init: podría pisar un índice que sí existe.
-state="$(printf '%s' "$status" | bun -e 'const s=JSON.parse(await Bun.stdin.text()); console.log(s.initialized === false ? "init" : s.initialized !== true ? "unknown" : s.index?.reindexRecommended ? "index" : "sync")' 2>/dev/null)"
+# CodeGraph busca índices en los padres: «initialized» no implica que sea el de este repo.
+state="$(printf '%s' "$status" | bun -e 'const s=JSON.parse(await Bun.stdin.text()); const own=s.projectPath === process.argv[1]; console.log(s.initialized === false ? "init" : s.initialized !== true || typeof s.projectPath !== "string" ? "unknown" : !own ? "init" : s.index?.reindexRecommended ? "index" : "sync")' "$project" 2>/dev/null)"
 case "$state" in
   init)
     printf '// 000 CODEGRAPH · creando índice · %s\n' "$project" >&2

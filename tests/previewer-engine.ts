@@ -8,7 +8,7 @@ import { copiesRoot, createCopy, sweepCopies } from "../previewer/src/copy.ts";
 import { review } from "../previewer/src/engine.ts";
 import { sandboxFor, type Sandbox } from "../previewer/src/sandbox.ts";
 import { parseReport } from "../previewer/src/report.ts";
-import { summarizeEvents, type AgentRequest, type AgentResult } from "../previewer/src/runner.ts";
+import { isCopyIndex, summarizeEvents, type AgentRequest, type AgentResult } from "../previewer/src/runner.ts";
 import { ReviewStore } from "../previewer/src/store.ts";
 
 const packageRoot = resolve(import.meta.dir, "..");
@@ -88,6 +88,10 @@ const logBefore = git("log", "--all", "--format=%H %D");
 
 // --- Lectura de eventos e informe ----------------------------------------------------
 {
+  assert.equal(isCopyIndex(JSON.stringify({ initialized: true, projectPath: repo }), repo), true);
+  assert.equal(isCopyIndex(JSON.stringify({ initialized: true, projectPath: scratch }), repo), false, "no consultar el índice del padre");
+  assert.equal(isCopyIndex('{"initialized":true}', repo), false, "sin raíz no está verificado");
+  assert.equal(isCopyIndex("status ilegible", repo), false);
   const lines = [
     JSON.stringify({ type: "message_end", message: { role: "assistant", content: [{ type: "text", text: "primero" }], usage: { input: 10, output: 2, cacheRead: 5, cost: { total: 0.25 } } } }),
     "no es json",
