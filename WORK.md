@@ -103,6 +103,15 @@ Tramo 2, afinado:
 
 ## Siguiente paso
 
+### Publicación autorizada: 0.4.0-alpha.1
+
+Samu pide «sacases la nueva versión de nein con los cambios» y un prompt para que otro agente corrija los fallos de Prelo. Esto autoriza integrar y publicar la release, incluyendo push, PR, merge y tag necesarios. Se mantiene preview; no se actualiza la instalación personal ni se corrige Prelo desde este encargo.
+
+- [ ] R1 · Preparar versión, bootstrap y notas, comprobar migración con copia SQLite y renovación del servidor local antiguo; verificar el candidato.
+- [ ] R2 · Pasar la matriz CI, integrar en main y publicar el tag con sus adjuntos verificados y el bootstrap de Pages.
+- [ ] R3 · Verificar la release publicada y entregar en la conversación el prompt de Prelo, con fallos vigentes, evidencia y límites.
+
+
 ### Cadenas e integración — autorizado el 27 de octubre
 
 Samu acepta «cadenas y revisión de integración juntas» con «Venga, pues dale». Trabajo en `feat/previewer-chains`, desde `42493af`, conservando el revisor ordinario y su modelo fijo. Sin modificar Prelo, publicar ni actualizar la instalación personal.

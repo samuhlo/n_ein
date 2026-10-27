@@ -11,8 +11,8 @@
 
 import { Database } from "bun:sqlite";
 import { randomUUID } from "node:crypto";
-import { mkdirSync } from "node:fs";
-import { dirname, join } from "node:path";
+import { chmodSync, closeSync, fsyncSync, mkdirSync, openSync, renameSync, rmSync } from "node:fs";
+import { basename, dirname, join } from "node:path";
 import { channelDir } from "../../pi-package/models.ts";
 import type { Citation, Finding, Kind, Probe, Severity, TourStep } from "./finding.ts";
 import { storedProbe } from "./probe-result.ts";
@@ -143,7 +143,7 @@ export class ReviewStore {
     this.db.run("PRAGMA journal_mode = WAL");
     this.db.run("PRAGMA foreign_keys = ON");
     this.db.run("PRAGMA busy_timeout = 5000");
-    this.migrate();
+    this.migrate(path);
   }
 
   static forPackage(packageRoot: string): ReviewStore {
@@ -154,11 +154,29 @@ export class ReviewStore {
     this.db.close();
   }
 
-  private migrate(): void {
+  private migrate(path: string): void {
     const { user_version: version } = this.db.query<{ user_version: number }, []>("PRAGMA user_version").get() ?? { user_version: 0 };
     if (version > SCHEMA) throw new Error(`previewer.db usa el esquema ${version}; esta versión entiende hasta ${SCHEMA}`);
     if (version === SCHEMA) return;
+    if (version > 0 && path !== ":memory:") {
+      const folder = join(dirname(path), "backups");
+      mkdirSync(folder, { recursive: true, mode: 0o700 });
+      const backup = join(folder, `${basename(path)}.schema-${version}-${Date.now()}-${randomUUID()}.db`);
+      // VACUUM INTO incluye los commits del WAL; copiar solo el .db podría perder decisiones recientes.
+      const partial = backup + ".partial";
+      try {
+        this.db.query("VACUUM INTO ?").run(partial);
+        chmodSync(partial, 0o600);
+        const fd = openSync(partial, "r+");
+        try { fsyncSync(fd); } finally { closeSync(fd); }
+        renameSync(partial, backup);
+      } finally { rmSync(partial, { force: true }); }
+    }
     this.db.transaction(() => {
+      // Otro proceso pudo completar la migración mientras se preparaba nuestra copia.
+      const { user_version: version } = this.db.query<{ user_version: number }, []>("PRAGMA user_version").get()!;
+      if (version > SCHEMA) throw new Error(`previewer.db usa el esquema ${version}; esta versión entiende hasta ${SCHEMA}`);
+      if (version === SCHEMA) return;
       if (version < 1) this.schemaV1();
       if (version < 2) {
         this.db.run("ALTER TABLE findings ADD COLUMN thread TEXT NOT NULL DEFAULT ''");
@@ -183,7 +201,7 @@ export class ReviewStore {
           run_id TEXT PRIMARY KEY REFERENCES runs(id))`);
       }
       this.db.run(`PRAGMA user_version = ${SCHEMA}`);
-    })();
+    }).immediate();
   }
 
   private schemaV1(): void {

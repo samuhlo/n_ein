@@ -1,11 +1,11 @@
 import { strict as assert } from "node:assert";
-import { execFileSync } from "node:child_process";
+import { execFileSync, spawn } from "node:child_process";
 import { mkdirSync, mkdtempSync, readFileSync, realpathSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join, resolve } from "node:path";
 import type { Finding } from "../previewer/src/finding.ts";
 import { ensureServer, reviewerLink } from "../previewer/src/open.ts";
-import { createHandler } from "../previewer/src/server.ts";
+import { createHandler, statePath } from "../previewer/src/server.ts";
 import { ReviewStore } from "../previewer/src/store.ts";
 import { runInNewContext } from "node:vm";
 import { marksFor, rowMarks, splitDiff } from "../previewer/web/diff.ts";
@@ -198,6 +198,31 @@ store.close();
   process.kill(first.pid, "SIGTERM");
   await Bun.sleep(300);
   assert.throws(() => process.kill(first.pid, 0), "se para con SIGTERM");
+}
+
+// Un servidor de la versión anterior no oculta la interfaz recién instalada.
+{
+  const script = join(scratch, "old-server.ts"), path = statePath(root);
+  writeFileSync(script, `import {writeFileSync} from 'node:fs';
+const token='a'.repeat(48); const server=Bun.serve({hostname:'127.0.0.1',port:0,fetch(req){return req.headers.get('x-previewer-token')===token?Response.json({ok:true,pid:process.pid}):new Response(null,{status:403});}});
+writeFileSync(process.argv[2],JSON.stringify({pid:process.pid,port:server.port,token}));
+process.once('SIGTERM',()=>{server.stop(true);process.exit(0);});`);
+  const legacy = spawn(process.execPath, [script, path], { stdio: "ignore" });
+  let replacement: Awaited<ReturnType<typeof ensureServer>> | undefined;
+  try {
+    for (let i = 0; i < 100; i++) {
+      try { if (JSON.parse(readFileSync(path, "utf8")).pid === legacy.pid) break; } catch {}
+      await Bun.sleep(20);
+    }
+    replacement = await ensureServer(root);
+    assert.notEqual(replacement.pid, legacy.pid, "una actualización no reutiliza la interfaz antigua");
+    const page = await fetch(`http://127.0.0.1:${replacement.port}/app.js`);
+    assert.equal(page.status, 200);
+    assert.match(await page.text(), /previewer-token/);
+  } finally {
+    if (replacement && replacement.pid !== legacy.pid) process.kill(replacement.pid, "SIGTERM");
+    if (legacy.exitCode === null) legacy.kill("SIGTERM");
+  }
 }
 
 // Una revisión que termina mientras se lee la página no mezcla su informe con el diff anterior.

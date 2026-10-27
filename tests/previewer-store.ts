@@ -1,5 +1,5 @@
 import { strict as assert } from "node:assert";
-import { mkdtempSync } from "node:fs";
+import { mkdtempSync, readdirSync, statSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import type { Finding } from "../previewer/src/finding.ts";
@@ -142,6 +142,13 @@ store.close();
   old.run("PRAGMA user_version = 1");
   old.close();
   const migrated = new ReviewStore(v1);
+  const backups = readdirSync(join(v1, "..", "backups"));
+  assert.equal(backups.length, 1);
+  const copy = new Database(join(v1, "..", "backups", backups[0]!), { readonly: true });
+  assert.equal((copy.query("PRAGMA user_version").get() as { user_version: number }).user_version, 1);
+  assert.equal((copy.query("SELECT verdict FROM ratings WHERE finding_id='f'").get() as { verdict: string }).verdict, "vale");
+  assert.equal(statSync(join(v1, "..", "backups", backups[0]!)).mode & 0o777, 0o600);
+  copy.close();
   const [kept] = migrated.findings("s");
   assert.deepEqual([kept?.title, kept?.thread, kept?.status, kept?.rating?.verdict], ["Antiguo", "f", "new", "vale"]);
   assert.deepEqual(migrated.run("r")?.tour, [], "una revisión anterior al recorrido queda sin él");
@@ -160,8 +167,15 @@ store.close();
   old.rate(item!.id, "vale", "decisión anterior"); old.select(item!.id, true);
   old.db.run("DROP TABLE chain_runs"); old.db.run("DROP TABLE chain_revisions"); old.db.run("DROP TABLE chains");
   old.db.run("PRAGMA user_version = 3");
-  old.close();
+  // Mantener la conexión abierta deja los commits recientes en WAL al hacer la copia.
   const upgraded = new ReviewStore(path);
+  const { Database } = await import("bun:sqlite");
+  const backups = readdirSync(join(path, "..", "backups"));
+  assert.equal(backups.length, 1);
+  const backup = new Database(join(path, "..", "backups", backups[0]!), { readonly: true });
+  assert.equal((backup.query("SELECT selected FROM selection WHERE finding_id=?").get(item!.id) as { selected: number }).selected, 1);
+  assert.equal((backup.query("PRAGMA user_version").get() as { user_version: number }).user_version, 3);
+  backup.close();
   const kept = upgraded.finding(item!.id)!;
   assert.equal(kept.rating?.reason, "decisión anterior");
   assert.equal(kept.selected, true);
@@ -172,6 +186,7 @@ store.close();
   assert.equal((upgraded.db.query("PRAGMA user_version").get() as { user_version: number }).user_version, 5,
     "un lector v3 rechaza los nuevos datos en vez de llamar arreglo a not_applicable + exit 0");
   upgraded.close();
+  old.close();
 }
 
 console.log("previewer store: OK");
