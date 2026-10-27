@@ -107,6 +107,8 @@ n-ein-install restore --channel preview            # vuelve al backup anterior
 ./scripts/hotfix-preview.sh plan|apply|rollback    # aplica un commit comprobado a la preview
 ```
 
+El revisor distingue un fallo reproducido, una comprobación superada y un escenario que ya no aplica. Una sonda que no permite concluir deja el hallazgo sin comprobar y conserva tu selección. Al revisar después de un arreglo, indica si lo confirmó una sonda o la inspección del código con citas actuales.
+
 Dentro de Pi:
 
 | ATAJO | PARA QUÉ |

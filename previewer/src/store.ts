@@ -15,6 +15,7 @@ import { mkdirSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { channelDir } from "../../pi-package/models.ts";
 import type { Citation, Finding, Kind, Probe, Severity, TourStep } from "./finding.ts";
+import { storedProbe } from "./probe-result.ts";
 
 export const VERDICTS = ["vale", "descartar", "investigar"] as const;
 export type Verdict = (typeof VERDICTS)[number];
@@ -123,7 +124,7 @@ function run(row: RunRow): Run {
 
 function finding(row: FindingRow, status: Status, check: Check | null): StoredFinding {
   const citations: Citation[] = JSON.parse(row.citations);
-  const probe: Probe | null = row.probe ? JSON.parse(row.probe) : null;
+  const probe: Probe | null = row.probe ? storedProbe(JSON.parse(row.probe)) : null;
   return {
     id: row.id, sessionId: row.session_id, runId: row.run_id, headSha: row.head_sha, kind: row.kind, severity: row.severity,
     title: row.title, plain: row.plain, condition: row.condition, consequence: row.consequence, citations, probe,
@@ -318,7 +319,7 @@ export class ReviewStore {
       if (listed.has(row.thread)) continue;
       listed.add(row.thread);
       const later = checks.find((item) => item.thread === row.thread && item.run_order > row.run_order);
-      const check: Check | null = later ? { runId: later.run_id, outcome: later.outcome, note: later.note, probe: later.probe ? JSON.parse(later.probe) : null } : null;
+      const check: Check | null = later ? { runId: later.run_id, outcome: later.outcome, note: later.note, probe: later.probe ? storedProbe(JSON.parse(later.probe)) : null } : null;
       let status: Status = "unchecked";
       if (row.run_order === latest?.run_order) status = (seen.get(row.thread) ?? 0) > 1 ? "persists" : "new";
       else if (later?.outcome === "resolved") status = "resolved";

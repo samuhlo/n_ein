@@ -165,6 +165,9 @@ store.close();
   assert.equal(kept.rating?.reason, "decisión anterior");
   assert.equal(kept.selected, true);
   assert.equal(probeState(kept.probe!), "inconclusive");
+  assert.equal(kept.probe?.reproduced, false, "también la API y el traspaso JSON reciben la semántica nueva");
+  assert.equal(JSON.parse((upgraded.db.query("SELECT probe FROM findings WHERE id=?").get(item!.id) as { probe: string }).probe).reproduced, true,
+    "la evidencia histórica original permanece guardada");
   assert.equal((upgraded.db.query("PRAGMA user_version").get() as { user_version: number }).user_version, 4,
     "un lector v3 rechaza los nuevos datos en vez de llamar arreglo a not_applicable + exit 0");
   upgraded.close();

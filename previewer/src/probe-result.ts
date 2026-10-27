@@ -8,7 +8,15 @@ export const PROBE_PREFIX = "NEIN_PROBE_RESULT ";
 
 /** Los registros históricos no especificaban qué condición había fallado. */
 export function probeState(probe: Pick<Probe, "outcome">): ProbeAssessment["outcome"] {
-  return probe.outcome ?? "inconclusive";
+  return probe.outcome && ["reproduced", "passed", "not_applicable", "error", "inconclusive", "not_run"].includes(probe.outcome)
+    ? probe.outcome : "inconclusive";
+}
+
+/** Conserva los bytes históricos en SQLite; todos los consumidores reciben la semántica actual. */
+export function storedProbe(probe: Probe): Probe {
+  const outcome = probeState(probe);
+  return { ...probe, outcome, reproduced: outcome === "reproduced",
+    reason: probe.reason ?? (outcome === "inconclusive" ? "Sonda histórica sin resultado explícito de la condición comprobada." : "") };
 }
 
 /** Un único resultado de la condición declarada, coherente con la salida del proceso. */

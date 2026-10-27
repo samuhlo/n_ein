@@ -123,6 +123,8 @@ store.rate(plain.id, "descartar");
   const data = await (await request(`/api/sessions/${session.id}`, { headers: api })).json();
   assert.equal(data.session.branch, "feat/clip");
   assert.equal(data.findings.length, 2);
+  assert.equal(data.findings[0].probe.reproduced, false, "la API no anuncia como demostrada una sonda histórica");
+  assert.equal(data.findings[0].probe.outcome, "inconclusive");
   assert.match(data.patch, /text\.slice\(0, 3\)/);
   assert.equal((await request("/api/sessions/nope", { headers: api })).status, 404);
   const version = (await (await request(`/api/sessions/${session.id}/version`, { headers: api })).json()).version;

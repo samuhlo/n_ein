@@ -109,7 +109,11 @@ Tras la valoración del banco de Prelo, Samu respondió «Pues dale, vamos con e
 
 - [x] E1 · Resultado explícito de sondas: fallo de la condición, comprobación superada, escenario no aplicable, error de ejecución o resultado inconcluso. Conservar datos antiguos sin presentarlos como evidencia nueva; comparar base/head cuando proceda.
 - [x] E2 · Segunda revisión: solo una comprobación pertinente puede confirmar o descartar el fallo automáticamente; una sonda obsoleta no fuerza «sigue», una salida 0 sin resultado no fuerza «resuelto». Mostrarlo en web, CLI y traspaso conservando valoración y selección.
-- [ ] E3 · Verificar el recorrido con regresiones del banco y un revisor real sobre copias aisladas, incluidos fallo persistente, arreglo real y escenario cambiado. Ejecutar los checks pertinentes y registrar resultados y límites.
+- [x] E3 · Verificar el recorrido con regresiones del banco y un revisor real sobre copias aisladas, incluidos fallo persistente, arreglo real y escenario cambiado. Ejecutar los checks pertinentes y registrar resultados y límites.
+
+Implementación en `f445be3`: resultados explícitos con identificador de condición, comparación opcional en copia de la base, comprobación del código fijado, resolución con citas actuales y esquema 4 compatible con la lectura de datos antiguos. Los lectores antiguos rechazan el esquema nuevo para no interpretar un escenario no aplicable como arreglo. Web, CLI y traspaso distinguen resultados y conservan valoración y selección. La API y el traspaso JSON normalizan la evidencia histórica como inconclusa, sin reescribir su fuente en SQLite.
+
+[Evidencia del tramo](evals/results/2026-10-27-previewer-evidence-loop.md): Sol 6.1 real reproduce el fallo conocido del presupuesto (base pasa, head falla) y confirma el arreglo en una segunda revisión; valoración y selección histórica se mantienen. En Prelo PR 2→PR 4, el escenario cambia y el hilo queda sin comprobar hasta aportar citas actuales del arreglo. Checks completos de macOS y paquete instalado pasan. Datos y scripts en `evals/previewer/evidence-2026-10-27/` y `evals/previewer/evidence-loop.ts`. Se prueba la fiabilidad del recorrido, no una mejora de cobertura ni las demás líneas propuestas. Sin actualización personal ni publicación.
 
 ### Encargo del 27 de octubre: banco con las diez PR de prelo-ob
 

@@ -1,0 +1,114 @@
+{
+  "session": {
+    "id": "035703f1-e5f6-4ba8-a820-296e150482ef",
+    "repo": "<n_ein>/.n_ein/evidence-loop-2026-10-27T11-03-17-125Z/quote",
+    "branch": "change",
+    "prUrl": null,
+    "baseSha": "9daa9a74014aed2700d3c2f1fb4faa3b902e5c0b",
+    "headSha": "9662e31fae946d5d156f69b5a56a1aa7bbff2219",
+    "created": "2026-10-27T11:03:17.214Z"
+  },
+  "run": {
+    "id": "fd34f9c6-ae49-4f00-94b0-fd9a04edfdb0",
+    "sessionId": "035703f1-e5f6-4ba8-a820-296e150482ef",
+    "baseSha": "9daa9a74014aed2700d3c2f1fb4faa3b902e5c0b",
+    "headSha": "9662e31fae946d5d156f69b5a56a1aa7bbff2219",
+    "model": "openai-codex/gpt-6.1-sol",
+    "thinking": "high",
+    "status": "done",
+    "error": null,
+    "summary": "El estado final es idéntico a la base. La prueba restaurada pasa: checkout(1250) devuelve 1250. No hay defectos nuevos.",
+    "tour": [],
+    "gaps": [],
+    "rejected": [],
+    "usage": {
+      "input": 10838,
+      "output": 509,
+      "cacheRead": 10368,
+      "usd": 0.027802800000000003
+    },
+    "started": "2026-10-27T11:04:00.134Z",
+    "ended": "2026-10-27T11:04:24.046Z"
+  },
+  "findings": [
+    {
+      "id": "241210bb-980c-4256-aab4-c51cba79ab78",
+      "sessionId": "035703f1-e5f6-4ba8-a820-296e150482ef",
+      "runId": "2f46ccfc-a676-4345-966c-472e482567cb",
+      "headSha": "340cdfdbb0124643b7254d756b2175f71db5e919",
+      "kind": "bug",
+      "severity": "high",
+      "title": "El nuevo resultado rompe checkout",
+      "plain": "Al cobrar 1250 céntimos, el programa intenta buscar un campo total dentro de un número y falla. Antes devolvía correctamente 1250.",
+      "condition": "Se llama a checkout con un importe entero.",
+      "consequence": "checkout lanza TypeError en lugar de devolver el importe, incumpliendo el objetivo de mantener el comportamiento del cobro.",
+      "citations": [
+        {
+          "ref": "pricing.py@340cdfd:L1-L2",
+          "path": "pricing.py",
+          "sha": "340cdfdbb0124643b7254d756b2175f71db5e919",
+          "start": 1,
+          "end": 2,
+          "text": "def make_quote(cents):\n    return cents"
+        },
+        {
+          "ref": "checkout.py@340cdfd:L3-L4",
+          "path": "checkout.py",
+          "sha": "340cdfdbb0124643b7254d756b2175f71db5e919",
+          "start": 3,
+          "end": 4,
+          "text": "def checkout(cents):\n    return make_quote(cents)[\"total\"]"
+        }
+      ],
+      "probe": {
+        "command": "python3 .previewer-probes/checkout-contract.py",
+        "protocol": "nein-probe-v1",
+        "check": "checkout-quote-contract",
+        "compareBase": true,
+        "file": ".previewer-probes/checkout-contract.py",
+        "source": "import json\nimport sys\nfrom pathlib import Path\n\nsys.path.insert(0, str(Path.cwd()))\n\n\ndef check():\n    from checkout import checkout\n    from pricing import make_quote\n\n    cents = 1250\n    quote = make_quote(cents)\n    if quote != cents and quote != {\"total\": cents}:\n        raise RuntimeError(\"Unexpected quote precondition\")\n    try:\n        result = checkout(cents)\n    except TypeError as exc:\n        if str(exc) != \"'int' object is not subscriptable\":\n            raise\n        return \"reproduced\", \"checkout(1250) raises TypeError instead of returning 1250\", 1\n    if result != cents:\n        return \"reproduced\", f\"checkout(1250) returned {result!r} instead of 1250\", 1\n    return \"passed\", \"checkout(1250) returns 1250\", 0\n\n\ntry:\n    outcome, reason, code = check()\nexcept Exception as exc:\n    outcome, reason, code = \"error\", f\"{type(exc).__name__}: {exc}\", 2\n\nprint(\"NEIN_PROBE_RESULT \" + json.dumps({\"check\": \"checkout-quote-contract\", \"outcome\": outcome, \"reason\": reason}))\nsys.exit(code)\n",
+        "exitCode": 1,
+        "output": "NEIN_PROBE_RESULT {\"check\": \"checkout-quote-contract\", \"outcome\": \"reproduced\", \"reason\": \"checkout(1250) raises TypeError instead of returning 1250\"}",
+        "outcome": "reproduced",
+        "reason": "checkout(1250) raises TypeError instead of returning 1250",
+        "reproduced": true,
+        "baseline": {
+          "sha": "9daa9a74014aed2700d3c2f1fb4faa3b902e5c0b",
+          "outcome": "passed",
+          "reason": "checkout(1250) returns 1250",
+          "exitCode": 0,
+          "output": "NEIN_PROBE_RESULT {\"check\": \"checkout-quote-contract\", \"outcome\": \"passed\", \"reason\": \"checkout(1250) returns 1250\"}"
+        }
+      },
+      "verification": "",
+      "thread": "241210bb-980c-4256-aab4-c51cba79ab78",
+      "status": "resolved",
+      "current": false,
+      "check": {
+        "runId": "fd34f9c6-ae49-4f00-94b0-fd9a04edfdb0",
+        "outcome": "resolved",
+        "note": "La comprobación explícita de la sonda se ha superado.",
+        "probe": {
+          "command": "python3 .previewer-probes/checkout-contract.py",
+          "protocol": "nein-probe-v1",
+          "check": "checkout-quote-contract",
+          "compareBase": true,
+          "file": ".previewer-probes/checkout-contract.py",
+          "source": "import json\nimport sys\nfrom pathlib import Path\n\nsys.path.insert(0, str(Path.cwd()))\n\n\ndef check():\n    from checkout import checkout\n    from pricing import make_quote\n\n    cents = 1250\n    quote = make_quote(cents)\n    if quote != cents and quote != {\"total\": cents}:\n        raise RuntimeError(\"Unexpected quote precondition\")\n    try:\n        result = checkout(cents)\n    except TypeError as exc:\n        if str(exc) != \"'int' object is not subscriptable\":\n            raise\n        return \"reproduced\", \"checkout(1250) raises TypeError instead of returning 1250\", 1\n    if result != cents:\n        return \"reproduced\", f\"checkout(1250) returned {result!r} instead of 1250\", 1\n    return \"passed\", \"checkout(1250) returns 1250\", 0\n\n\ntry:\n    outcome, reason, code = check()\nexcept Exception as exc:\n    outcome, reason, code = \"error\", f\"{type(exc).__name__}: {exc}\", 2\n\nprint(\"NEIN_PROBE_RESULT \" + json.dumps({\"check\": \"checkout-quote-contract\", \"outcome\": outcome, \"reason\": reason}))\nsys.exit(code)\n",
+          "exitCode": 0,
+          "output": "NEIN_PROBE_RESULT {\"check\": \"checkout-quote-contract\", \"outcome\": \"passed\", \"reason\": \"checkout(1250) returns 1250\"}",
+          "outcome": "passed",
+          "reason": "checkout(1250) returns 1250",
+          "reproduced": false
+        }
+      },
+      "rating": {
+        "verdict": "vale",
+        "reason": "Valoración automática del fixture de aceptación, no decisión del usuario.",
+        "at": "2026-10-27T11:04:00.093Z"
+      },
+      "selected": true
+    }
+  ],
+  "contamination": []
+}
