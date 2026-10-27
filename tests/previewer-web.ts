@@ -21,7 +21,7 @@ const root = resolve(import.meta.dir, "..");
   const location = new URL("http://127.0.0.1:4321/s/demo?run=old#t=private-token");
   const app = { innerHTML: "", textContent: "", querySelectorAll: () => [], querySelector: () => null };
   const requests: string[] = [];
-  let poll: (() => void) | undefined, version = 0;
+  let poll: (() => void) | undefined;
   const view = { session: { id: "demo", repo: "/repo", branch: "change", prUrl: null }, run: null, latest: null,
     findings: [], patch: "", lang: "es", runs: { count: 0, usd: 0 }, historical: true };
   runInNewContext(await built.outputs[0]!.text(), {
@@ -31,7 +31,7 @@ const root = resolve(import.meta.dir, "..");
     document: { getElementById: () => app, querySelectorAll: () => [], addEventListener() {}, activeElement: null, documentElement: {}, hidden: false },
     window: { addEventListener() {}, scrollY: 0, scrollTo() {} },
     setInterval(callback: () => void) { poll = callback; return 1; },
-    fetch: async (path: string) => { requests.push(path); return { ok: true, json: async () => path.endsWith("/version") ? { version: String(++version) } : view }; },
+    fetch: async (path: string) => { requests.push(path); return { ok: true, json: async () => path.endsWith("/version") ? { version: "already-finished" } : view }; },
   });
   await new Promise(resolve => setTimeout(resolve, 0));
   assert.equal(location.hash, "");
@@ -198,6 +198,31 @@ store.close();
   process.kill(first.pid, "SIGTERM");
   await Bun.sleep(300);
   assert.throws(() => process.kill(first.pid, 0), "se para con SIGTERM");
+}
+
+// Una revisión que termina mientras se lee la página no mezcla su informe con el diff anterior.
+{
+  const path = join(scratch, "concurrent.db"), observer = new ReviewStore(path), writer = new ReviewStore(path);
+  const s = writer.openSession({ repo, branch: "concurrent" });
+  const first = writer.startRun({ sessionId: s.id, baseSha, headSha, model: "test/reviewer", thinking: "high" });
+  writer.finishRun(first.id, { status: "done", summary: "first", findings: [sample("first")] });
+  const originalRuns = observer.runs.bind(observer);
+  let advanced = false;
+  observer.runs = id => {
+    const captured = originalRuns(id);
+    if (!advanced) {
+      advanced = true;
+      const next = writer.startRun({ sessionId: s.id, baseSha, headSha, model: "test/reviewer", thinking: "high" });
+      writer.finishRun(next.id, { status: "done", summary: "later", findings: [sample("later")] });
+    }
+    return captured;
+  };
+  const handle = await createHandler({ packageRoot: root, store: observer, token: "test", port: () => 4321 });
+  const response = await handle(new Request(`http://127.0.0.1:4321/api/sessions/${s.id}`, { headers: { host: "127.0.0.1:4321", "x-previewer-token": "test" } }));
+  const data = await response.json();
+  assert.equal(data.run.id, first.id);
+  assert.deepEqual(data.findings.map((f: { title: string }) => f.title), ["first"], "una lectura coherente del informe, los hilos y la cadena");
+  observer.close(); writer.close();
 }
 
 console.log("previewer web: OK");

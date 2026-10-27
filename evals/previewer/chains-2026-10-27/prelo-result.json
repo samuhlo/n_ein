@@ -1,0 +1,183 @@
+{
+  "session": {
+    "id": "6986129e-72ab-4fb9-905c-3cd718c9a3d4",
+    "repo": "<n_ein>/.n_ein/prelo-chain-1793110539436/prelo",
+    "branch": "chain:Prelo upload",
+    "prUrl": null,
+    "baseSha": "5ec72530fe8e502cf2997ac9750fad7b89e7a62b",
+    "headSha": "ae1f2eb8220a73d66295075c3142daf0f87cb903",
+    "created": "2026-10-27T14:15:39.691Z"
+  },
+  "chain": {
+    "name": "Prelo upload",
+    "revision": 1,
+    "revisionId": "bef44191-f18b-4c4a-be37-66b0184ed3af",
+    "complete": true,
+    "busy": false,
+    "stages": [
+      {
+        "name": "PR 2",
+        "kind": "change",
+        "base": "5ec72530fe8e502cf2997ac9750fad7b89e7a62b",
+        "head": "f26d2c0f57b6585c3a12cdd3c3d52a97b8a15f97",
+        "baseSha": "5ec72530fe8e502cf2997ac9750fad7b89e7a62b",
+        "headSha": "f26d2c0f57b6585c3a12cdd3c3d52a97b8a15f97",
+        "prUrl": "https://github.com/samuhlo/prelo-ob/pull/2",
+        "runId": "a6b3afa6-a5d2-4a09-ad10-b7527e1fdb2d",
+        "status": "done",
+        "error": null
+      },
+      {
+        "name": "PR 3",
+        "kind": "change",
+        "base": "f26d2c0f57b6585c3a12cdd3c3d52a97b8a15f97",
+        "head": "75bfff386b9a1787fea0b9b81071b43bc4237fde",
+        "baseSha": "f26d2c0f57b6585c3a12cdd3c3d52a97b8a15f97",
+        "headSha": "75bfff386b9a1787fea0b9b81071b43bc4237fde",
+        "prUrl": "https://github.com/samuhlo/prelo-ob/pull/3",
+        "runId": "1317cbe3-e61b-444c-a939-1b15909e425c",
+        "status": "done",
+        "error": null
+      },
+      {
+        "name": "PR 4",
+        "kind": "change",
+        "base": "75bfff386b9a1787fea0b9b81071b43bc4237fde",
+        "head": "ae1f2eb8220a73d66295075c3142daf0f87cb903",
+        "baseSha": "75bfff386b9a1787fea0b9b81071b43bc4237fde",
+        "headSha": "ae1f2eb8220a73d66295075c3142daf0f87cb903",
+        "prUrl": "https://github.com/samuhlo/prelo-ob/pull/4",
+        "runId": "ced507f6-f931-4c3a-8cc4-5076ae70d316",
+        "status": "done",
+        "error": null
+      },
+      {
+        "name": "Integración",
+        "kind": "integration",
+        "base": "5ec72530fe8e502cf2997ac9750fad7b89e7a62b",
+        "baseSha": "5ec72530fe8e502cf2997ac9750fad7b89e7a62b",
+        "head": "ae1f2eb8220a73d66295075c3142daf0f87cb903",
+        "headSha": "ae1f2eb8220a73d66295075c3142daf0f87cb903",
+        "prUrl": null,
+        "runId": "f250f2cf-b93b-4adc-8a79-7d1fb43c3152",
+        "status": "done",
+        "error": null
+      }
+    ],
+    "history": {
+      "2e594c59-d812-4fa0-a9f5-5e8b4fdb1c4a": [
+        {
+          "runId": "a6b3afa6-a5d2-4a09-ad10-b7527e1fdb2d",
+          "revision": 1,
+          "position": 0,
+          "stage": "PR 2",
+          "kind": "change",
+          "headSha": "f26d2c0f57b6585c3a12cdd3c3d52a97b8a15f97",
+          "outcome": "detected",
+          "note": "Subida bloqueada"
+        },
+        {
+          "runId": "1317cbe3-e61b-444c-a939-1b15909e425c",
+          "revision": 1,
+          "position": 1,
+          "stage": "PR 3",
+          "kind": "change",
+          "headSha": "75bfff386b9a1787fea0b9b81071b43bc4237fde",
+          "outcome": "persists",
+          "note": "Subida bloqueada"
+        },
+        {
+          "runId": "ced507f6-f931-4c3a-8cc4-5076ae70d316",
+          "revision": 1,
+          "position": 2,
+          "stage": "PR 4",
+          "kind": "change",
+          "headSha": "ae1f2eb8220a73d66295075c3142daf0f87cb903",
+          "outcome": "unchecked",
+          "note": "el escenario ya no aplica: El backup ya conserva el EPUB: no existe la ausencia de archivo que activaba esta sonda."
+        },
+        {
+          "runId": "f250f2cf-b93b-4adc-8a79-7d1fb43c3152",
+          "revision": 1,
+          "position": 3,
+          "stage": "Integración",
+          "kind": "integration",
+          "headSha": "ae1f2eb8220a73d66295075c3142daf0f87cb903",
+          "outcome": "resolved",
+          "note": "Resolución por inspección del revisor, sin confirmación por sonda: El backup incluye los EPUB pendientes y la restauración conserva los bytes.\nserver/margen/library.py@ae1f2eb8220a73d66295075c3142daf0f87cb903:L347\n                    archive.write(file, \".uploads/\" + file.name)"
+        }
+      ]
+    },
+    "lastReviewed": {
+      "stage": "Integración",
+      "revision": 1,
+      "headSha": "ae1f2eb8220a73d66295075c3142daf0f87cb903"
+    },
+    "drift": []
+  },
+  "findings": [
+    {
+      "id": "8507c61c-3ff9-487d-9b10-0f3696b39fbc",
+      "sessionId": "6986129e-72ab-4fb9-905c-3cd718c9a3d4",
+      "runId": "1317cbe3-e61b-444c-a939-1b15909e425c",
+      "headSha": "75bfff386b9a1787fea0b9b81071b43bc4237fde",
+      "kind": "bug",
+      "severity": "high",
+      "title": "Subida bloqueada",
+      "plain": "La orden restaurada no tiene archivo y no se puede cancelar.",
+      "condition": "restaurar una subida pendiente",
+      "consequence": "queda bloqueada",
+      "citations": [
+        {
+          "ref": "server/margen/kobo.py@75bfff386b9a1787fea0b9b81071b43bc4237fde:L139",
+          "path": "server/margen/kobo.py",
+          "sha": "75bfff386b9a1787fea0b9b81071b43bc4237fde",
+          "start": 139,
+          "end": 139,
+          "text": "def cancel(root, identity):"
+        }
+      ],
+      "probe": {
+        "command": "uv run --project server python .previewer-probes/upload.py",
+        "protocol": "nein-probe-v1",
+        "check": "pending-upload-recoverability",
+        "compareBase": false,
+        "file": ".previewer-probes/upload.py",
+        "source": "\"\"\"Witness for Prelo PR 2's missing upload: distinguish a fixed precondition.\n\nRun inside a disposable Prelo checkout. No reader, server or private library.\n\"\"\"\nimport io\nimport json\nfrom pathlib import Path\nimport runpy\nimport tempfile\nimport zipfile\nfrom margen import kobo, library\n\n\ndef result(outcome, reason):\n    print(\"NEIN_PROBE_RESULT \" + json.dumps({\"check\": \"pending-upload-recoverability\", \"outcome\": outcome, \"reason\": reason}))\n    raise SystemExit(1 if outcome == \"reproduced\" else 2 if outcome == \"error\" else 0)\n\n\ntry:\n    with tempfile.TemporaryDirectory() as scratch:\n        root = Path(scratch) / \"library\"\n        root.mkdir()\n        library.save_inventory(root, {\"device\": \"A\", \"books\": []})\n        data = io.BytesIO()\n        with zipfile.ZipFile(data, \"w\") as archive:\n            archive.writestr(\"mimetype\", \"application/epub+zip\")\n            archive.writestr(\"META-INF/container.xml\", \"<container/>\")\n        command = kobo.upload(root, \"synthetic.epub\", data.getvalue(), \"A\")\n        restored = Path(scratch) / \"restored\"\n        runpy.run_path(\"scripts/restore_backup.py\")[\"restore\"](library.backup(root), restored)\n        uploaded = restored / \".uploads\" / (command[\"id\"] + \".epub\")\n        if uploaded.exists():\n            if uploaded.read_bytes() != data.getvalue():\n                result(\"error\", \"El escenario cambió y el archivo restaurado tiene otros bytes.\")\n            result(\"not_applicable\", \"El backup ya conserva el EPUB: no existe la ausencia de archivo que activaba esta sonda.\")\n        kobo.claim(restored, command[\"id\"], \"A\")\n        try:\n            kobo.cancel(restored, command[\"id\"])\n        except ValueError:\n            state = next(row[\"state\"] for row in kobo.listing(restored) if row[\"id\"] == command[\"id\"])\n            if state == \"executing\":\n                result(\"reproduced\", \"La subida restaurada no tiene archivo, sigue en ejecución y no se puede cancelar.\")\n            result(\"error\", \"La cancelación falló por una condición distinta de la comprobada.\")\n        result(\"passed\", \"La orden sin archivo se puede cancelar.\")\nexcept Exception as error:\n    result(\"error\", f\"No se pudo preparar o ejecutar el escenario: {error}\")\n",
+        "exitCode": 1,
+        "output": "Using CPython 3.13.14\nCreating virtual environment at: server/.venv\n   Building margen-server @ file://<n_ein>/.n_ein/prelo-chain-1793110539436/prelo-worktrees/previewer-1317cbe3/server\n      Built margen-server @ file://<n_ein>/.n_ein/prelo-chain-1793110539436/prelo-worktrees/previewer-1317cbe3/server\nInstalled 28 packages in 17ms\nNEIN_PROBE_RESULT {\"check\": \"pending-upload-recoverability\", \"outcome\": \"reproduced\", \"reason\": \"La subida restaurada no tiene archivo, sigue en ejecuci\\u00f3n y no se puede cancelar.\"}",
+        "outcome": "reproduced",
+        "reason": "La subida restaurada no tiene archivo, sigue en ejecución y no se puede cancelar.",
+        "reproduced": true
+      },
+      "verification": "",
+      "thread": "2e594c59-d812-4fa0-a9f5-5e8b4fdb1c4a",
+      "status": "resolved",
+      "current": false,
+      "check": {
+        "runId": "f250f2cf-b93b-4adc-8a79-7d1fb43c3152",
+        "outcome": "resolved",
+        "note": "Resolución por inspección del revisor, sin confirmación por sonda: El backup incluye los EPUB pendientes y la restauración conserva los bytes.\nserver/margen/library.py@ae1f2eb8220a73d66295075c3142daf0f87cb903:L347\n                    archive.write(file, \".uploads/\" + file.name)",
+        "probe": {
+          "command": "uv run --project server python .previewer-probes/upload.py",
+          "protocol": "nein-probe-v1",
+          "check": "pending-upload-recoverability",
+          "compareBase": false,
+          "file": ".previewer-probes/upload.py",
+          "source": "\"\"\"Witness for Prelo PR 2's missing upload: distinguish a fixed precondition.\n\nRun inside a disposable Prelo checkout. No reader, server or private library.\n\"\"\"\nimport io\nimport json\nfrom pathlib import Path\nimport runpy\nimport tempfile\nimport zipfile\nfrom margen import kobo, library\n\n\ndef result(outcome, reason):\n    print(\"NEIN_PROBE_RESULT \" + json.dumps({\"check\": \"pending-upload-recoverability\", \"outcome\": outcome, \"reason\": reason}))\n    raise SystemExit(1 if outcome == \"reproduced\" else 2 if outcome == \"error\" else 0)\n\n\ntry:\n    with tempfile.TemporaryDirectory() as scratch:\n        root = Path(scratch) / \"library\"\n        root.mkdir()\n        library.save_inventory(root, {\"device\": \"A\", \"books\": []})\n        data = io.BytesIO()\n        with zipfile.ZipFile(data, \"w\") as archive:\n            archive.writestr(\"mimetype\", \"application/epub+zip\")\n            archive.writestr(\"META-INF/container.xml\", \"<container/>\")\n        command = kobo.upload(root, \"synthetic.epub\", data.getvalue(), \"A\")\n        restored = Path(scratch) / \"restored\"\n        runpy.run_path(\"scripts/restore_backup.py\")[\"restore\"](library.backup(root), restored)\n        uploaded = restored / \".uploads\" / (command[\"id\"] + \".epub\")\n        if uploaded.exists():\n            if uploaded.read_bytes() != data.getvalue():\n                result(\"error\", \"El escenario cambió y el archivo restaurado tiene otros bytes.\")\n            result(\"not_applicable\", \"El backup ya conserva el EPUB: no existe la ausencia de archivo que activaba esta sonda.\")\n        kobo.claim(restored, command[\"id\"], \"A\")\n        try:\n            kobo.cancel(restored, command[\"id\"])\n        except ValueError:\n            state = next(row[\"state\"] for row in kobo.listing(restored) if row[\"id\"] == command[\"id\"])\n            if state == \"executing\":\n                result(\"reproduced\", \"La subida restaurada no tiene archivo, sigue en ejecución y no se puede cancelar.\")\n            result(\"error\", \"La cancelación falló por una condición distinta de la comprobada.\")\n        result(\"passed\", \"La orden sin archivo se puede cancelar.\")\nexcept Exception as error:\n    result(\"error\", f\"No se pudo preparar o ejecutar el escenario: {error}\")\n",
+          "exitCode": 0,
+          "output": "Using CPython 3.13.14\nCreating virtual environment at: server/.venv\n   Building margen-server @ file://<n_ein>/.n_ein/prelo-chain-1793110539436/prelo-worktrees/previewer-f250f2cf/server\n      Built margen-server @ file://<n_ein>/.n_ein/prelo-chain-1793110539436/prelo-worktrees/previewer-f250f2cf/server\nInstalled 28 packages in 18ms\nNEIN_PROBE_RESULT {\"check\": \"pending-upload-recoverability\", \"outcome\": \"not_applicable\", \"reason\": \"El backup ya conserva el EPUB: no existe la ausencia de archivo que activaba esta sonda.\"}",
+          "outcome": "not_applicable",
+          "reason": "El backup ya conserva el EPUB: no existe la ausencia de archivo que activaba esta sonda.",
+          "reproduced": false
+        }
+      },
+      "rating": {
+        "verdict": "vale",
+        "reason": "Fixture del banco",
+        "at": "2026-10-27T14:15:40.712Z"
+      },
+      "selected": true
+    }
+  ]
+}

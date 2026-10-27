@@ -112,7 +112,8 @@ async function load(): Promise<void> {
   try {
     view = await api<SessionView>(viewPath);
     document.documentElement.lang = view.lang;
-    version = await api<{ version: string }>(`/api/sessions/${encodeURIComponent(sessionId)}/version`).then((data) => data.version);
+    // La primera actualización releerá la vista: un tramo pudo terminar durante esta carga.
+    version = "";
     paint();
     focusHash();
   } catch (error) {

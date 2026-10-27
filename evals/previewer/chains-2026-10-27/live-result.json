@@ -1,0 +1,198 @@
+{
+  "session": {
+    "id": "f2267e47-2fa3-4e51-a4bf-58e8b612249e",
+    "repo": "<n_ein>/.n_ein/chain-live-1793110539436/quote",
+    "branch": "chain:Quote acceptance",
+    "prUrl": null,
+    "baseSha": "2ef63b5c5b2d4acfa48e8a746b88e5e6adab4ed5",
+    "headSha": "98f0bba9dce8c16df01d8dc7c08fd8673574dc36",
+    "created": "2026-10-27T14:15:39.572Z"
+  },
+  "chain": {
+    "name": "Quote acceptance",
+    "revision": 1,
+    "revisionId": "07cd4325-de65-4e2d-9017-3845bca6b650",
+    "complete": true,
+    "busy": false,
+    "stages": [
+      {
+        "name": "PR 1",
+        "kind": "change",
+        "base": "main",
+        "head": "one",
+        "baseSha": "2ef63b5c5b2d4acfa48e8a746b88e5e6adab4ed5",
+        "headSha": "caa18e93ec6b26ad583b147f9d61e8c6a0d77e5a",
+        "prUrl": null,
+        "runId": "24c6fdff-328f-4f70-b07d-1b00ae331ea9",
+        "status": "done",
+        "error": null
+      },
+      {
+        "name": "PR 2",
+        "kind": "change",
+        "base": "one",
+        "head": "two",
+        "baseSha": "caa18e93ec6b26ad583b147f9d61e8c6a0d77e5a",
+        "headSha": "82e278a802f19bd2851a60340b057c802bf04716",
+        "prUrl": null,
+        "runId": "74820479-a813-4b4c-854a-844d2589fb97",
+        "status": "done",
+        "error": null
+      },
+      {
+        "name": "PR 3",
+        "kind": "change",
+        "base": "two",
+        "head": "three",
+        "baseSha": "82e278a802f19bd2851a60340b057c802bf04716",
+        "headSha": "98f0bba9dce8c16df01d8dc7c08fd8673574dc36",
+        "prUrl": null,
+        "runId": "776bae04-8d1c-477e-a3ef-2a64b3f86504",
+        "status": "done",
+        "error": null
+      },
+      {
+        "name": "Integración",
+        "kind": "integration",
+        "base": "main",
+        "baseSha": "2ef63b5c5b2d4acfa48e8a746b88e5e6adab4ed5",
+        "head": "three",
+        "headSha": "98f0bba9dce8c16df01d8dc7c08fd8673574dc36",
+        "prUrl": null,
+        "runId": "c6eff660-287c-46cd-88c8-2a3d1ac72ae7",
+        "status": "done",
+        "error": null
+      }
+    ],
+    "history": {
+      "6a26cc47-eb20-49c1-87da-420cd3abd3e1": [
+        {
+          "runId": "24c6fdff-328f-4f70-b07d-1b00ae331ea9",
+          "revision": 1,
+          "position": 0,
+          "stage": "PR 1",
+          "kind": "change",
+          "headSha": "caa18e93ec6b26ad583b147f9d61e8c6a0d77e5a",
+          "outcome": "detected",
+          "note": "El nuevo resultado rompe checkout"
+        },
+        {
+          "runId": "74820479-a813-4b4c-854a-844d2589fb97",
+          "revision": 1,
+          "position": 1,
+          "stage": "PR 2",
+          "kind": "change",
+          "headSha": "82e278a802f19bd2851a60340b057c802bf04716",
+          "outcome": "persists",
+          "note": "Checkout sigue fallando al recibir un importe entero"
+        },
+        {
+          "runId": "776bae04-8d1c-477e-a3ef-2a64b3f86504",
+          "revision": 1,
+          "position": 2,
+          "stage": "PR 3",
+          "kind": "change",
+          "headSha": "98f0bba9dce8c16df01d8dc7c08fd8673574dc36",
+          "outcome": "resolved",
+          "note": "La comprobación explícita de la sonda se ha superado."
+        },
+        {
+          "runId": "c6eff660-287c-46cd-88c8-2a3d1ac72ae7",
+          "revision": 1,
+          "position": 3,
+          "stage": "Integración",
+          "kind": "integration",
+          "headSha": "98f0bba9dce8c16df01d8dc7c08fd8673574dc36",
+          "outcome": "resolved",
+          "note": "La comprobación explícita de la sonda se ha superado."
+        }
+      ]
+    },
+    "lastReviewed": {
+      "stage": "Integración",
+      "revision": 1,
+      "headSha": "98f0bba9dce8c16df01d8dc7c08fd8673574dc36"
+    },
+    "drift": []
+  },
+  "findings": [
+    {
+      "id": "a3f56ea2-4f02-4c3d-b896-7c86fa1ebe03",
+      "sessionId": "f2267e47-2fa3-4e51-a4bf-58e8b612249e",
+      "runId": "74820479-a813-4b4c-854a-844d2589fb97",
+      "headSha": "82e278a802f19bd2851a60340b057c802bf04716",
+      "kind": "bug",
+      "severity": "high",
+      "title": "Checkout sigue fallando al recibir un importe entero",
+      "plain": "Al pedir checkout con 1250 céntimos, el programa da un error en lugar de devolver 1250. El problema ya existía en la base y esta etapa no lo corrige.",
+      "condition": "Se llama a checkout con un importe entero. make_quote devuelve ese entero, pero checkout intenta extraer de él una entrada llamada total.",
+      "consequence": "Checkout lanza TypeError en lugar de devolver el importe prometido.",
+      "citations": [
+        {
+          "ref": "pricing.py@82e278a802f19bd2851a60340b057c802bf04716:L1-L2",
+          "path": "pricing.py",
+          "sha": "82e278a802f19bd2851a60340b057c802bf04716",
+          "start": 1,
+          "end": 2,
+          "text": "def make_quote(cents):\n    return cents"
+        },
+        {
+          "ref": "checkout.py@82e278a802f19bd2851a60340b057c802bf04716:L3-L4",
+          "path": "checkout.py",
+          "sha": "82e278a802f19bd2851a60340b057c802bf04716",
+          "start": 3,
+          "end": 4,
+          "text": "def checkout(cents):\n    return make_quote(cents)[\"total\"]"
+        }
+      ],
+      "probe": {
+        "command": "python3 .previewer-probes/checkout-contract.py",
+        "protocol": "nein-probe-v1",
+        "check": "checkout-preserves-total",
+        "compareBase": true,
+        "file": ".previewer-probes/checkout-contract.py",
+        "source": "import json\nimport sys\nfrom pathlib import Path\n\nsys.path.insert(0, str(Path(__file__).resolve().parents[1]))\nCHECK = \"checkout-preserves-total\"\n\n\ndef run():\n    from checkout import checkout\n\n    try:\n        total = checkout(1250)\n    except TypeError as exc:\n        if str(exc) != \"'int' object is not subscriptable\":\n            raise\n        return \"reproduced\", \"checkout(1250) raises TypeError instead of returning 1250\", 1\n    if total != 1250:\n        return \"reproduced\", f\"checkout(1250) returned {total!r} instead of 1250\", 1\n    return \"passed\", \"checkout(1250) returns 1250\", 0\n\n\ntry:\n    outcome, reason, code = run()\nexcept Exception as exc:\n    outcome, reason, code = \"error\", f\"{type(exc).__name__}: {exc}\", 2\nprint(\"NEIN_PROBE_RESULT \" + json.dumps({\"check\": CHECK, \"outcome\": outcome, \"reason\": reason}))\nsys.exit(code)\n",
+        "exitCode": 1,
+        "output": "NEIN_PROBE_RESULT {\"check\": \"checkout-preserves-total\", \"outcome\": \"reproduced\", \"reason\": \"checkout(1250) raises TypeError instead of returning 1250\"}",
+        "outcome": "reproduced",
+        "reason": "checkout(1250) raises TypeError instead of returning 1250",
+        "reproduced": true,
+        "baseline": {
+          "sha": "caa18e93ec6b26ad583b147f9d61e8c6a0d77e5a",
+          "outcome": "reproduced",
+          "reason": "checkout(1250) raises TypeError instead of returning 1250",
+          "exitCode": 1,
+          "output": "NEIN_PROBE_RESULT {\"check\": \"checkout-preserves-total\", \"outcome\": \"reproduced\", \"reason\": \"checkout(1250) raises TypeError instead of returning 1250\"}"
+        }
+      },
+      "verification": "",
+      "thread": "6a26cc47-eb20-49c1-87da-420cd3abd3e1",
+      "status": "resolved",
+      "current": false,
+      "check": {
+        "runId": "c6eff660-287c-46cd-88c8-2a3d1ac72ae7",
+        "outcome": "resolved",
+        "note": "La comprobación explícita de la sonda se ha superado.",
+        "probe": {
+          "command": "python3 .previewer-probes/checkout-contract.py",
+          "protocol": "nein-probe-v1",
+          "check": "checkout-preserves-total",
+          "compareBase": true,
+          "file": ".previewer-probes/checkout-contract.py",
+          "source": "import json\nimport sys\nfrom pathlib import Path\n\nsys.path.insert(0, str(Path(__file__).resolve().parents[1]))\nCHECK = \"checkout-preserves-total\"\n\n\ndef run():\n    from checkout import checkout\n\n    try:\n        total = checkout(1250)\n    except TypeError as exc:\n        if str(exc) != \"'int' object is not subscriptable\":\n            raise\n        return \"reproduced\", \"checkout(1250) raises TypeError instead of returning 1250\", 1\n    if total != 1250:\n        return \"reproduced\", f\"checkout(1250) returned {total!r} instead of 1250\", 1\n    return \"passed\", \"checkout(1250) returns 1250\", 0\n\n\ntry:\n    outcome, reason, code = run()\nexcept Exception as exc:\n    outcome, reason, code = \"error\", f\"{type(exc).__name__}: {exc}\", 2\nprint(\"NEIN_PROBE_RESULT \" + json.dumps({\"check\": CHECK, \"outcome\": outcome, \"reason\": reason}))\nsys.exit(code)\n",
+          "exitCode": 0,
+          "output": "NEIN_PROBE_RESULT {\"check\": \"checkout-preserves-total\", \"outcome\": \"passed\", \"reason\": \"checkout(1250) returns 1250\"}",
+          "outcome": "passed",
+          "reason": "checkout(1250) returns 1250",
+          "reproduced": false
+        }
+      },
+      "rating": {
+        "verdict": "vale",
+        "reason": "Fixture de aceptación, decisión automática sin representar al usuario.",
+        "at": "2026-10-27T14:16:22.572Z"
+      },
+      "selected": true
+    }
+  ]
+}

@@ -110,9 +110,11 @@ Samu acepta «cadenas y revisión de integración juntas» con «Venga, pues dal
 - [x] C1 · Fijar una cadena lineal por referencias locales y metadatos de PR opcionales; validar todas las bases y heads antes de ejecutar modelos. Guardar snapshots y progreso para reanudar sin repetir tramos completos.
 - [x] C2 · Compartir los hilos entre tramos, preservar valoraciones/selección, evitar duplicados identificados y registrar dónde se detectó, siguió o resolvió cada problema. Una detección no demuestra por sí sola el commit que lo introdujo.
 - [x] C3 · Pasada final de integración desde la base inicial al último head, con las garantías de evidencia del tramo anterior. Mostrar claramente revisiones parciales y la vigencia al final de la cadena en web, CLI y traspaso.
-- [ ] C4 · Verificar reanudación, cambios de refs, concurrencia en la misma cadena, trazabilidad y aislamiento con pruebas deterministas, casos de Prelo y un recorrido con Sol 6.1 real. Registrar evidencia y completar checks.
+- [x] C4 · Verificar reanudación, cambios de refs, concurrencia en la misma cadena, trazabilidad y aislamiento con pruebas deterministas, casos de Prelo y un recorrido con Sol 6.1 real. Registrar evidencia y completar checks.
 
 Decisiones de implementación: entrada mediante manifiesto preparado por el agente (nombre, base y lista ordenada de heads con nombres/enlaces opcionales); no depender de GitHub ni inferir una cadena de todas las ramas del repo. Una sesión por cadena, snapshots inmutables y una ejecución secuencial por snapshot; el bloqueo afecta solo a esa cadena, no al proyecto. Los mismos SHA y versión de revisor reutilizan lo completado; repetir explícitamente o cambiar el snapshot vuelve a revisar. La web conserva las decisiones y no lanza inferencia ni escribe código.
+
+Resultado: [aceptación de cadenas e integración](evals/results/2026-10-27-previewer-chains.md). Sol 6.1 real completó tres tramos y la integración conservando un solo hilo y sus decisiones; la CLI reutilizó el snapshot completo sin nuevas inferencias. En Prelo se validaron las diez bases/heads y se ejerció PR 2→3→4 con sondas reales e informes controlados. Checks completos y paquete instalado pasaron sobre `047e2e7`; las últimas regresiones de coherencia de la vista, cadenas y tipos también pasan. La interfaz distingue balance actual, histórico y revisión parcial; el esquema 5 conserva datos anteriores. Sin cambio de instalación personal, push ni publicación.
 
 ### Siguiente tramo autorizado: evidencia y segunda revisión
 

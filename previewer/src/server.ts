@@ -68,7 +68,8 @@ export async function createHandler(options: HandlerOptions): Promise<(request: 
     return given.length === expected.length && timingSafeEqual(given, expected);
   };
 
-  const view = (sessionId: string, inspect?: string | null): SessionView | null => {
+  // El escritor puede terminar otro tramo entre consultas: una vista lee un único estado de SQLite.
+  const view = (sessionId: string, inspect?: string | null): SessionView | null => options.store.db.transaction((): SessionView | null => {
     const session = options.store.session(sessionId);
     if (!session) return null;
     const runs = options.store.runs(sessionId);
@@ -96,7 +97,7 @@ export async function createHandler(options: HandlerOptions): Promise<(request: 
       chain: new ChainStore(options.store).view(sessionId), historical: !!inspect,
       reviewLabel: run ? new ChainStore(options.store).location(run.id) : null,
     };
-  };
+  })();
 
   async function body(request: Request): Promise<Record<string, unknown> | null> {
     if (!(request.headers.get("content-type") ?? "").startsWith("application/json")) return null;
