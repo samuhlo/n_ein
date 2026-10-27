@@ -5,13 +5,14 @@
 // Se apaga solo tras un rato sin peticiones.
 // =============================================================================
 
-import { randomBytes, timingSafeEqual } from "node:crypto";
-import { readFileSync, rmSync, writeFileSync } from "node:fs";
+import { createHash, randomBytes, timingSafeEqual } from "node:crypto";
+import { existsSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { join, resolve } from "node:path";
 import { loadLang } from "../../pi-package/lang.ts";
 import { channelDir } from "../../pi-package/models.ts";
 import { git } from "./git.ts";
 import { ReviewStore, VERDICTS, type Verdict } from "./store.ts";
+import { ChainStore } from "./chains.ts";
 import type { SessionView } from "../web/view.ts";
 
 const WEB = resolve(import.meta.dir, "../web");
@@ -21,6 +22,18 @@ const BODY_LIMIT = 16_384;
 
 export type ServerState = { pid: number; port: number; token: string };
 export const statePath = (packageRoot: string): string => join(channelDir(packageRoot), "previewer", "server.json");
+
+/** La identidad se calcula al arrancar, no al responder: un proceso viejo no puede anunciar los archivos recién instalados. */
+export function serverBuildId(packageRoot: string): string {
+  const manifest = join(packageRoot, "package-manifest.json");
+  const hash = createHash("sha256");
+  if (existsSync(manifest)) return hash.update(readFileSync(manifest)).digest("hex");
+  for (const path of ["VERSION", "previewer/src/server.ts", "previewer/src/open.ts", "previewer/src/store.ts", "previewer/src/chains.ts",
+    "previewer/src/probe-result.ts", "previewer/web/main.ts", "previewer/web/view.ts", "previewer/web/html.ts", "previewer/web/diff.ts",
+    "previewer/web/style.css", "pi-package/lang.ts", "brand.json", "pi-package/themes/ein.json"])
+    hash.update(path).update(readFileSync(join(packageRoot, path)));
+  return hash.digest("hex");
+}
 
 type Palette = Record<string, string>;
 
@@ -59,6 +72,7 @@ const fail = (status: number, error: string): Response => json({ error }, status
 export type HandlerOptions = { packageRoot: string; store: ReviewStore; token: string; port: () => number; touch?: () => void };
 
 export async function createHandler(options: HandlerOptions): Promise<(request: Request) => Promise<Response>> {
+  const buildId = serverBuildId(options.packageRoot);
   const script = await bundle();
   const css = `${palette(options.packageRoot)}\n${readFileSync(join(WEB, "style.css"), "utf8")}`;
   const expected = Buffer.from(options.token);
@@ -67,11 +81,14 @@ export async function createHandler(options: HandlerOptions): Promise<(request: 
     return given.length === expected.length && timingSafeEqual(given, expected);
   };
 
-  const view = (sessionId: string): SessionView | null => {
+  // El escritor puede terminar otro tramo entre consultas: una vista lee un único estado de SQLite.
+  const view = (sessionId: string, inspect?: string | null): SessionView | null => options.store.db.transaction((): SessionView | null => {
     const session = options.store.session(sessionId);
     if (!session) return null;
     const runs = options.store.runs(sessionId);
-    const run = runs.filter((item) => item.status === "done").at(-1) ?? null;
+    const run = inspect ? runs.find(item => item.id === inspect && item.status === "done") ?? null
+      : runs.filter((item) => item.status === "done").at(-1) ?? null;
+    if (inspect && !run) return null;
     const latest = runs.at(-1) ?? null;
     let patch = "";
     if (run) {
@@ -87,11 +104,13 @@ export async function createHandler(options: HandlerOptions): Promise<(request: 
       }
     }
     return {
-      session, run, latest: latest && latest.id !== run?.id ? latest : null,
+      session, run, latest: !inspect && latest && latest.id !== run?.id ? latest : null,
       runs: { count: runs.length, usd: runs.reduce((sum, item) => sum + (item.usage?.usd ?? 0), 0) },
-      findings: options.store.findings(sessionId), patch, lang: loadLang(options.packageRoot).chat,
+      findings: options.store.findings(sessionId, inspect ?? undefined), patch, lang: loadLang(options.packageRoot).chat,
+      chain: new ChainStore(options.store).view(sessionId), historical: !!inspect,
+      reviewLabel: run ? new ChainStore(options.store).location(run.id) : null,
     };
-  };
+  })();
 
   async function body(request: Request): Promise<Record<string, unknown> | null> {
     if (!(request.headers.get("content-type") ?? "").startsWith("application/json")) return null;
@@ -122,16 +141,17 @@ export async function createHandler(options: HandlerOptions): Promise<(request: 
     // BLINDAJE -> La API pide su cabecera propia: un formulario o un fetch simple de otra web no la manda.
     if (!tokenOk(request)) return fail(403, "token ausente o incorrecto");
 
-    if (request.method === "GET" && url.pathname === "/api/health") return json({ ok: true, pid: process.pid });
+    if (request.method === "GET" && url.pathname === "/api/health") return json({ ok: true, pid: process.pid, buildId });
     const sessionMatch = /^\/api\/sessions\/([\w-]+)(\/version)?$/.exec(url.pathname);
     if (request.method === "GET" && sessionMatch) {
       const id = sessionMatch[1] ?? "";
       if (sessionMatch[2]) {
         const runs = options.store.runs(id);
         if (!options.store.session(id)) return fail(404, "sesión desconocida");
-        return json({ version: `${runs.map((item) => `${item.id}:${item.status}`).join(",")}|${options.store.decisions(id)}` });
+        const chain = new ChainStore(options.store).view(id);
+        return json({ version: `${runs.map((item) => `${item.id}:${item.status}`).join(",")}|${options.store.decisions(id)}|${chain ? JSON.stringify([chain.revisionId, chain.busy, chain.drift]) : ""}` });
       }
-      const data = view(id);
+      const data = view(id, url.searchParams.get("run"));
       return data ? json(data) : fail(404, "sesión desconocida");
     }
     const action = /^\/api\/findings\/([\w-]+)\/(rate|select)$/.exec(url.pathname);

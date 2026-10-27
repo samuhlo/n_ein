@@ -1,0 +1,8 @@
+{
+  "commit": "f445be35292a92b4ab898f245aa7f11171481e8d",
+  "originalBase": "5ec72530fe8e502cf2997ac9750fad7b89e7a62b",
+  "originalBroken": "f26d2c0f57b6585c3a12cdd3c3d52a97b8a15f97",
+  "originalFixed": "ae1f2eb8220a73d66295075c3142daf0f87cb903",
+  "runner": "controlled report, real sandboxed probes; no inference",
+  "started": "2026-10-27T11:03:17.293Z"
+}

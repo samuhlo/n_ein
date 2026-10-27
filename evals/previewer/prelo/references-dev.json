@@ -1,0 +1,121 @@
+{
+  "schema": 1,
+  "marker": "REFERENCE_ONLY_DO_NOT_SEND_TO_REVIEWER",
+  "scope": "Referencias de desarrollo, obtenidas durante la exploración y el contraste del código. No son un censo exhaustivo ni una muestra reservada.",
+  "humanReviewed": false,
+  "defects": [
+    {
+      "id": "draft-drain",
+      "pr": 1,
+      "category": "regression",
+      "condition": "Guardar B mientras A espera confirmación y cerrar la última vista.",
+      "consequence": "B queda local sin otro envío hasta abrir Prelo.",
+      "evidence": "validate.py: la misma sonda pasa en base y falla en head."
+    },
+    {
+      "id": "missing-upload-stuck",
+      "pr": 2,
+      "category": "regression",
+      "condition": "Restaurar un backup que conserva la orden de subida, pero no su archivo, y conectarle el lector.",
+      "consequence": "Tras reclamar, el 404 deja executing y ya no se puede cancelar.",
+      "evidence": "baseline-clean PR2 F1: sonda autosuficiente repetida en otra copia del head."
+    },
+    {
+      "id": "reader-scope",
+      "pr": 2,
+      "category": "incomplete-fix",
+      "condition": "A y B contienen la misma ruta; A tiene una retirada pendiente.",
+      "consequence": "El filtro/consulta sin dispositivo bloquea B o confirma la orden de A para B.",
+      "evidence": "baseline-clean PR2 F2: consulta real y consumidor TS, repetidos en otra copia."
+    },
+    {
+      "id": "migration-hidden",
+      "pr": 2,
+      "category": "regression",
+      "condition": "Migración de una orden sin destino con inventario existente.",
+      "consequence": "El fallo no tiene done_at y el filtro de la interfaz lo oculta.",
+      "evidence": "baseline-clean PR2 F3: SQLite y expresión real del filtro, repetidos en otra copia."
+    },
+    {
+      "id": "missing-job-stuck",
+      "pr": 3,
+      "category": "regression",
+      "condition": "activeJob persistido pero inexistente en el servidor; cancelar devuelve 404.",
+      "consequence": "No se puede crear otra publicación y no existe estado final que libere el bloqueo.",
+      "evidence": "validate.py: plugin real empaquetado, API simulada; la misma sonda pasa en base y falla en head."
+    },
+    {
+      "id": "slot-cancellation",
+      "pr": 3,
+      "category": "incomplete-fix",
+      "condition": "Las ilustraciones pasan el control de cancelación y esperan un slot; se cancela antes de obtenerlo.",
+      "consequence": "Al obtener turno comienzan generaciones nuevas tras cancelar.",
+      "evidence": "baseline-clean PR3 F1: semáforo real con proveedor simulado; repetida en otra copia, sin consumo de generación."
+    },
+    {
+      "id": "store-book-status",
+      "pr": 3,
+      "category": "regression",
+      "condition": "El catálogo contiene un ContentID sin prefijo file:///mnt/onboard/.",
+      "consequence": "present=false significa que la ruta no está modelada, pero la UI anuncia que el libro ha desaparecido.",
+      "evidence": "baseline-clean PR3 F2: catálogo sintético y bookStatus real. Sin prueba física de un Kobo."
+    },
+    {
+      "id": "redelivery-status",
+      "pr": 3,
+      "category": "worsened-existing",
+      "condition": "Un recibo de copia nuevo es posterior a un inventario que marcaba el archivo ausente.",
+      "consequence": "La UI pasa de anunciar imported (ya impreciso en base) a anunciar missing y ofrecer un reenvío innecesario.",
+      "evidence": "validate.py ejecuta on_kobo de ambos SHAs: imported en base, missing en head; el resultado esperado es copied."
+    },
+    {
+      "id": "double-disk-reserve",
+      "pr": 4,
+      "category": "regression",
+      "condition": "Tras recibir el temporal queda la reserva de 128 MB, pero no reserva más otra copia del EPUB.",
+      "consequence": "La validación exige dos veces el espacio de una subida que se guarda por rename en el mismo disco.",
+      "evidence": "baseline-clean PR4 F1: petición HTTP con disco simulado según bytes realmente escritos; replay independiente en head."
+    },
+    {
+      "id": "yaml-date",
+      "pr": 5,
+      "category": "regression",
+      "condition": "Una nota del vault contiene una fecha YAML fuera de rango.",
+      "consequence": "El nuevo parser de propiedades lanza ValueError, no capturado por el except yaml.YAMLError, y aborta la sincronización.",
+      "evidence": "baseline-clean PR5 F1: la misma sonda HTTP/importación pasa en base y falla en head en copias independientes."
+    },
+    {
+      "id": "null-anchor",
+      "pr": 5,
+      "category": "regression",
+      "condition": "Una ficha contiene una fuente con anchor:null.",
+      "consequence": "records la acepta y el nuevo re.escape rompe la resolución del lote completo con TypeError.",
+      "evidence": "baseline-clean PR5 F2: la misma sonda pasa en base y falla en head en copias independientes."
+    },
+    {
+      "id": "unchanged-identifiers",
+      "pr": 6,
+      "category": "regression",
+      "condition": "El texto adaptado conserva literalmente v1.2.3 o una URL con un segmento numérico.",
+      "consequence": "TOKEN extrae un sufijo numérico que missing_tokens rechaza en su propio contexto; la adaptación correcta no se publica.",
+      "evidence": "baseline-clean PR6 F1: misma sonda pasa en base y falla en head."
+    }
+  ],
+  "notCounted": [
+    {
+      "pr": 2,
+      "id": "mount-fallback",
+      "reason": "La identidad por ruta de montaje es previa. La sonda explora lectores sin metadatos; aplicabilidad física no comprobada. No se cuenta como regresión nueva."
+    },
+    {
+      "pr": 6,
+      "id": "positive-to-negative",
+      "reason": "El control literal acepta 5 como conservado dentro de -5 tanto en base como en head. Es una limitación residual demostrada, no una regresión introducida por la PR."
+    },
+    {
+      "pr": 6,
+      "id": "asset-prefix",
+      "reason": "Un identificador de imagen con sufijo añadido elude el guard nuevo; la misma pérdida de imagen también se permite en base. Se conserva como reparación incompleta, fuera del recuento estricto de regresiones."
+    }
+  ]
+}

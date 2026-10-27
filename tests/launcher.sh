@@ -30,7 +30,9 @@ cat > "$test_dir/codegraph" <<'FAKE_CODEGRAPH'
 printf '%s\n' "$*" >> "$N_EIN_CODEGRAPH_LOG"
 case "$1" in
   --version) printf '1.6.1\n' ;;
-  status) if [[ -d "$3/.codegraph" ]]; then printf '{"initialized":true,"index":{"reindexRecommended":false}}\n'; else printf '{"initialized":false}\n'; fi ;;
+  status) if [[ -d "$3/.codegraph" ]]; then printf '{"initialized":true,"projectPath":"%s","index":{"reindexRecommended":false}}\n' "$3";
+    elif [[ -n "${N_EIN_TEST_PARENT_INDEX:-}" ]]; then printf '{"initialized":true,"projectPath":"%s"}\n' "$N_EIN_TEST_PARENT_INDEX";
+    else printf '{"initialized":false}\n'; fi ;;
   init) mkdir -p "$3/.codegraph" ;;
 esac
 FAKE_CODEGRAPH
@@ -142,6 +144,16 @@ rg -q 'CODEGRAPH · creando índice' "$test_dir/err"
 test "$(< "$N_EIN_CAPTURE.codegraph")" == "$N_EIN_CODEGRAPH_BIN"
 N_EIN_CODEGRAPH_ALLOW_TEMP=1 "$repo_dir/bin/n-ein-dev" --print 'segunda'
 rg -q '^sync --quiet ' "$N_EIN_CODEGRAPH_LOG"
+# Un repo anidado todavía sin índice no debe sincronizar el del padre.
+mkdir nested
+git init -q nested
+export N_EIN_TEST_PARENT_INDEX="$test_dir/repo"
+cd nested
+rm -f "$N_EIN_CODEGRAPH_LOG"
+N_EIN_CODEGRAPH_ALLOW_TEMP=1 "$repo_dir/bin/n-ein-dev" --print 'anidado'
+rg -q '^init --yes .*/nested$' "$N_EIN_CODEGRAPH_LOG"
+if rg -q '^sync ' "$N_EIN_CODEGRAPH_LOG"; then exit 1; fi
+unset N_EIN_TEST_PARENT_INDEX
 # Sin permiso explícito, un temporal no se indexa, pero Pi arranca igual.
 "$repo_dir/bin/n-ein-dev" --print 'temporal' 2> "$test_dir/err"
 rg -q 'CODEGRAPH_SKIP :: reason: no se indexan temporales' "$test_dir/err"

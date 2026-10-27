@@ -1,0 +1,132 @@
+{
+  "live-initial": [
+    {
+      "stage": "before",
+      "status": "new",
+      "probe": "reproduced",
+      "baseProbe": "passed",
+      "selected": false,
+      "rating": null,
+      "usd": 0.024952400000000003,
+      "seconds": 36.361,
+      "contamination": [],
+      "model": "openai-codex/gpt-6.1-sol"
+    },
+    {
+      "stage": "after",
+      "status": "resolved",
+      "probe": "passed",
+      "baseProbe": "passed",
+      "selected": true,
+      "rating": {
+        "verdict": "vale",
+        "reason": "Valoración automática del fixture de aceptación, no decisión del usuario.",
+        "at": "2026-10-27T10:51:33.392Z"
+      },
+      "usd": 0.0183276,
+      "seconds": 25.56,
+      "contamination": [],
+      "model": "openai-codex/gpt-6.1-sol"
+    }
+  ],
+  "live-final": [
+    {
+      "stage": "before",
+      "status": "new",
+      "probe": "reproduced",
+      "baseProbe": "passed",
+      "selected": false,
+      "rating": null,
+      "usd": 0.038188,
+      "seconds": 42.878,
+      "contamination": [],
+      "model": "openai-codex/gpt-6.1-sol"
+    },
+    {
+      "stage": "after",
+      "status": "resolved",
+      "probe": "passed",
+      "baseProbe": null,
+      "selected": true,
+      "rating": {
+        "verdict": "vale",
+        "reason": "Valoración automática del fixture de aceptación, no decisión del usuario.",
+        "at": "2026-10-27T11:04:00.093Z"
+      },
+      "usd": 0.027802800000000003,
+      "seconds": 23.912,
+      "contamination": [],
+      "model": "openai-codex/gpt-6.1-sol"
+    }
+  ],
+  "prelo-final": [
+    {
+      "stage": "before",
+      "status": "new",
+      "probe": "reproduced",
+      "baseProbe": null,
+      "selected": false,
+      "rating": null,
+      "usd": 0,
+      "seconds": 0.861,
+      "contamination": null,
+      "model": "fixture/prelo"
+    },
+    {
+      "stage": "scenario-changed",
+      "status": "unchecked",
+      "probe": "not_applicable",
+      "baseProbe": null,
+      "selected": true,
+      "rating": {
+        "verdict": "vale",
+        "reason": "Fixture automático del banco",
+        "at": "2026-10-27T11:03:18.187Z"
+      },
+      "usd": 0,
+      "seconds": 0.43,
+      "contamination": null,
+      "model": "fixture/prelo"
+    },
+    {
+      "stage": "code-confirmed",
+      "status": "resolved",
+      "probe": "not_applicable",
+      "baseProbe": null,
+      "selected": true,
+      "rating": {
+        "verdict": "vale",
+        "reason": "Fixture automático del banco",
+        "at": "2026-10-27T11:03:18.187Z"
+      },
+      "usd": 0,
+      "seconds": 0.453,
+      "contamination": null,
+      "model": "fixture/prelo"
+    }
+  ],
+  "checks": {
+    "sourceCommit": "f445be3",
+    "fullCheck": "bash scripts/check.sh",
+    "exitCode": 0,
+    "platform": "macOS arm64",
+    "browserVisualCheck": "not performed: no browser provider available",
+    "webHTMLAndAPI": "tests/previewer-web.ts passed",
+    "schema": 4,
+    "originalPreloUntouched": true,
+    "legacyCompatibility": {
+      "tests": [
+        "tests/previewer-store.ts",
+        "tests/previewer-web.ts",
+        "tests/previewer-handoff.ts",
+        "tests/previewer-evidence-loop.ts",
+        "scripts/typecheck-agents.ts"
+      ],
+      "exitCode": 0,
+      "files": {
+        "previewer/src/store.ts": "49d86c74f4c177f5483d0fe7036b3d376b5b09a30334910be9d9487714f153c9",
+        "previewer/src/probe-result.ts": "78afe66087ecb684660558a379e3b5c81a71be00cb3a2719a837f322bb1c69e3"
+      }
+    }
+  }
+}

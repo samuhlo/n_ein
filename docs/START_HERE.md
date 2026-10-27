@@ -15,16 +15,16 @@ El experimento de equipo se conserva desactivado: `N_EIN_TEAM=1` lo habilita exp
 ## Estado y continuidad
 
 - Rama del proyecto: consultar Git y WORK.md; la conversación actual prevalece sobre propuestas anteriores.
-- Preview personal: `0.1.0-preview.3`, instalada el 7 de octubre desde el tarball verificado. Fuente `936e682`, Pi 1.0.2 y CodeGraph 1.6.1; backup anterior conservado. [Notas de versión](releases/0.1.0-preview.3.md).
+- Versión del checkout: consultar `VERSION`. Entrega actual: `0.4.0-alpha.1`, canal preview. [Notas de versión](releases/0.4.0-alpha.1.md). La versión personal instalada se comprueba en su `install.json`; publicar no la actualiza por sí solo.
 - Pi 1.0.2 y CodeGraph 1.6.1 fijados en `runtime.json`. No asumir que los binarios globales coinciden.
 - Preferencias y ajustes personales viven fuera del paquete, en `~/.n_ein`. Mantener credenciales en su hogar nativo; no copiarlas desde el banco.
 - `WORK.md` es la única guía del encargo; decisiones duraderas, glosario e instrucciones del proyecto aportan memoria selectiva.
 - El relevo ordinario Pi→Claude→Pi y la recuperación en una sesión nueva están probados. El ensayo con equipo y Claude real quedó pendiente por cuota y ahora está aplazado con el experimento.
 - Modelo local descartado el 5 de octubre. No descargar modelos ni preparar servidores.
 
-## Candidata del 9 de octubre
+## Entrega actual
 
-Encargo autorizado: preparar `0.2.0-alpha.1` para revisión de Samu, sin publicación ni actualización personal. Rama `feat/alpha-distribution` desde main `ed9f7c9`, incluyendo README y estética Claude. WORK.md registra el estado y [distribución](11-distribucion.md) el contrato de versiones/instalación/CI. Candidata comprobada: `d9ab032`, matriz completa verde y copia macOS de CI instalada en `dist/alpha-home` (86 archivos). [Evidencia](../evals/results/2026-10-09-alpha-candidate.md). Espera la revisión de Samu, incluido el recorrido interactivo Omarchy; no confundirla con una release ya publicada.
+`0.4.0-alpha.1` reúne el afinado de p_reviewer y las cadenas de PR: rangos fijados, hilos y decisiones compartidos, historial e integración final. Las sondas distinguen una reproducción de errores y escenarios no aplicables. El esquema 5 conserva los datos anteriores y crea una copia coherente antes de migrarlos; los lectores antiguos no admiten el esquema nuevo. Estado de publicación y evidencia en WORK.md.
 
 ## Ruta de lectura
 

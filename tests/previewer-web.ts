@@ -1,17 +1,45 @@
 import { strict as assert } from "node:assert";
-import { execFileSync } from "node:child_process";
+import { execFileSync, spawn } from "node:child_process";
 import { mkdirSync, mkdtempSync, readFileSync, realpathSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join, resolve } from "node:path";
 import type { Finding } from "../previewer/src/finding.ts";
 import { ensureServer, reviewerLink } from "../previewer/src/open.ts";
-import { createHandler } from "../previewer/src/server.ts";
+import { createHandler, statePath } from "../previewer/src/server.ts";
 import { ReviewStore } from "../previewer/src/store.ts";
+import { runInNewContext } from "node:vm";
 import { marksFor, rowMarks, splitDiff } from "../previewer/web/diff.ts";
 import { html, text } from "../previewer/web/html.ts";
 import { renderPage } from "../previewer/web/view.ts";
 
 const root = resolve(import.meta.dir, "..");
+
+// El JS real debe conservar el tramo histórico al limpiar el token y al actualizar por polling.
+{
+  const built = await Bun.build({ entrypoints: [join(root, "previewer/web/main.ts")], target: "browser" });
+  assert.equal(built.success, true);
+  const location = new URL("http://127.0.0.1:4321/s/demo?run=old#t=private-token");
+  const app = { innerHTML: "", textContent: "", querySelectorAll: () => [], querySelector: () => null };
+  const requests: string[] = [];
+  let poll: (() => void) | undefined;
+  const view = { session: { id: "demo", repo: "/repo", branch: "change", prUrl: null }, run: null, latest: null,
+    findings: [], patch: "", lang: "es", runs: { count: 0, usd: 0 }, historical: true };
+  runInNewContext(await built.outputs[0]!.text(), {
+    URL, URLSearchParams, location, HTMLElement: class {},
+    sessionStorage: { setItem() {}, getItem() { return null; } },
+    history: { replaceState(_state: unknown, _title: string, path: string) { location.href = new URL(path, location.origin).href; } },
+    document: { getElementById: () => app, querySelectorAll: () => [], addEventListener() {}, activeElement: null, documentElement: {}, hidden: false },
+    window: { addEventListener() {}, scrollY: 0, scrollTo() {} },
+    setInterval(callback: () => void) { poll = callback; return 1; },
+    fetch: async (path: string) => { requests.push(path); return { ok: true, json: async () => path.endsWith("/version") ? { version: "already-finished" } : view }; },
+  });
+  await new Promise(resolve => setTimeout(resolve, 0));
+  assert.equal(location.hash, "");
+  assert.equal(location.search, "?run=old", "quitar el token no borra el tramo seleccionado");
+  poll!(); await new Promise(resolve => setTimeout(resolve, 0));
+  assert.deepEqual(requests.filter(path => !path.endsWith("/version")), ["/api/sessions/demo?run=old", "/api/sessions/demo?run=old"],
+    "una actualización no transforma una vista histórica en el balance actual");
+}
 const scratch = realpathSync(mkdtempSync(join(tmpdir(), "nein-previewer-web-")));
 process.env.N_EIN_HOME = join(scratch, "home");
 process.env.N_EIN_CHANNEL = "dev";
@@ -82,6 +110,15 @@ store.rate(plain.id, "descartar");
   assert.match(page, /<span class="slashes">\/\/<\/span> <span class="num">001<\/span>  QUÉ CAMBIA/);
   assert.match(page, /Los nombres se ven cortados\./);
   const card = page.slice(page.indexOf(`id="f-${evil.id}"`), page.indexOf("</article>", page.indexOf(`id="f-${evil.id}"`)));
+  assert.match(card, /resultado inconcluso/, "una sonda histórica no adquiere garantías al actualizar la interfaz");
+  assert.doesNotMatch(card, /demostrado/);
+  const explicit = text(renderPage({ ...views, findings: views.findings.map(f => ({ ...f, probe: f.probe ? { ...f.probe,
+    outcome: "not_applicable" as const, reason: "El backup ahora contiene el archivo.",
+    baseline: { sha: baseSha, outcome: "passed" as const, reason: "La base conserva los datos.", exitCode: 0, output: "ok" },
+  } : null })) }));
+  assert.match(explicit, /el escenario ya no aplica/);
+  assert.match(explicit, /El backup ahora contiene el archivo/);
+  assert.match(explicit, /comprobación en la base/);
   assert.ok(card.indexOf("Explicación llana") < card.indexOf("<details>"), "la explicación llana se ve sin desplegar");
   assert.ok(card.indexOf("si el texto es largo") > card.indexOf("<details>"), "la condición técnica va plegada");
   assert.match(card, new RegExp(`href="#l-0-a-2">text\\.ts@${headSha.slice(0, 7)}:L2`), "la cita enlaza su línea del diff");
@@ -114,6 +151,8 @@ store.rate(plain.id, "descartar");
   const data = await (await request(`/api/sessions/${session.id}`, { headers: api })).json();
   assert.equal(data.session.branch, "feat/clip");
   assert.equal(data.findings.length, 2);
+  assert.equal(data.findings[0].probe.reproduced, false, "la API no anuncia como demostrada una sonda histórica");
+  assert.equal(data.findings[0].probe.outcome, "inconclusive");
   assert.match(data.patch, /text\.slice\(0, 3\)/);
   assert.equal((await request("/api/sessions/nope", { headers: api })).status, 404);
   const version = (await (await request(`/api/sessions/${session.id}/version`, { headers: api })).json()).version;
@@ -159,6 +198,56 @@ store.close();
   process.kill(first.pid, "SIGTERM");
   await Bun.sleep(300);
   assert.throws(() => process.kill(first.pid, 0), "se para con SIGTERM");
+}
+
+// Un servidor de la versión anterior no oculta la interfaz recién instalada.
+{
+  const script = join(scratch, "old-server.ts"), path = statePath(root);
+  writeFileSync(script, `import {writeFileSync} from 'node:fs';
+const token='a'.repeat(48); const server=Bun.serve({hostname:'127.0.0.1',port:0,fetch(req){return req.headers.get('x-previewer-token')===token?Response.json({ok:true,pid:process.pid}):new Response(null,{status:403});}});
+writeFileSync(process.argv[2],JSON.stringify({pid:process.pid,port:server.port,token}));
+process.once('SIGTERM',()=>{server.stop(true);process.exit(0);});`);
+  const legacy = spawn(process.execPath, [script, path], { stdio: "ignore" });
+  let replacement: Awaited<ReturnType<typeof ensureServer>> | undefined;
+  try {
+    for (let i = 0; i < 100; i++) {
+      try { if (JSON.parse(readFileSync(path, "utf8")).pid === legacy.pid) break; } catch {}
+      await Bun.sleep(20);
+    }
+    replacement = await ensureServer(root);
+    assert.notEqual(replacement.pid, legacy.pid, "una actualización no reutiliza la interfaz antigua");
+    const page = await fetch(`http://127.0.0.1:${replacement.port}/app.js`);
+    assert.equal(page.status, 200);
+    assert.match(await page.text(), /previewer-token/);
+  } finally {
+    if (replacement && replacement.pid !== legacy.pid) process.kill(replacement.pid, "SIGTERM");
+    if (legacy.exitCode === null) legacy.kill("SIGTERM");
+  }
+}
+
+// Una revisión que termina mientras se lee la página no mezcla su informe con el diff anterior.
+{
+  const path = join(scratch, "concurrent.db"), observer = new ReviewStore(path), writer = new ReviewStore(path);
+  const s = writer.openSession({ repo, branch: "concurrent" });
+  const first = writer.startRun({ sessionId: s.id, baseSha, headSha, model: "test/reviewer", thinking: "high" });
+  writer.finishRun(first.id, { status: "done", summary: "first", findings: [sample("first")] });
+  const originalRuns = observer.runs.bind(observer);
+  let advanced = false;
+  observer.runs = id => {
+    const captured = originalRuns(id);
+    if (!advanced) {
+      advanced = true;
+      const next = writer.startRun({ sessionId: s.id, baseSha, headSha, model: "test/reviewer", thinking: "high" });
+      writer.finishRun(next.id, { status: "done", summary: "later", findings: [sample("later")] });
+    }
+    return captured;
+  };
+  const handle = await createHandler({ packageRoot: root, store: observer, token: "test", port: () => 4321 });
+  const response = await handle(new Request(`http://127.0.0.1:4321/api/sessions/${s.id}`, { headers: { host: "127.0.0.1:4321", "x-previewer-token": "test" } }));
+  const data = await response.json();
+  assert.equal(data.run.id, first.id);
+  assert.deepEqual(data.findings.map((f: { title: string }) => f.title), ["first"], "una lectura coherente del informe, los hilos y la cadena");
+  observer.close(); writer.close();
 }
 
 console.log("previewer web: OK");

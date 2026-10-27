@@ -1,0 +1,18 @@
+{
+  "variant": "candidate",
+  "started": "2026-10-27T09:03:21.082Z",
+  "commit": "e48a73814e3e96217809b9274bc01cae13c27d09",
+  "model": "openai-codex/gpt-6.1-sol",
+  "thinking": "high",
+  "hashes": {
+    "previewer/agent/reviewer.md": "8d9cdf0339737392762c5fbfb23ca6e588c45c4af9d99845334fab874d15b222",
+    "previewer/src/engine.ts": "ad33e224601e9cf97eda03226c50e2f9d2b93f57911254651f476710f638f4ed",
+    "previewer/src/runner.ts": "a4afa8b656f76ddc8c8b0c33a80c2e56bdad9f1e9ed265a8a68a0cc0041ef64a",
+    "previewer/src/report.ts": "fa062ac787f3fb42a8f9a41415c788c2c2db5f1f41e950acd65de77d16171973",
+    "bin/n-ein-codegraph": "8af6fd36c760bfd4d8de0d4c6ba923a1d75bc57d699fcbdf5a26497b2343a407",
+    "pi-package/extensions/codegraph.ts": "197042be71dccbff5889ef0751ad0a954a8cdeff12742ad5159f2d4aa41ffb1a",
+    "previewer/agent/guard.ts": "cdc0c205c839f81c3a595cd5b05a4127e1c1f011651aec76cbe21aa63e21e25a",
+    "previewer/src/sandbox.ts": "490dcb37b425e5d4687dd2020b989a9770242963381c370e7a137b92760aee32",
+    "previewer/src/probe-result.ts": "8e27e59574e62247611bf384934d604da19ec4a529f9f157e772857e2ffbc372"
+  }
+}

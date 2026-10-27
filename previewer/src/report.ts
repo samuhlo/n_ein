@@ -4,7 +4,8 @@
 // propuesta mal formada se aparta con su motivo en vez de tumbar la revisión.
 // =============================================================================
 
-import { KINDS, SEVERITIES, type Kind, type Severity, type TourStep } from "./finding.ts";
+import { KINDS, SEVERITIES, type Kind, type Severity, type TourStep, type ProbeSpec } from "./finding.ts";
+import { PROBE_PROTOCOL } from "./probe-result.ts";
 
 export type ProposedFinding = {
   kind: Kind;
@@ -14,14 +15,14 @@ export type ProposedFinding = {
   condition: string;
   consequence: string;
   citations: string[];
-  probe: { command: string; file: string | null } | null;
+  probe: ProbeSpec | null;
   verification: string;
   /** Clave (`P1`…) del hallazgo de la revisión anterior que sigue presente. */
   previous: string | null;
 };
 
 /** Un hallazgo anterior que el revisor da por corregido en este head. */
-export type Resolution = { previous: string; note: string };
+export type Resolution = { previous: string; note: string; citations: string[]; probe: ProbeSpec | null };
 
 export type Report = { summary: string; tour: TourStep[]; findings: ProposedFinding[]; resolved: Resolution[]; gaps: string[]; rejected: string[] };
 
@@ -37,6 +38,13 @@ const text = (value: unknown): string => (typeof value === "string" ? value.trim
 const texts = (value: unknown): string[] => (Array.isArray(value) ? value.map(text).filter(Boolean) : []);
 const isKind = (value: unknown): value is Kind => KINDS.some((kind) => kind === value);
 const isSeverity = (value: unknown): value is Severity => SEVERITIES.some((severity) => severity === value);
+
+function probeSpec(value: unknown): ProbeSpec | null {
+  if (!isFields(value) || !text(value.command)) return null;
+  const explicit = value.protocol === PROBE_PROTOCOL && /^[a-zA-Z][\w.-]{0,79}$/.test(text(value.check));
+  return { command: text(value.command), file: text(value.file) || null,
+    ...(explicit ? { protocol: PROBE_PROTOCOL, check: text(value.check), compareBase: value.compareBase === true } : {}) };
+}
 
 /** El último bloque ```json del mensaje; si no hay, el último objeto entre llaves. */
 export function extractJson(message: string): unknown {
@@ -55,9 +63,7 @@ function proposed(value: unknown, index: number): ProposedFinding | string {
   if (!plain || !condition || !consequence) return `${title}: falta explicación, condición o consecuencia`;
   const citations = texts(value.citations);
   if (!citations.length) return `${title}: sin citas`;
-  let probe: ProposedFinding["probe"] = null;
-  if (isFields(value.probe) && text(value.probe.command))
-    probe = { command: text(value.probe.command), file: text(value.probe.file) || null };
+  const probe = probeSpec(value.probe);
   return {
     kind: value.kind, severity: value.severity, title, plain, condition, consequence, citations, probe,
     verification: text(value.verification), previous: text(value.previous) || null,
@@ -77,7 +83,7 @@ export function parseReport(message: string): Report {
     else findings.push(result);
   });
   const resolved = (Array.isArray(value.resolved) ? value.resolved : []).flatMap((item): Resolution[] =>
-    isFields(item) && text(item.previous) ? [{ previous: text(item.previous), note: text(item.note) }] : []);
+    isFields(item) && text(item.previous) ? [{ previous: text(item.previous), note: text(item.note), citations: texts(item.citations), probe: probeSpec(item.probe) }] : []);
   const tour = (Array.isArray(value.tour) ? value.tour : []).flatMap((item): TourStep[] =>
     isFields(item) && text(item.title) && text(item.plain) ? [{ title: text(item.title), plain: text(item.plain), why: text(item.why), files: texts(item.files) }] : []);
   return { summary: text(value.summary), tour: tour.slice(0, MAX_TOUR_STEPS), findings, resolved, gaps: texts(value.gaps), rejected };

@@ -1,0 +1,125 @@
+{
+  "session": {
+    "id": "e2a3bee8-b3b6-4d14-9ca7-514a0b0a2f57",
+    "repo": "<n_ein>/.n_ein/prelo-evidence-1793098997125/prelo",
+    "branch": "change",
+    "prUrl": null,
+    "baseSha": "3890319f3a9983c8f3d4c19c4f56245adb9eb1b4",
+    "headSha": "904fc36de6ce8304965cf4439346a7ba20b27b9f",
+    "created": "2026-10-27T11:03:17.325Z"
+  },
+  "run": {
+    "id": "68584a47-1380-4ae0-ad3d-7015d1494129",
+    "sessionId": "e2a3bee8-b3b6-4d14-9ca7-514a0b0a2f57",
+    "baseSha": "3890319f3a9983c8f3d4c19c4f56245adb9eb1b4",
+    "headSha": "904fc36de6ce8304965cf4439346a7ba20b27b9f",
+    "model": "fixture/prelo",
+    "thinking": "high",
+    "status": "done",
+    "error": null,
+    "summary": "Escenario del banco de Prelo",
+    "tour": [
+      {
+        "title": "Archivos sin explicar",
+        "plain": "El recorrido no cuenta qué hacen estos archivos; míralos por tu cuenta.",
+        "why": "",
+        "files": [
+          "docs/desarrollo.md",
+          "plugin/src/main.ts",
+          "plugin/src/reader.ts",
+          "plugin/src/studio.ts",
+          "plugin/tests/draft-recovery.test.ts",
+          "scripts/restore_backup.py",
+          "server/margen/app.py",
+          "server/margen/artwork.py",
+          "server/margen/editor.py",
+          "server/margen/jobs.py",
+          "server/margen/kobo.py",
+          "server/margen/library.py",
+          "server/margen/native.py",
+          "server/tests/test_command_safety.py",
+          "server/tests/test_job_control.py",
+          "server/tests/test_library_usb.py",
+          "server/tests/test_storage_recovery.py"
+        ]
+      }
+    ],
+    "gaps": [
+      "P1 «Subida bloqueada tras restaurar», de una revisión anterior, no se comprobó en este head"
+    ],
+    "rejected": [],
+    "usage": {
+      "input": 0,
+      "output": 0,
+      "cacheRead": 0,
+      "usd": 0
+    },
+    "started": "2026-10-27T11:03:18.267Z",
+    "ended": "2026-10-27T11:03:18.697Z"
+  },
+  "findings": [
+    {
+      "id": "2f46bb8d-1c9d-4d20-b06a-754a0e774e38",
+      "sessionId": "e2a3bee8-b3b6-4d14-9ca7-514a0b0a2f57",
+      "runId": "c6483705-4231-4c74-aed0-9508ce161f5f",
+      "headSha": "6ccbee28e2691cfccd9a90b5353cfbd7161afaf6",
+      "kind": "bug",
+      "severity": "high",
+      "title": "Subida bloqueada tras restaurar",
+      "plain": "La copia pierde el archivo y la orden ya no se puede cancelar.",
+      "condition": "restaurar una subida pendiente",
+      "consequence": "queda bloqueada",
+      "citations": [
+        {
+          "ref": "server/margen/kobo.py@6ccbee28e2691cfccd9a90b5353cfbd7161afaf6:L139",
+          "path": "server/margen/kobo.py",
+          "sha": "6ccbee28e2691cfccd9a90b5353cfbd7161afaf6",
+          "start": 139,
+          "end": 139,
+          "text": "def cancel(root, identity):"
+        }
+      ],
+      "probe": {
+        "command": "uv run --project server python .previewer-probes/upload.py",
+        "protocol": "nein-probe-v1",
+        "check": "pending-upload-recoverability",
+        "compareBase": false,
+        "file": ".previewer-probes/upload.py",
+        "source": "\"\"\"Witness for Prelo PR 2's missing upload: distinguish a fixed precondition.\n\nRun inside a disposable Prelo checkout. No reader, server or private library.\n\"\"\"\nimport io\nimport json\nfrom pathlib import Path\nimport runpy\nimport tempfile\nimport zipfile\nfrom margen import kobo, library\n\n\ndef result(outcome, reason):\n    print(\"NEIN_PROBE_RESULT \" + json.dumps({\"check\": \"pending-upload-recoverability\", \"outcome\": outcome, \"reason\": reason}))\n    raise SystemExit(1 if outcome == \"reproduced\" else 2 if outcome == \"error\" else 0)\n\n\ntry:\n    with tempfile.TemporaryDirectory() as scratch:\n        root = Path(scratch) / \"library\"\n        root.mkdir()\n        library.save_inventory(root, {\"device\": \"A\", \"books\": []})\n        data = io.BytesIO()\n        with zipfile.ZipFile(data, \"w\") as archive:\n            archive.writestr(\"mimetype\", \"application/epub+zip\")\n            archive.writestr(\"META-INF/container.xml\", \"<container/>\")\n        command = kobo.upload(root, \"synthetic.epub\", data.getvalue(), \"A\")\n        restored = Path(scratch) / \"restored\"\n        runpy.run_path(\"scripts/restore_backup.py\")[\"restore\"](library.backup(root), restored)\n        uploaded = restored / \".uploads\" / (command[\"id\"] + \".epub\")\n        if uploaded.exists():\n            if uploaded.read_bytes() != data.getvalue():\n                result(\"error\", \"El escenario cambió y el archivo restaurado tiene otros bytes.\")\n            result(\"not_applicable\", \"El backup ya conserva el EPUB: no existe la ausencia de archivo que activaba esta sonda.\")\n        kobo.claim(restored, command[\"id\"], \"A\")\n        try:\n            kobo.cancel(restored, command[\"id\"])\n        except ValueError:\n            state = next(row[\"state\"] for row in kobo.listing(restored) if row[\"id\"] == command[\"id\"])\n            if state == \"executing\":\n                result(\"reproduced\", \"La subida restaurada no tiene archivo, sigue en ejecución y no se puede cancelar.\")\n            result(\"error\", \"La cancelación falló por una condición distinta de la comprobada.\")\n        result(\"passed\", \"La orden sin archivo se puede cancelar.\")\nexcept Exception as error:\n    result(\"error\", f\"No se pudo preparar o ejecutar el escenario: {error}\")\n",
+        "exitCode": 1,
+        "output": "Using CPython 3.13.14\nCreating virtual environment at: server/.venv\n   Building margen-server @ file://<n_ein>/.n_ein/prelo-evidence-1793098997125/prelo-worktrees/previewer-c6483705/server\n      Built margen-server @ file://<n_ein>/.n_ein/prelo-evidence-1793098997125/prelo-worktrees/previewer-c6483705/server\nInstalled 28 packages in 71ms\nNEIN_PROBE_RESULT {\"check\": \"pending-upload-recoverability\", \"outcome\": \"reproduced\", \"reason\": \"La subida restaurada no tiene archivo, sigue en ejecuci\\u00f3n y no se puede cancelar.\"}",
+        "outcome": "reproduced",
+        "reason": "La subida restaurada no tiene archivo, sigue en ejecución y no se puede cancelar.",
+        "reproduced": true
+      },
+      "verification": "",
+      "thread": "2f46bb8d-1c9d-4d20-b06a-754a0e774e38",
+      "status": "unchecked",
+      "current": false,
+      "check": {
+        "runId": "68584a47-1380-4ae0-ad3d-7015d1494129",
+        "outcome": "unchecked",
+        "note": "el escenario ya no aplica: El backup ya conserva el EPUB: no existe la ausencia de archivo que activaba esta sonda.",
+        "probe": {
+          "command": "uv run --project server python .previewer-probes/upload.py",
+          "protocol": "nein-probe-v1",
+          "check": "pending-upload-recoverability",
+          "compareBase": false,
+          "file": ".previewer-probes/upload.py",
+          "source": "\"\"\"Witness for Prelo PR 2's missing upload: distinguish a fixed precondition.\n\nRun inside a disposable Prelo checkout. No reader, server or private library.\n\"\"\"\nimport io\nimport json\nfrom pathlib import Path\nimport runpy\nimport tempfile\nimport zipfile\nfrom margen import kobo, library\n\n\ndef result(outcome, reason):\n    print(\"NEIN_PROBE_RESULT \" + json.dumps({\"check\": \"pending-upload-recoverability\", \"outcome\": outcome, \"reason\": reason}))\n    raise SystemExit(1 if outcome == \"reproduced\" else 2 if outcome == \"error\" else 0)\n\n\ntry:\n    with tempfile.TemporaryDirectory() as scratch:\n        root = Path(scratch) / \"library\"\n        root.mkdir()\n        library.save_inventory(root, {\"device\": \"A\", \"books\": []})\n        data = io.BytesIO()\n        with zipfile.ZipFile(data, \"w\") as archive:\n            archive.writestr(\"mimetype\", \"application/epub+zip\")\n            archive.writestr(\"META-INF/container.xml\", \"<container/>\")\n        command = kobo.upload(root, \"synthetic.epub\", data.getvalue(), \"A\")\n        restored = Path(scratch) / \"restored\"\n        runpy.run_path(\"scripts/restore_backup.py\")[\"restore\"](library.backup(root), restored)\n        uploaded = restored / \".uploads\" / (command[\"id\"] + \".epub\")\n        if uploaded.exists():\n            if uploaded.read_bytes() != data.getvalue():\n                result(\"error\", \"El escenario cambió y el archivo restaurado tiene otros bytes.\")\n            result(\"not_applicable\", \"El backup ya conserva el EPUB: no existe la ausencia de archivo que activaba esta sonda.\")\n        kobo.claim(restored, command[\"id\"], \"A\")\n        try:\n            kobo.cancel(restored, command[\"id\"])\n        except ValueError:\n            state = next(row[\"state\"] for row in kobo.listing(restored) if row[\"id\"] == command[\"id\"])\n            if state == \"executing\":\n                result(\"reproduced\", \"La subida restaurada no tiene archivo, sigue en ejecución y no se puede cancelar.\")\n            result(\"error\", \"La cancelación falló por una condición distinta de la comprobada.\")\n        result(\"passed\", \"La orden sin archivo se puede cancelar.\")\nexcept Exception as error:\n    result(\"error\", f\"No se pudo preparar o ejecutar el escenario: {error}\")\n",
+          "exitCode": 0,
+          "output": "Using CPython 3.13.14\nCreating virtual environment at: server/.venv\n   Building margen-server @ file://<n_ein>/.n_ein/prelo-evidence-1793098997125/prelo-worktrees/previewer-68584a47/server\n      Built margen-server @ file://<n_ein>/.n_ein/prelo-evidence-1793098997125/prelo-worktrees/previewer-68584a47/server\nInstalled 28 packages in 17ms\nNEIN_PROBE_RESULT {\"check\": \"pending-upload-recoverability\", \"outcome\": \"not_applicable\", \"reason\": \"El backup ya conserva el EPUB: no existe la ausencia de archivo que activaba esta sonda.\"}",
+          "outcome": "not_applicable",
+          "reason": "El backup ya conserva el EPUB: no existe la ausencia de archivo que activaba esta sonda.",
+          "reproduced": false
+        }
+      },
+      "rating": {
+        "verdict": "vale",
+        "reason": "Fixture automático del banco",
+        "at": "2026-10-27T11:03:18.187Z"
+      },
+      "selected": true
+    }
+  ]
+}

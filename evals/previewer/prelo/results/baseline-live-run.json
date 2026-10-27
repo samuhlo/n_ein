@@ -1,0 +1,13 @@
+{
+  "variant": "baseline-live",
+  "started": "2026-10-27T08:03:50.003Z",
+  "commit": "ea2d09a2ecb76e8a2145384a02e30c3b0a621a8b",
+  "model": "openai-codex/gpt-6.1-sol",
+  "thinking": "high",
+  "hashes": {
+    "previewer/agent/reviewer.md": "22cf80eb3cbd8dd9978577a2f1485a352c2ea381b79ef70a475b8e6c6ce79b2f",
+    "previewer/src/engine.ts": "3a79d469dabe954a2ecc074d3fb8d65e94ef48f0058720fa198d2b1b8499c431",
+    "previewer/src/runner.ts": "6670e5459636748e9a14b95347b5b07ddd158e348e923b2659484076e61c9d6f",
+    "previewer/src/report.ts": "fa062ac787f3fb42a8f9a41415c788c2c2db5f1f41e950acd65de77d16171973"
+  }
+}

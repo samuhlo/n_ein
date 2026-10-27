@@ -1,0 +1,121 @@
+{
+  "session": {
+    "id": "14bc220d-3ec2-470d-a3d0-c2fe53202e59",
+    "repo": "<n_ein>/.n_ein/evidence-loop-2026-10-27T10-50-56-946Z/quote",
+    "branch": "change",
+    "prUrl": null,
+    "baseSha": "63743d92bf5fe19cc0abb14cd7f58f86e6e86e3d",
+    "headSha": "26cec0a950616bba7f8adfd92d44c1f9f21a6400",
+    "created": "2026-10-27T10:50:57.030Z"
+  },
+  "run": {
+    "id": "7cdf6584-e671-4c5c-9806-b8c6a57bfdec",
+    "sessionId": "14bc220d-3ec2-470d-a3d0-c2fe53202e59",
+    "baseSha": "63743d92bf5fe19cc0abb14cd7f58f86e6e86e3d",
+    "headSha": "26cec0a950616bba7f8adfd92d44c1f9f21a6400",
+    "model": "openai-codex/gpt-6.1-sol",
+    "thinking": "high",
+    "status": "done",
+    "error": null,
+    "summary": "El estado final es idéntico a la base: se restauró el formato que checkout necesita. La prueba restaurada pasa y no encontré defectos nuevos.",
+    "tour": [],
+    "gaps": [],
+    "rejected": [],
+    "usage": {
+      "input": 6168,
+      "output": 443,
+      "cacheRead": 15616,
+      "usd": 0.0183276
+    },
+    "started": "2026-10-27T10:51:33.424Z",
+    "ended": "2026-10-27T10:51:58.984Z"
+  },
+  "findings": [
+    {
+      "id": "e484b91b-ecf4-4816-8ac0-f0f1d02632c9",
+      "sessionId": "14bc220d-3ec2-470d-a3d0-c2fe53202e59",
+      "runId": "14332502-5429-4532-9118-35ce367daddc",
+      "headSha": "3e54d8d8917df30cd98410c18b47b4955fb9b85c",
+      "kind": "bug",
+      "severity": "high",
+      "title": "checkout falla al leer el total",
+      "plain": "Al llamar a checkout con 1234 céntimos, el programa intenta buscar un campo dentro de un número y falla, en lugar de devolver 1234.",
+      "condition": "Se llama a checkout(cents) con un importe entero.",
+      "consequence": "checkout lanza TypeError porque sigue accediendo a [\"total\"] sobre el entero que ahora devuelve make_quote. Esto rompe el comportamiento que el commit promete conservar.",
+      "citations": [
+        {
+          "ref": "pricing.py@3e54d8d8917df30cd98410c18b47b4955fb9b85c:L1-L2",
+          "path": "pricing.py",
+          "sha": "3e54d8d8917df30cd98410c18b47b4955fb9b85c",
+          "start": 1,
+          "end": 2,
+          "text": "def make_quote(cents):\n    return cents"
+        },
+        {
+          "ref": "checkout.py@3e54d8d8917df30cd98410c18b47b4955fb9b85c:L3-L4",
+          "path": "checkout.py",
+          "sha": "3e54d8d8917df30cd98410c18b47b4955fb9b85c",
+          "start": 3,
+          "end": 4,
+          "text": "def checkout(cents):\n    return make_quote(cents)[\"total\"]"
+        }
+      ],
+      "probe": {
+        "command": "python3 .previewer-probes/checkout_contract.py",
+        "file": ".previewer-probes/checkout_contract.py",
+        "protocol": "nein-probe-v1",
+        "check": "checkout-quote-contract",
+        "compareBase": true,
+        "source": "import json\nfrom pathlib import Path\nimport sys\n\nsys.path.insert(0, str(Path(__file__).resolve().parents[1]))\n\n\ndef run():\n    from checkout import checkout\n\n    try:\n        total = checkout(1234)\n    except TypeError as exc:\n        if str(exc) != \"'int' object is not subscriptable\":\n            raise\n        return \"reproduced\", \"checkout(1234) raises TypeError instead of returning 1234\", 1\n    if total != 1234:\n        return \"reproduced\", f\"checkout(1234) returned {total!r} instead of 1234\", 1\n    return \"passed\", \"checkout(1234) returns 1234\", 0\n\n\ntry:\n    outcome, reason, code = run()\nexcept Exception as exc:\n    outcome, reason, code = \"error\", f\"{type(exc).__name__}: {exc}\", 2\nprint(\"NEIN_PROBE_RESULT \" + json.dumps({\n    \"check\": \"checkout-quote-contract\",\n    \"outcome\": outcome,\n    \"reason\": reason,\n}))\nsys.exit(code)\n",
+        "exitCode": 1,
+        "output": "NEIN_PROBE_RESULT {\"check\": \"checkout-quote-contract\", \"outcome\": \"reproduced\", \"reason\": \"checkout(1234) raises TypeError instead of returning 1234\"}",
+        "outcome": "reproduced",
+        "reason": "checkout(1234) raises TypeError instead of returning 1234",
+        "reproduced": true,
+        "baseline": {
+          "sha": "63743d92bf5fe19cc0abb14cd7f58f86e6e86e3d",
+          "outcome": "passed",
+          "reason": "checkout(1234) returns 1234",
+          "exitCode": 0,
+          "output": "NEIN_PROBE_RESULT {\"check\": \"checkout-quote-contract\", \"outcome\": \"passed\", \"reason\": \"checkout(1234) returns 1234\"}"
+        }
+      },
+      "verification": "",
+      "thread": "e484b91b-ecf4-4816-8ac0-f0f1d02632c9",
+      "status": "resolved",
+      "current": false,
+      "check": {
+        "runId": "7cdf6584-e671-4c5c-9806-b8c6a57bfdec",
+        "outcome": "resolved",
+        "note": "La comprobación explícita de la sonda se ha superado.",
+        "probe": {
+          "command": "python3 .previewer-probes/checkout_contract.py",
+          "file": ".previewer-probes/checkout_contract.py",
+          "protocol": "nein-probe-v1",
+          "check": "checkout-quote-contract",
+          "compareBase": true,
+          "source": "import json\nfrom pathlib import Path\nimport sys\n\nsys.path.insert(0, str(Path(__file__).resolve().parents[1]))\n\n\ndef run():\n    from checkout import checkout\n\n    try:\n        total = checkout(1234)\n    except TypeError as exc:\n        if str(exc) != \"'int' object is not subscriptable\":\n            raise\n        return \"reproduced\", \"checkout(1234) raises TypeError instead of returning 1234\", 1\n    if total != 1234:\n        return \"reproduced\", f\"checkout(1234) returned {total!r} instead of 1234\", 1\n    return \"passed\", \"checkout(1234) returns 1234\", 0\n\n\ntry:\n    outcome, reason, code = run()\nexcept Exception as exc:\n    outcome, reason, code = \"error\", f\"{type(exc).__name__}: {exc}\", 2\nprint(\"NEIN_PROBE_RESULT \" + json.dumps({\n    \"check\": \"checkout-quote-contract\",\n    \"outcome\": outcome,\n    \"reason\": reason,\n}))\nsys.exit(code)\n",
+          "exitCode": 0,
+          "output": "NEIN_PROBE_RESULT {\"check\": \"checkout-quote-contract\", \"outcome\": \"passed\", \"reason\": \"checkout(1234) returns 1234\"}",
+          "outcome": "passed",
+          "reason": "checkout(1234) returns 1234",
+          "reproduced": false,
+          "baseline": {
+            "sha": "63743d92bf5fe19cc0abb14cd7f58f86e6e86e3d",
+            "outcome": "passed",
+            "reason": "checkout(1234) returns 1234",
+            "exitCode": 0,
+            "output": "NEIN_PROBE_RESULT {\"check\": \"checkout-quote-contract\", \"outcome\": \"passed\", \"reason\": \"checkout(1234) returns 1234\"}"
+          }
+        }
+      },
+      "rating": {
+        "verdict": "vale",
+        "reason": "Valoración automática del fixture de aceptación, no decisión del usuario.",
+        "at": "2026-10-27T10:51:33.392Z"
+      },
+      "selected": true
+    }
+  ],
+  "contamination": []
+}

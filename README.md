@@ -41,7 +41,7 @@ nein
   <img src="docs/assets/nein-setup.png" alt="Plan de nein-setup --dry-run" width="720" />
 </div>
 
-macOS arm64 y Linux amd64 (Ubuntu, Arch). Requisitos: Bash, curl, Git y ripgrep. El instalador verifica SHA-256 antes de ejecutar nada e instala como usuario, sin sudo, dentro de `~/.n_ein`: Node, Bun, Pi, Claude Code y CodeGraph fijados, sin tocar el `pi` ni el `claude` globales ni Ein legado. El primer arranque pide `/login` en el hogar aislado; ninguna credencial se copia. Mientras no haya release estable se instala la alpha del canal preview; [notas de 0.3.1-alpha.1](docs/releases/0.3.1-alpha.1.md).
+macOS arm64 y Linux amd64 (Ubuntu, Arch). Requisitos: Bash, curl, Git y ripgrep. El instalador verifica SHA-256 antes de ejecutar nada e instala como usuario, sin sudo, dentro de `~/.n_ein`: Node, Bun, Pi, Claude Code y CodeGraph fijados, sin tocar el `pi` ni el `claude` globales ni Ein legado. El primer arranque pide `/login` en el hogar aislado; ninguna credencial se copia. Mientras no haya release estable se instala la alpha del canal preview; [notas de 0.4.0-alpha.1](docs/releases/0.4.0-alpha.1.md).
 
 > _note: `curl -fsSL https://samuhlo.github.io/n_ein/install.sh | bash -s -- --dry-run` enseña el plan sin escribir. Sobre una preview anterior se actualiza con backup y `n-ein-install restore --channel preview` vuelve atrás._
 
@@ -102,10 +102,16 @@ El paquete de Pi lleva el catálogo de skills, la voz y el TODO de `WORK.md`. Co
 nein                                  # portada: estado del proyecto, sesiones y sistema
 nein --project . --runtime pi         # abre directamente, con el bloqueo del árbol
 nein previewer [review]               # abre (o hace) la revisión de la rama actual
+nein previewer chain --file serie.json # revisa los tramos y después su integración
+nein previewer open --chain nombre    # vuelve al balance de una cadena
 n-ein-install doctor --channel preview --runtime   # diagnostica la instalación
 n-ein-install restore --channel preview            # vuelve al backup anterior
 ./scripts/hotfix-preview.sh plan|apply|rollback    # aplica un commit comprobado a la preview
 ```
+
+El revisor distingue un fallo reproducido, una comprobación superada y un escenario que ya no aplica. Una sonda que no permite concluir deja el hallazgo sin comprobar y conserva tu selección. Al revisar después de un arreglo, indica si lo confirmó una sonda o la inspección del código con citas actuales.
+
+Puedes pedirle al agente «revisa esta cadena de PR»: prepara las referencias y valida el orden antes de iniciar las revisiones. La cadena conserva un único hilo por problema identificado, sus decisiones y el historial de comprobaciones; al terminar revisa el conjunto integrado. La vista distingue el balance actual de los informes históricos y señala si las ramas se han movido. [Formato y funcionamiento](docs/12-cadenas-revisor.md).
 
 Dentro de Pi:
 
@@ -170,7 +176,7 @@ n_ein/
 
 ## // 09_ ESTADO
 
-Preview. La pública vigente es [0.3.1-alpha.1](https://github.com/samuhlo/n_ein/releases/tag/v0.3.1-alpha.1); las notas de cada versión están en [docs/releases](docs/releases/). Pendientes: la promoción a estable y Qwen local, aplazado hasta tener una máquina con 24 GB.
+Preview. La versión de esta entrega es [0.4.0-alpha.1](https://github.com/samuhlo/n_ein/releases/tag/v0.4.0-alpha.1); las notas de cada versión están en [docs/releases](docs/releases/). Pendientes: la promoción a estable y Qwen local, aplazado hasta tener una máquina con 24 GB.
 
 ---
 

@@ -1,0 +1,84 @@
+{
+  "live": {
+    "complete": true,
+    "stages": 4,
+    "threads": 1,
+    "events": [
+      [
+        "PR 1",
+        "detected"
+      ],
+      [
+        "PR 2",
+        "persists"
+      ],
+      [
+        "PR 3",
+        "resolved"
+      ],
+      [
+        "Integración",
+        "resolved"
+      ]
+    ],
+    "selectedPreserved": true,
+    "rating": {
+      "verdict": "vale",
+      "reason": "Fixture de aceptación, decisión automática sin representar al usuario.",
+      "at": "2026-10-27T14:16:22.572Z"
+    },
+    "runner": "Sol 6.1 real",
+    "estimatedUsd": 0.1260644,
+    "seconds": 126.157
+  },
+  "prelo": {
+    "complete": true,
+    "stages": 4,
+    "threads": 1,
+    "events": [
+      [
+        "PR 2",
+        "detected"
+      ],
+      [
+        "PR 3",
+        "persists"
+      ],
+      [
+        "PR 4",
+        "unchecked"
+      ],
+      [
+        "Integración",
+        "resolved"
+      ]
+    ],
+    "selectedPreserved": true,
+    "rating": {
+      "verdict": "vale",
+      "reason": "Fixture del banco",
+      "at": "2026-10-27T14:15:40.712Z"
+    },
+    "runner": "Controlled reports, real probes"
+  },
+  "cliResumeReusedAllRuns": true,
+  "checks": {
+    "full": "bash scripts/check.sh",
+    "exitCode": 0,
+    "historicalJSRegression": "token cleanup and polling preserve selected run",
+    "platform": "macOS arm64",
+    "fullCommit": "047e2e7",
+    "lastRegressions": [
+      "consistent SQLite response while a stage finishes",
+      "first poll refreshes a view captured before completion",
+      "historical route retained"
+    ],
+    "lastHashes": {
+      "previewer/src/server.ts": "759d7e52ac69890231a1ee2d1e01d4ae76081dc7afb3e2c23d8b6933e5a14ae1",
+      "previewer/web/main.ts": "6a7a8519573b8f065d6f3ec5bc0f3d85543eb8ae49f7abb9caff4b87096472a9",
+      "tests/previewer-web.ts": "2ad518c15c82af7889d91d68414a270cef35498830729ba23427f120f79878dc"
+    },
+    "liveCoreCommit": "8c2d9a3",
+    "lastRegressionsPassed": true
+  }
+}

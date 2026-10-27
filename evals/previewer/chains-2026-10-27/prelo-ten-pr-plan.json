@@ -1,0 +1,105 @@
+{
+  "name": "Prelo beta",
+  "repo": "<home>/Documents/01_Proyectos/prelo",
+  "stages": [
+    {
+      "name": "PR 1",
+      "kind": "change",
+      "base": "476c0905f99882c87f75e0ad09584da4bf2d8aae",
+      "head": "5ec72530fe8e502cf2997ac9750fad7b89e7a62b",
+      "baseSha": "476c0905f99882c87f75e0ad09584da4bf2d8aae",
+      "headSha": "5ec72530fe8e502cf2997ac9750fad7b89e7a62b",
+      "prUrl": "https://github.com/samuhlo/prelo-ob/pull/1"
+    },
+    {
+      "name": "PR 2",
+      "kind": "change",
+      "base": "5ec72530fe8e502cf2997ac9750fad7b89e7a62b",
+      "head": "f26d2c0f57b6585c3a12cdd3c3d52a97b8a15f97",
+      "baseSha": "5ec72530fe8e502cf2997ac9750fad7b89e7a62b",
+      "headSha": "f26d2c0f57b6585c3a12cdd3c3d52a97b8a15f97",
+      "prUrl": "https://github.com/samuhlo/prelo-ob/pull/2"
+    },
+    {
+      "name": "PR 3",
+      "kind": "change",
+      "base": "f26d2c0f57b6585c3a12cdd3c3d52a97b8a15f97",
+      "head": "75bfff386b9a1787fea0b9b81071b43bc4237fde",
+      "baseSha": "f26d2c0f57b6585c3a12cdd3c3d52a97b8a15f97",
+      "headSha": "75bfff386b9a1787fea0b9b81071b43bc4237fde",
+      "prUrl": "https://github.com/samuhlo/prelo-ob/pull/3"
+    },
+    {
+      "name": "PR 4",
+      "kind": "change",
+      "base": "75bfff386b9a1787fea0b9b81071b43bc4237fde",
+      "head": "ae1f2eb8220a73d66295075c3142daf0f87cb903",
+      "baseSha": "75bfff386b9a1787fea0b9b81071b43bc4237fde",
+      "headSha": "ae1f2eb8220a73d66295075c3142daf0f87cb903",
+      "prUrl": "https://github.com/samuhlo/prelo-ob/pull/4"
+    },
+    {
+      "name": "PR 5",
+      "kind": "change",
+      "base": "ae1f2eb8220a73d66295075c3142daf0f87cb903",
+      "head": "a6d5ad7f71b4a2d591d64ba863f7a9b5bb03ab18",
+      "baseSha": "ae1f2eb8220a73d66295075c3142daf0f87cb903",
+      "headSha": "a6d5ad7f71b4a2d591d64ba863f7a9b5bb03ab18",
+      "prUrl": "https://github.com/samuhlo/prelo-ob/pull/5"
+    },
+    {
+      "name": "PR 6",
+      "kind": "change",
+      "base": "a6d5ad7f71b4a2d591d64ba863f7a9b5bb03ab18",
+      "head": "0175bb3bfa0d44f8543b55086d4d1d49a2e919ef",
+      "baseSha": "a6d5ad7f71b4a2d591d64ba863f7a9b5bb03ab18",
+      "headSha": "0175bb3bfa0d44f8543b55086d4d1d49a2e919ef",
+      "prUrl": "https://github.com/samuhlo/prelo-ob/pull/6"
+    },
+    {
+      "name": "PR 7",
+      "kind": "change",
+      "base": "0175bb3bfa0d44f8543b55086d4d1d49a2e919ef",
+      "head": "61832e378a5b1cd6f8ebbf431556c6670df0a4cf",
+      "baseSha": "0175bb3bfa0d44f8543b55086d4d1d49a2e919ef",
+      "headSha": "61832e378a5b1cd6f8ebbf431556c6670df0a4cf",
+      "prUrl": "https://github.com/samuhlo/prelo-ob/pull/7"
+    },
+    {
+      "name": "PR 8",
+      "kind": "change",
+      "base": "61832e378a5b1cd6f8ebbf431556c6670df0a4cf",
+      "head": "043c16d664927bf8a43b19db53523f0303db1849",
+      "baseSha": "61832e378a5b1cd6f8ebbf431556c6670df0a4cf",
+      "headSha": "043c16d664927bf8a43b19db53523f0303db1849",
+      "prUrl": "https://github.com/samuhlo/prelo-ob/pull/8"
+    },
+    {
+      "name": "PR 9",
+      "kind": "change",
+      "base": "043c16d664927bf8a43b19db53523f0303db1849",
+      "head": "a8401fe9ba495e97b6aae99cc267523ffdc9ffab",
+      "baseSha": "043c16d664927bf8a43b19db53523f0303db1849",
+      "headSha": "a8401fe9ba495e97b6aae99cc267523ffdc9ffab",
+      "prUrl": "https://github.com/samuhlo/prelo-ob/pull/9"
+    },
+    {
+      "name": "PR 10",
+      "kind": "change",
+      "base": "a8401fe9ba495e97b6aae99cc267523ffdc9ffab",
+      "head": "4bdf1e01c586914cbf56af2b5463c63665c89f9d",
+      "baseSha": "a8401fe9ba495e97b6aae99cc267523ffdc9ffab",
+      "headSha": "4bdf1e01c586914cbf56af2b5463c63665c89f9d",
+      "prUrl": "https://github.com/samuhlo/prelo-ob/pull/10"
+    },
+    {
+      "name": "Integración",
+      "kind": "integration",
+      "base": "476c0905f99882c87f75e0ad09584da4bf2d8aae",
+      "baseSha": "476c0905f99882c87f75e0ad09584da4bf2d8aae",
+      "head": "4bdf1e01c586914cbf56af2b5463c63665c89f9d",
+      "headSha": "4bdf1e01c586914cbf56af2b5463c63665c89f9d",
+      "prUrl": null
+    }
+  ]
+}
