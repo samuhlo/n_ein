@@ -1,0 +1,214 @@
+{
+  "schema": 1,
+  "assessor": "Codex, con contraste de código y sondas; no valoración humana de Samu",
+  "humanReviewed": false,
+  "rule": "valid significa defecto atribuible al cambio (regresión o reparación específica incompleta); preexisting conserva problemas reales cuyo mismo resultado ya ocurre en base. No se deduce validez de exit != 0. preexisting no significa falsa alarma: puede ser una limitación real o una reparación incompleta. Los grupos compartidos no implican que las dos pasadas hayan cubierto todos los mismos consumidores.",
+  "variants": {
+    "baseline-clean": {
+      "1": [],
+      "2": [
+        {
+          "finding": 1,
+          "defect": "missing-upload-stuck",
+          "verdict": "valid"
+        },
+        {
+          "finding": 2,
+          "defect": "reader-scope",
+          "verdict": "valid"
+        },
+        {
+          "finding": 3,
+          "defect": "migration-hidden",
+          "verdict": "valid"
+        }
+      ],
+      "3": [
+        {
+          "finding": 1,
+          "defect": "slot-cancellation",
+          "verdict": "valid"
+        },
+        {
+          "finding": 2,
+          "defect": "store-book-status",
+          "verdict": "valid"
+        }
+      ],
+      "4": [
+        {
+          "finding": 1,
+          "defect": "double-disk-reserve",
+          "verdict": "valid"
+        }
+      ],
+      "5": [
+        {
+          "finding": 1,
+          "defect": "yaml-date",
+          "verdict": "valid"
+        },
+        {
+          "finding": 2,
+          "defect": "null-anchor",
+          "verdict": "valid"
+        }
+      ],
+      "6": [
+        {
+          "finding": 1,
+          "defect": "unchanged-identifiers",
+          "verdict": "valid"
+        },
+        {
+          "finding": 2,
+          "defect": "positive-to-negative",
+          "verdict": "preexisting"
+        },
+        {
+          "finding": 3,
+          "defect": "asset-prefix",
+          "verdict": "preexisting"
+        }
+      ],
+      "7": [],
+      "8": [
+        {
+          "finding": 1,
+          "defect": "update-journal-early",
+          "verdict": "valid"
+        },
+        {
+          "finding": 2,
+          "defect": "manual-install-rollback",
+          "verdict": "valid"
+        }
+      ],
+      "9": [
+        {
+          "finding": 1,
+          "defect": "first-install-retry",
+          "verdict": "valid"
+        },
+        {
+          "finding": 2,
+          "defect": "settings-bom",
+          "verdict": "valid"
+        }
+      ],
+      "10": []
+    },
+    "candidate": {
+      "1": [
+        {
+          "finding": 1,
+          "defect": "draft-drain",
+          "verdict": "valid"
+        }
+      ],
+      "2": [
+        {
+          "finding": 1,
+          "defect": "firmware-identity",
+          "verdict": "valid"
+        },
+        {
+          "finding": 2,
+          "defect": "reader-scope",
+          "verdict": "valid",
+          "scopeNote": "Cubre la reutilización de la orden en la API. El aviso de baseline incluía además el estado visual global; la coincidencia es por grupo de problema, no por cobertura íntegra de sus consumidores."
+        },
+        {
+          "finding": 3,
+          "defect": "migration-hidden",
+          "verdict": "valid"
+        }
+      ],
+      "3": [
+        {
+          "finding": 1,
+          "defect": "missing-job-stuck",
+          "verdict": "valid"
+        },
+        {
+          "finding": 2,
+          "defect": "admission-write-failure",
+          "verdict": "valid"
+        }
+      ],
+      "4": [
+        {
+          "finding": 1,
+          "defect": "double-disk-reserve",
+          "verdict": "valid"
+        }
+      ],
+      "5": [
+        {
+          "finding": 1,
+          "defect": "yaml-date",
+          "verdict": "valid"
+        },
+        {
+          "finding": 2,
+          "defect": "null-anchor",
+          "verdict": "valid"
+        },
+        {
+          "finding": 3,
+          "defect": "commented-damaged-identity",
+          "verdict": "valid"
+        },
+        {
+          "finding": 4,
+          "defect": "repaired-manifest-duplicate",
+          "verdict": "valid"
+        },
+        {
+          "finding": 5,
+          "defect": "long-frontmatter-identity",
+          "verdict": "valid"
+        }
+      ],
+      "6": [
+        {
+          "finding": 1,
+          "defect": "unchanged-identifiers",
+          "verdict": "valid"
+        }
+      ],
+      "7": [],
+      "8": [
+        {
+          "finding": 1,
+          "defect": "update-journal-early",
+          "verdict": "valid"
+        },
+        {
+          "finding": 2,
+          "defect": "unused-folder-blocks-api",
+          "verdict": "valid"
+        }
+      ],
+      "9": [
+        {
+          "finding": 1,
+          "defect": "first-install-retry",
+          "verdict": "valid"
+        },
+        {
+          "finding": 2,
+          "defect": "stale-usb-blocks-update",
+          "verdict": "valid"
+        },
+        {
+          "finding": 3,
+          "defect": "legacy-bridge-compatibility",
+          "verdict": "unclear",
+          "reason": "La sonda demuestra el cambio de contrato, no que sea incorrecto. La PR añade comprobación explícita de autenticación y el proyecto prescribe actualizar componentes juntos. No hay un compromiso documentado de aceptar health antiguos sin authenticated; no se cuenta como fallo confirmado."
+        }
+      ],
+      "10": []
+    }
+  }
+}

@@ -1,0 +1,17 @@
+{
+  "variant": "baseline-clean",
+  "started": "2026-10-27T08:21:38.016Z",
+  "commit": "799aef87de9a3aee16e18d41bb5e896d4b5c2a71",
+  "model": "openai-codex/gpt-6.1-sol",
+  "thinking": "high",
+  "hashes": {
+    "previewer/agent/reviewer.md": "22cf80eb3cbd8dd9978577a2f1485a352c2ea381b79ef70a475b8e6c6ce79b2f",
+    "previewer/src/engine.ts": "3a79d469dabe954a2ecc074d3fb8d65e94ef48f0058720fa198d2b1b8499c431",
+    "previewer/src/runner.ts": "a4afa8b656f76ddc8c8b0c33a80c2e56bdad9f1e9ed265a8a68a0cc0041ef64a",
+    "previewer/src/report.ts": "fa062ac787f3fb42a8f9a41415c788c2c2db5f1f41e950acd65de77d16171973",
+    "bin/n-ein-codegraph": "8af6fd36c760bfd4d8de0d4c6ba923a1d75bc57d699fcbdf5a26497b2343a407",
+    "pi-package/extensions/codegraph.ts": "197042be71dccbff5889ef0751ad0a954a8cdeff12742ad5159f2d4aa41ffb1a",
+    "previewer/agent/guard.ts": "cdc0c205c839f81c3a595cd5b05a4127e1c1f011651aec76cbe21aa63e21e25a",
+    "previewer/src/sandbox.ts": "490dcb37b425e5d4687dd2020b989a9770242963381c370e7a137b92760aee32"
+  }
+}

@@ -1,0 +1,32 @@
+{
+  "baseline-clean:2:2": [
+    {
+      "before": "\"title\": \"Book\", \"sha256\": hashlib.sha256(b\"original\").hexdigest()",
+      "after": "\"title\": \"Book\", \"sha256\": hashlib.sha256(b\"original\").hexdigest(), \"present\": True"
+    }
+  ],
+  "baseline-clean:3:1": [
+    {
+      "before": "import json\n",
+      "after": "import json\nimport uuid\n"
+    },
+    {
+      "before": "image = tmp_path.resolve() / 'generated_images' / f'{answer.parent.name}.jpg'",
+      "after": "thread = str(uuid.uuid5(uuid.NAMESPACE_URL, str(answer)))\n        image = tmp_path.resolve() / 'generated_images' / thread / 'synthetic.jpg'"
+    },
+    {
+      "before": "image.parent.mkdir(exist_ok=True)",
+      "after": "image.parent.mkdir(parents=True, exist_ok=True)"
+    },
+    {
+      "before": "return SimpleNamespace(returncode=0, stdout='', stderr='')",
+      "after": "return SimpleNamespace(returncode=0, stdout=json.dumps({'type': 'thread.started', 'thread_id': thread}), stderr='')"
+    }
+  ],
+  "baseline-clean:6:3": [
+    {
+      "before": "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO+jRZkAAAAASUVORK5CYII=",
+      "after": "iVBORw0KGgoAAAANSUhEUgAAAAgAAAAICAIAAABLbSncAAAAFUlEQVR4nGP8//8/AzbAhFV00EoAAFbUAw037MyjAAAAAElFTkSuQmCC"
+    }
+  ]
+}

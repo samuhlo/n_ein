@@ -103,4 +103,18 @@ Tramo 2, afinado:
 
 ## Siguiente paso
 
+### Encargo del 27 de octubre: banco con las diez PR de prelo-ob
+
+Samu autoriza usar p_reviewer para revisar sus diez PR encadenadas, obtener un banco de datos y afinar la herramienta. Trabajo en `feat/previewer-prelo-bench`, desde `ea2d09a`; `prelo` permanece en solo lectura. No incluye corregir Prelo, publicar comentarios, push ni instalación personal.
+
+- [x] Congelar las diez bases/heads y ejecutar la línea base con Sol 6.1 high; guardar hallazgos, sondas, eventos, consumo y tiempos.
+- [x] Contrastar los avisos de PR 1–6 y corregir problemas demostrados del revisor. Reservar PR 7–10 hasta fijar la candidata; la dependencia entre PR limita la independencia de esa muestra.
+- [x] Comparar candidata y línea base, verificar regresiones y entregar resultados y datos reproducibles con límites explícitos.
+
+Manifiesto en `evals/previewer/prelo/manifest.json`; ejecutor en `run.ts`. Cada caso reconstruye solo base/head, comprueba sus árboles contra los originales y usa una base de datos distinta por variante. Datos completos locales bajo `.n_ein/prelo-bench-20261027/`; credenciales en su hogar nativo. Primer intento dentro del sandbox de Codex falló por no poder crear los locks de Pi y no disponer de sandbox anidado; queda registrado como intento fallido, no como revisión sin fallos.
+
+Resultado del encargo: [informe y límites](evals/results/2026-10-27-previewer-prelo.md). Veinte revisiones comparables, 25 intentos conservados y 22 grupos atribuibles entre ambas pasadas. Base: 13 avisos atribuibles y 2 problemas previos; candidata: 17 atribuibles y 1 dudoso. La candidata aporta 9 grupos y omite 5 de la base; sobre las 12 referencias de desarrollo pasa de 9 a 8 coincidencias. No se certifica una mejora uniforme ni el umbral general del 70 %, y T9 sigue abierto a valoraciones humanas y otros proyectos.
+
+Corregidos en `799aef8` el índice de CodeGraph del padre en repos anidados, y en `e48a738` la clasificación de errores de preparación de sondas y las instrucciones de revisión. Ambos fallos tienen regresiones rojo→verde. Checks completos de macOS, paquete instalado y tipos pasan; web comprobada para las 20 sesiones. Las PR de GitHub conservan base/head y `prelo` conserva estado y referencias. Sin push, comentarios, instalación personal ni cambios a Prelo. Enlaces privados del banco en `.n_ein/prelo-bench-20261027/reviews.md`; datos exportados, etiquetas y scripts en `evals/previewer/prelo/`.
+
 T1 a T6 y T8 terminados; T7 hecho en macOS, falta la prueba en Omarchy. Revisor fijado por Samu el 21 de octubre: «siempre sería Sol 6.1 y listo. Nada de claude aunq se invoque desde claude». Sigue T9 con uso real. La detección en `reserved` (2/4 con Sol 6.1) queda por debajo del umbral y es lo primero que mide T9. Decisión abierta para Samu: si un hallazgo seleccionado que la última revisión no comprobó debe seguir en el traspaso, marcado, como ahora, o salir de él.

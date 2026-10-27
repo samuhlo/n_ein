@@ -1,0 +1,17 @@
+{
+  "command": "bash scripts/check.sh",
+  "commit": "e48a738",
+  "exitCode": 0,
+  "result": "checks locales: OK",
+  "includes": [
+    "aislamiento real macOS",
+    "launcher e instalador",
+    "motor y sondas",
+    "SQLite y handoff",
+    "web",
+    "tipos contra Pi 1.0.2",
+    "paquete instalado"
+  ],
+  "platform": "macOS arm64",
+  "linuxTested": false
+}

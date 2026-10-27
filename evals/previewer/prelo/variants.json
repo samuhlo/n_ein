@@ -1,0 +1,22 @@
+{
+  "baseline": {
+    "purpose": "Primer arranque dentro del sandbox de Codex",
+    "eligibleForComparison": false,
+    "limitation": "Pi no pudo abrir sus locks; no hubo revisión del modelo."
+  },
+  "baseline-live": {
+    "purpose": "Exploración inicial con el producto sin corregir",
+    "eligibleForComparison": false,
+    "limitation": "CodeGraph devolvió fuente de n_ein, el repositorio padre. El detector basado en argumentos no detectaba ese contexto ajeno en las respuestas. PR 4 cancelada al descubrirlo; PR 5–10 no ejecutadas."
+  },
+  "baseline-clean": {
+    "purpose": "Prompt original con selección de índice corregida en 799aef8",
+    "eligibleForComparison": true,
+    "limitation": "Una ejecución por PR; muestra pequeña y encadenada. No estima por sí sola la cobertura de todos los fallos."
+  },
+  "candidate": {
+    "purpose": "Mismo modelo y árboles; instrucciones afinadas y errores de ejecución de sondas reconocidos",
+    "eligibleForComparison": true,
+    "limitation": "PR 1–6 usadas para desarrollo. PR 7–10 reservadas hasta fijar la candidata; son parte del mismo proyecto, no una muestra independiente."
+  }
+}

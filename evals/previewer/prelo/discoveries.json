@@ -1,0 +1,58 @@
+{
+  "schema": 1,
+  "humanReviewed": false,
+  "note": "Defectos identificados después de fijar la candidata; no se incorporan retroactivamente a las referencias de desarrollo.",
+  "defects": [
+    {
+      "id": "firmware-identity",
+      "pr": 2,
+      "condition": "Cambia el firmware en .kobo/version con el mismo número de serie.",
+      "consequence": "El hash del archivo completo cambia y las órdenes quedan vinculadas a la identidad anterior.",
+      "evidence": "candidate PR2 F1: replay base=0, head=1, tip=1. Sin dispositivo físico.",
+      "externalContract": "Calibre obtiene el número de serie del campo 0 y el firmware del campo 2 del mismo archivo.",
+      "source": "https://github.com/kovidgoyal/calibre/blob/master/src/calibre/devices/kobo/driver.py#L176-L204"
+    },
+    {
+      "id": "admission-write-failure",
+      "pr": 3,
+      "condition": "La persistencia falla después de añadir ACTIVE y antes de enviar el trabajo al ejecutor.",
+      "consequence": "Las entradas sin trabajo consumen permanentemente el nuevo límite de admisión.",
+      "evidence": "candidate PR3 F2: replay base=0, head=1, con un fallo de escritura inyectado."
+    },
+    {
+      "id": "commented-damaged-identity",
+      "pr": 5,
+      "condition": "Una identidad YAML entre comillas lleva un comentario final y otro campo está dañado.",
+      "consequence": "El recuperador parcial no reconoce el grupo y permite crear una segunda nota; al reparar aparece identidad duplicada.",
+      "evidence": "candidate PR5 F3: replay base=0, head=1."
+    },
+    {
+      "id": "repaired-manifest-duplicate",
+      "pr": 5,
+      "condition": "Se importa mientras la ficha es ilegible, se restaura y se reimporta la misma cita.",
+      "consequence": "La cita cambia de grupo y se escribe dos veces.",
+      "evidence": "candidate PR5 F4: replay base=0, head=1."
+    },
+    {
+      "id": "long-frontmatter-identity",
+      "pr": 5,
+      "condition": "La nota ha cambiado de ruta; margen_id está antes del corte de 16.384 caracteres pero el cierre YAML después.",
+      "consequence": "El nuevo parser recibe una cabecera truncada y pierde el enlace que antes reconocía.",
+      "evidence": "candidate PR5 F5: replay base=0, head=1."
+    },
+    {
+      "id": "unused-folder-blocks-api",
+      "pr": 8,
+      "condition": "outputFolder queda vacío aunque la petición solo consulta la biblioteca.",
+      "consequence": "La validación de campos que esa petición no usa impide todas las llamadas a la API.",
+      "evidence": "candidate PR8 F2: plugin real empaquetado con requestUrl simulado; replay head y tip fallan en la aserción esperada."
+    },
+    {
+      "id": "stale-usb-blocks-update",
+      "pr": 9,
+      "condition": "El estado persistido es working pero su heartbeat es antiguo y el conector ya no trabaja.",
+      "consequence": "El instalador rechaza actualizar para reparar el conector porque no distingue estado activo de estado obsoleto.",
+      "evidence": "candidate PR9 F2; prueba con estado persistido y sin operaciones reales de USB/Docker."
+    }
+  ]
+}

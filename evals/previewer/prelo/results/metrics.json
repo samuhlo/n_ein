@@ -1,0 +1,558 @@
+{
+  "schema": 1,
+  "generatedAt": "2026-10-27T09:50:01.226Z",
+  "assessor": "Codex, con contraste de código y sondas; no valoración humana de Samu",
+  "results": {
+    "baseline-clean": {
+      "cases": [
+        {
+          "pr": 1,
+          "findings": 0,
+          "valid": [],
+          "preexisting": 0,
+          "invalid": 0,
+          "unclear": 0,
+          "seconds": 116.15,
+          "usd": 0.1355384,
+          "usage": {
+            "input": 46318,
+            "output": 2616,
+            "cacheRead": 167424,
+            "usd": 0.1355384
+          },
+          "rejected": 0,
+          "contamination": [],
+          "probesFailed": 0
+        },
+        {
+          "pr": 2,
+          "findings": 3,
+          "valid": [
+            "missing-upload-stuck",
+            "reader-scope",
+            "migration-hidden"
+          ],
+          "preexisting": 0,
+          "invalid": 0,
+          "unclear": 0,
+          "seconds": 271.713,
+          "usd": 0.2464696,
+          "usage": {
+            "input": 57895,
+            "output": 7747,
+            "cacheRead": 532096,
+            "usd": 0.2464696
+          },
+          "rejected": 0,
+          "contamination": [],
+          "probesFailed": 3
+        },
+        {
+          "pr": 3,
+          "findings": 2,
+          "valid": [
+            "slot-cancellation",
+            "store-book-status"
+          ],
+          "preexisting": 0,
+          "invalid": 0,
+          "unclear": 0,
+          "seconds": 264.289,
+          "usd": 0.26132920000000004,
+          "usage": {
+            "input": 55706,
+            "output": 8145,
+            "cacheRead": 684672,
+            "usd": 0.26132920000000004
+          },
+          "rejected": 0,
+          "contamination": [],
+          "probesFailed": 2
+        },
+        {
+          "pr": 4,
+          "findings": 1,
+          "valid": [
+            "double-disk-reserve"
+          ],
+          "preexisting": 0,
+          "invalid": 0,
+          "unclear": 0,
+          "seconds": 305.729,
+          "usd": 0.2625372,
+          "usage": {
+            "input": 65838,
+            "output": 6617,
+            "cacheRead": 646912,
+            "usd": 0.2625372
+          },
+          "rejected": 0,
+          "contamination": [],
+          "probesFailed": 1
+        },
+        {
+          "pr": 5,
+          "findings": 2,
+          "valid": [
+            "yaml-date",
+            "null-anchor"
+          ],
+          "preexisting": 0,
+          "invalid": 0,
+          "unclear": 0,
+          "seconds": 179.729,
+          "usd": 0.1531776,
+          "usage": {
+            "input": 41686,
+            "output": 4514,
+            "cacheRead": 246656,
+            "usd": 0.1531776
+          },
+          "rejected": 0,
+          "contamination": [],
+          "probesFailed": 2
+        },
+        {
+          "pr": 6,
+          "findings": 3,
+          "valid": [
+            "unchanged-identifiers"
+          ],
+          "preexisting": 2,
+          "invalid": 0,
+          "unclear": 0,
+          "seconds": 205.99,
+          "usd": 0.15991640000000001,
+          "usage": {
+            "input": 38419,
+            "output": 5680,
+            "cacheRead": 262784,
+            "usd": 0.15991640000000001
+          },
+          "rejected": 0,
+          "contamination": [],
+          "probesFailed": 3
+        },
+        {
+          "pr": 7,
+          "findings": 0,
+          "valid": [],
+          "preexisting": 0,
+          "invalid": 0,
+          "unclear": 0,
+          "seconds": 167.687,
+          "usd": 0.3033488,
+          "usage": {
+            "input": 96627,
+            "output": 4301,
+            "cacheRead": 670848,
+            "usd": 0.3033488
+          },
+          "rejected": 0,
+          "contamination": [],
+          "probesFailed": 0
+        },
+        {
+          "pr": 8,
+          "findings": 2,
+          "valid": [
+            "update-journal-early",
+            "manual-install-rollback"
+          ],
+          "preexisting": 0,
+          "invalid": 0,
+          "unclear": 0,
+          "seconds": 258.132,
+          "usd": 0.25549120000000003,
+          "usage": {
+            "input": 70105,
+            "output": 7235,
+            "cacheRead": 429312,
+            "usd": 0.25549120000000003
+          },
+          "rejected": 0,
+          "contamination": [],
+          "probesFailed": 2
+        },
+        {
+          "pr": 9,
+          "findings": 2,
+          "valid": [
+            "first-install-retry",
+            "settings-bom"
+          ],
+          "preexisting": 0,
+          "invalid": 0,
+          "unclear": 0,
+          "seconds": 421.503,
+          "usd": 0.359852,
+          "usage": {
+            "input": 93459,
+            "output": 10055,
+            "cacheRead": 723840,
+            "usd": 0.359852
+          },
+          "rejected": 0,
+          "contamination": [],
+          "probesFailed": 2
+        },
+        {
+          "pr": 10,
+          "findings": 0,
+          "valid": [],
+          "preexisting": 0,
+          "invalid": 0,
+          "unclear": 0,
+          "seconds": 223.604,
+          "usd": 0.23001200000000005,
+          "usage": {
+            "input": 67211,
+            "output": 5751,
+            "cacheRead": 380800,
+            "usd": 0.23001200000000005
+          },
+          "rejected": 0,
+          "contamination": [],
+          "probesFailed": 0
+        }
+      ],
+      "findings": 15,
+      "valid": 13,
+      "preexisting": 2,
+      "invalid": 0,
+      "unclear": 0,
+      "seconds": 2414.5260000000003,
+      "medianSeconds": 240.868,
+      "maxSeconds": 421.503,
+      "estimatedUsd": 2.3676724,
+      "knownDevelopment": {
+        "found": [
+          "missing-upload-stuck",
+          "reader-scope",
+          "migration-hidden",
+          "slot-cancellation",
+          "store-book-status",
+          "double-disk-reserve",
+          "yaml-date",
+          "null-anchor",
+          "unchanged-identifiers"
+        ],
+        "total": 12,
+        "missed": [
+          "draft-drain",
+          "missing-job-stuck",
+          "redelivery-status"
+        ],
+        "note": "Referencias de desarrollo; no mide recall reservado ni exhaustivo."
+      }
+    },
+    "candidate": {
+      "cases": [
+        {
+          "pr": 1,
+          "findings": 1,
+          "valid": [
+            "draft-drain"
+          ],
+          "preexisting": 0,
+          "invalid": 0,
+          "unclear": 0,
+          "seconds": 178.298,
+          "usd": 0.14407440000000002,
+          "usage": {
+            "input": 33039,
+            "output": 5287,
+            "cacheRead": 251264,
+            "usd": 0.14407440000000002
+          },
+          "rejected": 0,
+          "contamination": [],
+          "probesFailed": 1
+        },
+        {
+          "pr": 2,
+          "findings": 3,
+          "valid": [
+            "firmware-identity",
+            "reader-scope",
+            "migration-hidden"
+          ],
+          "preexisting": 0,
+          "invalid": 0,
+          "unclear": 0,
+          "seconds": 315.667,
+          "usd": 0.2736364,
+          "usage": {
+            "input": 76214,
+            "output": 8885,
+            "cacheRead": 323584,
+            "usd": 0.2736364
+          },
+          "rejected": 0,
+          "contamination": [],
+          "probesFailed": 3
+        },
+        {
+          "pr": 3,
+          "findings": 2,
+          "valid": [
+            "missing-job-stuck",
+            "admission-write-failure"
+          ],
+          "preexisting": 0,
+          "invalid": 0,
+          "unclear": 0,
+          "seconds": 197.601,
+          "usd": 0.2229184,
+          "usage": {
+            "input": 54212,
+            "output": 6044,
+            "cacheRead": 540544,
+            "usd": 0.2229184
+          },
+          "rejected": 0,
+          "contamination": [],
+          "probesFailed": 2
+        },
+        {
+          "pr": 4,
+          "findings": 1,
+          "valid": [
+            "double-disk-reserve"
+          ],
+          "preexisting": 0,
+          "invalid": 0,
+          "unclear": 0,
+          "seconds": 218.137,
+          "usd": 0.21163200000000001,
+          "usage": {
+            "input": 50643,
+            "output": 6433,
+            "cacheRead": 460160,
+            "usd": 0.21163200000000001
+          },
+          "rejected": 0,
+          "contamination": [],
+          "probesFailed": 1
+        },
+        {
+          "pr": 5,
+          "findings": 5,
+          "valid": [
+            "yaml-date",
+            "null-anchor",
+            "commented-damaged-identity",
+            "repaired-manifest-duplicate",
+            "long-frontmatter-identity"
+          ],
+          "preexisting": 0,
+          "invalid": 0,
+          "unclear": 0,
+          "seconds": 336.272,
+          "usd": 0.2682764000000001,
+          "usage": {
+            "input": 56520,
+            "output": 9843,
+            "cacheRead": 568064,
+            "usd": 0.2682764000000001
+          },
+          "rejected": 0,
+          "contamination": [],
+          "probesFailed": 5
+        },
+        {
+          "pr": 6,
+          "findings": 1,
+          "valid": [
+            "unchanged-identifiers"
+          ],
+          "preexisting": 0,
+          "invalid": 0,
+          "unclear": 0,
+          "seconds": 202.9,
+          "usd": 0.1604848,
+          "usage": {
+            "input": 43028,
+            "output": 5336,
+            "cacheRead": 210688,
+            "usd": 0.1604848
+          },
+          "rejected": 0,
+          "contamination": [],
+          "probesFailed": 1
+        },
+        {
+          "pr": 7,
+          "findings": 0,
+          "valid": [],
+          "preexisting": 0,
+          "invalid": 0,
+          "unclear": 0,
+          "seconds": 116.613,
+          "usd": 0.3057008,
+          "usage": {
+            "input": 101467,
+            "output": 3421,
+            "cacheRead": 685568,
+            "usd": 0.3057008
+          },
+          "rejected": 0,
+          "contamination": [],
+          "probesFailed": 0
+        },
+        {
+          "pr": 8,
+          "findings": 2,
+          "valid": [
+            "update-journal-early",
+            "unused-folder-blocks-api"
+          ],
+          "preexisting": 0,
+          "invalid": 0,
+          "unclear": 0,
+          "seconds": 400.393,
+          "usd": 0.4535944,
+          "usage": {
+            "input": 81683,
+            "output": 9787,
+            "cacheRead": 1923584,
+            "usd": 0.4535944
+          },
+          "rejected": 0,
+          "contamination": [],
+          "probesFailed": 2
+        },
+        {
+          "pr": 9,
+          "findings": 3,
+          "valid": [
+            "first-install-retry",
+            "stale-usb-blocks-update"
+          ],
+          "preexisting": 0,
+          "invalid": 0,
+          "unclear": 1,
+          "seconds": 445.36,
+          "usd": 0.3237648,
+          "usage": {
+            "input": 62225,
+            "output": 12871,
+            "cacheRead": 706048,
+            "usd": 0.3237648
+          },
+          "rejected": 0,
+          "contamination": [],
+          "probesFailed": 3
+        },
+        {
+          "pr": 10,
+          "findings": 0,
+          "valid": [],
+          "preexisting": 0,
+          "invalid": 0,
+          "unclear": 0,
+          "seconds": 185.393,
+          "usd": 0.23826519999999998,
+          "usage": {
+            "input": 69039,
+            "output": 4868,
+            "cacheRead": 515072,
+            "usd": 0.23826519999999998
+          },
+          "rejected": 0,
+          "contamination": [],
+          "probesFailed": 0
+        }
+      ],
+      "findings": 18,
+      "valid": 17,
+      "preexisting": 0,
+      "invalid": 0,
+      "unclear": 1,
+      "seconds": 2596.634,
+      "medianSeconds": 210.51850000000002,
+      "maxSeconds": 445.36,
+      "estimatedUsd": 2.6023476000000003,
+      "knownDevelopment": {
+        "found": [
+          "draft-drain",
+          "reader-scope",
+          "migration-hidden",
+          "missing-job-stuck",
+          "double-disk-reserve",
+          "yaml-date",
+          "null-anchor",
+          "unchanged-identifiers"
+        ],
+        "total": 12,
+        "missed": [
+          "missing-upload-stuck",
+          "slot-cancellation",
+          "store-book-status",
+          "redelivery-status"
+        ],
+        "note": "Referencias de desarrollo; no mide recall reservado ni exhaustivo."
+      }
+    }
+  },
+  "paired": {
+    "common": [
+      "reader-scope",
+      "migration-hidden",
+      "double-disk-reserve",
+      "yaml-date",
+      "null-anchor",
+      "unchanged-identifiers",
+      "update-journal-early",
+      "first-install-retry"
+    ],
+    "candidateOnly": [
+      "draft-drain",
+      "firmware-identity",
+      "missing-job-stuck",
+      "admission-write-failure",
+      "commented-damaged-identity",
+      "repaired-manifest-duplicate",
+      "long-frontmatter-identity",
+      "unused-folder-blocks-api",
+      "stale-usb-blocks-update"
+    ],
+    "baselineOnly": [
+      "missing-upload-stuck",
+      "slot-cancellation",
+      "store-book-status",
+      "manual-install-rollback",
+      "settings-bom"
+    ],
+    "union": [
+      "missing-upload-stuck",
+      "reader-scope",
+      "migration-hidden",
+      "slot-cancellation",
+      "store-book-status",
+      "double-disk-reserve",
+      "yaml-date",
+      "null-anchor",
+      "unchanged-identifiers",
+      "update-journal-early",
+      "manual-install-rollback",
+      "first-install-retry",
+      "settings-bom",
+      "draft-drain",
+      "firmware-identity",
+      "missing-job-stuck",
+      "admission-write-failure",
+      "commented-damaged-identity",
+      "repaired-manifest-duplicate",
+      "long-frontmatter-identity",
+      "unused-folder-blocks-api",
+      "stale-usb-blocks-update"
+    ]
+  },
+  "limitations": [
+    "Una pasada por configuración; variación del modelo sin intervalo estadístico.",
+    "Misma cadena, sin independencia entre PR.",
+    "Etiquetas del agente con evidencia; sin validación humana de Samu.",
+    "Importes estimados del runtime, no facturas."
+  ]
+}
