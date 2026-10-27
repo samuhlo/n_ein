@@ -18,6 +18,7 @@ import type { Citation, Finding, Probe, TourStep } from "./finding.ts";
 import { branchTip, changedFiles, commitsOf, diffOf, resolveRange, type Range } from "./git.ts";
 import { reviewGuard } from "./guard-rules.ts";
 import { parseReport, type ProposedFinding } from "./report.ts";
+import { probeExecutionFailure } from "./probe-result.ts";
 import { sandboxFor, type Sandbox } from "./sandbox.ts";
 import { piRunner, type AgentRunner } from "./runner.ts";
 import { ReviewStore, type Run, type RunResult, type Session, type StoredFinding } from "./store.ts";
@@ -206,9 +207,10 @@ async function rerunProbe(context: ProbeContext, proposed: NonNullable<ProposedF
   if (blocked) return skipped(blocked.reason);
   const { file: bin, args } = context.sandbox.wrap(proposed.command);
   const { exitCode, output } = await runGrouped(bin, args, copy, context.timeoutMs);
-  // BLINDAJE -> 126 y 127 son «no se pudo ejecutar» y «comando inexistente»: la sonda no llegó a comprobar nada.
-  if (exitCode === 126 || exitCode === 127)
-    return { command: proposed.command, file, source, exitCode, output: `la sonda no pudo ejecutarse\n${output}`, reproduced: false };
+  // BLINDAJE -> Un auxiliar perdido o un runner que no arranca no demuestra un defecto del producto.
+  const executionFailure = probeExecutionFailure(exitCode, output);
+  if (executionFailure)
+    return { command: proposed.command, file, source, exitCode, output: `la sonda no pudo ejecutarse: ${executionFailure}\n${output}`, reproduced: false };
   return { command: proposed.command, file, source, exitCode, output, reproduced: exitCode !== null && exitCode !== 0 };
 }
 

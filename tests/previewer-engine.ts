@@ -362,6 +362,24 @@ assert.equal(git("rev-parse", "main"), baseSha);
   }
 }
 
+// --- Un auxiliar perdido no es una reproducción del defecto ------------------------------------
+{
+  const head = git("rev-parse", "HEAD").slice(0, 10);
+  const missingHelper = await review({
+    packageRoot, cwd: repo, store, model: "test/reviewer", log: () => {}, sandbox: injected,
+    runner: async (request) => {
+      mkdirSync(join(request.cwd, ".previewer-probes"), { recursive: true });
+      writeFileSync(join(request.cwd, ".previewer-probes/needs-helper.cjs"), "require('./missing-helper.cjs');\n");
+      return { text: report([finding("Auxiliar ausente", [`text.ts@${head}:L1`], {
+        command: "node .previewer-probes/needs-helper.cjs", file: ".previewer-probes/needs-helper.cjs",
+      })]), usage: { input: 0, output: 0, cacheRead: 0, usd: 0 }, error: null };
+    },
+  });
+  const probe = missingHelper.findings.find(item => item.title === "Auxiliar ausente")?.probe;
+  assert.equal(probe?.exitCode, 1);
+  assert.equal(probe?.reproduced, false, "un módulo ausente no demuestra el fallo del producto");
+}
+
 // --- Nada que revisar --------------------------------------------------------------------------
 await assert.rejects(review({ packageRoot, cwd: repo, head: "main", store, model: "test/reviewer", log: () => {} }), /nada que revisar/);
 
