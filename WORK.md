@@ -36,7 +36,7 @@ Sin nuevo motor de orquestación, memoria obligatoria ni copia de credenciales. 
 - [x] T5 · Encargo — peticiones, tareas y comprobaciones con identidad de archivos y vigencia.
 - [x] T6 · Revisor — cobertura por riesgos y evaluación con control y casos reservados.
 - [x] T7 · Diseño — variantes, comentarios, dirección elegida y comprobación visual.
-- [ ] T8 · Contexto — observación y ensayo de directo/continuación/delegación.
+- [x] T8 · Contexto — observación y ensayo de directo/continuación/delegación.
 - [ ] T9 · Entrega — revisión integrada, suite/tipos, paquete, documentación, push y PR con CI.
 
 ## Evidencia
@@ -59,6 +59,10 @@ T6: [comparación de foco](evals/results/2026-10-30-review-focus.md), doce inten
 
 Revisión integrada: los trabajos pasan ahora por `executeTool` para conservar los hooks/permisos de bash, además de su backend. Una prueba con Pi real confirma entrega en segundo plano y rechazo nativo sin ejecutar el comando.
 
+T8: [piloto de contexto](evals/results/2026-10-30-context.md), tres rutas. Código aceptado en las tres, pero la delegada agotó plazo y dejó la guía pendiente; no se promueve. Directo fue más rápido/barato.
+
+T9: suite completa y paquete instalado pasan sobre `40c02a1`; [aceptación](evals/results/2026-10-30-experience.md). Pendiente PR y CI.
+
 ## Siguiente paso
 
-Implementar T1 y continuar por el plan. Detalle de resultados en `evals/results/`; aquí solo avances y límites útiles.
+Abrir la PR y comprobar su CI. No hacer merge ni publicar versión.
