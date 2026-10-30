@@ -185,3 +185,11 @@ Claude conserva sus tareas en segundo plano y avisos nativos; la paleta expone `
 `/nein:sesiones` en Pi, `/nein-sesiones búsqueda` en Claude y `nein work sessions --query texto` buscan resúmenes publicados del proyecto. Añade `--all` en la CLI para buscar otros proyectos del mismo canal. Cada resumen conserva objetivo, avance, siguiente paso, bloqueos y fecha. Una nota de más de cinco minutos se marca antigua: no acredita actividad actual ni propiedad de archivos. El Panel enriquece las sesiones que puede reanudar con sus resúmenes; su buscador habitual también encuentra esos textos.
 
 La conversación usa la skill `workspace` para publicar y consultar. Los hooks actualizan las casillas y el cierre; no copian prompts automáticamente. `nein work status` consulta el encargo sin abrir un modelo.
+
+## Encargo y evidencia
+
+La entrada «Encargo y evidencia» del Panel (`w`), `/nein:estado` en Pi, `/nein-estado` en Claude y `nein work open` devuelven una vista local del trabajo. Muestra las peticiones, el TODO del documento, las comprobaciones y las sesiones. No lanza modelos ni cambia casillas desde la web.
+
+El agente puede comprobar un criterio con `nein work check --criterion T1 -- bun test`: se ejecuta realmente el comando y se guardan salida, código de salida y código antes/después. Si cambia un archivo rastreado o nuevo, la evidencia queda obsoleta. Un error queda fallido y un árbol imposible de identificar queda desconocido. Marcar una casilla no equivale a verificarla. El alcance de la prueba es declarado: una salida cero no prueba por sí sola que cubra toda la petición. Archivos ignorados, servicios externos y cambios de entorno no declarados requieren su comprobación correspondiente.
+
+El servidor escucha solo en loopback y exige el token del enlace; el token se retira de la barra. Se apaga tras dos horas sin uso. La vista actualiza al pulsar «Actualizar».

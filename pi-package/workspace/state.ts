@@ -49,7 +49,7 @@ function validNote(raw: unknown): SessionNote {
   if (!n || n.schema !== 1 || !["pi", "claude"].includes(n.runtime) || !["working", "idle", "closed"].includes(n.status)
     || !n.id || !n.project || !Number.isFinite(Date.parse(n.recordedAt)) || !Array.isArray(n.areas) || n.areas.length > 12) throw new Error("Sesión inválida");
   for (const key of ["objective", "progress", "next", "blockers", "decisions"] as const) text(n[key]);
-  n.areas.forEach(a => text(a, 200)); return n;
+  n.areas.forEach(a => text(a, 200)); return { schema: 1, id: n.id, runtime: n.runtime, project: n.project, objective: n.objective, progress: n.progress, next: n.next, blockers: n.blockers, decisions: n.decisions, areas: n.areas, status: n.status, recordedAt: n.recordedAt };
 }
 export function publishSession(root: string, cwd: string, id: string, runtime: SessionNote["runtime"], patch: SessionPatch): SessionNote {
   if (!patch || typeof patch !== "object" || Array.isArray(patch) || Object.keys(patch).some(k => !["objective","progress","next","blockers","decisions","areas","status"].includes(k))) throw new Error("Campos de resumen inválidos");

@@ -15,7 +15,7 @@ async function run($: EngineInterface, verb: string, query = "") {
   return { text: result.stdout || result.stderr || "Sin datos disponibles." };
 }
 export function registerWorkspace(on: On): void {
-  on("command.run", { command: "nein-estado" }, $ => run($, "status"));
+  on("command.run", { command: "nein-estado" }, $ => run($, "open"));
   on("command.run", { command: "nein-sesiones" }, ($, e) => run($, "sessions", e.args));
   on("command.run", { command: "nein-revisor" }, async ($) => {
     const root = await $.env.get("N_EIN_ROOT"); if (!root) return { text: "Abre Claude desde nein." };

@@ -33,7 +33,7 @@ Sin nuevo motor de orquestación, memoria obligatoria ni copia de credenciales. 
 - [x] T2 · Paleta — catálogo, búsqueda, descripciones, disponibilidad, borrador y acceso por host.
 - [x] T3 · Procesos — segundo plano, monitores acotados, vista, avisos y parada antes del relevo.
 - [x] T4 · Sesiones — objetivo/avance/siguiente paso, búsqueda, estado fechado y consulta sin inferencia.
-- [ ] T5 · Encargo — peticiones, tareas y comprobaciones con identidad de archivos y vigencia.
+- [x] T5 · Encargo — peticiones, tareas y comprobaciones con identidad de archivos y vigencia.
 - [ ] T6 · Revisor — cobertura por riesgos y evaluación con control y casos reservados.
 - [ ] T7 · Diseño — variantes, comentarios, dirección elegida y comprobación visual.
 - [ ] T8 · Contexto — observación y ensayo de directo/continuación/delegación.
@@ -50,6 +50,8 @@ T2: búsqueda local, disponibilidad, borrador y terminal estrecha comprobados; 1
 T3: procesos reales con backend nativo Pi, códigos de salida, monitor ruidoso, cancelación de grupo y parada sin despertar al origen pasan. Tipos contra Pi 1.0.2 pasan. Claude conserva sus tareas nativas.
 
 T4: sesiones de Pi y Claude con identidad independiente, búsqueda por proyecto/todos, conservación al cerrar y rechazo de registro corrupto comprobados. CLI empaquetada y notas incorporadas al Panel.
+
+T5: comando real, error, criterio inexistente, cambios durante la comprobación y archivo nuevo invalidando evidencia pasan. Web real compila; API comprueba Host/Origin/token y dibuja contenido como texto. Se añade al smoke instalado.
 
 ## Siguiente paso
 

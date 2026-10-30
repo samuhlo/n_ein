@@ -457,6 +457,7 @@ func loadState(root, project string) appState {
 		previewerItem(readPreviewer(root, project)),
 		{"Elegir una sesión", sessionNote, "s", "view:3"},
 		{"Estado del proyecto", tasks, "e", "view:1"},
+		{"Encargo y evidencia", "vista local", "w", "work:open"},
 	}
 	homeRows := make([]row, len(menu))
 	for i, item := range menu {
