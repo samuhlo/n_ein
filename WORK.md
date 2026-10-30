@@ -39,7 +39,7 @@ Sin nuevo motor de orquestación, memoria obligatoria ni copia de credenciales. 
 - [x] T8 · Contexto — observación y ensayo de directo/continuación/delegación.
 - [x] T9 · Entrega — revisión integrada, suite/tipos, paquete, documentación, push y PR con CI.
 
-- [ ] R1 · Preparar 0.5.0-alpha.1, bootstrap, notas y candidato instalado.
+- [x] R1 · Preparar 0.5.0-alpha.1, bootstrap, notas y candidato instalado.
 - [ ] R2 · Verificar e integrar la preparación en main y publicar el tag con su matriz.
 - [ ] R3 · Comprobar adjuntos publicados y bootstrap de Pages; registrar entrega.
 
@@ -68,6 +68,8 @@ T8: [piloto de contexto](evals/results/2026-10-30-context.md), tres rutas. Códi
 T9: suite completa y paquete instalado pasan sobre `40c02a1`; la regresión posterior de comentarios largos pasa en `4fc2eaf`. [PR #22](https://github.com/samuhlo/n_ein/pull/22) integrada en `72b64ab`; su árbol coincide con el head revisado `6f22636`. [Matriz CI](https://github.com/samuhlo/n_ein/actions/runs/41045558424) completa en verde sobre `4fc2eaf`: macOS, Linux, payload común y artefacto instalado como usuario sin privilegios en Ubuntu y Arch. [Aceptación y límites](evals/results/2026-10-30-experience.md).
 
 Corrección de CI: la ejecución posterior `41046772452` detectó una carrera entre el sondeo y el arranque en la prueba de lectores. Se sustituye el polling que adquiere flock por una señal de preparación del hijo, sin cambiar los bloqueos del producto; el test nativo pasa localmente. La PR conserva ambas ejecuciones.
+
+R1: versión/ bootstrap/enlaces comprobados; `build-release.sh 0.5.0-alpha.1` pasó sobre `7f5a025`, incluida instalación desde tarball y doctor. Candidato local macOS arm64 SHA-256 `5115251552fcdf377a49cc1f94b98bbcc795d7e34fed80bba944769fcc2635b9`. La publicación construirá y verificará sus propios adjuntos desde el tag definitivo.
 
 ## Siguiente paso
 
