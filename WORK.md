@@ -63,6 +63,8 @@ T8: [piloto de contexto](evals/results/2026-10-30-context.md), tres rutas. Códi
 
 T9: suite completa y paquete instalado pasan sobre `40c02a1`; la regresión posterior de comentarios largos pasa en `4fc2eaf`. [PR #22](https://github.com/samuhlo/n_ein/pull/22) abierta. [Matriz CI](https://github.com/samuhlo/n_ein/actions/runs/41045558424) completa en verde sobre `4fc2eaf`: macOS, Linux, payload común y artefacto instalado como usuario sin privilegios en Ubuntu y Arch. [Aceptación y límites](evals/results/2026-10-30-experience.md).
 
+Corrección de CI: la ejecución posterior `41046772452` detectó una carrera entre el sondeo y el arranque en la prueba de lectores. Se sustituye el polling que adquiere flock por una señal de preparación del hijo, sin cambiar los bloqueos del producto; el test nativo pasa localmente. La PR conserva ambas ejecuciones.
+
 ## Siguiente paso
 
 Revisión de Samu en la PR #22. El último commit registra el cierre y precisa una descripción de la paleta (comprobada con tests/actions.ts); la CI del head se consulta en la PR. No hacer merge ni publicar versión hasta su decisión.

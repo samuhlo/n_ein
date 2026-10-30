@@ -47,19 +47,29 @@ const manager = new TeamManager({
 // El coordinador conserva su bloqueo mientras dos lectores avanzan.
 const coordinator = spawn(
   host,
-  ["--worker-host", "--project", cwd, "--", "/bin/cat"],
+  ["--worker-host", "--project", cwd, "--", "/bin/sh", "-c", "printf 'ready\\n'; exec cat"],
   {
-    stdio: ["pipe", "ignore", "ignore"],
+    stdio: ["pipe", "pipe", "pipe"],
     env: { ...process.env, N_EIN_LEASE_FD: "" },
   },
 );
+let coordinatorError = "";
+coordinator.stderr.on("data", data => { coordinatorError += data.toString(); });
 const closed = new Promise((r) => coordinator.once("close", r));
 try {
-  // El primer arranque del binario recién compilado puede demorarse en macOS.
-  const deadline = Date.now() + 10000;
-  while (manager.free(cwd) && Date.now() < deadline && coordinator.exitCode === null)
-    await Bun.sleep(20);
-  assert.equal(manager.free(cwd), false, `coordinator did not acquire its lease (exit ${coordinator.exitCode})`);
+  // El sondeo free() toma brevemente el mismo flock: durante el arranque
+  // podía ganar la carrera y hacer que el coordinador saliera con código 1.
+  // El hijo solo imprime ready después de que el host posea su bloqueo.
+  await new Promise<void>((done, reject) => {
+    const timer = setTimeout(() => reject(new Error(`coordinator readiness timed out: ${coordinatorError}`)), 10000);
+    let output = "";
+    coordinator.stdout.on("data", data => {
+      output += data.toString();
+      if (output.includes("ready\n")) { clearTimeout(timer); done(); }
+    });
+    coordinator.once("close", code => { clearTimeout(timer); reject(new Error(`coordinator exited ${code}: ${coordinatorError}`)); });
+  });
+  assert.equal(manager.free(cwd), false, `coordinator did not acquire its lease (exit ${coordinator.exitCode}): ${coordinatorError}`);
   const tasks = manager.start(
     ["R1", "R2"].map((taskId) => ({
       mode: "read" as const,

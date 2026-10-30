@@ -22,6 +22,10 @@ El primer pase encontró un fixture de relevo al que faltaba la identidad de ses
 
 Las pruebas alojadas se registran separadamente: [foco del revisor](2026-10-30-review-focus.md), candidata no promovida; [contexto](2026-10-30-context.md), ruta delegada incompleta dentro del plazo. No se anuncia una mejora general de detección ni ahorro.
 
+## Carrera de la prueba de lectores
+
+La ejecución posterior [41046772452](https://github.com/samuhlo/n_ein/actions/runs/41046772452) falló en Linux al arrancar el coordinador de `tests/agents-read.ts` (exit 1). El sondeo `free()` compite por el mismo flock y puede adelantarse al arranque. La prueba ahora espera un `ready` emitido por el hijo después de adquirir el bloqueo, y conserva las comprobaciones de propiedad y lectores. Diez repeticiones locales del caso anterior no reprodujeron el fallo; el recorrido corregido pasa localmente. No se cambian los bloqueos del producto ni se exime la prueba de CI.
+
 ## Límites de producto
 
 Alt+K es propio de Pi. Claude expone `/nein-comandos` y mantiene sus tareas y compactación nativas. Los resúmenes son históricos y no prueban actividad ni exclusividad. El fingerprint no certifica archivos ignorados, servicios externos o un despliegue distinto. El botón de diseño prepara un encargo para la conversación; no ejecuta implementación por haber elegido una variante. La aplicación puede requerir abrirse aparte si rechaza iframes.
