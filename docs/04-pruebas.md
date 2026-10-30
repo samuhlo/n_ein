@@ -102,3 +102,9 @@ Ante empate, escoger menos piezas. Reportar coste desconocido como desconocido, 
 - Auditoría de 28 de septiembre: 61 tests focales pasaron en snapshot de Ein main con dependencias existentes enlazadas; no fue instalación limpia ni benchmark nuevo de modelos. [Log](evidence/ein-audit-focused-20260928.log).
 
 Los tres tarballs contienen la evidencia previa preservada. Sus hashes se verifican al preparar este paquete; no se vuelven a ejecutar sus modelos aquí.
+
+## Experiencia del encargo
+
+Los scripts `actions`, `jobs`, `workspace`, `work-evidence`, `work-web`, `design` y `context-panel` cubren las superficies incorporadas el 30 de octubre. La paleta también se prueba con Claude 2.1.302 y la sesión nativa de Pi. El smoke instalado compila y sirve la vista local fuera del checkout. Aceptación visual real: carga ESM, retirada del token, elemento señalado, comentario guardado y dirección elegida. No equivale a aceptación visual de aplicaciones futuras.
+
+Los pilotos de foco y contexto viven bajo `evals/`; sus resultados negativos se conservan y no habilitan automáticamente otra política.

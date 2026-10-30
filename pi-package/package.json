@@ -5,6 +5,9 @@
   "pi": {
     "extensions": [
       "./extensions/banner.ts",
+      "./extensions/actions.ts",
+      "./extensions/jobs.ts",
+      "./extensions/workspace.ts",
       "./extensions/tools-view.ts",
       "./extensions/router.ts",
       "./extensions/todo.ts",
@@ -12,6 +15,7 @@
       "./extensions/models.ts",
       "./extensions/codegraph.ts",
       "./extensions/context.ts",
+      "./extensions/context-panel.ts",
       "./extensions/team.ts"
     ],
     "skills": [

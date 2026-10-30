@@ -1,0 +1,59 @@
+import { strict as assert } from "node:assert";
+import { mkdtempSync, mkdirSync, writeFileSync } from "node:fs";
+import { tmpdir } from "node:os";
+import { join } from "node:path";
+import {
+  publishSession,
+  listSessions,
+  dataDir,
+  digest,
+  workState,
+} from "../pi-package/workspace/state.ts";
+const area = mkdtempSync(join(tmpdir(), "nein-workspace-"));
+process.env.N_EIN_HOME = join(area, "home");
+process.env.N_EIN_CHANNEL = "dev";
+const project = join(area, "one"),
+  second = join(area, "two");
+mkdirSync(project);
+mkdirSync(second);
+writeFileSync(
+  join(project, "WORK.md"),
+  "## Objetivo\nProbar continuidad\n\n## Tareas\n- [x] A\n- [ ] B\n\n## Siguiente paso\nComprobar B\n",
+);
+publishSession(area, project, "1", "pi", {
+  objective: "Instalador",
+  next: "Probar restore",
+  areas: ["go"],
+});
+publishSession(area, project, "2", "claude", {
+  objective: "Documentar",
+  next: "Revisar guía",
+});
+assert.equal(listSessions(area, project).sessions.length, 2);
+assert.equal(listSessions(area, project, "restore").sessions[0].runtime, "pi");
+assert.equal(listSessions(area, second).sessions.length, 0);
+assert.equal(listSessions(area, second, "", true).sessions.length, 2);
+publishSession(area, project, "1", "pi", { status: "closed" });
+assert.equal(
+  listSessions(area, project, "restore").sessions[0].next,
+  "Probar restore",
+);
+assert.equal(
+  listSessions(area, project, "restore").sessions[0].progress,
+  "1/2 tareas",
+);
+assert.equal(workState(project).tasks.length, 2);
+const file = join(
+  dataDir(area, project),
+  "sessions",
+  `${digest("claude:2")}.json`,
+);
+writeFileSync(file, "broken");
+assert.equal(listSessions(area, project).invalid, 1);
+assert.throws(
+  () => publishSession(area, project, "2", "claude", {}),
+  "do not overwrite unreadable history",
+);
+console.log(
+  "workspace: concurrent session identities, project scope, search, continuity and corrupt records",
+);

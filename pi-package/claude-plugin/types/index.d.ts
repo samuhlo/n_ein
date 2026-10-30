@@ -1,6 +1,8 @@
 declare module 'claude-code' {
   interface PluginState {
     'n-ein': {
+      actionQuery: string;
+      actionNames: string[];
       /** true: Claude dibuja sus filas nativas (comando completo, salida, diff). */
       detail: boolean;
       /** Segundos de la apertura de la marca pequeña; null cuando ya no se muestra. */

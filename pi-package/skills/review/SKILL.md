@@ -52,8 +52,8 @@ Also check that a reader can follow it: comments say why, logs and errors name w
 - **Important**: an edge case of an ask unhandled; a test that would still pass if the behaviour broke; stale documentation of the changed behaviour.
 - **Minor**: everything else, including every smell.
 
-## 5. Report and fix once
+## 5. Report and finish the authorized correction
 
 Show `## Spec` and `## Standards` separately, each with its findings in severity order, `path:line` and the probe or quote behind it. Close with one line per axis: the count and the worst finding.
 
-When you are the one building: fix every blocker in one batch, re-run only the probes that failed, and stop. A probe that still fails after that round, or a new finding, goes to the user as "needs your decision"; never start a second full sweep. Important and minor findings go to `WORK.md` as tasks, or into the close report when there is no document.
+When you are the one building, correct valid in-scope defects and rerun the affected probes. Continue while new evidence supports a recoverable correction; a second finding or a failed first correction is not itself a reason to ask permission again. After two attempts without new evidence, change the hypothesis or use `diagnose`. Stop only for an actual missing decision, unavailable prerequisite, explicit user limit or action outside authorization. Reuse unaffected evidence instead of starting another full review by routine. Findings outside scope go to the close report, not into implementation without authorization. Keep pending work explicit.

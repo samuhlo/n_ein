@@ -35,3 +35,5 @@ Right shape when: "what should this page look like?", "show me a few options for
 ## Anti-patterns
 
 Variants that differ only in colour or copy · a shared `<Layout>` between variants (a shared header is fine) · wiring variants to real mutations · promoting prototype code straight to production.
+
+For persistent feedback on directions, use `canvas` to register self-contained HTML variants and preserve comments. After implementing an explicitly chosen direction, record the local preview and actual visual acceptance there; neither a screenshot nor a green code test alone proves all requested states.

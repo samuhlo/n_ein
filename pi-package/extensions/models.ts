@@ -42,8 +42,10 @@ function persist(saved: Draft, draft: Draft): string[] {
   const applied: string[] = [];
   for (const { key: role } of slots()) {
     if (JSON.stringify(saved[role]) === JSON.stringify(draft[role])) continue;
-    saveModelChoice(packageRoot, role as never, draft[role] ?? null);
-    const value = draft[role] ? `${draft[role]!.model} · ${draft[role]!.thinking}` : "valor del paquete";
+    const choice = draft[role];
+    const selected = choice && typeof choice === "object" ? choice : null;
+    saveModelChoice(packageRoot, role as never, selected);
+    const value = selected ? `${selected.model} · ${selected.thinking}` : "valor del paquete";
     applied.push(`${LABELS[role]}: ${value} (${role === "principal" ? "reinicia Pi" : "próximo encargo"})`);
   }
   if (saved.claude !== draft.claude) {
@@ -82,7 +84,8 @@ export async function openModels(ctx: ExtensionContext, kit: PanelKit): Promise<
       draft = result.draft;
       const model = (await ctx.ui.input("Id proveedor/modelo"))?.trim();
       if (model) {
-        const current = draft[result.role] ?? state.defaults[result.role];
+        const choice = draft[result.role];
+        const current = choice && typeof choice === "object" ? choice : state.defaults[result.role];
         draft = { ...draft, [result.role]: { model, thinking: current.thinking } };
       }
       continue;

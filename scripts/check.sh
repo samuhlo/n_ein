@@ -35,6 +35,13 @@ tests/handoff-launcher.sh
 tests/reverse-launcher.sh
 bash -n install.sh scripts/build-release.sh scripts/installer-e2e.sh
 bun run tests/work-doc.ts
+bun run tests/actions.ts
+bun run tests/jobs.ts
+bun run tests/jobs-pi.ts
+bun run tests/workspace.ts
+bun run tests/work-evidence.ts
+bun run tests/work-web.ts
+bun run tests/design.ts
 bun run tests/models.ts
 bun run tests/memory.ts
 bun run tests/codegraph.ts
@@ -47,7 +54,9 @@ bun run tests/tools-view.ts
 bun run tests/skills.ts
 bun run tests/router.ts
 bun run tests/context.ts
+bun run tests/context-panel.ts
 bun run tests/bench.ts
+bun run tests/previewer-usage.ts
 bun run tests/previewer-store.ts
 bun run tests/previewer-engine.ts
 bun run tests/previewer-probes.ts

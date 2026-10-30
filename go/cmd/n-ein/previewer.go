@@ -71,3 +71,15 @@ func launchPreviewer(packageRoot, project string, args []string) error {
 	}
 	return syscall.Exec(bin, append([]string{bin}, args...), os.Environ())
 }
+
+// launchWork abre el encargo portable con el mismo hogar y ejecutor del paquete.
+func launchWork(packageRoot, project string, args []string) error {
+	if len(args) == 0 {
+		args = []string{"status"}
+	}
+	bin := filepath.Join(packageRoot, "bin", "n-ein-work")
+	if err := os.Chdir(project); err != nil {
+		return err
+	}
+	return syscall.Exec(bin, append([]string{bin}, args...), os.Environ())
+}

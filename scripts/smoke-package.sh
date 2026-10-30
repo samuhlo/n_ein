@@ -29,6 +29,15 @@ previewer_status=0
 "$target/bin/n-ein-previewer" > /dev/null 2> "$test_dir/previewer-usage" || previewer_status=$?
 test "$previewer_status" -eq 64
 rg -q 'n-ein-previewer handoff' "$test_dir/previewer-usage"
+# El encargo instalado compila y sirve su API sin depender del checkout.
+bun -e '
+  const [target, project] = process.argv.slice(1);
+  const { serveWork } = await import(target + "/pi-package/workspace/server.ts");
+  const live = await serveWork(target, project, {publish:false});
+  try { const r = await fetch(`http://127.0.0.1:${live.state.port}/state`, {headers:{authorization:`Bearer ${live.state.token}`}}); if(!r.ok) throw new Error("installed work state unavailable"); }
+  finally {live.close();}
+' "$target" "$project"
+"$target/bin/n-ein" --project "$project" work status --json > "$test_dir/work-status.json"
 # Su servidor arranca desde la instalación y compila la web con lo que el paquete trae.
 bun -e '
   const [target] = process.argv.slice(1);

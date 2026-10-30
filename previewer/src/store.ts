@@ -20,7 +20,7 @@ import { storedProbe } from "./probe-result.ts";
 export const VERDICTS = ["vale", "descartar", "investigar"] as const;
 export type Verdict = (typeof VERDICTS)[number];
 export type RunStatus = "running" | "done" | "failed" | "cancelled";
-export type Usage = { input: number; output: number; cacheRead: number; usd: number };
+export type Usage = { input: number; output: number; cacheRead: number; usd: number; cacheWrite?: number; coverage?: { messages: number; tokens: number; priced: number }; source?: "catalog-estimate" };
 /** Respecto a la última revisión terminada: nuevo, sigue, resuelto o sin comprobar desde un head anterior. */
 export type Status = "new" | "persists" | "resolved" | "unchecked";
 export type Outcome = "resolved" | "persists" | "unchecked";

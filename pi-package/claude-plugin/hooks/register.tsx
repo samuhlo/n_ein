@@ -12,6 +12,8 @@
 // para cuando haga falta el comando completo, la salida o el diff.
 // =============================================================================
 
+import { registerWorkspace, publishClaude } from "./workspace-hooks.ts";
+import { registerActions } from "./actions-view.tsx";
 import { atom, read, update } from "claude-code";
 import type { EngineInterface, Register, RenderInput } from "claude-code";
 
@@ -94,12 +96,20 @@ async function adopt($: EngineInterface): Promise<void> {
 }
 
 export const register: Register = (on) => {
+  registerActions(on);
+  registerWorkspace(on);
   let place: Place = { cwd: "", home: "" };
   let opening: { cancel: () => void } | undefined;
   let metering: { cancel: () => void } | undefined;
 
   on("session.start", async ($, e, next) => {
     place = { cwd: await $.session.cwd(), home: (await $.env.get("HOME")) ?? "" };
+    await publishClaude($, "idle");
+    await $.command.register({ name: "nein-disenos", description: "Ver variantes y comentarios de diseño", immediate: true });
+    await $.command.register({ name: "nein-estado", description: "Objetivo, tareas y evidencia del encargo", immediate: true });
+    await $.command.register({ name: "nein-sesiones", description: "Buscar trabajo publicado", argumentHint: "[búsqueda]", immediate: true });
+    await $.command.register({ name: "nein-revisor", description: "Abrir revisión guardada sin inferencia", immediate: true });
+    await $.command.register({ name: "nein-comandos", description: "Buscar acciones de n_ein con explicación breve", immediate: true });
     await $.command.register({ name: "detalle", description: "Alterna entre los recibos de n_ein y las filas nativas de Claude Code." });
     // La única animación del contrato visual: las palas giran una vez y se quedan quietas.
     await update($, intro, () => 0);
@@ -143,6 +153,7 @@ export const register: Register = (on) => {
       const last = tokensOf(e.usage);
       await update($, turn, () => last);
       await update($, session, (total) => addTokens(total, last));
+      await publishClaude($, "idle");
     }
     return next(e);
   });

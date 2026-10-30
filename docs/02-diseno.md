@@ -192,6 +192,14 @@ La atribución de ediciones observadas puede inspirarse en Gentle Shell; el diff
 
 Los datos desconocidos se muestran como desconocidos, distintos de vacíos. Fallar al renderizar, medir coste o guardar una tarjeta no cambia por sí solo el permiso para trabajar.
 
+### Encargo, acciones y procesos
+
+La paleta usa un catálogo compartido y filtra por comandos disponibles en cada host. Preparar una acción con inferencia o argumentos no la envía. Pi usa Alt+K configurable; Claude conserva su panel/foco nativo.
+
+Los procesos de Pi se ejecutan con su backend de bash, con log y plazo explícitos, resultado único y parada antes del relevo. Claude conserva sus tareas nativas. Los resúmenes por sesión viven fuera del paquete y no acreditan permisos, propiedad de archivos ni actividad actual. El Panel muestra hasta cien sesiones del proyecto.
+
+La vista local del encargo cruza WORK.md con comandos ejecutados y sus identidades antes/después. Las casillas acreditan implementación declarada, no verificación automática. El lienzo conserva alternativas y comentarios del proyecto, separando elección, implementación y aceptación visual. Contratos, límites y entradas en [guía](guia.md#encargo-y-evidencia).
+
 ### TODO
 
 Conserva el aspecto del de Ein: debajo del editor, la fila actual con `▸`, sin fondo propio. Cambia su fuente: proyecta el checklist del documento de trabajo activo en lugar del `tasks.md` de OpenSpec.

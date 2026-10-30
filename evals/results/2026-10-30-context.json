@@ -1,0 +1,162 @@
+[
+  {
+    "arm": "direct",
+    "model": "openai-codex/gpt-6.1-sol",
+    "thinking": "high",
+    "seconds": 265.802,
+    "stages": [
+      {
+        "stage": "explore",
+        "seconds": 32.493,
+        "exit": 0,
+        "timedOut": false
+      },
+      {
+        "stage": "implement",
+        "seconds": 233.269,
+        "exit": 0,
+        "timedOut": false
+      }
+    ],
+    "accepted": true,
+    "acceptance": "acceptance OK\n",
+    "usage": {
+      "input": 61112,
+      "output": 9101,
+      "cacheRead": 1266560,
+      "cacheWrite": 0,
+      "usd": 0.3398900000000001,
+      "messages": 43,
+      "priced": 43
+    },
+    "head": "c245d4f19031fd0f82a2595089d786207e77f0b1",
+    "status": "",
+    "observedModels": [
+      "openai-codex/gpt-6.1-sol"
+    ],
+    "peakContext": {
+      "initial": 47408
+    },
+    "explorationTools": [
+      "read",
+      "codegraph_explore",
+      "bash",
+      "read",
+      "read",
+      "read",
+      "read",
+      "bash"
+    ],
+    "completed": true,
+    "usageIncomplete": false,
+    "completedTasks": 3
+  },
+  {
+    "arm": "fresh",
+    "model": "openai-codex/gpt-6.1-sol",
+    "thinking": "high",
+    "seconds": 354.75,
+    "stages": [
+      {
+        "stage": "explore",
+        "seconds": 36.253,
+        "exit": 0,
+        "timedOut": false
+      },
+      {
+        "stage": "implement",
+        "seconds": 318.462,
+        "exit": 0,
+        "timedOut": false
+      }
+    ],
+    "accepted": true,
+    "acceptance": "acceptance OK\n",
+    "usage": {
+      "input": 90433,
+      "output": 9220,
+      "cacheRead": 1204224,
+      "cacheWrite": 0,
+      "usd": 0.39348839999999996,
+      "messages": 47,
+      "priced": 47
+    },
+    "head": "aec92d1d41ab871fa725913f29bb79ae31937177",
+    "status": "",
+    "observedModels": [
+      "openai-codex/gpt-6.1-sol"
+    ],
+    "peakContext": {
+      "initial": 17058,
+      "fresh": 41336
+    },
+    "explorationTools": [
+      "codegraph_explore",
+      "bash",
+      "read",
+      "codegraph_explore",
+      "bash",
+      "read",
+      "read",
+      "bash",
+      "read",
+      "read"
+    ],
+    "completed": true,
+    "usageIncomplete": false,
+    "completedTasks": 3
+  },
+  {
+    "arm": "delegated",
+    "model": "openai-codex/gpt-6.1-sol",
+    "thinking": "high",
+    "seconds": 452.547,
+    "stages": [
+      {
+        "stage": "explore",
+        "seconds": 32.471,
+        "exit": 0,
+        "timedOut": false
+      },
+      {
+        "stage": "implement",
+        "seconds": 420.049,
+        "exit": null,
+        "timedOut": true
+      }
+    ],
+    "accepted": true,
+    "acceptance": "acceptance OK\n",
+    "usage": {
+      "input": 139909,
+      "output": 14850,
+      "cacheRead": 1482240,
+      "cacheWrite": 0,
+      "usd": 0.5765420000000002,
+      "messages": 57,
+      "priced": 57
+    },
+    "head": "d2bf0007f1749a570077b6f13db3614020656cd4",
+    "status": "",
+    "observedModels": [
+      "openai-codex/gpt-6.1-sol"
+    ],
+    "peakContext": {
+      "initial": 35341,
+      "worker": 49263
+    },
+    "explorationTools": [
+      "read",
+      "codegraph_explore",
+      "bash",
+      "read",
+      "read",
+      "bash",
+      "read",
+      "read"
+    ],
+    "completed": false,
+    "usageIncomplete": true,
+    "completedTasks": 0
+  }
+]

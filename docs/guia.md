@@ -167,3 +167,41 @@ El revisor (p_reviewer) revisa la rama actual contra su base y da un enlace a un
 ## Alpha y distribución nueva
 
 La candidata 0.2.0-alpha.1 incorpora dependencias gestionadas, curl y matriz de instalación. Conserva el hogar preview. El [contrato de distribución](11-distribucion.md) describe versionado, instalación, hotfixes, pruebas y publicación; las [notas](releases/0.2.0-alpha.1.md) distinguen los comandos futuros de la preview pública.
+
+## Buscar acciones
+
+En Pi, `Alt+K` o `/nein:comandos` abre el buscador de acciones propias: nombre, explicación y términos como «retomar», «modelo» o «revisar». `N_EIN_COMMANDS_KEY` cambia el atajo; `off` lo desactiva. Esc cierra conservando el borrador. Las acciones que usan modelo o necesitan argumentos se preparan en el editor y no se envían automáticamente. Las vistas disponibles se abren directamente; `/nein:revisor` abre una revisión guardada sin volver a revisar.
+
+En Claude, `/nein-comandos` abre un panel nativo con buscador y botones. El host gestiona el foco y conserva el borrador; no se modifica su configuración global de teclas. La lista solo ofrece comandos disponibles en esa sesión.
+
+## Procesos y avisos
+
+En Pi, pide «ejecuta el build en segundo plano» o abre `/nein:procesos` desde la paleta. Los comandos atraviesan también los hooks y permisos nativos de bash. El agente recibe un resultado al terminar; la vista conserva estado, salida final y ruta del log privado. Puedes detener el árbol de procesos. Los monitores filtran eventos con un máximo de 120 líneas/minuto; cada proceso tiene un plazo explícito de hasta 30 minutos y 16 MiB de salida. Los logs se conservan en el hogar del canal para diagnóstico. Cerrar o relevar la sesión detiene sus procesos. En print/JSON se usa bash síncrono.
+
+Claude conserva sus tareas en segundo plano y avisos nativos; la paleta expone `/tasks` cuando está disponible. No se crean ejecutores paralelos al host.
+
+## Encontrar y retomar trabajo
+
+`/nein:sesiones` en Pi, `/nein-sesiones búsqueda` en Claude y `nein work sessions --query texto` buscan resúmenes publicados del proyecto. Añade `--all` en la CLI para buscar otros proyectos del mismo canal. Cada resumen conserva objetivo, avance, siguiente paso, bloqueos y fecha. Una nota de más de cinco minutos se marca antigua: no acredita actividad actual ni propiedad de archivos. El Panel muestra hasta cien sesiones recientes del proyecto (antes cinco) y enriquece las que puede reanudar con sus resúmenes; su buscador habitual también encuentra esos textos.
+
+La conversación usa la skill `workspace` para publicar y consultar. Los hooks actualizan las casillas y el cierre; no copian prompts automáticamente. `nein work status` consulta el encargo sin abrir un modelo.
+
+## Encargo y evidencia
+
+La entrada «Encargo y evidencia» del Panel (`w`), `/nein:estado` en Pi, `/nein-estado` en Claude y `nein work open` devuelven una vista local del trabajo. Muestra las peticiones, el TODO del documento, las comprobaciones y las sesiones. No lanza modelos ni cambia casillas desde la web.
+
+El agente puede comprobar un criterio con `nein work check --criterion T1 -- bun test`: se ejecuta realmente el comando y se guardan salida, código de salida y código antes/después. Si cambia un archivo rastreado o nuevo, la evidencia queda obsoleta. Un error queda fallido y un árbol imposible de identificar queda desconocido. Marcar una casilla no equivale a verificarla. El alcance de la prueba es declarado: una salida cero no prueba por sí sola que cubra toda la petición. Archivos ignorados, servicios externos y cambios de entorno no declarados requieren su comprobación correspondiente.
+
+El servidor escucha solo en loopback y exige el token del enlace; el token se retira de la barra. Se apaga tras dos horas sin uso. La vista actualiza al pulsar «Actualizar».
+
+## Diseños y comprobación visual
+
+Pide variantes de una pantalla, abre «Ver diseños» en la paleta y elige una dirección. El visor conserva las alternativas, permite señalar un elemento y añadir comentarios con captura PNG/JPEG. «Preparar implementación / comentarios» ofrece el encargo para llevarlo a la conversación; elegir una variante no ejecuta código.
+
+El agente usa la skill `canvas`, registra avance y enlaza la aplicación local. La vista muestra diseño y aplicación, con enlace aparte cuando la app no admite iframe. «Registrar comprobación visual» exige describir lo observado; implementación y aceptación son estados distintos. Cambiar el código o el HTML convierte la aceptación en histórica. La aplicación externa puede corresponder a otros bytes: el registro no certifica ese despliegue.
+
+Los archivos viven en `docs/design/<slug>/`: HTML autocontenido, `design.json`, `comments.json` y capturas. El HTML se sirve aislado, sin acceso al padre ni red externa. Comentarios ilegibles no se sobrescriben. `nein work design list` y `design show --slug nombre` permiten consultar desde ambos runtimes.
+
+## Contexto y continuación
+
+`/nein:contexto` muestra el uso que Pi reporta, modelo y esfuerzo. El aviso al 60 % es informativo, configurable con `N_EIN_CONTEXT_NOTICE` (fracción entre 0 y 1); nunca delega ni cambia el modelo. `/nein:continuar` espera al turno, detiene procesos propios y abre una sesión nueva enlazada con la anterior, conservando ruta/modelo/esfuerzo y borrador. Requiere objetivo, autorización y siguiente paso en WORK.md. El destino contrasta la guía y la evidencia; no recibe permisos adicionales. En Claude, la paleta conserva `/context` y prepara `/compact`, sus capacidades nativas.

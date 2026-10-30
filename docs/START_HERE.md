@@ -22,6 +22,10 @@ El experimento de equipo se conserva desactivado: `N_EIN_TEAM=1` lo habilita exp
 - El relevo ordinario Pi→Claude→Pi y la recuperación en una sesión nueva están probados. El ensayo con equipo y Claude real quedó pendiente por cuota y ahora está aplazado con el experimento.
 - Modelo local descartado el 5 de octubre. No descargar modelos ni preparar servidores.
 
+## Trabajo del 30 de octubre
+
+La incorporación autorizada de paleta, procesos, sesiones, evidencia, diseño y contexto se sigue en [WORK.md](../WORK.md) y [plan de experiencia](13-experiencia.md). La entrega se revisa por PR antes de decidir versión. El documento de p_reviewer anterior y sus pendientes se conservan en [archivo de trabajo](archive/work/2026-10-30-previewer.md).
+
 ## Entrega actual
 
 `0.4.0-alpha.1` reúne el afinado de p_reviewer y las cadenas de PR: rangos fijados, hilos y decisiones compartidos, historial e integración final. Las sondas distinguen una reproducción de errores y escenarios no aplicables. El esquema 5 conserva los datos anteriores y crea una copia coherente antes de migrarlos; los lectores antiguos no admiten el esquema nuevo. Estado de publicación y evidencia en WORK.md.

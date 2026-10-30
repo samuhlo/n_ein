@@ -5,6 +5,7 @@
 // diff con una marca donde cae cada cita. Funciones puras: datos → HTML.
 // =============================================================================
 
+import { usageLabel } from "../src/usage.ts";
 import type { Probe } from "../src/finding.ts";
 import { probeLabel, probeState as evidenceState } from "../src/probe-result.ts";
 import type { Run, Session, Status, StoredFinding, Verdict } from "../src/store.ts";
@@ -21,7 +22,7 @@ export type SessionView = {
   run: Run | null;
   /** La última en empezar, si es otra: en curso o fallida. */
   latest: Run | null;
-  runs: { count: number; usd: number };
+  runs: { count: number; usd: number; coverage?: "complete" | "partial" | "unknown" };
   findings: StoredFinding[];
   patch: string;
   lang: Lang;
@@ -213,7 +214,7 @@ export function renderPage(view: SessionView): Html {
     ${heading(0, words.title)}
     ${view.historical ? html`<p class="warn">${words.historical} · ${view.reviewLabel?.name ?? short(run?.headSha)}
       <a data-review-link href="/s/${session.id}">${words.balance}</a></p>` : null}
-    <p class="meta">${run ? html`head <code>${short(run.headSha)}</code> · base <code>${short(run.baseSha)}</code> · ` : null}${words.reviews(view.runs.count)} · ${view.runs.usd.toLocaleString(view.lang === "es" ? "es-ES" : "en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })} $${session.prUrl ? html` · <a href="${session.prUrl}" rel="noreferrer">PR</a>` : null}</p>
+    <p class="meta">${run ? html`head <code>${short(run.headSha)}</code> · base <code>${short(run.baseSha)}</code> · ` : null}${words.reviews(view.runs.count)} · ${usageLabel(view.runs, view.lang)}${session.prUrl ? html` · <a href="${session.prUrl}" rel="noreferrer">PR</a>` : null}</p>
     ${latest?.status === "running" ? html`<p class="live">▸ ${words.running}</p>` : null}
     ${latest && latest.status !== "running" && latest.status !== "done" ? html`<p class="warn">${words.failed(latest.error ?? latest.status)}</p>` : null}
     ${run ? null : html`<p class="warn">${words.none}</p>`}

@@ -100,7 +100,7 @@ const logBefore = git("log", "--all", "--format=%H %D");
   ];
   const summary = summarizeEvents(lines);
   assert.equal(summary.text, "final");
-  assert.deepEqual(summary.usage, { input: 11, output: 3, cacheRead: 5, usd: 0.3 });
+  assert.deepEqual(summary.usage, { input: 11, output: 3, cacheRead: 5, cacheWrite: 0, usd: 0.3, coverage: { messages: 3, tokens: 0, priced: 2 }, source: "catalog-estimate" });
   assert.equal(summary.error, null);
   assert.throws(() => parseReport("sin informe"), /JSON/);
 }

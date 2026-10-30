@@ -39,7 +39,7 @@ const notices: string[] = [];
 const ctx = {
   cwd: dir,
   waitForIdle: async () => { idle = true; },
-  sessionManager: { getBranch: () => [
+  sessionManager: { getSessionId: () => "handoff-test", getBranch: () => [
     { type: "message", message: { role: "user", content: [{ type: "text", text: "Corrige el valor" }] } },
     { type: "message", message: { role: "assistant", content: [{ type: "text", text: "Falta comprobar el cambio" }] } },
   ] },

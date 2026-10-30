@@ -61,7 +61,8 @@ try {
       },
       include: [
         join(root, "pi-package/agents/*.ts"),
-        join(root, "pi-package/extensions/team.ts"),
+        join(root, "pi-package/workspace/*.ts"),
+        join(root, "pi-package/extensions/*.ts"),
         join(root, "pi-package/extensions/handoff.ts"),
         join(root, "pi-package/extensions/router.ts"),
         join(root, "pi-package/extensions/receipts.ts"),
