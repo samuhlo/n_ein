@@ -11,6 +11,7 @@ import type { ExtensionAPI, ExtensionContext } from "@earendil-works/pi-coding-a
 import { Type } from "typebox";
 import { readWorkDoc, resolveWorkDoc } from "./work-doc";
 import { stopTeam } from "../agents/runtime.ts";
+import { stopSessionJobs } from "./jobs-core.ts";
 import { teamSummary } from "../agents/summary.ts";
 
 type GitState = { root: string; head: string; status: string; diffStat: string };
@@ -119,6 +120,7 @@ function summary(cwd: string, branch: Array<any>): string {
 
 async function prepare(ctx: ExtensionContext, pi: ExtensionAPI): Promise<void> {
   const request = lastText(ctx.sessionManager.getBranch(), "user");
+  await stopSessionJobs(ctx.sessionManager.getSessionId() ?? "");
   await stopTeam(ctx.cwd, pi.events);
   if (ctx.signal?.aborted || ctx.hasPendingMessages?.() || lastText(ctx.sessionManager.getBranch(), "user") !== request) throw new Error("Nueva indicación durante la parada; se conserva este runtime.");
   const home = process.env.PI_CODING_AGENT_DIR;

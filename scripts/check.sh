@@ -36,6 +36,7 @@ tests/reverse-launcher.sh
 bash -n install.sh scripts/build-release.sh scripts/installer-e2e.sh
 bun run tests/work-doc.ts
 bun run tests/actions.ts
+bun run tests/jobs.ts
 bun run tests/models.ts
 bun run tests/memory.ts
 bun run tests/codegraph.ts

@@ -173,3 +173,9 @@ La candidata 0.2.0-alpha.1 incorpora dependencias gestionadas, curl y matriz de 
 En Pi, `Alt+K` o `/nein:comandos` abre el buscador de acciones propias: nombre, explicación y términos como «retomar», «modelo» o «revisar». `N_EIN_COMMANDS_KEY` cambia el atajo; `off` lo desactiva. Esc cierra conservando el borrador. Las acciones que usan modelo o necesitan argumentos se preparan en el editor y no se envían automáticamente. Las vistas disponibles se abren directamente; `/nein:revisor` abre una revisión guardada sin volver a revisar.
 
 En Claude, `/nein-comandos` abre un panel nativo con buscador y botones. El host gestiona el foco y conserva el borrador; no se modifica su configuración global de teclas. La lista solo ofrece comandos disponibles en esa sesión.
+
+## Procesos y avisos
+
+En Pi, pide «ejecuta el build en segundo plano» o abre `/nein:procesos` desde la paleta. El agente recibe un resultado al terminar; la vista conserva estado, salida final y ruta del log privado. Puedes detener el árbol de procesos. Los monitores filtran eventos con un máximo de 120 líneas/minuto; cada proceso tiene un plazo explícito de hasta 30 minutos y 16 MiB de salida. Los logs se conservan en el hogar del canal para diagnóstico. Cerrar o relevar la sesión detiene sus procesos. En print/JSON se usa bash síncrono.
+
+Claude conserva sus tareas en segundo plano y avisos nativos; la paleta expone `/tasks` cuando está disponible. No se crean ejecutores paralelos al host.
