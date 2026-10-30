@@ -22,8 +22,10 @@ Each `<section class="sheet">` is one tab: an `id`, a `data-tab` label (`3 · Se
 
 ## Variants
 
-When the open decision is between layouts, show two or three as sibling sheets (`2A`, `2B`, `2C`) that disagree on **structure**: layout, hierarchy, primary action. Not colour or wording. If two come out alike, redo one. Once the user chooses, keep the winner as sheet `2` and delete the rest.
+When the open decision is between layouts, show two or three as sibling sheets (`2A`, `2B`, `2C`) that disagree on **structure**: layout, hierarchy, primary action. Not colour or wording. If two come out alike, redo one. Once the user chooses, mark the winner as sheet `2`. Preserve the other directions as alternatives when using the `canvas` skill, so the user can compare them; do not silently delete their feedback.
 
 ## Fidelity
 
 Structure, hierarchy, flow and data only. No brand colours, fonts, icons, polished copy or animation. Those are later decisions for the real page or a `prototype`. A sketch that looks finished invites feedback on the wrong things.
+
+For variants, pinned element comments, screenshots or comparison with implementation, use the `canvas` skill. Register one self-contained HTML file per direction under `docs/design/<slug>/`; the brief and WORK.md link it. Choosing a direction still does not authorize implementation.

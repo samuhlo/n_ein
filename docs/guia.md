@@ -193,3 +193,11 @@ La entrada «Encargo y evidencia» del Panel (`w`), `/nein:estado` en Pi, `/nein
 El agente puede comprobar un criterio con `nein work check --criterion T1 -- bun test`: se ejecuta realmente el comando y se guardan salida, código de salida y código antes/después. Si cambia un archivo rastreado o nuevo, la evidencia queda obsoleta. Un error queda fallido y un árbol imposible de identificar queda desconocido. Marcar una casilla no equivale a verificarla. El alcance de la prueba es declarado: una salida cero no prueba por sí sola que cubra toda la petición. Archivos ignorados, servicios externos y cambios de entorno no declarados requieren su comprobación correspondiente.
 
 El servidor escucha solo en loopback y exige el token del enlace; el token se retira de la barra. Se apaga tras dos horas sin uso. La vista actualiza al pulsar «Actualizar».
+
+## Diseños y comprobación visual
+
+Pide variantes de una pantalla, abre «Ver diseños» en la paleta y elige una dirección. El visor conserva las alternativas, permite señalar un elemento y añadir comentarios con captura PNG/JPEG. «Preparar implementación / comentarios» ofrece el encargo para llevarlo a la conversación; elegir una variante no ejecuta código.
+
+El agente usa la skill `canvas`, registra avance y enlaza la aplicación local. La vista muestra diseño y aplicación, con enlace aparte cuando la app no admite iframe. «Registrar comprobación visual» exige describir lo observado; implementación y aceptación son estados distintos. Cambiar el código o el HTML convierte la aceptación en histórica. La aplicación externa puede corresponder a otros bytes: el registro no certifica ese despliegue.
+
+Los archivos viven en `docs/design/<slug>/`: HTML autocontenido, `design.json`, `comments.json` y capturas. El HTML se sirve aislado, sin acceso al padre ni red externa. Comentarios ilegibles no se sobrescriben. `nein work design list` y `design show --slug nombre` permiten consultar desde ambos runtimes.

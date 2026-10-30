@@ -28,6 +28,7 @@ export default function (pi: ExtensionAPI) {
     const link = await openWork(root,ctx.cwd);
     const w = workState(ctx.cwd); ctx.ui.notify(["// 004 ENCARGO", link, w.objective || "Sin documento activo", ...w.tasks.map(t => `${t.done ? "✓" : "·"} ${t.text}`), w.next].join("\n"), "info");
   } });
+  pi.registerCommand("nein:disenos", { description: "Ver variantes y comentarios de diseño", handler: async (_args, ctx) => { ctx.ui.notify(await openWork(root,ctx.cwd), "info"); } });
   pi.registerCommand("nein:sesiones", { description: "Buscar sesiones por objetivo y siguiente paso", handler: async (args, ctx) => {
     const query = args || (await ctx.ui.input("Buscar trabajo publicado (vacío: todo el proyecto)") ?? "");
     const result = listSessions(root,ctx.cwd,query);

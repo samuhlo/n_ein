@@ -14,7 +14,7 @@ try {
   assert.equal((await fetch(`${base}/state`,{headers:{...headers,host:"evil.test"}})).status,403);
   const state=await (await fetch(`${base}/state`,{headers})).json();
   assert.equal(state.work.tasks[0].done,false);
-  const html=await (await fetch(base)).text();assert.ok(!html.includes("alert(1)"));
+  const html=await (await fetch(base)).text();assert.ok(!html.includes("alert(1)"));assert.match(html, /type="module"/, "browser bundle uses ES modules");
   const js=await (await fetch(`${base}/app.js`)).text();assert.ok(js.includes("textContent"));assert.ok(!js.includes("innerHTML"));
   assert.equal((await fetch(`${base}/state`,{method:"POST",headers})).status,405);
   console.log("work web: bundle, live API, origin/host/token guards and text-only rendering");

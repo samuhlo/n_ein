@@ -40,6 +40,7 @@ bun run tests/jobs.ts
 bun run tests/workspace.ts
 bun run tests/work-evidence.ts
 bun run tests/work-web.ts
+bun run tests/design.ts
 bun run tests/models.ts
 bun run tests/memory.ts
 bun run tests/codegraph.ts

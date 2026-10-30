@@ -105,6 +105,7 @@ export const register: Register = (on) => {
   on("session.start", async ($, e, next) => {
     place = { cwd: await $.session.cwd(), home: (await $.env.get("HOME")) ?? "" };
     await publishClaude($, "idle");
+    await $.command.register({ name: "nein-disenos", description: "Ver variantes y comentarios de diseño", immediate: true });
     await $.command.register({ name: "nein-estado", description: "Objetivo, tareas y evidencia del encargo", immediate: true });
     await $.command.register({ name: "nein-sesiones", description: "Buscar trabajo publicado", argumentHint: "[búsqueda]", immediate: true });
     await $.command.register({ name: "nein-revisor", description: "Abrir revisión guardada sin inferencia", immediate: true });

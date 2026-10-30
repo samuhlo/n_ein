@@ -3,6 +3,7 @@
 import { parseArgs } from "node:util";
 import { dirname, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
+import { listDesigns, readDesign, readComments, changeDesign } from "./design.ts";
 import { inspectWork, checkWork } from "./evidence.ts";
 import { openWork } from "./open.ts";
 import { serveWork } from "./server.ts";
@@ -10,13 +11,19 @@ import { listSessions, publishSession, workState } from "./state.ts";
 const root = resolve(dirname(fileURLToPath(import.meta.url)), "../..");
 const { values: v, positionals: p } = parseArgs({ allowPositionals: true, options: {
   project: { type: "string" }, json: { type: "boolean" }, all: { type: "boolean" }, query: { type: "string" },
-  criterion: { type: "string" }, timeout: { type: "string" },
+  slug: { type: "string" }, file: { type: "string" }, criterion: { type: "string" }, timeout: { type: "string" },
   id: { type: "string" }, runtime: { type: "string" }, data: { type: "string" },
 } });
 const cwd = resolve(v.project ?? process.cwd());
 try {
   let result: unknown;
-  if (p[0] === "serve") { await serveWork(root,cwd); result = { serving: true }; }
+  if (p[0] === "design") {
+    const action=p[1]??"list";
+    if(action==="list") result=listDesigns(cwd);
+    else if(action==="show") result={design:readDesign(cwd,v.slug??""),comments:readComments(cwd,v.slug??"")};
+    else result=await changeDesign(cwd,v.slug??"",{...JSON.parse(v.data??"{}"),action,file:v.file});
+  }
+  else if (p[0] === "serve") { await serveWork(root,cwd); result = { serving: true }; }
   else if (p[0] === "open") { result = { link: await openWork(root,cwd) }; }
   else if (p[0] === "check") {
     const abort = new AbortController();
@@ -30,7 +37,7 @@ try {
     result = publishSession(root,cwd,v.id,v.runtime as "pi" | "claude", JSON.parse(v.data ?? "{}"));
   } else if (p[0] === "status") result = inspectWork(root,cwd);
   else throw new Error("uso: n-ein-work status | sessions [--query texto] [--all] | publish --id ID --runtime pi|claude --data JSON [--json]");
-  if (v.json || ["publish", "serve", "check"].includes(p[0])) console.log(JSON.stringify(result));
+  if (v.json || ["publish", "serve", "check", "design"].includes(p[0])) console.log(JSON.stringify(result));
   else if (p[0] === "open") console.log((result as {link:string}).link);
   else if (p[0] === "status") {
     const w = result as ReturnType<typeof inspectWork>;

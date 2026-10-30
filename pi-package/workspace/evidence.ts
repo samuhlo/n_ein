@@ -10,13 +10,14 @@ import { join, relative } from "node:path";
 import { atomicJSON, dataDir, projectRoot, smallJSON, workState, digest } from "./state.ts";
 export type Evidence = { schema: 1; id: string; project: string; criterion: string; command: string[]; cwd: string; before: string | null; after: string | null;
   exit: number | null; error: string | null; started: string; ended: string; log: string; environment: string };
-export function fingerprint(cwd: string): string | null {
+export function fingerprint(cwd: string, omitDesign = false): string | null {
   try {
     const root = projectRoot(cwd), work = workState(cwd).path;
     const files = [...new Set(execFileSync("git",["ls-files","-z","--cached","--others","--exclude-standard"],{cwd:root,encoding:"utf8",maxBuffer:4<<20,timeout:5000,stdio:["ignore","pipe","ignore"]}).split("\0").filter(Boolean))].sort();
     if (files.length > 20000) return null;
     const hash = createHash("sha256"); let bytes = 0;
     for (const file of files) {
+      if (omitDesign && file.startsWith("docs/design/")) continue;
       if (work && file === relative(root,work)) continue; // Marcar una casilla no invalida el código.
       const path = join(root,file); hash.update(file).update("\0");
       let stat; try { stat = lstatSync(path); } catch { hash.update("absent\0"); continue; }

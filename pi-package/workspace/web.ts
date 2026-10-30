@@ -1,3 +1,4 @@
+import { showDesigns } from "./design-web.ts";
 // [UI] ESTADO, CRITERIOS Y COMPROBACIONES
 // Todo contenido del proyecto se dibuja como texto, nunca como HTML confiable.
 const key="nein-work-token", token=location.hash.slice(1)||sessionStorage.getItem(key)||"";
@@ -28,3 +29,5 @@ document.querySelector("#refresh")!.addEventListener("click",refresh);
 let searchTimer: ReturnType<typeof setTimeout>;
 document.querySelector("#search")!.addEventListener("input",()=>{clearTimeout(searchTimer);searchTimer=setTimeout(refresh,150);});
 void refresh();
+
+void showDesigns(token);
