@@ -37,7 +37,7 @@ Sin nuevo motor de orquestación, memoria obligatoria ni copia de credenciales. 
 - [x] T6 · Revisor — cobertura por riesgos y evaluación con control y casos reservados.
 - [x] T7 · Diseño — variantes, comentarios, dirección elegida y comprobación visual.
 - [x] T8 · Contexto — observación y ensayo de directo/continuación/delegación.
-- [ ] T9 · Entrega — revisión integrada, suite/tipos, paquete, documentación, push y PR con CI.
+- [x] T9 · Entrega — revisión integrada, suite/tipos, paquete, documentación, push y PR con CI.
 
 ## Evidencia
 
@@ -61,8 +61,8 @@ Revisión integrada: los trabajos pasan ahora por `executeTool` para conservar l
 
 T8: [piloto de contexto](evals/results/2026-10-30-context.md), tres rutas. Código aceptado en las tres, pero la delegada agotó plazo y dejó la guía pendiente; no se promueve. Directo fue más rápido/barato.
 
-T9: suite completa y paquete instalado pasan sobre `40c02a1`; [aceptación](evals/results/2026-10-30-experience.md). Pendiente PR y CI.
+T9: suite completa y paquete instalado pasan sobre `40c02a1`; la regresión posterior de comentarios largos pasa en `4fc2eaf`. [PR #22](https://github.com/samuhlo/n_ein/pull/22) abierta. [Matriz CI](https://github.com/samuhlo/n_ein/actions/runs/41045558424) completa en verde sobre `4fc2eaf`: macOS, Linux, payload común y artefacto instalado como usuario sin privilegios en Ubuntu y Arch. [Aceptación y límites](evals/results/2026-10-30-experience.md).
 
 ## Siguiente paso
 
-Abrir la PR y comprobar su CI. No hacer merge ni publicar versión.
+Revisión de Samu en la PR #22. El último commit registra el cierre y precisa una descripción de la paleta (comprobada con tests/actions.ts); la CI del head se consulta en la PR. No hacer merge ni publicar versión hasta su decisión.

@@ -64,7 +64,7 @@ export const ACTIONS: readonly Action[] = [
   {
     id: "models",
     label: "Modelos y esfuerzo",
-    description: "Configurar modelos por encargo y esfuerzo de Claude.",
+    description: "Ver o cambiar modelo y esfuerzo disponibles en este runtime.",
     keywords: "modelo pensar razonamiento",
     pi: "nein:models",
     claude: "model",
