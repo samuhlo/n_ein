@@ -49,4 +49,4 @@ GitHub `check.yml` llama a `candidate.yml`: macOS-15 arm64 y Ubuntu-24.04 amd64;
 5. El job de publicación descarga esos mismos bytes, vuelve a verificar los hashes/manifest y genera attestation. Publica los assets comprobados, sin reconstruirlos en ese job. Alpha/rc son prereleases; solo stable puede ser latest.
 6. Actualización personal con sesiones cerradas, backup y doctor. Las instalaciones de revisión tienen otro hogar y no sustituyen la preview personal.
 
-La rama actual no crea tags, publica releases ni actualiza el hogar personal. Una revisión de candidato no autoriza por sí sola esos pasos.
+Una revisión de candidato no autoriza por sí sola publicar. La publicación requiere la petición explícita del usuario; actualizar su hogar personal es una operación separada.

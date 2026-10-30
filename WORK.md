@@ -40,8 +40,8 @@ Sin nuevo motor de orquestación, memoria obligatoria ni copia de credenciales. 
 - [x] T9 · Entrega — revisión integrada, suite/tipos, paquete, documentación, push y PR con CI.
 
 - [x] R1 · Preparar 0.5.0-alpha.1, bootstrap, notas y candidato instalado.
-- [ ] R2 · Verificar e integrar la preparación en main y publicar el tag con su matriz.
-- [ ] R3 · Comprobar adjuntos publicados y bootstrap de Pages; registrar entrega.
+- [x] R2 · Verificar e integrar la preparación en main y publicar el tag con su matriz.
+- [x] R3 · Comprobar adjuntos publicados y bootstrap de Pages; registrar entrega.
 
 ## Evidencia
 
@@ -71,6 +71,10 @@ Corrección de CI: la ejecución posterior `41046772452` detectó una carrera en
 
 R1: versión/ bootstrap/enlaces comprobados; `build-release.sh 0.5.0-alpha.1` pasó sobre `7f5a025`, incluida instalación desde tarball y doctor. Candidato local macOS arm64 SHA-256 `5115251552fcdf377a49cc1f94b98bbcc795d7e34fed80bba944769fcc2635b9`. La publicación construirá y verificará sus propios adjuntos desde el tag definitivo.
 
+R2–R3: [0.5.0-alpha.1 publicada](https://github.com/samuhlo/n_ein/releases/tag/v0.5.0-alpha.1), prerelease preview, tag en `99e0d0642ecd10d124eef21c6662c6dc9ef27309`. [PR #23](https://github.com/samuhlo/n_ein/pull/23) integrada tras [matriz verde](https://github.com/samuhlo/n_ein/actions/runs/41083397059). [Workflow del tag](https://github.com/samuhlo/n_ein/actions/runs/41084441165) completo, incluidos publicación, attestation y Pages.
+
+Los nueve adjuntos descargados se verificaron con `verify-release-assets.py`: mismas fuentes, manifiestos, modos, hashes e instaladores. `gh attestation verify` validó ambos tarballs y `install.sh`, exigiendo repositorio, workflow de release, ref del tag, commit de origen y runners alojados. SHA-256 de los tarballs publicados: macOS `58e85dff2e18e12892454533bc3fec1dfe4b1cd0ae6360ea3fb39a196f1f0c61`; Linux `476d0c509eb27eba79e389b3d475b850e59b5a193d75f61f82d627230630a09e`. El bootstrap público coincide byte a byte con el adjunto y su dry-run selecciona 0.5.0-alpha.1 sin crear el hogar ni el enlace del ensayo. Assets locales en `dist/published-0.5.0/`; log del dry-run en `/private/tmp/nein-050-public-dryrun.log`. No se actualizó la instalación personal ni se tocó el legado.
+
 ## Siguiente paso
 
-Publicar la preview 0.5.0-alpha.1 desde la rama `release/0.5.0-alpha.1`. La preparación cambia versión, bootstrap y documentación, sin alterar los runtimes ni el código revisado. La matriz de publicación verifica los mismos bytes que se adjuntan. No actualizar la instalación personal.
+Versión publicada. La actualización personal queda para cuando Samu la pida. Continúan los pendientes ya declarados de Omarchy gráfico y cobertura/valoraciones humanas de p_reviewer; no bloquean ni se presentan como resueltos por esta release.

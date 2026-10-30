@@ -24,7 +24,7 @@ El experimento de equipo se conserva desactivado: `N_EIN_TEAM=1` lo habilita exp
 
 ## Trabajo del 30 de octubre
 
-La incorporación autorizada de paleta, procesos, sesiones, evidencia, diseño y contexto se sigue en [WORK.md](../WORK.md) y [plan de experiencia](13-experiencia.md). La PR #22 está integrada; Samu ha autorizado publicar la nueva preview. El documento de p_reviewer anterior y sus pendientes se conservan en [archivo de trabajo](archive/work/2026-10-30-previewer.md).
+La incorporación autorizada de paleta, procesos, sesiones, evidencia, diseño y contexto se sigue en [WORK.md](../WORK.md) y [plan de experiencia](13-experiencia.md). La PR #22 está integrada y sus mejoras se publican en 0.5.0-alpha.1, con la verificación de entrega en WORK.md. El documento de p_reviewer anterior y sus pendientes se conservan en [archivo de trabajo](archive/work/2026-10-30-previewer.md).
 
 ## Entrega actual
 
