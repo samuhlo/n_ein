@@ -46,6 +46,8 @@ await Promise.all(
   ),
 );
 assert.equal(readComments(cwd, "example").length, 10);
+for (let i = 0; i < 35; i++) await changeDesign(cwd, "example", { action: "comment", file: "one.html", text: "a".repeat(2000) });
+assert.equal(readComments(cwd, "example").length, 45, "a valid history larger than 64 KiB remains editable");
 await changeDesign(cwd, "example", { action: "choose", file: "one.html" });
 await changeDesign(cwd, "example", {
   action: "implement",

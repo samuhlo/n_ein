@@ -144,7 +144,7 @@ export function listDesigns(cwd: string): {
 export function readComments(cwd: string, slug: string): Comment[] {
   const path = designPath(cwd, slug, "comments.json");
   if (!existsSync(path)) return [];
-  const comments = smallJSON(path) as Comment[];
+  const comments = smallJSON(path, 2 * 1024 * 1024) as Comment[];
   if (
     !Array.isArray(comments) ||
     comments.length > 200 ||

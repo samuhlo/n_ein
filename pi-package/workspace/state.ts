@@ -45,8 +45,8 @@ export function atomicJSON(file: string, value: unknown): void {
   writeFileSync(temp, text, { mode: 0o600, flag: "wx" });
   renameSync(temp, file);
 }
-export function smallJSON(file: string): unknown {
-  if (statSync(file).size > 64 * 1024)
+export function smallJSON(file: string, limit = 64 * 1024): unknown {
+  if (statSync(file).size > limit)
     throw new Error("Registro demasiado grande");
   return JSON.parse(readFileSync(file, "utf8"));
 }

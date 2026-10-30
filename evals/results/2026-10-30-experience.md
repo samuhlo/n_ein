@@ -16,6 +16,8 @@ Rama `feat/encargo-visible`, desde `b0f6f27`. El producto conserva Pi 1.0.2, Cod
 
 `scripts/check.sh` completo pasa sobre el código de `40c02a1`, con Claude 2.1.302 en PATH: lógica, motor y sondas de p_reviewer, Go test/vet, sesiones nativas, equipo experimental, tipos contra Pi fijado, plugin de Claude y smoke del paquete instalado. Log local: `/private/tmp/nein-experience-final-check.log`.
 
+La revisión posterior detectó que una historia válida de comentarios podía superar el límite genérico de 64 KiB. La regresión con 45 comentarios falló antes y pasó después de dar a ese archivo su límite propio de 2 MiB, conservando el máximo de 200 comentarios.
+
 El primer pase encontró un fixture de relevo al que faltaba la identidad de sesión ahora necesaria; se completó sin debilitar la parada de procesos. El segundo pase termina `checks locales: OK`. El aviso de CodeGraph ausente en el smoke corresponde al hogar simulado sin descarga de runtimes: no es un ensayo de indexación fallido presentado como éxito.
 
 Las pruebas alojadas se registran separadamente: [foco del revisor](2026-10-30-review-focus.md), candidata no promovida; [contexto](2026-10-30-context.md), ruta delegada incompleta dentro del plazo. No se anuncia una mejora general de detección ni ahorro.
