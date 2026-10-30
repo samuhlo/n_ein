@@ -167,3 +167,9 @@ El revisor (p_reviewer) revisa la rama actual contra su base y da un enlace a un
 ## Alpha y distribución nueva
 
 La candidata 0.2.0-alpha.1 incorpora dependencias gestionadas, curl y matriz de instalación. Conserva el hogar preview. El [contrato de distribución](11-distribucion.md) describe versionado, instalación, hotfixes, pruebas y publicación; las [notas](releases/0.2.0-alpha.1.md) distinguen los comandos futuros de la preview pública.
+
+## Buscar acciones
+
+En Pi, `Alt+K` o `/nein:comandos` abre el buscador de acciones propias: nombre, explicación y términos como «retomar», «modelo» o «revisar». `N_EIN_COMMANDS_KEY` cambia el atajo; `off` lo desactiva. Esc cierra conservando el borrador. Las acciones que usan modelo o necesitan argumentos se preparan en el editor y no se envían automáticamente. Las vistas disponibles se abren directamente; `/nein:revisor` abre una revisión guardada sin volver a revisar.
+
+En Claude, `/nein-comandos` abre un panel nativo con buscador y botones. El host gestiona el foco y conserva el borrador; no se modifica su configuración global de teclas. La lista solo ofrece comandos disponibles en esa sesión.

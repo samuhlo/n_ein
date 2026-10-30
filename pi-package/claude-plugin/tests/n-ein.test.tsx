@@ -163,3 +163,22 @@ test("antes del primer turno la línea de ayuda no cambia", async ($, on) => {
   await start($);
   expect(await (await hint($)).find({ text: "? for shortcuts" })).toBeDefined();
 });
+
+test("la paleta busca sin iniciar un turno y prepara la acción elegida", async ($, on) => {
+  on("command.list", () => ({ value: [] }));
+  on("ui.open", () => ({ value: undefined }));
+  on("ui.close", () => ({ value: undefined }));
+  on("prompt.read", () => ({ value: { text: "borrador previo", cursor: 0 } }));
+  const fills: string[] = [];
+  on("prompt.fill", ($, e) => { fills.push(e.text); return { isFilled: true }; });
+  const answer = await $.command.run({ command: "nein-comandos", args: "", origin: { kind: "composer" }, presentation: { isFullscreen: false, columns: 100 } });
+  expect(answer.text).toBeUndefined();
+  const ui = await $.ui.mount({ plugin: "n-ein", surface: "terminal", component: "Pane", requestId: "nein-actions",
+    props: { title: "Comandos", isFocused: true, bodyColumns: 80, bodyRows: 20 }, viewport });
+  expect(JSON.stringify(await ui.drawn())).toContain("Nuevo encargo");
+  await ui.input({ key: "action-search", text: "nuevo" });
+  expect(JSON.stringify(await ui.drawn())).not.toContain("Modelos y esfuerzo");
+  await ui.press({ key: "action-new" });
+  expect(fills[0]).toContain("Otro encargo:");
+  expect(fills[0]).toContain("borrador previo");
+});

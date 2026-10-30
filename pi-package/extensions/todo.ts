@@ -27,7 +27,7 @@ export default function (pi: ExtensionAPI) {
 
   pi.registerCommand("todo", {
     description: "Muestra o actualiza las casillas de WORK.md: /todo, /todo done N, /todo add texto",
-    handler: (args, ctx) => {
+    handler: async (args, ctx) => {
       if (ctx.mode !== "tui") return;
       const path = resolveWorkDoc(ctx.cwd);
       if (!path) { ctx.ui.notify("No hay WORK.md activo; el TODO no aparece para trabajos pequeños.", "info"); return; }

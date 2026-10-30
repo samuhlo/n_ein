@@ -12,6 +12,7 @@
 // para cuando haga falta el comando completo, la salida o el diff.
 // =============================================================================
 
+import { registerActions } from "./actions-view.tsx";
 import { atom, read, update } from "claude-code";
 import type { EngineInterface, Register, RenderInput } from "claude-code";
 
@@ -94,12 +95,14 @@ async function adopt($: EngineInterface): Promise<void> {
 }
 
 export const register: Register = (on) => {
+  registerActions(on);
   let place: Place = { cwd: "", home: "" };
   let opening: { cancel: () => void } | undefined;
   let metering: { cancel: () => void } | undefined;
 
   on("session.start", async ($, e, next) => {
     place = { cwd: await $.session.cwd(), home: (await $.env.get("HOME")) ?? "" };
+    await $.command.register({ name: "nein-comandos", description: "Buscar acciones de n_ein con explicación breve", immediate: true });
     await $.command.register({ name: "detalle", description: "Alterna entre los recibos de n_ein y las filas nativas de Claude Code." });
     // La única animación del contrato visual: las palas giran una vez y se quedan quietas.
     await update($, intro, () => 0);
