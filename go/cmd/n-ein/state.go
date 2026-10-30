@@ -302,7 +302,7 @@ func recentSessions(channel, project string) []session {
 		item.last = known(request)
 		item.id = sessionID(item.path)
 		selected = append(selected, item)
-		if len(selected) == 5 {
+		if len(selected) == 100 {
 			break
 		}
 	}

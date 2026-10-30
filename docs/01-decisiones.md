@@ -14,6 +14,10 @@ Se conservan las mejoras de comprobación de consumidores y mensajes de error. L
 
 Las secciones cronológicas siguientes registran cómo se llegó aquí. Las propuestas antiguas de roles baratos, modelo local o paralelismo ordinario no son instrucciones vigentes.
 
+## Incorporación autorizada el 30 de octubre
+
+Tras la auditoría de Gentle Shell, Samu pide planificar e incorporar las mejoras propuestas en una rama nueva, con commits y PR explicativa. Autoriza implementación, pruebas y push de esa rama; revisará antes de sacar versión. Se añaden paleta, procesos en segundo plano, resúmenes de sesión, vista de peticiones/evidencia y diseño con feedback. Se comparan las hipótesis de foco del revisor y delegación por contexto antes de promoverlas. El recorrido ordinario mantiene un agente y un modelo; no hay autorización para actualizar la instalación personal ni publicar una release. Detalle y aceptación en [plan](13-experiencia.md).
+
 ## Acordado explícitamente
 
 El 21 de octubre Samu aclaró que debe poder abrir varias sesiones de Claude o Pi en el mismo proyecto, aunque otra siga abierta o suspendida en una terminal distinta. Se retira la exclusión general por árbol del launcher. El criterio de un agente por encargo se aplica a cada conversación; el relevo sigue esperando a su propio origen y sus herramientas, y el equipo experimental conserva la propiedad de sus trabajadores.

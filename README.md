@@ -101,6 +101,8 @@ El paquete de Pi lleva el catálogo de skills, la voz y el TODO de `WORK.md`. Co
 ```bash
 nein                                  # portada: estado del proyecto, sesiones y sistema
 nein --project . --runtime pi         # abre directamente, con el bloqueo del árbol
+nein work open                       # encargo, evidencia, sesiones y diseños
+nein work sessions --query texto     # recuperar trabajo publicado sin modelo
 nein previewer [review]               # abre (o hace) la revisión de la rama actual
 nein previewer chain --file serie.json # revisa los tramos y después su integración
 nein previewer open --chain nombre    # vuelve al balance de una cadena
@@ -117,12 +119,19 @@ Dentro de Pi:
 
 | ATAJO | PARA QUÉ |
 | :--- | :--- |
+| `Alt+K` · `/nein:comandos` | Buscar acciones propias y ver qué hacen |
+| `/nein:procesos` | Ver y detener comandos de esta sesión |
+| `/nein:estado` · `/nein:sesiones` | Encargo y continuidad publicada |
+| `/nein:disenos` | Variantes, comentarios y comparación visual |
+| `/nein:contexto` · `/nein:continuar` | Medir contexto y continuar con guía y modelo conservados |
 | `/nein:models` | Tabla de modelos y esfuerzo |
 | `/nein:modo <clase>` · `/nein:nuevo` | Fijar la clase o empezar otro encargo |
 | `/todo done N` · `/todo add …` | Marcar o añadir tareas de `WORK.md` |
 | `Ctrl+O` | Detalle completo de las herramientas |
 
 ---
+
+En Claude, `/nein-comandos` ofrece el buscador nativo; `/nein-estado`, `/nein-sesiones` y `/nein-disenos` acceden al mismo estado. Sus tareas y compactación siguen siendo nativas. [Uso y límites](docs/guia.md#buscar-acciones).
 
 ## // 06_ BLUEPRINT
 

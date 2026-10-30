@@ -4,19 +4,54 @@ import { mkdtempSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { checkWork, inspectWork } from "../pi-package/workspace/evidence.ts";
-const area = mkdtempSync(join(tmpdir(),"nein-evidence-"));
-process.env.N_EIN_HOME = join(area,"home"); process.env.N_EIN_CHANNEL = "dev";
-execFileSync("git",["init","-q"],{cwd:area});
-writeFileSync(join(area,".gitignore"),"home/\n");
-writeFileSync(join(area,"WORK.md"),"## Objetivo\nValidar comportamiento\n## Criterios\n- acepta Unicode\n## Tareas\n- [x] T1 · Codificar\n");
-writeFileSync(join(area,"code.ts"),"export const n = 1;\n");
-const record = await checkWork(area,area,"acepta Unicode",[process.execPath,"-e","console.log('á')"]);
-assert.equal(record.exit,0); assert.equal(inspectWork(area,area).evidence[0].state,"verified");
-writeFileSync(join(area,"new.ts"),"new file");
-assert.equal(inspectWork(area,area).evidence[0].state,"stale","new untracked files invalidate checks");
-const bad = await checkWork(area,area,"acepta Unicode",[process.execPath,"-e","process.exit(3)"]);
-assert.equal(bad.exit,3); assert.equal(inspectWork(area,area).evidence[0].state,"failed");
-await assert.rejects(checkWork(area,area,"invented criterion",[process.execPath,"-e","process.exit(0)"]));
-const changed = await checkWork(area,area,"T1",[process.execPath,"-e","await Bun.write('code.ts','changed')"]);
-assert.equal(changed.exit,0); assert.equal(inspectWork(area,area).evidence[0].state,"stale","a check modifying its code does not verify the final tree");
-console.log("work evidence: executed command, exit, criterion, changed and new files");
+const area = mkdtempSync(join(tmpdir(), "nein-evidence-"));
+process.env.N_EIN_HOME = join(area, "home");
+process.env.N_EIN_CHANNEL = "dev";
+execFileSync("git", ["init", "-q"], { cwd: area });
+writeFileSync(join(area, ".gitignore"), "home/\n");
+writeFileSync(
+  join(area, "WORK.md"),
+  "## Objetivo\nValidar comportamiento\n## Criterios\n- acepta Unicode\n## Tareas\n- [x] T1 · Codificar\n",
+);
+writeFileSync(join(area, "code.ts"), "export const n = 1;\n");
+const record = await checkWork(area, area, "acepta Unicode", [
+  process.execPath,
+  "-e",
+  "console.log('á')",
+]);
+assert.equal(record.exit, 0);
+assert.equal(inspectWork(area, area).evidence[0].state, "verified");
+writeFileSync(join(area, "new.ts"), "new file");
+assert.equal(
+  inspectWork(area, area).evidence[0].state,
+  "stale",
+  "new untracked files invalidate checks",
+);
+const bad = await checkWork(area, area, "acepta Unicode", [
+  process.execPath,
+  "-e",
+  "process.exit(3)",
+]);
+assert.equal(bad.exit, 3);
+assert.equal(inspectWork(area, area).evidence[0].state, "failed");
+await assert.rejects(
+  checkWork(area, area, "invented criterion", [
+    process.execPath,
+    "-e",
+    "process.exit(0)",
+  ]),
+);
+const changed = await checkWork(area, area, "T1", [
+  process.execPath,
+  "-e",
+  "await Bun.write('code.ts','changed')",
+]);
+assert.equal(changed.exit, 0);
+assert.equal(
+  inspectWork(area, area).evidence[0].state,
+  "stale",
+  "a check modifying its code does not verify the final tree",
+);
+console.log(
+  "work evidence: executed command, exit, criterion, changed and new files",
+);

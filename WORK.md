@@ -57,6 +57,8 @@ T7: variantes, diez comentarios concurrentes, elección/implementación/aceptaci
 
 T6: [comparación de foco](evals/results/2026-10-30-review-focus.md), doce intentos. Base 3/4 referencias; candidata 2/4 y un timeout. Candidata no promovida, revisor ordinario intacto; 1,38044 USD estimados.
 
+Revisión integrada: los trabajos pasan ahora por `executeTool` para conservar los hooks/permisos de bash, además de su backend. Una prueba con Pi real confirma entrega en segundo plano y rechazo nativo sin ejecutar el comando.
+
 ## Siguiente paso
 
 Implementar T1 y continuar por el plan. Detalle de resultados en `evals/results/`; aquí solo avances y límites útiles.

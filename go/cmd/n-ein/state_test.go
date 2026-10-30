@@ -232,3 +232,17 @@ func TestSessionsUseHumanPromptsFromCurrentProject(t *testing.T) {
 		t.Fatalf("petición humana no recuperada: %#v", sessions)
 	}
 }
+
+func TestRecentSessionsKeepsMoreThanFive(t *testing.T) {
+	home := t.TempDir()
+	project := t.TempDir()
+	t.Setenv("N_EIN_HOME", home)
+	t.Setenv("N_EIN_AGENT_DIR", filepath.Join(home, "dev", "pi-agent"))
+	t.Setenv("N_EIN_CLAUDE_DIR", filepath.Join(home, "dev", "claude"))
+	for _, id := range []string{"a", "b", "c", "d", "e", "f", "g", "h"} {
+		write(t, filepath.Join(home, "dev", "pi-agent", "sessions", id+".jsonl"), `{"type":"session","id":"`+id+`","cwd":"`+project+`"}`+"\n"+`{"type":"message","message":{"role":"user","content":"Encargo `+id+`"}}`+"\n")
+	}
+	if got := len(recentSessions("dev", project)); got != 8 {
+		t.Fatalf("sesiones recuperables: %d; se esperan 8", got)
+	}
+}

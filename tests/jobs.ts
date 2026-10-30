@@ -2,27 +2,57 @@ import { strict as assert } from "node:assert";
 import { mkdtempSync, readFileSync } from "node:fs";
 import { tmpdir, homedir } from "node:os";
 import { join } from "node:path";
-import { Jobs, ownJobs, stopSessionJobs, type Notice } from "../pi-package/extensions/jobs-core.ts";
-const { createLocalBashOperations } = await import(join(process.env.N_EIN_HOME || join(homedir(), ".n_ein"), "runtimes/pi/1.0.2/global/node_modules/@earendil-works/pi-coding-agent/dist/index.js"));
+import {
+  Jobs,
+  ownJobs,
+  stopSessionJobs,
+  type Notice,
+} from "../pi-package/extensions/jobs-core.ts";
+const { createLocalBashOperations } = await import(
+  join(
+    process.env.N_EIN_HOME || join(homedir(), ".n_ein"),
+    "runtimes/pi/1.0.2/global/node_modules/@earendil-works/pi-coding-agent/dist/index.js",
+  )
+);
 const area = mkdtempSync(join(tmpdir(), "nein-jobs-test-"));
-const events: Notice[] = [], ops = createLocalBashOperations();
-const jobs = new Jobs(area, (c, d, o) => ops.exec(c,d,o), n => events.push(n));
+const events: Notice[] = [],
+  ops = createLocalBashOperations();
+const jobs = new Jobs(
+  area,
+  (c, d, o) => ops.exec(c, d, o),
+  (n) => events.push(n),
+);
 const ok = jobs.start("printf 'á\\n'; exit 0", area, "éxito", 5);
 await jobs.wait(ok.id);
-assert.equal(jobs.list()[0].status, "passed"); assert.equal(events.length, 1);
+assert.equal(jobs.list()[0].status, "passed");
+assert.equal(events.length, 1);
 assert.match(readFileSync(ok.log, "utf8"), /á/);
-const fail = jobs.start("echo error; exit 3", area, "fallo", 5); await jobs.wait(fail.id);
-assert.equal(jobs.list()[1].exit, 3); assert.equal(jobs.list()[1].status, "failed");
+const fail = jobs.start("echo error; exit 3", area, "fallo", 5);
+await jobs.wait(fail.id);
+assert.equal(jobs.list()[1].exit, 3);
+assert.equal(jobs.list()[1].status, "failed");
 await assert.rejects(jobs.stop("foreign"));
 const cancelled = jobs.start("sleep 30 & wait", area, "espera", 60);
-await new Promise(r => setTimeout(r, 60));
-await jobs.stop(cancelled.id); assert.equal(jobs.list()[2].status, "stopped");
-assert.equal(events.filter(e => e.job.id === cancelled.id).length, 1);
-const noisy = jobs.start("seq 1 140", area, "monitor", 5, true); await jobs.wait(noisy.id);
-assert.match(jobs.list()[3].reason!, /120/); assert.ok(events.filter(e => e.kind === "lines").every(e => e.lines.length <= 21));
+await new Promise((r) => setTimeout(r, 60));
+await jobs.stop(cancelled.id);
+assert.equal(jobs.list()[2].status, "stopped");
+assert.equal(events.filter((e) => e.job.id === cancelled.id).length, 1);
+const noisy = jobs.start("seq 1 140", area, "monitor", 5, true);
+await jobs.wait(noisy.id);
+assert.match(jobs.list()[3].reason!, /120/);
+assert.ok(
+  events.filter((e) => e.kind === "lines").every((e) => e.lines.length <= 21),
+);
 const end = jobs.start("sleep 30", area, "relevo", 60);
-ownJobs("session", jobs); await stopSessionJobs("session");
-assert.equal(jobs.list().find(j => j.id === end.id)?.status, "stopped");
-assert.equal(events.filter(e => e.job.id === end.id).length, 0, "closing cannot wake the old runtime");
+ownJobs("session", jobs);
+await stopSessionJobs("session");
+assert.equal(jobs.list().find((j) => j.id === end.id)?.status, "stopped");
+assert.equal(
+  events.filter((e) => e.job.id === end.id).length,
+  0,
+  "closing cannot wake the old runtime",
+);
 assert.throws(() => jobs.start("echo x", area, "x", 5));
-console.log("jobs: native execution, failure, bounded monitor, cancellation and handoff shutdown");
+console.log(
+  "jobs: native execution, failure, bounded monitor, cancellation and handoff shutdown",
+);
