@@ -34,7 +34,7 @@ Sin nuevo motor de orquestación, memoria obligatoria ni copia de credenciales. 
 - [x] T3 · Procesos — segundo plano, monitores acotados, vista, avisos y parada antes del relevo.
 - [x] T4 · Sesiones — objetivo/avance/siguiente paso, búsqueda, estado fechado y consulta sin inferencia.
 - [x] T5 · Encargo — peticiones, tareas y comprobaciones con identidad de archivos y vigencia.
-- [ ] T6 · Revisor — cobertura por riesgos y evaluación con control y casos reservados.
+- [x] T6 · Revisor — cobertura por riesgos y evaluación con control y casos reservados.
 - [x] T7 · Diseño — variantes, comentarios, dirección elegida y comprobación visual.
 - [ ] T8 · Contexto — observación y ensayo de directo/continuación/delegación.
 - [ ] T9 · Entrega — revisión integrada, suite/tipos, paquete, documentación, push y PR con CI.
@@ -54,6 +54,8 @@ T4: sesiones de Pi y Claude con identidad independiente, búsqueda por proyecto/
 T5: comando real, error, criterio inexistente, cambios durante la comprobación y archivo nuevo invalidando evidencia pasan. Web real compila; API comprueba Host/Origin/token y dibuja contenido como texto. Se añade al smoke instalado.
 
 T7: variantes, diez comentarios concurrentes, elección/implementación/aceptación, rutas y captura comprobados. En Zen real: encargo visible, token retirado, elemento señalado, comentario persistido y elección de dirección. Se corrigió la carga ESM detectada en ese recorrido y se añadió regresión.
+
+T6: [comparación de foco](evals/results/2026-10-30-review-focus.md), doce intentos. Base 3/4 referencias; candidata 2/4 y un timeout. Candidata no promovida, revisor ordinario intacto; 1,38044 USD estimados.
 
 ## Siguiente paso
 

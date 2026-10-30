@@ -1,0 +1,11 @@
+{
+  "frozen_candidate_sha256": "see manifest.json; candidate.md unchanged",
+  "reserved-race": {
+    "defect": "An older run finishing removes the newer active promise",
+    "probe": "Start two deferred promises under same key; resolve first; second must still be active."
+  },
+  "reserved-unicode": {
+    "defects": [],
+    "probe": "Astral symbol counts as one code point; no grapheme-cluster promise."
+  }
+}

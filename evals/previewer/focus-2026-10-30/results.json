@@ -1,0 +1,509 @@
+{
+  "candidateSHA256": "da314d9ee3cc0d7aeeeabe29e2798b0205a8533afacc1ff4306af9edadf12a0f",
+  "decision": "not-promoted",
+  "labelSource": "agent inspection and saved probes; not human labels",
+  "runs": [
+    {
+      "case": "lang-dev-01",
+      "variant": "baseline",
+      "status": "done",
+      "seconds": 38.823,
+      "usage": {
+        "input": 6184,
+        "output": 1185,
+        "cacheRead": 25856,
+        "cacheWrite": 0,
+        "usd": 0.0268036,
+        "coverage": {
+          "messages": 6,
+          "tokens": 6,
+          "priced": 6
+        },
+        "source": "catalog-estimate"
+      },
+      "referenceDetected": true,
+      "error": null,
+      "findings": [
+        {
+          "title": "El nuevo resultado rompe checkout",
+          "condition": "Se llama a checkout(cents) con un importe entero.",
+          "consequence": "checkout lanza TypeError porque sigue accediendo a make_quote(cents)[\"total\"]. El mismo pago funcionaba en la base.",
+          "citations": [
+            "pricing.py@4d62ff71e8dc0e8615a5371382a0f263eff07c05:L1-L2",
+            "checkout.py@4d62ff71e8dc0e8615a5371382a0f263eff07c05:L3-L4"
+          ],
+          "probe": {
+            "command": "python3 .previewer-probes/checkout-contract.py",
+            "protocol": "nein-probe-v1",
+            "check": "checkout-total-contract",
+            "compareBase": true,
+            "file": ".previewer-probes/checkout-contract.py",
+            "source": "import json\nimport sys\nfrom pathlib import Path\n\nsys.path.insert(0, str(Path(__file__).resolve().parents[1]))\n\n\ndef run():\n    try:\n        from checkout import checkout\n    except Exception as exc:\n        return \"error\", 2, f\"Import failed: {type(exc).__name__}: {exc}\"\n\n    try:\n        result = checkout(1250)\n    except TypeError as exc:\n        if \"'int' object is not subscriptable\" in str(exc):\n            return \"reproduced\", 1, \"checkout(1250) raises TypeError instead of returning 1250\"\n        return \"error\", 2, f\"Unexpected TypeError: {exc}\"\n    except Exception as exc:\n        return \"error\", 2, f\"Unexpected execution failure: {type(exc).__name__}: {exc}\"\n\n    if result != 1250:\n        return \"reproduced\", 1, f\"checkout(1250) returned {result!r} instead of 1250\"\n    return \"passed\", 0, \"checkout(1250) returns 1250\"\n\n\noutcome, code, reason = run()\nprint(\"NEIN_PROBE_RESULT \" + json.dumps({\"check\": \"checkout-total-contract\", \"outcome\": outcome, \"reason\": reason}))\nsys.exit(code)\n",
+            "exitCode": 1,
+            "output": "NEIN_PROBE_RESULT {\"check\": \"checkout-total-contract\", \"outcome\": \"reproduced\", \"reason\": \"checkout(1250) raises TypeError instead of returning 1250\"}",
+            "outcome": "reproduced",
+            "reason": "checkout(1250) raises TypeError instead of returning 1250",
+            "reproduced": true,
+            "baseline": {
+              "sha": "ac002f3ab6d267eab78325c3e79a4bf6c86fe511",
+              "outcome": "passed",
+              "reason": "checkout(1250) returns 1250",
+              "exitCode": 0,
+              "output": "NEIN_PROBE_RESULT {\"check\": \"checkout-total-contract\", \"outcome\": \"passed\", \"reason\": \"checkout(1250) returns 1250\"}"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "case": "lang-dev-01",
+      "variant": "candidate",
+      "status": "done",
+      "seconds": 56.559,
+      "usage": {
+        "input": 12852,
+        "output": 1643,
+        "cacheRead": 27008,
+        "cacheWrite": 0,
+        "usd": 0.0448348,
+        "coverage": {
+          "messages": 7,
+          "tokens": 7,
+          "priced": 7
+        },
+        "source": "catalog-estimate"
+      },
+      "referenceDetected": true,
+      "error": null,
+      "findings": [
+        {
+          "title": "El nuevo resultado rompe checkout",
+          "condition": "Se llama a checkout con un importe entero, por ejemplo 1250 o 0.",
+          "consequence": "checkout lanza TypeError y no devuelve el total. La base devuelve correctamente ambos importes.",
+          "citations": [
+            "pricing.py@4d62ff71e8dc0e8615a5371382a0f263eff07c05:L1-L2",
+            "checkout.py@4d62ff71e8dc0e8615a5371382a0f263eff07c05:L3-L4"
+          ],
+          "probe": {
+            "command": "python3 .previewer-probes/checkout_contract.py",
+            "protocol": "nein-probe-v1",
+            "check": "checkout-total-contract",
+            "compareBase": true,
+            "file": ".previewer-probes/checkout_contract.py",
+            "source": "import json\nimport sys\nfrom pathlib import Path\n\nsys.path.insert(0, str(Path(__file__).resolve().parents[1]))\nCHECK = \"checkout-total-contract\"\n\n\ndef emit(outcome, reason, code):\n    print(\"NEIN_PROBE_RESULT \" + json.dumps({\"check\": CHECK, \"outcome\": outcome, \"reason\": reason}))\n    raise SystemExit(code)\n\n\ntry:\n    from checkout import checkout\n    if not callable(checkout):\n        raise RuntimeError(\"checkout is not callable\")\nexcept Exception as exc:\n    emit(\"error\", f\"Setup failed: {type(exc).__name__}: {exc}\", 2)\n\nfailures = []\nfor cents in (1250, 0):\n    try:\n        actual = checkout(cents)\n    except TypeError as exc:\n        if str(exc) != \"'int' object is not subscriptable\":\n            emit(\"error\", f\"Unexpected TypeError: {exc}\", 2)\n        failures.append(f\"checkout({cents}) raises TypeError: {exc}\")\n    except Exception as exc:\n        emit(\"error\", f\"Unexpected execution failure: {type(exc).__name__}: {exc}\", 2)\n    else:\n        if actual != cents:\n            failures.append(f\"checkout({cents}) returned {actual!r}, expected {cents}\")\n\nif failures:\n    emit(\"reproduced\", \"; \".join(failures), 1)\nemit(\"passed\", \"checkout(1250) returns 1250 and checkout(0) returns 0\", 0)\n",
+            "exitCode": 1,
+            "output": "NEIN_PROBE_RESULT {\"check\": \"checkout-total-contract\", \"outcome\": \"reproduced\", \"reason\": \"checkout(1250) raises TypeError: 'int' object is not subscriptable; checkout(0) raises TypeError: 'int' object is not subscriptable\"}",
+            "outcome": "reproduced",
+            "reason": "checkout(1250) raises TypeError: 'int' object is not subscriptable; checkout(0) raises TypeError: 'int' object is not subscriptable",
+            "reproduced": true,
+            "baseline": {
+              "sha": "ac002f3ab6d267eab78325c3e79a4bf6c86fe511",
+              "outcome": "passed",
+              "reason": "checkout(1250) returns 1250 and checkout(0) returns 0",
+              "exitCode": 0,
+              "output": "NEIN_PROBE_RESULT {\"check\": \"checkout-total-contract\", \"outcome\": \"passed\", \"reason\": \"checkout(1250) returns 1250 and checkout(0) returns 0\"}"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "case": "lang-eval-02",
+      "variant": "baseline",
+      "status": "done",
+      "seconds": 20.861,
+      "usage": {
+        "input": 5621,
+        "output": 544,
+        "cacheRead": 19456,
+        "cacheWrite": 0,
+        "usd": 0.0186276,
+        "coverage": {
+          "messages": 5,
+          "tokens": 5,
+          "priced": 5
+        },
+        "source": "catalog-estimate"
+      },
+      "referenceDetected": false,
+      "error": null,
+      "findings": []
+    },
+    {
+      "case": "lang-eval-02",
+      "variant": "candidate",
+      "status": "done",
+      "seconds": 39.587,
+      "usage": {
+        "input": 1767,
+        "output": 1166,
+        "cacheRead": 25856,
+        "cacheWrite": 0,
+        "usd": 0.0177796,
+        "coverage": {
+          "messages": 5,
+          "tokens": 5,
+          "priced": 5
+        },
+        "source": "catalog-estimate"
+      },
+      "referenceDetected": false,
+      "error": null,
+      "findings": []
+    },
+    {
+      "case": "nein-receipts",
+      "variant": "baseline",
+      "status": "done",
+      "seconds": 242.098,
+      "usage": {
+        "input": 91388,
+        "output": 7518,
+        "cacheRead": 976128,
+        "cacheWrite": 0,
+        "usd": 0.35556879999999996,
+        "coverage": {
+          "messages": 21,
+          "tokens": 21,
+          "priced": 21
+        },
+        "source": "catalog-estimate"
+      },
+      "referenceDetected": true,
+      "error": null,
+      "findings": [
+        {
+          "title": "Los caracteres anchos pueden detener la interfaz",
+          "condition": "Una llamada contiene suficientes caracteres de doble anchura en su ruta, comando, consulta o resumen.",
+          "consequence": "El recibo supera el ancho disponible. En el modo de terminal normal, Pi lanza un error y detiene la interfaz; la base ajustaba correctamente esta misma llamada.",
+          "citations": [
+            "pi-package/extensions/receipts.ts@5c0354c:L61-L64",
+            "pi-package/extensions/receipts.ts@5c0354c:L224-L235",
+            "pi-package/extensions/tools-view.ts@5c0354c:L40-L44"
+          ],
+          "probe": {
+            "command": "bun .previewer-probes/tool-view.ts receipt-terminal-width",
+            "protocol": "nein-probe-v1",
+            "check": "receipt-terminal-width",
+            "compareBase": true,
+            "file": ".previewer-probes/tool-view.ts",
+            "source": "import { existsSync, readFileSync } from \"node:fs\";\nimport { homedir } from \"node:os\";\nimport { resolve, join } from \"node:path\";\nimport { pathToFileURL } from \"node:url\";\nimport { mock } from \"bun:test\";\n\nconst check = process.argv[2];\nfunction result(outcome: string, reason: string, code: number): never {\n  process.stdout.write(`NEIN_PROBE_RESULT ${JSON.stringify({ check, outcome, reason })}\\n`);\n  process.exit(code);\n}\ntry {\n  if (![\"receipt-terminal-width\", \"expanded-output-controls\"].includes(check)) throw new Error(\"Unknown check\");\n  const version = JSON.parse(readFileSync(\"runtime.json\", \"utf8\")).pi.version;\n  const roots = [process.env.N_EIN_HOME, join(homedir(), \".n_ein\")].filter(Boolean) as string[];\n  const modules = roots.map(root => join(root, \"runtimes/pi\", version, \"global/node_modules\"))\n    .find(path => existsSync(join(path, \"@earendil-works/pi-coding-agent/package.json\")));\n  if (!modules) throw new Error(`Pi ${version} runtime is required`);\n  const load = (path: string) => import(pathToFileURL(join(modules, path)).href);\n  const tui = await load(\"@earendil-works/pi-tui/dist/index.js\");\n  mock.module(\"@earendil-works/pi-tui\", () => tui);\n  const { initTheme } = await load(\"@earendil-works/pi-coding-agent/dist/modes/interactive/theme/theme.js\");\n  initTheme(\"dark\", false);\n  const { ToolExecutionComponent } = await load(\"@earendil-works/pi-coding-agent/dist/modes/interactive/components/tool-execution.js\");\n  const { readRenderers } = await load(\"@earendil-works/pi-coding-agent/dist/core/tools/renderers/read.js\");\n  let resolver: any;\n  if (existsSync(\"pi-package/extensions/tools-view.ts\")) {\n    const { default: register } = await import(pathToFileURL(resolve(\"pi-package/extensions/tools-view.ts\")).href);\n    register({ registerToolRenderer(fn: any) { resolver = fn; } });\n    if (typeof resolver !== \"function\") throw new Error(\"Extension did not register its resolver\");\n  }\n  const tool = check === \"receipt-terminal-width\" ? \"read\" : \"external_search\";\n  const native = tool === \"read\" ? readRenderers : {};\n  const definition = resolver ? resolver(tool, () => native) : native;\n  const args = tool === \"read\" ? { path: `docs/${\"界\".repeat(80)}.txt` } : { query: \"example\" };\n  const row = new ToolExecutionComponent(tool, \"probe-call\", args, { showImages: false }, definition, { requestRender() {} }, process.cwd());\n  row.setArgsComplete();\n  row.markExecutionStarted();\n  const output = check === \"expanded-output-controls\" ? \"hello\\u001b[2Jthere\" : \"example\\n\";\n  row.updateResult({ content: [{ type: \"text\", text: output }], details: undefined, isError: false });\n  row.setExpanded(check === \"expanded-output-controls\");\n  const width = 60;\n  const lines: string[] = row.render(width);\n  if (!lines.length || !lines.some(line => line.includes(tool === \"read\" ? \"docs/\" : \"hello\"))) throw new Error(\"Tool row did not render its expected content\");\n  if (check === \"receipt-terminal-width\") {\n    const measured = Math.max(...lines.map(line => tui.visibleWidth(line)));\n    if (measured > width) result(\"reproduced\", `Collapsed read row occupies ${measured} terminal columns at width ${width}`, 1);\n    result(\"passed\", `Read row was rendered and every line fits within ${width} terminal columns`, 0);\n  }\n  const injected = lines.some(line => line.includes(\"\\u001b[2J\"));\n  if (injected) result(\"reproduced\", \"Expanded generic tool output retains the clear-screen terminal command ESC[2J\", 1);\n  if (!lines.join(\"\").includes(\"there\")) throw new Error(\"Output suffix was not rendered\");\n  result(\"passed\", \"Expanded generic tool output renders both words but removes the clear-screen terminal command\", 0);\n} catch (error) {\n  result(\"error\", error instanceof Error ? error.message : String(error), 2);\n}\n",
+            "exitCode": 1,
+            "output": "NEIN_PROBE_RESULT {\"check\":\"receipt-terminal-width\",\"outcome\":\"reproduced\",\"reason\":\"Collapsed read row occupies 91 terminal columns at width 60\"}",
+            "outcome": "reproduced",
+            "reason": "Collapsed read row occupies 91 terminal columns at width 60",
+            "reproduced": true,
+            "baseline": {
+              "sha": "803493b14a2d820b86acdca900e2de00ffd572ee",
+              "outcome": "passed",
+              "reason": "Read row was rendered and every line fits within 60 terminal columns",
+              "exitCode": 0,
+              "output": "NEIN_PROBE_RESULT {\"check\":\"receipt-terminal-width\",\"outcome\":\"passed\",\"reason\":\"Read row was rendered and every line fits within 60 terminal columns\"}"
+            }
+          }
+        },
+        {
+          "title": "El detalle genérico permite órdenes de terminal en la salida",
+          "condition": "Una herramienta sin renderResult propio devuelve secuencias de control, como ESC[2J, y se despliega su detalle.",
+          "consequence": "La salida de una herramienta puede modificar la pantalla en vez de mostrarse como texto. La prueba confirma que la orden de borrado se conserva en head y se elimina en la base.",
+          "citations": [
+            "pi-package/extensions/tools-view.ts@5c0354c:L50-L56",
+            "pi-package/extensions/receipts.ts@5c0354c:L80-L82"
+          ],
+          "probe": {
+            "command": "bun .previewer-probes/tool-view.ts expanded-output-controls",
+            "protocol": "nein-probe-v1",
+            "check": "expanded-output-controls",
+            "compareBase": true,
+            "file": ".previewer-probes/tool-view.ts",
+            "source": "import { existsSync, readFileSync } from \"node:fs\";\nimport { homedir } from \"node:os\";\nimport { resolve, join } from \"node:path\";\nimport { pathToFileURL } from \"node:url\";\nimport { mock } from \"bun:test\";\n\nconst check = process.argv[2];\nfunction result(outcome: string, reason: string, code: number): never {\n  process.stdout.write(`NEIN_PROBE_RESULT ${JSON.stringify({ check, outcome, reason })}\\n`);\n  process.exit(code);\n}\ntry {\n  if (![\"receipt-terminal-width\", \"expanded-output-controls\"].includes(check)) throw new Error(\"Unknown check\");\n  const version = JSON.parse(readFileSync(\"runtime.json\", \"utf8\")).pi.version;\n  const roots = [process.env.N_EIN_HOME, join(homedir(), \".n_ein\")].filter(Boolean) as string[];\n  const modules = roots.map(root => join(root, \"runtimes/pi\", version, \"global/node_modules\"))\n    .find(path => existsSync(join(path, \"@earendil-works/pi-coding-agent/package.json\")));\n  if (!modules) throw new Error(`Pi ${version} runtime is required`);\n  const load = (path: string) => import(pathToFileURL(join(modules, path)).href);\n  const tui = await load(\"@earendil-works/pi-tui/dist/index.js\");\n  mock.module(\"@earendil-works/pi-tui\", () => tui);\n  const { initTheme } = await load(\"@earendil-works/pi-coding-agent/dist/modes/interactive/theme/theme.js\");\n  initTheme(\"dark\", false);\n  const { ToolExecutionComponent } = await load(\"@earendil-works/pi-coding-agent/dist/modes/interactive/components/tool-execution.js\");\n  const { readRenderers } = await load(\"@earendil-works/pi-coding-agent/dist/core/tools/renderers/read.js\");\n  let resolver: any;\n  if (existsSync(\"pi-package/extensions/tools-view.ts\")) {\n    const { default: register } = await import(pathToFileURL(resolve(\"pi-package/extensions/tools-view.ts\")).href);\n    register({ registerToolRenderer(fn: any) { resolver = fn; } });\n    if (typeof resolver !== \"function\") throw new Error(\"Extension did not register its resolver\");\n  }\n  const tool = check === \"receipt-terminal-width\" ? \"read\" : \"external_search\";\n  const native = tool === \"read\" ? readRenderers : {};\n  const definition = resolver ? resolver(tool, () => native) : native;\n  const args = tool === \"read\" ? { path: `docs/${\"界\".repeat(80)}.txt` } : { query: \"example\" };\n  const row = new ToolExecutionComponent(tool, \"probe-call\", args, { showImages: false }, definition, { requestRender() {} }, process.cwd());\n  row.setArgsComplete();\n  row.markExecutionStarted();\n  const output = check === \"expanded-output-controls\" ? \"hello\\u001b[2Jthere\" : \"example\\n\";\n  row.updateResult({ content: [{ type: \"text\", text: output }], details: undefined, isError: false });\n  row.setExpanded(check === \"expanded-output-controls\");\n  const width = 60;\n  const lines: string[] = row.render(width);\n  if (!lines.length || !lines.some(line => line.includes(tool === \"read\" ? \"docs/\" : \"hello\"))) throw new Error(\"Tool row did not render its expected content\");\n  if (check === \"receipt-terminal-width\") {\n    const measured = Math.max(...lines.map(line => tui.visibleWidth(line)));\n    if (measured > width) result(\"reproduced\", `Collapsed read row occupies ${measured} terminal columns at width ${width}`, 1);\n    result(\"passed\", `Read row was rendered and every line fits within ${width} terminal columns`, 0);\n  }\n  const injected = lines.some(line => line.includes(\"\\u001b[2J\"));\n  if (injected) result(\"reproduced\", \"Expanded generic tool output retains the clear-screen terminal command ESC[2J\", 1);\n  if (!lines.join(\"\").includes(\"there\")) throw new Error(\"Output suffix was not rendered\");\n  result(\"passed\", \"Expanded generic tool output renders both words but removes the clear-screen terminal command\", 0);\n} catch (error) {\n  result(\"error\", error instanceof Error ? error.message : String(error), 2);\n}\n",
+            "exitCode": 1,
+            "output": "NEIN_PROBE_RESULT {\"check\":\"expanded-output-controls\",\"outcome\":\"reproduced\",\"reason\":\"Expanded generic tool output retains the clear-screen terminal command ESC[2J\"}",
+            "outcome": "reproduced",
+            "reason": "Expanded generic tool output retains the clear-screen terminal command ESC[2J",
+            "reproduced": true,
+            "baseline": {
+              "sha": "803493b14a2d820b86acdca900e2de00ffd572ee",
+              "outcome": "passed",
+              "reason": "Expanded generic tool output renders both words but removes the clear-screen terminal command",
+              "exitCode": 0,
+              "output": "NEIN_PROBE_RESULT {\"check\":\"expanded-output-controls\",\"outcome\":\"passed\",\"reason\":\"Expanded generic tool output renders both words but removes the clear-screen terminal command\"}"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "case": "nein-receipts",
+      "variant": "candidate",
+      "status": "failed",
+      "seconds": 302.063,
+      "usage": {
+        "input": 84088,
+        "output": 8983,
+        "cacheRead": 1105280,
+        "cacheWrite": 0,
+        "usd": 0.368534,
+        "coverage": {
+          "messages": 23,
+          "tokens": 23,
+          "priced": 23
+        },
+        "source": "catalog-estimate"
+      },
+      "referenceDetected": false,
+      "error": "tiempo agotado (5 min)",
+      "findings": []
+    },
+    {
+      "case": "plan-fechas",
+      "variant": "baseline",
+      "status": "done",
+      "seconds": 209.862,
+      "usage": {
+        "input": 41636,
+        "output": 6339,
+        "cacheRead": 372352,
+        "cacheWrite": 0,
+        "usd": 0.18389719999999998,
+        "coverage": {
+          "messages": 13,
+          "tokens": 13,
+          "priced": 13
+        },
+        "source": "catalog-estimate"
+      },
+      "referenceDetected": false,
+      "error": null,
+      "findings": [
+        {
+          "title": "El esquema pierde los tipos que exige el motor",
+          "condition": "Al ejecutar TypeScript sobre .nuxt/tsconfig.server.json, centro queda inferido como Record<string, unknown> y complementarios como Record<string, unknown>[], incompatibles con Center y ComplementaryModule[].",
+          "consequence": "Las asignaciones a PlanningInput producen dos TS2322 adicionales. El mismo probe pasa en la base y reproduce ambos errores en head; son independientes de los errores de tipos preexistentes.",
+          "citations": [
+            "server/utils/schemas/generate-body-schema.ts@9247e47:L51-L55",
+            "server/api/generate.post.ts@9247e47:L96-L100"
+          ],
+          "probe": {
+            "command": "bun install --frozen-lockfile >&2 && bun .previewer-probes/generate-planning-types.ts",
+            "protocol": "nein-probe-v1",
+            "check": "generate-planning-input-types",
+            "compareBase": true,
+            "file": ".previewer-probes/generate-planning-types.ts",
+            "source": "import ts from 'typescript'\nimport { readFileSync } from 'node:fs'\nimport { resolve } from 'node:path'\n\nconst check = 'generate-planning-input-types'\nfunction finish(outcome: 'reproduced' | 'passed' | 'error', reason: string): never {\n  console.log(`NEIN_PROBE_RESULT ${JSON.stringify({ check, outcome, reason })}`)\n  process.exit(outcome === 'reproduced' ? 1 : outcome === 'error' ? 2 : 0)\n}\n\ntry {\n  const configPath = resolve('.nuxt/tsconfig.server.json')\n  const config = ts.readConfigFile(configPath, ts.sys.readFile)\n  if (config.error) throw new Error(ts.flattenDiagnosticMessageText(config.error.messageText, '\\n'))\n  const parsed = ts.parseJsonConfigFileContent(config.config, ts.sys, resolve('.nuxt'))\n  if (parsed.errors.length) throw new Error(ts.formatDiagnosticsWithColorAndContext(parsed.errors, {\n    getCanonicalFileName: x => x, getCurrentDirectory: ts.sys.getCurrentDirectory, getNewLine: () => '\\n',\n  }))\n  const endpoint = resolve('server/api/generate.post.ts')\n  const sourceText = readFileSync(endpoint, 'utf8')\n  const assignments = ['center: centro', 'complementaryModules: complementarios']\n  for (const assignment of assignments) {\n    if (!sourceText.includes(assignment)) throw new Error(`No se encuentra la asignacion ${assignment}`)\n  }\n  const program = ts.createProgram(parsed.fileNames, { ...parsed.options, noEmit: true })\n  const source = program.getSourceFile(endpoint)\n  if (!source) throw new Error('El proyecto no incluye el endpoint generate')\n  const diagnostics = program.getSemanticDiagnostics(source)\n  const failures = diagnostics.filter(d => d.code === 2322 && d.start !== undefined && assignments.some(a => {\n    const start = sourceText.indexOf(a)\n    return d.start! >= start && d.start! < start + a.length\n  }))\n  const dependencyFailure = diagnostics.find(d => [2307, 2688, 6053].includes(d.code))\n  if (dependencyFailure) throw new Error(ts.flattenDiagnosticMessageText(dependencyFailure.messageText, '\\n'))\n  if (failures.length) finish('reproduced', failures.map(d => ts.flattenDiagnosticMessageText(d.messageText, ' ')).join(' | '))\n  finish('passed', 'Las asignaciones center y complementaryModules cumplen PlanningInput sin errores TS2322')\n} catch (error) {\n  finish('error', error instanceof Error ? error.message : String(error))\n}\n",
+            "exitCode": 1,
+            "output": "bun install v1.3.14 (0d9b296a)\n\n$ nuxt prepare\nℹ Nuxt Icon server bundle mode is set to local\n✔ Nuxt Icon discovered local-installed 2 collections: heroicons, lucide\n\n WARN  Duplicated imports \"isTipoEvaluacion\", the one from \"/Users/samu/Documents/01_Proyectos/n_ein/.n_ein/focus-20261030/repos/plan-fechas-worktrees/previewer-c504bced/app/utils/anexo5-evaluacion.ts\" has been ignored and \"/Users/samu/Documents/01_Proyectos/n_ein/.n_ein/focus-20261030/repos/plan-fechas-worktrees/previewer-c504bced/app/stores/evaluacion.ts\" is used\n\n\n WARN  Duplicated imports \"isTipoEvaluacion\", the one from \"/Users/samu/Documents/01_Proyectos/n_ein/.n_ein/focus-20261030/repos/plan-fechas-worktrees/previewer-c504bced/app/utils/anexo5-evaluacion.ts\" has been ignored and \"/Users/samu/Documents/01_Proyectos/n_ein/.n_ein/focus-20261030/repos/plan-fechas-worktrees/previewer-c504bced/app/stores/evaluacion.ts\" is used\n\n│\n◆  Types generated in .nuxt.\n\nChecked 813 installs across 979 packages (no changes) [1.91s]\nNEIN_PROBE_RESULT {\"check\":\"generate-planning-input-types\",\"outcome\":\"reproduced\",\"reason\":\"Type 'Record<string, unknown> | { codigo: string; nombre: string; domicilio: string; cp: string; municipio: string; provincia: string; telefono: string; email: string; }' is not assignable to type 'Center'.   Type 'Record<string, unknown>' is missing the following properties from type 'Center': codigo, nombre, domicilio, cp, and 2 more. | Type 'Record<string, unknown>[]' is not assignable to type 'ComplementaryModule[]'.   Type 'Record<string, unknown>' is missing the following properties from type 'ComplementaryModule': codigo, nombre, horas, obligatorio\"}",
+            "outcome": "reproduced",
+            "reason": "Type 'Record<string, unknown> | { codigo: string; nombre: string; domicilio: string; cp: string; municipio: string; provincia: string; telefono: string; email: string; }' is not assignable to type 'Center'.   Type 'Record<string, unknown>' is missing the following properties from type 'Center': codigo, nombre, domicilio, cp, and 2 more. | Type 'Record<string, unknown>[]' is not assignable to type 'ComplementaryModule[]'.   Type 'Record<string, unknown>' is missing the following properties from type 'ComplementaryModule': codigo, nombre, horas, obligatorio",
+            "reproduced": true,
+            "baseline": {
+              "sha": "3b41de3f04d536f0da599cd6d7142ea5dd36b0e2",
+              "outcome": "passed",
+              "reason": "Las asignaciones center y complementaryModules cumplen PlanningInput sin errores TS2322",
+              "exitCode": 0,
+              "output": "bun install v1.3.14 (0d9b296a)\n\n$ nuxt prepare\nℹ Nuxt Icon server bundle mode is set to local\n✔ Nuxt Icon discovered local-installed 2 collections: heroicons, lucide\n\n WARN  Duplicated imports \"isTipoEvaluacion\", the one from \"/Users/samu/Documents/01_Proyectos/n_ein/.n_ein/focus-20261030/repos/plan-fechas-worktrees/previewer-c504bced-base/app/utils/anexo5-evaluacion.ts\" has been ignored and \"/Users/samu/Documents/01_Proyectos/n_ein/.n_ein/focus-20261030/repos/plan-fechas-worktrees/previewer-c504bced-base/app/stores/evaluacion.ts\" is used\n\n\n WARN  Duplicated imports \"isTipoEvaluacion\", the one from \"/Users/samu/Documents/01_Proyectos/n_ein/.n_ein/focus-20261030/repos/plan-fechas-worktrees/previewer-c504bced-base/app/utils/anexo5-evaluacion.ts\" has been ignored and \"/Users/samu/Documents/01_Proyectos/n_ein/.n_ein/focus-20261030/repos/plan-fechas-worktrees/previewer-c504bced-base/app/stores/evaluacion.ts\" is used\n\n│\n◆  Types generated in .nuxt.\n\n+ @iconify-json/heroicons@1.2.3\n+ @iconify-json/lucide@1.2.111\n+ @nuxt/fonts@0.14.0\n+ @nuxt/test-utils@4.0.3\n+ @tailwindcss/vite@4.3.0\n+ @vitest/coverage-v8@4.1.8\n+ @vue/test-utils@2.4.11\n+ drizzle-kit@0.31.10\n+ jsdom@29.1.1\n+ vitest@4.1.8\n+ @neondatabase/serverless@1.1.0\n+ @nuxt/icon@2.2.3\n+ @pinia/nuxt@0.11.3\n+ @tailwindcss/postcss@4.3.0\n+ date-fns@4.4.0\n+ docx@9.7.1\n+ docxtemplater@3.68.7\n+ drizzle-orm@0.45.2\n+ nuxt@4.4.2\n+ pdfmake@0.3.10\n+ pinia@3.0.4\n+ pizzip@3.2.0\n+ reka-ui@2.9.9\n+ tailwindcss@4.3.0\n+ vue@3.5.35\n+ vue-router@5.1.0\n+ zod@4.4.3\n\n762 packages installed [5.71s]\nNEIN_PROBE_RESULT {\"check\":\"generate-planning-input-types\",\"outcome\":\"passed\",\"reason\":\"Las asignaciones center y complementaryModules cumplen PlanningInput sin errores TS2322\"}"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "case": "plan-fechas",
+      "variant": "candidate",
+      "status": "done",
+      "seconds": 252.339,
+      "usage": {
+        "input": 47420,
+        "output": 7941,
+        "cacheRead": 542848,
+        "cacheWrite": 0,
+        "usd": 0.22853479999999998,
+        "coverage": {
+          "messages": 17,
+          "tokens": 17,
+          "priced": 17
+        },
+        "source": "catalog-estimate"
+      },
+      "referenceDetected": false,
+      "error": null,
+      "findings": [
+        {
+          "title": "El resultado validado no encaja con los tipos del motor",
+          "condition": "El handler utiliza parsed.data para asignar Record<string, unknown> a Center y Record<string, unknown>[] a ComplementaryModule[].",
+          "consequence": "La comprobación de tipos produce dos TS2322 nuevos en generate.post.ts. Los tests del esquema pasan porque no verifican esta compatibilidad.",
+          "citations": [
+            "server/utils/schemas/generate-body-schema.ts@9247e47b2cea1a18b44abc4f9058d5b0713bfc75:L52-L55",
+            "server/api/generate.post.ts@9247e47b2cea1a18b44abc4f9058d5b0713bfc75:L96-L100"
+          ],
+          "probe": {
+            "command": "bun install --frozen-lockfile --ignore-scripts >&2 && bun .previewer-probes/generate-planning-types.ts",
+            "protocol": "nein-probe-v1",
+            "check": "generate-planning-types",
+            "compareBase": true,
+            "file": ".previewer-probes/generate-planning-types.ts",
+            "source": "import ts from 'typescript'\nimport path from 'node:path'\nimport { existsSync } from 'node:fs'\n\nconst check = 'generate-planning-types'\nfunction finish(outcome: string, reason: string, code: number): never {\n  process.stdout.write(`NEIN_PROBE_RESULT ${JSON.stringify({ check, outcome, reason })}\\n`)\n  process.exit(code)\n}\n\ntry {\n  const root = process.cwd()\n  const handler = path.join(root, 'server/api/generate.post.ts')\n  const globals = path.join(root, '.previewer-probes/virtual-nitro-globals.d.ts')\n  if (!existsSync(handler)) throw new Error('Missing tracked generate handler')\n  const declarations = `\n    declare function defineEventHandler<T>(handler: (event: any) => T): any;\n    declare function readBody(event: any): Promise<any>;\n    declare function createError(input: any): Error;\n    declare function setResponseStatus(event: any, status: number): void;\n    declare function $fetch<T>(url: string): Promise<T>;\n  `\n  const options: ts.CompilerOptions = {\n    target: ts.ScriptTarget.ES2022,\n    module: ts.ModuleKind.ESNext,\n    moduleResolution: ts.ModuleResolutionKind.Bundler,\n    strict: true,\n    skipLibCheck: true,\n    noEmit: true,\n    types: [],\n  }\n  const host = ts.createCompilerHost(options)\n  const originalGet = host.getSourceFile.bind(host)\n  host.getSourceFile = (file, languageVersion, onError, shouldCreateNewSourceFile) => file === globals\n    ? ts.createSourceFile(file, declarations, languageVersion, true)\n    : originalGet(file, languageVersion, onError, shouldCreateNewSourceFile)\n  const program = ts.createProgram([handler, globals], options, host)\n  if (!program.getSourceFile(handler) || !program.getSourceFile(path.join(root, 'server/utils/calculatePlanning.ts'))) {\n    throw new Error('Handler or real PlanningInput was not loaded by TypeScript')\n  }\n  const diagnostics = ts.getPreEmitDiagnostics(program)\n  const setupErrors = diagnostics.filter(d => [2307, 2688, 6053].includes(d.code) || (d.file?.fileName === handler && d.code === 2304))\n  if (setupErrors.length) throw new Error(ts.formatDiagnosticsWithColorAndContext(setupErrors, { getCanonicalFileName: f => f, getCurrentDirectory: () => root, getNewLine: () => '\\n' }))\n  const failures = diagnostics.filter(d => d.file?.fileName === handler && d.code === 2322 && /Center|ComplementaryModule/.test(ts.flattenDiagnosticMessageText(d.messageText, ' ')))\n  if (failures.length) {\n    finish('reproduced', failures.map(d => {\n      const position = d.file!.getLineAndCharacterOfPosition(d.start!)\n      return `generate.post.ts:${position.line + 1} TS${d.code} ${ts.flattenDiagnosticMessageText(d.messageText, ' ')}`\n    }).join('; '), 1)\n  }\n  finish('passed', 'The tracked generate handler assigns center and complementaryModules to the real PlanningInput without type errors', 0)\n} catch (error) {\n  finish('error', error instanceof Error ? error.stack || error.message : String(error), 2)\n}\n",
+            "exitCode": 1,
+            "output": "bun install v1.3.14 (0d9b296a)\n\nChecked 813 installs across 979 packages (no changes) [35.00ms]\nNEIN_PROBE_RESULT {\"check\":\"generate-planning-types\",\"outcome\":\"reproduced\",\"reason\":\"generate.post.ts:96 TS2322 Type 'Record<string, unknown> | { codigo: string; nombre: string; domicilio: string; cp: string; municipio: string; provincia: string; telefono: string; email: string; }' is not assignable to type 'Center'.   Type 'Record<string, unknown>' is missing the following properties from type 'Center': codigo, nombre, domicilio, cp, and 2 more.; generate.post.ts:100 TS2322 Type 'Record<string, unknown>[]' is not assignable to type 'ComplementaryModule[]'.   Type 'Record<string, unknown>' is missing the following properties from type 'ComplementaryModule': codigo, nombre, horas, obligatorio\"}",
+            "outcome": "reproduced",
+            "reason": "generate.post.ts:96 TS2322 Type 'Record<string, unknown> | { codigo: string; nombre: string; domicilio: string; cp: string; municipio: string; provincia: string; telefono: string; email: string; }' is not assignable to type 'Center'.   Type 'Record<string, unknown>' is missing the following properties from type 'Center': codigo, nombre, domicilio, cp, and 2 more.; generate.post.ts:100 TS2322 Type 'Record<string, unknown>[]' is not assignable to type 'ComplementaryModule[]'.   Type 'Record<string, unknown>' is missing the following properties from type 'ComplementaryModule': codigo, nombre, horas, obligatorio",
+            "reproduced": true,
+            "baseline": {
+              "sha": "3b41de3f04d536f0da599cd6d7142ea5dd36b0e2",
+              "outcome": "passed",
+              "reason": "The tracked generate handler assigns center and complementaryModules to the real PlanningInput without type errors",
+              "exitCode": 0,
+              "output": "bun install v1.3.14 (0d9b296a)\n\n+ @iconify-json/heroicons@1.2.3\n+ @iconify-json/lucide@1.2.111\n+ @nuxt/fonts@0.14.0\n+ @nuxt/test-utils@4.0.3\n+ @tailwindcss/vite@4.3.0\n+ @vitest/coverage-v8@4.1.8\n+ @vue/test-utils@2.4.11\n+ drizzle-kit@0.31.10\n+ jsdom@29.1.1\n+ vitest@4.1.8\n+ @neondatabase/serverless@1.1.0\n+ @nuxt/icon@2.2.3\n+ @pinia/nuxt@0.11.3\n+ @tailwindcss/postcss@4.3.0\n+ date-fns@4.4.0\n+ docx@9.7.1\n+ docxtemplater@3.68.7\n+ drizzle-orm@0.45.2\n+ nuxt@4.4.2\n+ pdfmake@0.3.10\n+ pinia@3.0.4\n+ pizzip@3.2.0\n+ reka-ui@2.9.9\n+ tailwindcss@4.3.0\n+ vue@3.5.35\n+ vue-router@5.1.0\n+ zod@4.4.3\n\n762 packages installed [580.00ms]\nNEIN_PROBE_RESULT {\"check\":\"generate-planning-types\",\"outcome\":\"passed\",\"reason\":\"The tracked generate handler assigns center and complementaryModules to the real PlanningInput without type errors\"}"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "case": "reserved-race",
+      "variant": "baseline",
+      "status": "done",
+      "seconds": 58.107,
+      "usage": {
+        "input": 12713,
+        "output": 1856,
+        "cacheRead": 21120,
+        "cacheWrite": 0,
+        "usd": 0.046098,
+        "coverage": {
+          "messages": 6,
+          "tokens": 6,
+          "priced": 6
+        },
+        "source": "catalog-estimate"
+      },
+      "referenceDetected": true,
+      "error": null,
+      "findings": [
+        {
+          "title": "Un trabajo anterior elimina del registro a su reemplazo",
+          "condition": "Dos llamadas a run comparten clave y la primera termina mientras la segunda sigue pendiente.",
+          "consequence": "active deja de mostrar el trabajo pendiente más reciente. La eliminación incondicional introduce este fallo; la base conservaba la entrada del reemplazo.",
+          "citations": [
+            "registry.ts@9294135027f73ba3cdc341be59852d17864ce689:L4-L7"
+          ],
+          "probe": {
+            "command": "node .previewer-probes/replacement.mjs",
+            "protocol": "nein-probe-v1",
+            "check": "replacement-survives-old-completion",
+            "compareBase": true,
+            "file": ".previewer-probes/replacement.mjs",
+            "source": "let result;\ntry {\n  const { Registry } = await import('../registry.ts');\n  const registry = new Registry();\n  let finishOld;\n  let finishNew;\n  const oldGate = new Promise(resolve => { finishOld = resolve; });\n  const newGate = new Promise(resolve => { finishNew = resolve; });\n  let oldStarted = false;\n  let newStarted = false;\n  const oldRun = registry.run('same-key', () => { oldStarted = true; return oldGate; });\n  const oldEntry = registry.active.get('same-key');\n  const newRun = registry.run('same-key', () => { newStarted = true; return newGate; });\n  const newEntry = registry.active.get('same-key');\n  await Promise.resolve();\n  if (!oldStarted || !newStarted || !(newEntry instanceof Promise) || newEntry === oldEntry) {\n    throw new Error('Setup did not create two overlapping jobs with the newest entry exposed');\n  }\n  finishOld('old-result');\n  if (await oldRun !== 'old-result') throw new Error('Old job did not return its own result');\n  const preservedNewest = registry.active.get('same-key') === newEntry;\n  finishNew('new-result');\n  if (await newRun !== 'new-result') throw new Error('New job did not return its own result');\n  if (registry.active.has('same-key')) throw new Error('Completed newest job was not cleaned up');\n  result = {\n    check: 'replacement-survives-old-completion',\n    outcome: preservedNewest ? 'passed' : 'reproduced',\n    reason: preservedNewest\n      ? 'Completing old work preserved the newer pending entry until the newer work finished'\n      : 'Completing old work removed the newer entry while the newer work was still pending'\n  };\n} catch (error) {\n  result = { check: 'replacement-survives-old-completion', outcome: 'error', reason: String(error) };\n}\nprocess.stdout.write(`NEIN_PROBE_RESULT ${JSON.stringify(result)}\\n`);\nprocess.exitCode = result.outcome === 'error' ? 2 : result.outcome === 'reproduced' ? 1 : 0;\n",
+            "exitCode": 1,
+            "output": "NEIN_PROBE_RESULT {\"check\":\"replacement-survives-old-completion\",\"outcome\":\"reproduced\",\"reason\":\"Completing old work removed the newer entry while the newer work was still pending\"}",
+            "outcome": "reproduced",
+            "reason": "Completing old work removed the newer entry while the newer work was still pending",
+            "reproduced": true,
+            "baseline": {
+              "sha": "3e2ad4a9066741472e4a50bf856118bac7f6780f",
+              "outcome": "passed",
+              "reason": "Completing old work preserved the newer pending entry until the newer work finished",
+              "exitCode": 0,
+              "output": "NEIN_PROBE_RESULT {\"check\":\"replacement-survives-old-completion\",\"outcome\":\"passed\",\"reason\":\"Completing old work preserved the newer pending entry until the newer work finished\"}"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "case": "reserved-race",
+      "variant": "candidate",
+      "status": "done",
+      "seconds": 42.962,
+      "usage": {
+        "input": 6544,
+        "output": 2137,
+        "cacheRead": 29056,
+        "cacheWrite": 0,
+        "usd": 0.037363600000000004,
+        "coverage": {
+          "messages": 6,
+          "tokens": 6,
+          "priced": 6
+        },
+        "source": "catalog-estimate"
+      },
+      "referenceDetected": true,
+      "error": null,
+      "findings": [
+        {
+          "title": "Una tarea antigua borra el registro de su reemplazo",
+          "condition": "Dos llamadas a Registry.run comparten clave; la primera se resuelve o rechaza mientras la segunda sigue pendiente.",
+          "consequence": "El finally de la primera elimina la entrada de la segunda. Quien consulte active verá la clave ausente en lugar de la promesa pendiente más reciente. La base evitaba esto comprobando qué promesa estaba registrada.",
+          "citations": [
+            "registry.ts@9294135027f73ba3cdc341be59852d17864ce689:L3-L7"
+          ],
+          "probe": {
+            "command": "node .previewer-probes/replacement.mjs",
+            "protocol": "nein-probe-v1",
+            "check": "registry-replacement-cleanup",
+            "compareBase": true,
+            "file": ".previewer-probes/replacement.mjs",
+            "source": "import { Registry } from '../registry.ts';\n\nconst check = 'registry-replacement-cleanup';\nfunction deferred() {\n  let resolve, reject;\n  const promise = new Promise((yes, no) => { resolve = yes; reject = no; });\n  return { promise, resolve, reject };\n}\nfunction requireSetup(value, message) {\n  if (!value) throw new Error(message);\n}\n\nasync function exercise() {\n  const failures = [];\n  for (const rejects of [false, true]) {\n    const registry = new Registry();\n    const older = deferred();\n    const newer = deferred();\n    const failure = new Error('expected work failure');\n    const oldResult = registry.run('key', () => older.promise).then(\n      value => ({ value }), error => ({ error })\n    );\n    const oldEntry = registry.active.get('key');\n    const newResult = registry.run('key', () => newer.promise);\n    const newEntry = registry.active.get('key');\n    requireSetup(oldEntry && newEntry && oldEntry !== newEntry, 'replacement was not registered');\n    await Promise.resolve();\n    if (rejects) older.reject(failure);\n    else older.resolve('older');\n    const outcome = await oldResult;\n    requireSetup(rejects ? outcome.error === failure : outcome.value === 'older', 'old result changed unexpectedly');\n    if (registry.active.get('key') !== newEntry) {\n      failures.push(`older ${rejects ? 'rejection' : 'completion'} removed the still-pending replacement`);\n    }\n    newer.resolve('newer');\n    requireSetup(await newResult === 'newer', 'new result changed unexpectedly');\n    if (registry.active.has('key')) failures.push('finished replacement was not cleaned up');\n  }\n  for (const rejects of [false, true]) {\n    const registry = new Registry();\n    const work = deferred();\n    const failure = new Error('expected single failure');\n    const result = registry.run('single', () => work.promise).then(\n      value => ({ value }), error => ({ error })\n    );\n    requireSetup(registry.active.has('single'), 'single work was not registered');\n    await Promise.resolve();\n    if (rejects) work.reject(failure);\n    else work.resolve('single');\n    const outcome = await result;\n    requireSetup(rejects ? outcome.error === failure : outcome.value === 'single', 'single result changed unexpectedly');\n    if (registry.active.has('single')) failures.push('single finished work was not cleaned up');\n  }\n  return failures;\n}\n\ntry {\n  const failures = await exercise();\n  const outcome = failures.length ? 'reproduced' : 'passed';\n  console.log('NEIN_PROBE_RESULT ' + JSON.stringify({ check, outcome, reason: failures.length ? failures.join('; ') : 'Pending replacements survive older completion and rejection; results and final cleanup are preserved.' }));\n  process.exitCode = failures.length ? 1 : 0;\n} catch (error) {\n  console.log('NEIN_PROBE_RESULT ' + JSON.stringify({ check, outcome: 'error', reason: String(error.stack || error) }));\n  process.exitCode = 2;\n}\n",
+            "exitCode": 1,
+            "output": "NEIN_PROBE_RESULT {\"check\":\"registry-replacement-cleanup\",\"outcome\":\"reproduced\",\"reason\":\"older completion removed the still-pending replacement; older rejection removed the still-pending replacement\"}",
+            "outcome": "reproduced",
+            "reason": "older completion removed the still-pending replacement; older rejection removed the still-pending replacement",
+            "reproduced": true,
+            "baseline": {
+              "sha": "3e2ad4a9066741472e4a50bf856118bac7f6780f",
+              "outcome": "passed",
+              "reason": "Pending replacements survive older completion and rejection; results and final cleanup are preserved.",
+              "exitCode": 0,
+              "output": "NEIN_PROBE_RESULT {\"check\":\"registry-replacement-cleanup\",\"outcome\":\"passed\",\"reason\":\"Pending replacements survive older completion and rejection; results and final cleanup are preserved.\"}"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "case": "reserved-unicode",
+      "variant": "baseline",
+      "status": "done",
+      "seconds": 25.981,
+      "usage": {
+        "input": 11305,
+        "output": 791,
+        "cacheRead": 14336,
+        "cacheWrite": 0,
+        "usd": 0.0319536,
+        "coverage": {
+          "messages": 5,
+          "tokens": 5,
+          "priced": 5
+        },
+        "source": "catalog-estimate"
+      },
+      "referenceDetected": false,
+      "error": null,
+      "findings": []
+    },
+    {
+      "case": "reserved-unicode",
+      "variant": "candidate",
+      "status": "done",
+      "seconds": 44.793,
+      "usage": {
+        "input": 1804,
+        "output": 1426,
+        "cacheRead": 25728,
+        "cacheWrite": 0,
+        "usd": 0.0204408,
+        "coverage": {
+          "messages": 5,
+          "tokens": 5,
+          "priced": 5
+        },
+        "source": "catalog-estimate"
+      },
+      "referenceDetected": false,
+      "error": null,
+      "findings": []
+    }
+  ]
+}
