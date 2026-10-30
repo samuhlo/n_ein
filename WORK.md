@@ -2,11 +2,11 @@
 
 ## Objetivo
 
-Samu pide «un plan para incorporar todas estas mejoras», desarrollar «haciendo commits en una rama nueva» y montar «una PR explicando todas las mejoras incluidas». Revisará antes de sacar versión. Descubrir funciones, trabajar sin vigilancia continua y conectar petición, cambios y evidencia.
+Samu pide «un plan para incorporar todas estas mejoras», desarrollar «haciendo commits en una rama nueva» y montar «una PR explicando todas las mejoras incluidas». La PR #22 ya está integrada; ahora pide «Saca nueva version». Publicar 0.5.0-alpha.1 del canal preview, con las mejoras revisadas y sus límites explícitos.
 
 ## Autorización
 
-Implementación, pruebas aisladas, commits, push de `feat/encargo-visible` y PR hacia main autorizados el 30 de octubre. Sin merge, release ni actualización personal; legado intacto. Alcance: propuesta de la auditoría de esta conversación y [plan](docs/13-experiencia.md).
+Implementación, pruebas aisladas, commits, push de `feat/encargo-visible` y PR hacia main autorizados el 30 de octubre. La petición posterior «Saca nueva version» autoriza preparar e integrar la versión, push, tag y release necesarios. Sin actualización personal; legado intacto. Alcance: propuesta de la auditoría de esta conversación y [plan](docs/13-experiencia.md).
 
 ## Decisiones
 
@@ -39,6 +39,10 @@ Sin nuevo motor de orquestación, memoria obligatoria ni copia de credenciales. 
 - [x] T8 · Contexto — observación y ensayo de directo/continuación/delegación.
 - [x] T9 · Entrega — revisión integrada, suite/tipos, paquete, documentación, push y PR con CI.
 
+- [ ] R1 · Preparar 0.5.0-alpha.1, bootstrap, notas y candidato instalado.
+- [ ] R2 · Verificar e integrar la preparación en main y publicar el tag con su matriz.
+- [ ] R3 · Comprobar adjuntos publicados y bootstrap de Pages; registrar entrega.
+
 ## Evidencia
 
 Base `b0f6f27`; árbol limpio y origin/main sin commits adicionales. Auditoría previa: diez scripts pasan, incluido Pi con proveedor determinista. No acredita el código nuevo.
@@ -61,10 +65,10 @@ Revisión integrada: los trabajos pasan ahora por `executeTool` para conservar l
 
 T8: [piloto de contexto](evals/results/2026-10-30-context.md), tres rutas. Código aceptado en las tres, pero la delegada agotó plazo y dejó la guía pendiente; no se promueve. Directo fue más rápido/barato.
 
-T9: suite completa y paquete instalado pasan sobre `40c02a1`; la regresión posterior de comentarios largos pasa en `4fc2eaf`. [PR #22](https://github.com/samuhlo/n_ein/pull/22) abierta. [Matriz CI](https://github.com/samuhlo/n_ein/actions/runs/41045558424) completa en verde sobre `4fc2eaf`: macOS, Linux, payload común y artefacto instalado como usuario sin privilegios en Ubuntu y Arch. [Aceptación y límites](evals/results/2026-10-30-experience.md).
+T9: suite completa y paquete instalado pasan sobre `40c02a1`; la regresión posterior de comentarios largos pasa en `4fc2eaf`. [PR #22](https://github.com/samuhlo/n_ein/pull/22) integrada en `72b64ab`; su árbol coincide con el head revisado `6f22636`. [Matriz CI](https://github.com/samuhlo/n_ein/actions/runs/41045558424) completa en verde sobre `4fc2eaf`: macOS, Linux, payload común y artefacto instalado como usuario sin privilegios en Ubuntu y Arch. [Aceptación y límites](evals/results/2026-10-30-experience.md).
 
 Corrección de CI: la ejecución posterior `41046772452` detectó una carrera entre el sondeo y el arranque en la prueba de lectores. Se sustituye el polling que adquiere flock por una señal de preparación del hijo, sin cambiar los bloqueos del producto; el test nativo pasa localmente. La PR conserva ambas ejecuciones.
 
 ## Siguiente paso
 
-Revisión de Samu en la PR #22. El último commit registra el cierre y precisa una descripción de la paleta (comprobada con tests/actions.ts); la CI del head se consulta en la PR. No hacer merge ni publicar versión hasta su decisión.
+Publicar la preview 0.5.0-alpha.1 desde la rama `release/0.5.0-alpha.1`. La preparación cambia versión, bootstrap y documentación, sin alterar los runtimes ni el código revisado. La matriz de publicación verifica los mismos bytes que se adjuntan. No actualizar la instalación personal.

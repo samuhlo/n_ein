@@ -16,7 +16,7 @@ Las secciones cronológicas siguientes registran cómo se llegó aquí. Las prop
 
 ## Incorporación autorizada el 30 de octubre
 
-Tras la auditoría de Gentle Shell, Samu pide planificar e incorporar las mejoras propuestas en una rama nueva, con commits y PR explicativa. Autoriza implementación, pruebas y push de esa rama; revisará antes de sacar versión. Se añaden paleta, procesos en segundo plano, resúmenes de sesión, vista de peticiones/evidencia y diseño con feedback. Se comparan las hipótesis de foco del revisor y delegación por contexto antes de promoverlas. El recorrido ordinario mantiene un agente y un modelo; no hay autorización para actualizar la instalación personal ni publicar una release. Detalle y aceptación en [plan](13-experiencia.md).
+Tras la auditoría de Gentle Shell, Samu pide planificar e incorporar las mejoras propuestas en una rama nueva, con commits y PR explicativa. Autoriza implementación, pruebas y push de esa rama; revisará antes de sacar versión. Se añaden paleta, procesos en segundo plano, resúmenes de sesión, vista de peticiones/evidencia y diseño con feedback. Se comparan las hipótesis de foco del revisor y delegación por contexto antes de promoverlas. El recorrido ordinario mantiene un agente y un modelo. Tras integrar la PR #22, Samu pide «Saca nueva version»: autoriza preparar e integrar la versión, crear su tag y publicar la preview. La instalación personal sigue fuera de alcance. Detalle y aceptación en [plan](13-experiencia.md).
 
 ## Acordado explícitamente
 

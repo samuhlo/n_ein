@@ -15,7 +15,7 @@ El experimento de equipo se conserva desactivado: `N_EIN_TEAM=1` lo habilita exp
 ## Estado y continuidad
 
 - Rama del proyecto: consultar Git y WORK.md; la conversación actual prevalece sobre propuestas anteriores.
-- Versión del checkout: consultar `VERSION`. Entrega actual: `0.4.0-alpha.1`, canal preview. [Notas de versión](releases/0.4.0-alpha.1.md). La versión personal instalada se comprueba en su `install.json`; publicar no la actualiza por sí solo.
+- Versión del checkout: consultar `VERSION`. Entrega actual: `0.5.0-alpha.1`, canal preview. [Notas de versión](releases/0.5.0-alpha.1.md). La versión personal instalada se comprueba en su `install.json`; publicar no la actualiza por sí solo.
 - Pi 1.0.2 y CodeGraph 1.6.1 fijados en `runtime.json`. No asumir que los binarios globales coinciden.
 - Preferencias y ajustes personales viven fuera del paquete, en `~/.n_ein`. Mantener credenciales en su hogar nativo; no copiarlas desde el banco.
 - `WORK.md` es la única guía del encargo; decisiones duraderas, glosario e instrucciones del proyecto aportan memoria selectiva.
@@ -24,11 +24,11 @@ El experimento de equipo se conserva desactivado: `N_EIN_TEAM=1` lo habilita exp
 
 ## Trabajo del 30 de octubre
 
-La incorporación autorizada de paleta, procesos, sesiones, evidencia, diseño y contexto se sigue en [WORK.md](../WORK.md) y [plan de experiencia](13-experiencia.md). La entrega se revisa por PR antes de decidir versión. El documento de p_reviewer anterior y sus pendientes se conservan en [archivo de trabajo](archive/work/2026-10-30-previewer.md).
+La incorporación autorizada de paleta, procesos, sesiones, evidencia, diseño y contexto se sigue en [WORK.md](../WORK.md) y [plan de experiencia](13-experiencia.md). La PR #22 está integrada; Samu ha autorizado publicar la nueva preview. El documento de p_reviewer anterior y sus pendientes se conservan en [archivo de trabajo](archive/work/2026-10-30-previewer.md).
 
 ## Entrega actual
 
-`0.4.0-alpha.1` reúne el afinado de p_reviewer y las cadenas de PR: rangos fijados, hilos y decisiones compartidos, historial e integración final. Las sondas distinguen una reproducción de errores y escenarios no aplicables. El esquema 5 conserva los datos anteriores y crea una copia coherente antes de migrarlos; los lectores antiguos no admiten el esquema nuevo. Estado de publicación y evidencia en WORK.md.
+`0.5.0-alpha.1` incorpora la paleta buscable, procesos en segundo plano, resúmenes de sesiones, vista del encargo con evidencia, diseño con comentarios y continuación explícita de contexto. Conserva el revisor ordinario y el agente directo tras los pilotos. No añade migración de SQLite: p_reviewer sigue en el esquema 5. Estado de publicación y evidencia en WORK.md.
 
 ## Ruta de lectura
 
