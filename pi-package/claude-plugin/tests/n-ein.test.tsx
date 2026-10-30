@@ -93,7 +93,7 @@ function world(on: On, rateLimits: SessionRateLimit[] = LIMITS) {
   });
   on("session.start", ($, e) => ({ cwd: e.cwd }));
   on("session.cwd", () => ({ value: "/repo" }));
-  on("env.get", () => ({ value: "/home/samu" }));
+  on("env.get", ($, e) => ({ value: e.name === "HOME" ? "/home/samu" : undefined }));
   on("command.register", ($, e) => ({ value: { command: e.name } }));
   on("session.usage", () => ({ value: { startedAt: NOW, context: { window: 200_000 }, rateLimits } as never }));
   on("session.measure", ($, e) => ({ changed: e.changed }));

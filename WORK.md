@@ -32,7 +32,7 @@ Sin nuevo motor de orquestación, memoria obligatoria ni copia de credenciales. 
 - [x] T1 · Confianza — continuidad de correcciones, consumo desconocido y versión de Claude en CI.
 - [x] T2 · Paleta — catálogo, búsqueda, descripciones, disponibilidad, borrador y acceso por host.
 - [x] T3 · Procesos — segundo plano, monitores acotados, vista, avisos y parada antes del relevo.
-- [ ] T4 · Sesiones — objetivo/avance/siguiente paso, búsqueda, estado fechado y consulta sin inferencia.
+- [x] T4 · Sesiones — objetivo/avance/siguiente paso, búsqueda, estado fechado y consulta sin inferencia.
 - [ ] T5 · Encargo — peticiones, tareas y comprobaciones con identidad de archivos y vigencia.
 - [ ] T6 · Revisor — cobertura por riesgos y evaluación con control y casos reservados.
 - [ ] T7 · Diseño — variantes, comentarios, dirección elegida y comprobación visual.
@@ -48,6 +48,8 @@ T1: regresión nueva de consumo en rojo antes del módulo; usage, engine y web p
 T2: búsqueda local, disponibilidad, borrador y terminal estrecha comprobados; 15 pruebas del plugin pasan con Claude 2.1.302, incluida interacción del panel. Diferencia de acceso por host documentada.
 
 T3: procesos reales con backend nativo Pi, códigos de salida, monitor ruidoso, cancelación de grupo y parada sin despertar al origen pasan. Tipos contra Pi 1.0.2 pasan. Claude conserva sus tareas nativas.
+
+T4: sesiones de Pi y Claude con identidad independiente, búsqueda por proyecto/todos, conservación al cerrar y rechazo de registro corrupto comprobados. CLI empaquetada y notas incorporadas al Panel.
 
 ## Siguiente paso
 

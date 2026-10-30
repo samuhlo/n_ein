@@ -384,6 +384,7 @@ func loadState(root, project string) appState {
 	} else if _, err := os.Stat(filepath.Join(root, "go", "go.mod")); err == nil {
 		installVersion = "checkout de desarrollo"
 	}
+	pub := publishedSessions(root, project)
 	sessionRows := []row{}
 	for _, item := range recentSessions(channel, project) {
 		text := []rune(strings.ReplaceAll(item.last, "\n", " "))
@@ -393,6 +394,12 @@ func loadState(root, project string) appState {
 		action := ""
 		if item.id != "" {
 			action = "resume-" + strings.ToLower(item.runtime) + ":" + item.id
+		}
+		for _, note := range pub {
+			if note.ID == item.id && strings.EqualFold(note.Runtime, strings.TrimSuffix(item.runtime, " Code")) && note.Objective != "" {
+				text = []rune(sessionNote(note))
+				break
+			}
 		}
 		sessionRows = append(sessionRows, row{item.runtime + " " + item.when.Format("02/01 15:04"), string(text), "sesión", action})
 	}

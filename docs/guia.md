@@ -179,3 +179,9 @@ En Claude, `/nein-comandos` abre un panel nativo con buscador y botones. El host
 En Pi, pide «ejecuta el build en segundo plano» o abre `/nein:procesos` desde la paleta. El agente recibe un resultado al terminar; la vista conserva estado, salida final y ruta del log privado. Puedes detener el árbol de procesos. Los monitores filtran eventos con un máximo de 120 líneas/minuto; cada proceso tiene un plazo explícito de hasta 30 minutos y 16 MiB de salida. Los logs se conservan en el hogar del canal para diagnóstico. Cerrar o relevar la sesión detiene sus procesos. En print/JSON se usa bash síncrono.
 
 Claude conserva sus tareas en segundo plano y avisos nativos; la paleta expone `/tasks` cuando está disponible. No se crean ejecutores paralelos al host.
+
+## Encontrar y retomar trabajo
+
+`/nein:sesiones` en Pi, `/nein-sesiones búsqueda` en Claude y `nein work sessions --query texto` buscan resúmenes publicados del proyecto. Añade `--all` en la CLI para buscar otros proyectos del mismo canal. Cada resumen conserva objetivo, avance, siguiente paso, bloqueos y fecha. Una nota de más de cinco minutos se marca antigua: no acredita actividad actual ni propiedad de archivos. El Panel enriquece las sesiones que puede reanudar con sus resúmenes; su buscador habitual también encuentra esos textos.
+
+La conversación usa la skill `workspace` para publicar y consultar. Los hooks actualizan las casillas y el cierre; no copian prompts automáticamente. `nein work status` consulta el encargo sin abrir un modelo.

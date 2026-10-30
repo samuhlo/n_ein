@@ -7,6 +7,7 @@
       "./extensions/banner.ts",
       "./extensions/actions.ts",
       "./extensions/jobs.ts",
+      "./extensions/workspace.ts",
       "./extensions/tools-view.ts",
       "./extensions/router.ts",
       "./extensions/todo.ts",
