@@ -53,6 +53,7 @@ bun run tests/tools-view.ts
 bun run tests/skills.ts
 bun run tests/router.ts
 bun run tests/context.ts
+bun run tests/context-panel.ts
 bun run tests/bench.ts
 bun run tests/previewer-usage.ts
 bun run tests/previewer-store.ts

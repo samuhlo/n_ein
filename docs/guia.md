@@ -201,3 +201,7 @@ Pide variantes de una pantalla, abre «Ver diseños» en la paleta y elige una d
 El agente usa la skill `canvas`, registra avance y enlaza la aplicación local. La vista muestra diseño y aplicación, con enlace aparte cuando la app no admite iframe. «Registrar comprobación visual» exige describir lo observado; implementación y aceptación son estados distintos. Cambiar el código o el HTML convierte la aceptación en histórica. La aplicación externa puede corresponder a otros bytes: el registro no certifica ese despliegue.
 
 Los archivos viven en `docs/design/<slug>/`: HTML autocontenido, `design.json`, `comments.json` y capturas. El HTML se sirve aislado, sin acceso al padre ni red externa. Comentarios ilegibles no se sobrescriben. `nein work design list` y `design show --slug nombre` permiten consultar desde ambos runtimes.
+
+## Contexto y continuación
+
+`/nein:contexto` muestra el uso que Pi reporta, modelo y esfuerzo. El aviso al 60 % es informativo, configurable con `N_EIN_CONTEXT_NOTICE` (fracción entre 0 y 1); nunca delega ni cambia el modelo. `/nein:continuar` espera al turno, detiene procesos propios y abre una sesión nueva enlazada con la anterior, conservando ruta/modelo/esfuerzo y borrador. Requiere objetivo, autorización y siguiente paso en WORK.md. El destino contrasta la guía y la evidencia; no recibe permisos adicionales. En Claude, la paleta conserva `/context` y prepara `/compact`, sus capacidades nativas.

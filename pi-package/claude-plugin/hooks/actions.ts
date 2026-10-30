@@ -3,6 +3,8 @@
 // una búsqueda nunca ejecuta código ni llama a un modelo.
 export type Action = { id: string; label: string; description: string; keywords: string; pi: string; claude: string; prepare?: boolean };
 export const ACTIONS: readonly Action[] = [
+  { id: "context", label: "Ver contexto y modelo", description: "Consultar el uso medido y la configuración efectiva.", keywords: "tokens contexto modelo esfuerzo", pi: "nein:contexto", claude: "context" },
+  { id: "continue", label: "Continuar con contexto reducido", description: "Preparar continuación en Pi o compactación nativa en Claude. Usa el modelo.", keywords: "continuar retomar limpiar contexto", pi: "nein:continuar", claude: "compact", prepare: true },
   { id: "state", label: "Ver el encargo", description: "Peticiones, tareas y comprobaciones vigentes.", keywords: "estado progreso pendiente evidencia", pi: "nein:estado", claude: "nein-estado" },
   { id: "jobs", label: "Ver procesos", description: "Comandos en curso, resultados y logs.", keywords: "build ci esperar trabajo segundo plano", pi: "nein:procesos", claude: "tasks" },
   { id: "sessions", label: "Buscar sesiones", description: "Encontrar trabajo por objetivo y siguiente paso.", keywords: "retomar continuar historial memoria", pi: "nein:sesiones", claude: "nein-sesiones" },
