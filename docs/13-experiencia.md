@@ -33,3 +33,7 @@ Se comprueban las APIs de cada host antes de anunciar paridad. Cuando un host ap
 Fixtures y procesos reales para mecánica determinista. Ensayos alojados secuenciales y acotados, hogares de prueba y credenciales nativas sin copia. Conservar intentos fallidos y resultados negativos. Comparar aceptación completa y consumo/tiempo total; una candidata peor queda experimental y la PR explica el resultado.
 
 Reversión de producto mediante restore. Registros nuevos versionados, lectura tolerante y escrituras atómicas; datos previos nunca se presentan como evidencia nueva. Sin migrar la instalación personal.
+
+## Consumo del revisor
+
+La web distingue estimación completa, parcial y desconocida. El runner conserva escritura de caché y cobertura por mensajes; los importes históricos siguen disponibles pero no acreditan cobertura. Son estimaciones de catálogo, nunca facturación.

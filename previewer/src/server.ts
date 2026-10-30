@@ -12,6 +12,7 @@ import { loadLang } from "../../pi-package/lang.ts";
 import { channelDir } from "../../pi-package/models.ts";
 import { git } from "./git.ts";
 import { ReviewStore, VERDICTS, type Verdict } from "./store.ts";
+import { usageSummary } from "./usage.ts";
 import { ChainStore } from "./chains.ts";
 import type { SessionView } from "../web/view.ts";
 
@@ -29,7 +30,7 @@ export function serverBuildId(packageRoot: string): string {
   const hash = createHash("sha256");
   if (existsSync(manifest)) return hash.update(readFileSync(manifest)).digest("hex");
   for (const path of ["VERSION", "previewer/src/server.ts", "previewer/src/open.ts", "previewer/src/store.ts", "previewer/src/chains.ts",
-    "previewer/src/probe-result.ts", "previewer/web/main.ts", "previewer/web/view.ts", "previewer/web/html.ts", "previewer/web/diff.ts",
+    "previewer/src/probe-result.ts", "previewer/src/usage.ts", "previewer/web/main.ts", "previewer/web/view.ts", "previewer/web/html.ts", "previewer/web/diff.ts",
     "previewer/web/style.css", "pi-package/lang.ts", "brand.json", "pi-package/themes/ein.json"])
     hash.update(path).update(readFileSync(join(packageRoot, path)));
   return hash.digest("hex");
@@ -105,7 +106,7 @@ export async function createHandler(options: HandlerOptions): Promise<(request: 
     }
     return {
       session, run, latest: !inspect && latest && latest.id !== run?.id ? latest : null,
-      runs: { count: runs.length, usd: runs.reduce((sum, item) => sum + (item.usage?.usd ?? 0), 0) },
+      runs: { count: runs.length, ...usageSummary(runs.map(item => item.usage)) },
       findings: options.store.findings(sessionId, inspect ?? undefined), patch, lang: loadLang(options.packageRoot).chat,
       chain: new ChainStore(options.store).view(sessionId), historical: !!inspect,
       reviewLabel: run ? new ChainStore(options.store).location(run.id) : null,

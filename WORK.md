@@ -29,7 +29,7 @@ Sin nuevo motor de orquestación, memoria obligatoria ni copia de credenciales. 
 
 ## Tareas
 
-- [ ] T1 · Confianza — continuidad de correcciones, consumo desconocido y versión de Claude en CI.
+- [x] T1 · Confianza — continuidad de correcciones, consumo desconocido y versión de Claude en CI.
 - [ ] T2 · Paleta — catálogo, búsqueda, descripciones, disponibilidad, borrador y acceso por host.
 - [ ] T3 · Procesos — segundo plano, monitores acotados, vista, avisos y parada antes del relevo.
 - [ ] T4 · Sesiones — objetivo/avance/siguiente paso, búsqueda, estado fechado y consulta sin inferencia.
@@ -42,6 +42,8 @@ Sin nuevo motor de orquestación, memoria obligatoria ni copia de credenciales. 
 ## Evidencia
 
 Base `b0f6f27`; árbol limpio y origin/main sin commits adicionales. Auditoría previa: diez scripts pasan, incluido Pi con proveedor determinista. No acredita el código nuevo.
+
+T1: regresión nueva de consumo en rojo antes del módulo; usage, engine y web pasan. CI deriva Claude de runtime.json. Instrucciones de revisión continúan correcciones recuperables dentro del alcance.
 
 ## Siguiente paso
 

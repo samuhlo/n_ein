@@ -48,6 +48,7 @@ bun run tests/skills.ts
 bun run tests/router.ts
 bun run tests/context.ts
 bun run tests/bench.ts
+bun run tests/previewer-usage.ts
 bun run tests/previewer-store.ts
 bun run tests/previewer-engine.ts
 bun run tests/previewer-probes.ts

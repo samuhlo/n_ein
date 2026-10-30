@@ -47,7 +47,8 @@ jobs:
         run: |
           (cd go && go build -o ../dist/n-ein-install ./cmd/n-ein-install)
           ./dist/n-ein-install runtime --source .
-          npm install --prefix "$RUNNER_TEMP/claude-host" @anthropic-ai/claude-code@2.1.295
+          claude_version="$(bun -e 'console.log((await Bun.file("runtime.json").json()).claude.version)')"
+          npm install --prefix "$RUNNER_TEMP/claude-host" "@anthropic-ai/claude-code@$claude_version"
           echo "$RUNNER_TEMP/claude-host/node_modules/.bin" >> "$GITHUB_PATH"
       - name: Suite completa sin modelos
         run: ./scripts/check.sh

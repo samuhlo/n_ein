@@ -38,7 +38,7 @@ const INDEX_TIMEOUT_MS = 5 * 60_000;
 
 type Event = Record<string, unknown>;
 const isRecord = (value: unknown): value is Event => typeof value === "object" && value !== null && !Array.isArray(value);
-const num = (value: unknown): number => (typeof value === "number" && Number.isFinite(value) ? value : 0);
+const num = (value: unknown): number => (typeof value === "number" && Number.isFinite(value) && value >= 0 ? value : 0);
 
 /** Un init fallido puede dejar disponible el índice del padre: no se entrega al revisor. */
 export function isCopyIndex(status: string, copy: string): boolean {
@@ -53,7 +53,7 @@ export function isCopyIndex(status: string, copy: string): boolean {
 
 /** Texto final del agente, coste acumulado y error de parada, a partir de los eventos JSON de Pi. */
 export function summarizeEvents(lines: readonly string[]): AgentResult {
-  const usage: Usage = { input: 0, output: 0, cacheRead: 0, usd: 0 };
+  const usage: Usage = { input: 0, output: 0, cacheRead: 0, cacheWrite: 0, usd: 0, coverage: { messages: 0, tokens: 0, priced: 0 }, source: "catalog-estimate" };
   let text = "";
   let error: string | null = null;
   for (const line of lines) {
@@ -65,11 +65,14 @@ export function summarizeEvents(lines: readonly string[]): AgentResult {
     }
     if (!isRecord(event) || event.type !== "message_end" || !isRecord(event.message) || event.message.role !== "assistant") continue;
     const message = event.message;
+    usage.coverage!.messages++;
     if (isRecord(message.usage)) {
+      if ([message.usage.input, message.usage.output, message.usage.cacheRead, message.usage.cacheWrite].every(value => typeof value === "number" && Number.isFinite(value) && value >= 0)) usage.coverage!.tokens++;
+      usage.cacheWrite! += num(message.usage.cacheWrite);
       usage.input += num(message.usage.input);
       usage.output += num(message.usage.output);
       usage.cacheRead += num(message.usage.cacheRead);
-      if (isRecord(message.usage.cost)) usage.usd += num(message.usage.cost.total);
+      if (isRecord(message.usage.cost) && typeof message.usage.cost.total === "number" && Number.isFinite(message.usage.cost.total) && message.usage.cost.total >= 0) { usage.usd += message.usage.cost.total; usage.coverage!.priced++; }
     }
     const parts = Array.isArray(message.content) ? message.content : [];
     const said = parts.flatMap((part) => (isRecord(part) && part.type === "text" && typeof part.text === "string" ? [part.text] : [])).join("\n");
