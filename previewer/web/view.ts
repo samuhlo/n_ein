@@ -26,6 +26,8 @@ export type SessionView = {
   runs: { count: number; usd: number; coverage?: "complete" | "partial" | "unknown" };
   findings: StoredFinding[];
   patch: string;
+  /** Capturas de la revisión vigente como `data:`, por nombre; falta la que ya no está en disco. */
+  images?: Record<string, string>;
   lang: Lang;
   chain?: ChainView | null;
   historical?: boolean;
@@ -55,6 +57,7 @@ const WORDS = {
     valid: "¿es válido?", reason: "motivo (opcional)", pick: "enviar a n_ein",
     detail: "detalle técnico", condition: "condición", consequence: "consecuencia", cited: "citas",
     probe: "sonda", check: "última comprobación", unproven: "falta comprobar", seenAt: "visto en",
+    screenshots: "capturas", shotMissing: "la imagen ya no está en la carpeta de la revisión",
     output: "salida", gap: "pendiente", skipped: "omitido por la suite (esperado)", rejected: (n: number) => `apartados: ${n} (sin citas válidas o mal formados)`,
     spec: { head: (path: string) => `especificación: ${path} del head`, none: (note: string) => `sin especificación: ${note}`,
       worktree: (path: string, modified: string) => `especificación: ${path} del árbol de trabajo, fuera de git · modificado ${modified}` },
@@ -85,6 +88,7 @@ const WORDS = {
     valid: "is it valid?", reason: "reason (optional)", pick: "send to n_ein",
     detail: "technical detail", condition: "condition", consequence: "consequence", cited: "citations",
     probe: "probe", check: "latest check", unproven: "still unproven", seenAt: "seen at",
+    screenshots: "screenshots", shotMissing: "the image is no longer in the review folder",
     output: "output", gap: "pending", skipped: "skipped by the suite (expected)", rejected: (n: number) => `set aside: ${n} (no valid citations or malformed)`,
     spec: { head: (path: string) => `specification: ${path} at the head`, none: (note: string) => `no specification: ${note}`,
       worktree: (path: string, modified: string) => `specification: ${path} from the working tree, outside git · modified ${modified}` },
@@ -253,6 +257,11 @@ export function renderPage(view: SessionView): Html {
       ${step.why ? html`<p class="why">${step.why}</p>` : null}
       <p class="files">${step.files.map((path, i) => html`${i ? " · " : ""}<a href="#file-${fileIndex.get(path) ?? ""}">${path}</a>`)}</p>
     </li>`)}</ol>
+    ${run.screenshots.length ? html`<div class="shots"><p class="group-label">${words.screenshots} · ${run.screenshots.length}</p>
+      ${run.screenshots.map((shot) => html`<figure>
+        ${view.images?.[shot.name] ? html`<img src="${view.images[shot.name]}" alt="${shot.caption}">` : html`<p class="warn">${words.shotMissing}</p>`}
+        <figcaption>${shot.caption}<span class="where"> · ${shot.source}</span>${shot.command ? html`<br><code>${shot.command}</code>` : null}</figcaption>
+      </figure>`)}</div>` : null}
   </section>
   <section id="findings">
     ${heading(2, words.findings)}

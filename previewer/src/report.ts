@@ -6,6 +6,7 @@
 
 import { KINDS, SEVERITIES, type Kind, type Severity, type TourStep, type ProbeSpec } from "./finding.ts";
 import { PROBE_PROTOCOL } from "./probe-result.ts";
+import type { ProposedScreenshot } from "./screenshots.ts";
 
 export type ProposedFinding = {
   kind: Kind;
@@ -25,7 +26,7 @@ export type ProposedFinding = {
 export type Resolution = { previous: string; note: string; citations: string[]; probe: ProbeSpec | null };
 
 /** `gaps`: lo que el usuario aún debería comprobar; `skipped`: lo que la propia suite omite a propósito. */
-export type Report = { summary: string; tour: TourStep[]; findings: ProposedFinding[]; resolved: Resolution[]; gaps: string[]; skipped: string[]; rejected: string[] };
+export type Report = { summary: string; tour: TourStep[]; findings: ProposedFinding[]; resolved: Resolution[]; gaps: string[]; skipped: string[]; screenshots: ProposedScreenshot[]; rejected: string[] };
 
 /** Más avisos que esto suelen ser ruido; el resto se aparta, no se muestra. */
 export const MAX_FINDINGS = 10;
@@ -87,5 +88,7 @@ export function parseReport(message: string): Report {
     isFields(item) && text(item.previous) ? [{ previous: text(item.previous), note: text(item.note), citations: texts(item.citations), probe: probeSpec(item.probe) }] : []);
   const tour = (Array.isArray(value.tour) ? value.tour : []).flatMap((item): TourStep[] =>
     isFields(item) && text(item.title) && text(item.plain) ? [{ title: text(item.title), plain: text(item.plain), why: text(item.why), files: texts(item.files) }] : []);
-  return { summary: text(value.summary), tour: tour.slice(0, MAX_TOUR_STEPS), findings, resolved, gaps: texts(value.gaps), skipped: texts(value.skipped), rejected };
+  const screenshots = (Array.isArray(value.screenshots) ? value.screenshots : []).flatMap((item): ProposedScreenshot[] =>
+    isFields(item) && text(item.file) ? [{ file: text(item.file), caption: text(item.caption), command: text(item.command) }] : []);
+  return { summary: text(value.summary), tour: tour.slice(0, MAX_TOUR_STEPS), findings, resolved, gaps: texts(value.gaps), skipped: texts(value.skipped), screenshots, rejected };
 }

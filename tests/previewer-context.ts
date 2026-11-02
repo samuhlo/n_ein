@@ -1,11 +1,12 @@
 import { strict as assert } from "node:assert";
 import { execFileSync } from "node:child_process";
-import { existsSync, mkdirSync, mkdtempSync, realpathSync, rmSync, statSync, utimesSync, writeFileSync } from "node:fs";
+import { existsSync, mkdirSync, mkdtempSync, readFileSync, realpathSync, rmSync, statSync, symlinkSync, utimesSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join, resolve } from "node:path";
 import { review } from "../previewer/src/engine.ts";
 import type { Sandbox } from "../previewer/src/sandbox.ts";
 import type { AgentRequest, AgentResult } from "../previewer/src/runner.ts";
+import { createHandler } from "../previewer/src/server.ts";
 import { ReviewStore } from "../previewer/src/store.ts";
 import { text } from "../previewer/web/html.ts";
 import { renderPage } from "../previewer/web/view.ts";
@@ -121,6 +122,60 @@ const page = (outcome: Awaited<ReturnType<typeof review>>): string => text(rende
   assert.match(shown, new RegExp(`· pendiente: ${unchecked.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}`));
   assert.doesNotMatch(shown, /pendiente: La suite Python/, "un skip esperado no es trabajo pendiente");
   assert.match(shown, /omitido por la suite \(esperado\): La suite Python omitió 1 prueba exclusiva de Windows\./);
+}
+
+// --- Capturas de una e2e: sobreviven a la copia y se ven en la web ---------------------------
+{
+  writeFileSync(join(repo, "app.css"), ".title { text-align: center; }\n");
+  git("add", "app.css");
+  git("commit", "-qm", "fix: center titles");
+  // PNG de 1×1 válido: cabecera, IHDR, IDAT e IEND.
+  const png = Buffer.from("iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8z8DwHwAFBQIAX8jx0gAAAABJRU5ErkJggg==", "base64");
+  const outside = join(scratch, "outside.png");
+  writeFileSync(outside, png);
+  let prompt = "";
+  const outcome = await review({
+    packageRoot, cwd: repo, store, model: "test/reviewer", thinking: "high", log: () => {}, sandbox: injected,
+    runner: async (request) => {
+      prompt = request.prompt;
+      const shots = join(request.cwd, ".test-artifacts/zen");
+      mkdirSync(shots, { recursive: true });
+      writeFileSync(join(shots, "menu.png"), png);
+      for (let n = 1; n <= 6; n++) writeFileSync(join(shots, `extra-${n}.png`), png);
+      writeFileSync(join(shots, "fake.png"), "no soy una imagen\n");
+      writeFileSync(join(shots, "huge.png"), Buffer.concat([png, Buffer.alloc(3 << 20)]));
+      symlinkSync(outside, join(shots, "link.png"));
+      return answer({ screenshots: [
+        { file: ".test-artifacts/zen/menu.png", caption: "Menú a 240 px sin desbordar", command: ".venv/bin/python tests/e2e_zen.py --review-menu" },
+        { file: ".test-artifacts/zen/fake.png", caption: "falsa", command: "x" },
+        { file: ".test-artifacts/zen/huge.png", caption: "enorme", command: "x" },
+        { file: ".test-artifacts/zen/link.png", caption: "enlace", command: "x" },
+        { file: "../outside.png", caption: "fuera", command: "x" },
+        ...[1, 2, 3, 4, 5, 6].map((n) => ({ file: `.test-artifacts/zen/extra-${n}.png`, caption: `extra ${n}`, command: "x" })),
+      ] });
+    },
+  });
+  assert.equal(outcome.run.status, "done", outcome.run.error ?? "");
+  assert.match(prompt, /touches stylesheets: app\.css/, "el prompt nombra el CSS cambiado");
+  const shots = outcome.run.screenshots;
+  assert.deepEqual(shots.map((shot) => shot.caption), ["Menú a 240 px sin desbordar", "extra 1", "extra 2", "extra 3", "extra 4", "extra 5"]);
+  assert.deepEqual([shots[0]?.source, shots[0]?.command], [".test-artifacts/zen/menu.png", ".venv/bin/python tests/e2e_zen.py --review-menu"]);
+  const rejected = outcome.run.rejected.join("\n");
+  for (const reason of [/«falsa»: no es una imagen PNG, JPEG ni WebP/, /«enorme»: pesa más de 2 MB/, /«enlace»: no es un archivo normal/, /«fuera»: fuera de la copia/, /«extra 6»: supera el máximo de 6 capturas/])
+    assert.match(rejected, reason);
+  const kept = join(process.env.N_EIN_HOME!, "dev/previewer/runs", outcome.run.id, "screenshots", shots[0]!.name);
+  assert.deepEqual(readFileSync(kept), png, "la captura sobrevive al borrado de la copia");
+  assert.equal(statSync(kept).mode & 0o777, 0o600);
+
+  const token = "t".repeat(48), port = 4321;
+  const handle = await createHandler({ packageRoot, store, token, port: () => port });
+  const get = (path: string, headers: Record<string, string> = {}) => handle(new Request(`http://127.0.0.1:${port}${path}`, { headers: { host: `127.0.0.1:${port}`, ...headers } }));
+  assert.match((await get(`/s/${outcome.session.id}`)).headers.get("content-security-policy") ?? "", /img-src data:/);
+  const view = await (await get(`/api/sessions/${outcome.session.id}`, { "x-previewer-token": token })).json();
+  assert.equal(view.images[shots[0]!.name], `data:image/png;base64,${png.toString("base64")}`);
+  const shown = text(renderPage(view));
+  assert.match(shown, new RegExp(`<img src="data:image/png;base64,${png.toString("base64").replace(/[+/=]/g, "\\$&")}" alt="Menú a 240 px sin desbordar"`));
+  assert.match(shown, /<code>\.venv\/bin\/python tests\/e2e_zen\.py --review-menu<\/code>/);
 }
 
 store.close();

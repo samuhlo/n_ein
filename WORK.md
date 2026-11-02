@@ -40,7 +40,7 @@ Implementación en una rama de trabajo con WORK.md, test rojo → verde y un com
 
 - [x] T1 · Especificación — WORK.md fuera de git como dato fechado, «sin especificación», trabajo externo nombrado; esquema 6. Blocked by: none.
 - [x] T2 · Pendiente real — `skipped` separado de `gaps` en informe, almacén, web y CLI. Blocked by: T1.
-- [ ] T3 · Comprobaciones del proyecto y capturas — guía de e2e, CSS en el prompt, capturas conservadas y visibles. Blocked by: T2.
+- [x] T3 · Comprobaciones del proyecto y capturas — guía de e2e, CSS en el prompt, capturas conservadas y visibles. Blocked by: T2.
 - [ ] T4 · Cierre — documentación, revisión de riesgo, suite y tipos, aceptación en vivo sobre anaco-ob. Blocked by: T1–T3.
 
 ## Evidencia
@@ -51,6 +51,8 @@ T1: `tests/previewer-context.ts` rojo (el prompt no llevaba WORK.md) y verde: WO
 
 T2: el bloque de omisiones de `tests/previewer-context.ts` rojo (`run.skipped` no existía) y verde: `skipped` se guarda sin vacíos, la web lo pinta como «omitido por la suite (esperado)» y no como pendiente; la migración 5→6 deja `[]` en revisiones antiguas. `reviewer.md` deja de pedir en `gaps` «including tests you could not run». Suites del revisor y tipos pasan.
 
+T3: el bloque de capturas de `tests/previewer-context.ts` rojo (el prompt no nombraba `app.css`) y verde: la captura válida sobrevive a la copia con modo 600 y la API la entrega como `data:` con CSP `img-src data:`; falsa, enorme, enlace, ruta fuera y la séptima se apartan con su motivo. Quitar el blindaje de enlaces hace fallar el test. `reviewer.md` añade el paso de comprobaciones documentadas (setup ignorado, HOME temporal, sin servicios reales, bloqueo exacto). Suites del revisor y tipos pasan.
+
 ## Siguiente paso
 
-T3.
+T4.

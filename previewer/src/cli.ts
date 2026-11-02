@@ -17,7 +17,7 @@ import { handoffBrief } from "./handoff.ts";
 import { ensureServer, reviewerLink } from "./open.ts";
 import { sandboxFor } from "./sandbox.ts";
 import { bundle } from "./server.ts";
-import { ReviewStore, storePath } from "./store.ts";
+import { ReviewStore, runDirOf, storePath } from "./store.ts";
 import { ChainStore, planChain, reviewChain } from "./chains.ts";
 
 const packageRoot = resolve(import.meta.dir, "../..");
@@ -235,6 +235,7 @@ try {
     });
     for (const gap of run.gaps) console.log(`\n· pendiente: ${gap}`);
     for (const item of run.skipped) console.log(`\n· omitido por la suite (esperado): ${item}`);
+    for (const shot of run.screenshots) console.log(`\n· captura: ${shot.caption} · ${join(runDirOf(packageRoot, run.id), "screenshots", shot.name)}`);
     if (run.rejected.length) console.log(`\n· apartados: ${run.rejected.length} (sin citas válidas o mal formados)`);
     if (opened) console.log(`\n// 003  REVISOR\n▏ ${opened}`);
   }

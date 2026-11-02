@@ -16,6 +16,7 @@ import { basename, dirname, join } from "node:path";
 import { channelDir } from "../../pi-package/models.ts";
 import type { Citation, Finding, Kind, Probe, Severity, TourStep } from "./finding.ts";
 import { storedProbe } from "./probe-result.ts";
+import type { Screenshot } from "./screenshots.ts";
 import type { Spec } from "./spec.ts";
 
 export const VERDICTS = ["vale", "descartar", "investigar"] as const;
@@ -57,6 +58,8 @@ export type Run = {
   usage: Usage | null;
   /** De dónde salió la especificación del encargo; null en revisiones anteriores al esquema 6. */
   spec: Spec | null;
+  /** Capturas guardadas en la carpeta de la ejecución (`runDirOf`). */
+  screenshots: Screenshot[];
   started: string;
   ended: string | null;
 };
@@ -89,6 +92,7 @@ export type RunResult = {
   rejected?: string[];
   usage?: Usage;
   spec?: Spec;
+  screenshots?: Screenshot[];
   /** `thread`: hilo de una revisión anterior que este hallazgo continúa. */
   findings?: (Finding & { thread?: string })[];
   checks?: { thread: string; outcome: Outcome; note: string; probe: Probe | null }[];
@@ -97,8 +101,13 @@ export type RunResult = {
 // La v4 cambia el significado de la evidencia y añade comprobaciones «unchecked».
 // Un lector antiguo no debe interpretar not_applicable + exit 0 como un arreglo.
 // La v6 añade a cada revisión de dónde salió la especificación del encargo y las
-// omisiones esperadas de la suite, separadas de lo pendiente.
+// omisiones esperadas de la suite, separadas de lo pendiente, y sus capturas.
 const SCHEMA = 6;
+
+/** Registros de una ejecución (eventos, sesión, capturas): `~/.n_ein/<canal>/previewer/runs/<id>`. */
+export function runDirOf(packageRoot: string, runId: string): string {
+  return join(channelDir(packageRoot), "previewer", "runs", runId);
+}
 
 /** Base de datos del canal: `~/.n_ein/<canal>/previewer/previewer.db`. */
 export function storePath(packageRoot: string): string {
@@ -109,7 +118,7 @@ type SessionRow = { id: string; repo: string; branch: string; pr_url: string | n
 type RunRow = {
   id: string; session_id: string; base_sha: string; head_sha: string; model: string; thinking: string; status: RunStatus;
   error: string | null; summary: string; tour: string; gaps: string; rejected: string; usage: string | null; started: string; ended: string | null;
-  spec: string | null; skipped: string;
+  spec: string | null; skipped: string; screenshots: string;
 };
 type FindingRow = {
   id: string; session_id: string; run_id: string; head_sha: string; kind: Kind; severity: Severity; title: string; plain: string;
@@ -128,7 +137,7 @@ function run(row: RunRow): Run {
   return {
     id: row.id, sessionId: row.session_id, baseSha: row.base_sha, headSha: row.head_sha, model: row.model, thinking: row.thinking,
     status: row.status, error: row.error, summary: row.summary, tour: JSON.parse(row.tour), gaps: JSON.parse(row.gaps), skipped: JSON.parse(row.skipped), rejected: JSON.parse(row.rejected),
-    usage: row.usage ? JSON.parse(row.usage) : null, spec: row.spec ? JSON.parse(row.spec) : null, started: row.started, ended: row.ended,
+    usage: row.usage ? JSON.parse(row.usage) : null, spec: row.spec ? JSON.parse(row.spec) : null, screenshots: JSON.parse(row.screenshots), started: row.started, ended: row.ended,
   };
 }
 
@@ -213,6 +222,7 @@ export class ReviewStore {
       if (version < 6) {
         this.db.run("ALTER TABLE runs ADD COLUMN spec TEXT");
         this.db.run("ALTER TABLE runs ADD COLUMN skipped TEXT NOT NULL DEFAULT '[]'");
+        this.db.run("ALTER TABLE runs ADD COLUMN screenshots TEXT NOT NULL DEFAULT '[]'");
       }
       this.db.run(`PRAGMA user_version = ${SCHEMA}`);
     }).immediate();
@@ -315,10 +325,11 @@ export class ReviewStore {
     if (current.status !== "running") throw new Error(`la ejecución ${runId} ya terminó (${current.status})`);
     this.db.transaction(() => {
       this.db.query(`UPDATE runs SET status = $status, error = $error, summary = $summary, tour = $tour, gaps = $gaps,
-        skipped = $skipped, rejected = $rejected, usage = $usage, spec = $spec, ended = $ended WHERE id = $id`).run({
+        skipped = $skipped, rejected = $rejected, usage = $usage, spec = $spec, screenshots = $screenshots, ended = $ended WHERE id = $id`).run({
         id: runId, status: result.status, error: result.error ?? null, summary: result.summary ?? "", tour: JSON.stringify(result.tour ?? []),
         gaps: JSON.stringify(result.gaps ?? []), skipped: JSON.stringify(result.skipped ?? []), rejected: JSON.stringify(result.rejected ?? []),
-        usage: result.usage ? JSON.stringify(result.usage) : null, spec: result.spec ? JSON.stringify(result.spec) : null, ended: now(),
+        usage: result.usage ? JSON.stringify(result.usage) : null, spec: result.spec ? JSON.stringify(result.spec) : null,
+        screenshots: JSON.stringify(result.screenshots ?? []), ended: now(),
       });
       if (result.status !== "done") return;
       const threads = new Set(this.db.query<{ thread: string }, { id: string }>(
