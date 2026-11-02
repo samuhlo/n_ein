@@ -41,7 +41,7 @@ Implementación en una rama de trabajo con WORK.md, test rojo → verde y un com
 - [x] T1 · Especificación — WORK.md fuera de git como dato fechado, «sin especificación», trabajo externo nombrado; esquema 6. Blocked by: none.
 - [x] T2 · Pendiente real — `skipped` separado de `gaps` en informe, almacén, web y CLI. Blocked by: T1.
 - [x] T3 · Comprobaciones del proyecto y capturas — guía de e2e, CSS en el prompt, capturas conservadas y visibles. Blocked by: T2.
-- [ ] T4 · Cierre — documentación, revisión de riesgo, suite y tipos, aceptación en vivo sobre anaco-ob. Blocked by: T1–T3.
+- [x] T4 · Cierre — documentación, revisión de riesgo, suite y tipos, aceptación en vivo sobre anaco-ob. Blocked by: T1–T3.
 
 ## Evidencia
 
@@ -55,6 +55,15 @@ T3: el bloque de capturas de `tests/previewer-context.ts` rojo (el prompt no nom
 
 Revisión de riesgo (T4): Spec y Standards sobre `99e91ea..35c5735`. Dos huecos en capturas corregidos con test rojo→verde: una imagen versionada sin cambios o una revisión de solo lectura ya no aportan capturas; la lectura se hace de una vez por descriptor con `O_NOFOLLOW`. `tryGit` deja de duplicarse en `spec.ts`. Suites del revisor y tipos pasan.
 
+`scripts/check.sh` completo sobre `d2f1ce4`: `checks locales: OK` (Go, Pi real, plugin de Claude con 15 pruebas, paquete instalado).
+
+Aceptación en vivo (T4) en el portátil, paquete instalado con el `previewer/` de `d2f1ce4` y `N_EIN_HOME` temporal, sobre anaco-ob `fix/clases-ubicacion-titulos` `43f286a..ccd6150` (run `0b54f328`, 486 s, 0,41 USD estimados):
+- Punto 1: `spec: worktree`; «especificación: WORK.md del árbol de trabajo, fuera de git · modificado 2026-11-02 13:16 +01:00» en CLI y web. El recorrido cita los pedidos con sus palabras («como llamarlas», «mire como estaban las unidades anteriores», «Centrar texto», «se sale el texto del marco»).
+- Punto 2: el resumen dice «Fuera del repositorio y no revisados: la skill second-brain-vault, el manual y perfil del vault, y la recolocación y enlaces de las 14 notas».
+- Punto 3: «omitido por la suite (esperado): 1 prueba Python omitida: compilación de un ejecutable nativo exclusiva de Windows»; el único pendiente es concreto (la cola real de la barra lateral que WORK.md deja por confirmar).
+- Punto 4: el revisor creó venv con Selenium y descargó geckodriver 0.37.1 en la copia, y ejecutó con HOME temporal `--review-menu`, `--panel-ux`, `--batch --batch-video`, `--batch`, `--course-links` y `--split-review`. Guardó 3 capturas PNG reales (641×1084, 300×900, 901×1084); la web las entrega como `data:` con la CSP nueva. Manifiestos de Native Messaging con el mismo hash que antes, copia borrada y anaco-ob sin cambios.
+- La revisión trajo un hallazgo nuevo sobre anaco-ob, reproducido en el head y superado en la base: «La búsqueda de unidades ignora un curso explícitamente distinto» (`native/provenance.py@ccd6150:L125-L140`). Es de anaco-ob, no de este encargo.
+
 ## Siguiente paso
 
-T4: `scripts/check.sh` completo y aceptación en vivo sobre anaco-ob desde el portátil.
+Entrega cerrada en `feat/revisor-contexto`, sin fusionar ni publicar. Antes de publicarla: pasar el banco del revisor (`evals/previewer`), porque cambian sus instrucciones (decisión vigente «evaluar antes de promover instrucciones»). Sin actualizar la instalación personal.

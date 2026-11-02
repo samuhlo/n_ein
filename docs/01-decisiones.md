@@ -121,6 +121,17 @@ Samu propuso convertir su proyecto `lang-pr-review` (Python y LangGraph, hecho p
 
 Detalle, criterios y tareas en `WORK.md`.
 
+### p_reviewer: especificación, pendiente y comprobaciones del proyecto (2 de noviembre)
+
+Tras usarlo en anaco-ob, Samu pidió que viera el `WORK.md` ignorado por git, que no presentara la rama como todo el trabajo, que no llamara pendiente a un skip esperado y que ejecutara las e2e documentadas. Decisiones:
+
+- El motor lee el `WORK.md` del árbol de trabajo solo si no está en el head y el árbol está en lo revisado, y lo pasa como dato fechado en el prompt, nunca a la copia. Sin él, el informe dice «sin especificación».
+- No hay canal aparte para el trabajo fuera del repositorio: `WORK.md` ya es la única guía del encargo y el de anaco-ob registraba el vault. El revisor nombra esas entregas como no revisadas.
+- `gaps` es lo que el usuario aún debería comprobar, con motivo y comando; las omisiones que la suite declara esperadas van aparte.
+- No se abre el sandbox para las e2e. En anaco-ob fallaban por `.venv`/driver ignorados y por escribir en `~/.mozilla`; reconstruyendo eso en la copia y con un `HOME` temporal pasaron dentro del sandbox. La guía enseña ese camino y las capturas se guardan con la revisión.
+
+[Evidencia y tareas](archive/work/2026-11-02-revisor-contexto.md) cuando se archive el encargo; mientras tanto, en `WORK.md`.
+
 ## Recomendaciones de diseño, revisables
 
 El 7 de octubre Samu autorizó implementar y evaluar el reparto temprano y la investigación acotada con el mismo mecanismo de equipo, tras la [auditoría del piloto](../evals/results/2026-10-07-auditoria-paralelismo.md). La lectura puede delegarse sin preparar un encargo de escritura. Se mide por separado el ahorro de contexto y el avance paralelo, conservando checks e integración. Esto amplía el experimento; no demuestra ahorro ni activa por sí solo la preview personal. El estado de implementación y evaluación vive en WORK.md.
