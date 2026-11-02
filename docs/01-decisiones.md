@@ -130,7 +130,7 @@ Tras usarlo en anaco-ob, Samu pidió que viera el `WORK.md` ignorado por git, qu
 - `gaps` es lo que el usuario aún debería comprobar, con motivo y comando; las omisiones que la suite declara esperadas van aparte.
 - No se abre el sandbox para las e2e. En anaco-ob fallaban por `.venv`/driver ignorados y por escribir en `~/.mozilla`; reconstruyendo eso en la copia y con un `HOME` temporal pasaron dentro del sandbox. La guía enseña ese camino y las capturas se guardan con la revisión.
 
-[Evidencia y tareas](archive/work/2026-11-02-revisor-contexto.md) cuando se archive el encargo; mientras tanto, en `WORK.md`.
+Evidencia y tareas en `WORK.md` de la rama `feat/revisor-contexto`.
 
 ## Recomendaciones de diseño, revisables
 
