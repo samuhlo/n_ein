@@ -8,7 +8,7 @@
 
 import { lstatSync, readFileSync } from "node:fs";
 import { join } from "node:path";
-import { fileAt, git, type Range } from "./git.ts";
+import { fileAt, tryGit, type Range } from "./git.ts";
 
 export const SPEC_FILE = "WORK.md";
 /** Más que esto ya no es una guía del encargo; se corta y se avisa. */
@@ -25,14 +25,6 @@ export function stamp(date: Date): string {
   const offset = -date.getTimezoneOffset();
   const sign = offset >= 0 ? "+" : "-";
   return `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())} ${pad(date.getHours())}:${pad(date.getMinutes())} ${sign}${pad(Math.floor(Math.abs(offset) / 60))}:${pad(Math.abs(offset) % 60)}`;
-}
-
-function tryGit(cwd: string, ...args: string[]): string | null {
-  try {
-    return git(cwd, ...args);
-  } catch {
-    return null;
-  }
 }
 
 export function readSpec(range: Range): TaskSpec {

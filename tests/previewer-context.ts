@@ -178,5 +178,30 @@ const page = (outcome: Awaited<ReturnType<typeof review>>): string => text(rende
   assert.match(shown, /<code>\.venv\/bin\/python tests\/e2e_zen\.py --review-menu<\/code>/);
 }
 
+// --- Una imagen versionada o una revisión de solo lectura no aportan capturas ---------------
+{
+  const png = Buffer.from("iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8z8DwHwAFBQIAX8jx0gAAAABJRU5ErkJggg==", "base64");
+  mkdirSync(join(repo, "docs"), { recursive: true });
+  writeFileSync(join(repo, "docs/shot.png"), png);
+  git("add", "docs/shot.png");
+  git("commit", "-qm", "docs: captura del README");
+  const tracked = await review({
+    packageRoot, cwd: repo, store, model: "test/reviewer", thinking: "high", log: () => {}, sandbox: injected,
+    runner: async () => answer({ screenshots: [{ file: "docs/shot.png", caption: "del README", command: "x" }] }),
+  });
+  assert.deepEqual(tracked.run.screenshots, []);
+  assert.match(tracked.run.rejected.join("\n"), /«del README»: está versionada y sin cambios/);
+  const readOnly = await review({
+    packageRoot, cwd: repo, store, model: "test/reviewer", thinking: "high", log: () => {}, sandbox: { kind: "none", wrap: injected.wrap },
+    runner: async (request) => {
+      mkdirSync(join(request.cwd, ".test-artifacts"), { recursive: true });
+      writeFileSync(join(request.cwd, ".test-artifacts/a.png"), png);
+      return answer({ screenshots: [{ file: ".test-artifacts/a.png", caption: "sin ejecutar", command: "x" }] });
+    },
+  });
+  assert.deepEqual(readOnly.run.screenshots, []);
+  assert.match(readOnly.run.rejected.join("\n"), /«sin ejecutar»: revisión de solo lectura/);
+}
+
 store.close();
 console.log("previewer context: OK");

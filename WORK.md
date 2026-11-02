@@ -53,6 +53,8 @@ T2: el bloque de omisiones de `tests/previewer-context.ts` rojo (`run.skipped` n
 
 T3: el bloque de capturas de `tests/previewer-context.ts` rojo (el prompt no nombraba `app.css`) y verde: la captura válida sobrevive a la copia con modo 600 y la API la entrega como `data:` con CSP `img-src data:`; falsa, enorme, enlace, ruta fuera y la séptima se apartan con su motivo. Quitar el blindaje de enlaces hace fallar el test. `reviewer.md` añade el paso de comprobaciones documentadas (setup ignorado, HOME temporal, sin servicios reales, bloqueo exacto). Suites del revisor y tipos pasan.
 
+Revisión de riesgo (T4): Spec y Standards sobre `99e91ea..35c5735`. Dos huecos en capturas corregidos con test rojo→verde: una imagen versionada sin cambios o una revisión de solo lectura ya no aportan capturas; la lectura se hace de una vez por descriptor con `O_NOFOLLOW`. `tryGit` deja de duplicarse en `spec.ts`. Suites del revisor y tipos pasan.
+
 ## Siguiente paso
 
-T4.
+T4: `scripts/check.sh` completo y aceptación en vivo sobre anaco-ob desde el portátil.

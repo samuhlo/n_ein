@@ -326,7 +326,8 @@ export async function review(options: ReviewOptions): Promise<ReviewOutcome> {
       const { tour, dropped } = settleTour(report.tour, changedFiles(range));
       const rejected = [...report.rejected, ...dropped];
       // Antes de repetir sondas: una sonda podría reescribir los archivos que el revisor declaró.
-      const shots = keepScreenshots(reviewCopy, join(runDir, "screenshots"), report.screenshots);
+      const shots = execute ? keepScreenshots(reviewCopy, join(runDir, "screenshots"), report.screenshots)
+        : { kept: [], rejected: report.screenshots.map((item) => `captura «${item.caption || item.file}»: revisión de solo lectura, sin ejecución que capturar`) };
       rejected.push(...shots.rejected);
       if (report.screenshots.length) log(`[REVIEW] :: SCREENSHOTS :: kept: ${shots.kept.length} | rejected: ${shots.rejected.length}`);
       const probes: ProbeContext = { copy: reviewCopy, sha: range.headSha, guard, sandbox, timeoutMs: options.probeTimeoutMs ?? DEFAULT_PROBE_TIMEOUT_MS, signal };

@@ -9,7 +9,7 @@ export function git(cwd: string, ...args: string[]): string {
   return execFileSync("git", args, { cwd, encoding: "utf8", maxBuffer: 64 << 20, stdio: ["ignore", "pipe", "pipe"] }).trimEnd();
 }
 
-function tryGit(cwd: string, ...args: string[]): string | null {
+export function tryGit(cwd: string, ...args: string[]): string | null {
   try {
     return git(cwd, ...args);
   } catch {
