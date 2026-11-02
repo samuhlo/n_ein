@@ -1,80 +1,52 @@
-# Mejoras de experiencia y ejecución
+# p_reviewer: especificación, pendiente real y comprobaciones del proyecto
 
 ## Objetivo
 
-Samu pide «un plan para incorporar todas estas mejoras», desarrollar «haciendo commits en una rama nueva» y montar «una PR explicando todas las mejoras incluidas». La PR #22 ya está integrada; ahora pide «Saca nueva version». Publicar 0.5.0-alpha.1 del canal preview, con las mejoras revisadas y sus límites explícitos.
+Samu usó p_reviewer sobre `fix/clases-ubicacion-titulos` de anaco-ob (sesión del 2 de noviembre, run `eaec7993`, head `d50ef6d`): encontró tres regresiones reales, pero dejó cuatro huecos. Pide:
+
+1. «No ve la especificación de la tarea cuando WORK.md está en .gitignore … Propón y aplica una forma segura de pasarle el WORK.md del árbol de trabajo (solo lectura, marcado como dato y no como instrucción, con su fecha) o, si no existe, de decir explícitamente «sin especificación» en el informe.»
+2. «Trabajo fuera del repositorio … Valora si tiene sentido que la sesión acepte un resumen de los cambios externos que entregó el agente … Si no merece la pena, justifícalo.»
+3. «Ruido en «pendiente» … Separa en el informe lo que el revisor no pudo comprobar y debería comprobarse … de los skips esperados de la suite.»
+4. «Pruebas de navegador declaradas por el proyecto … Estudia si el revisor puede descubrir y ejecutar dentro de la copia, con su sandbox y su límite de tiempo, las e2e que el proyecto documenta para los archivos tocados, y adjuntar capturas cuando cambia CSS. Si el sandbox no lo permite, que lo diga con el motivo concreto.»
 
 ## Autorización
 
-Implementación, pruebas aisladas, commits, push de `feat/encargo-visible` y PR hacia main autorizados el 30 de octubre. La petición posterior «Saca nueva version» autoriza preparar e integrar la versión, push, tag y release necesarios. Sin actualización personal; legado intacto. Alcance: propuesta de la auditoría de esta conversación y [plan](docs/13-experiencia.md).
+Implementación en una rama de trabajo con WORK.md, test rojo → verde y un commit por tarea. Sin fusionar ni publicar. Reproducciones en el portátil (`portatil-1`) dentro del sandbox del revisor, sin tocar el repositorio de anaco-ob ni la instalación personal.
 
 ## Decisiones
 
-- Un agente y un modelo por encargo siguen siendo el recorrido ordinario. Procesos en segundo plano no son subagentes.
-- Una paleta de acciones con adaptación a cada host y solo APIs comprobadas.
-- WORK.md sigue siendo la guía; procesos, sesiones y evidencia son registros técnicos y vistas, no otra lista de tareas.
-- Sol 6.1 high se mantiene en p_reviewer. Evaluar antes de promover instrucciones; conservar resultados desfavorables.
-- Delegación por contexto: experimento explícito, sin activarla por defecto ni prometer ahorro.
-- El encargo previo se conserva íntegro en [su archivo](docs/archive/work/2026-10-30-previewer.md). T7 (Omarchy real) y T9 (detección general/valoración humana) siguen abiertos.
+- **Especificación.** El motor, no el agente, lee `WORK.md` del árbol de trabajo cuando no está en el head y el árbol está en la rama o el head revisados. Va al prompt como dato fechado dentro de un bloque cercado; nunca se escribe en la copia. Sin WORK.md en el head ni utilizable en el árbol, el informe dice «sin especificación» y el motivo. Se guarda en la ejecución (esquema 6) para mostrarlo en web y CLI.
+- **Trabajo externo: sin canal nuevo.** WORK.md ya es la única guía del encargo y el de anaco-ob registraba el vault (T3 y T4, con evidencia). Un resumen aparte duplicaría esa guía, dependería de que el agente lo pase y no se podría revisar. Con la especificación visible, el revisor nombra en el resumen las entregas que quedan fuera del repositorio y no se revisaron.
+- **Pendiente frente a omisiones esperadas.** `gaps` queda para lo que el usuario aún debería comprobar, con motivo concreto y cómo. Las omisiones que la propia suite declara esperadas (plataforma, opt-in) van a `skipped`, que se guarda y se muestra aparte. Causa observada: `reviewer.md` pedía en `gaps` «including tests you could not run».
+- **E2e documentadas: viables en el sandbox.** Estudio en el portátil con `createCopy` y `sandboxFor` instalados (bwrap) sobre `d50ef6d`: el comando documentado falla porque `.venv/` y `geckodriver` están ignorados y con HOME real por `Read-only file system` en `~/.mozilla/native-messaging-hosts`; tras crear venv y descargar geckodriver en la copia (7,5 s) y con HOME temporal, `--batch --batch-video` pasa en 27 s y `--review-menu` en 11 s y dejan capturas. Los manifiestos reales no cambiaron. No se abre el sandbox: la guía enseña al revisor a reconstruir lo ignorado y a usar un HOME temporal, y a nombrar el bloqueo exacto cuando no se pueda.
+- **Capturas.** El revisor declara las capturas en `screenshots`; el motor solo conserva imágenes PNG, JPEG o WebP regulares dentro de la copia, con tamaño y número acotados, en la carpeta de la ejecución. La web las incrusta como `data:` (CSP `img-src data:`), sin ruta nueva. El prompt nombra las hojas de estilo cambiadas.
+- `nein-probe-v1` y el formato de los hallazgos no cambian. El esquema 6 solo añade columnas a `runs`, con copia previa como en las migraciones anteriores.
 
 ## Límites
 
-Sin nuevo motor de orquestación, memoria obligatoria ni copia de credenciales. Música, Vim, dictado y YOLO se investigaron pero no formaron parte de las mejoras recomendadas. Las funciones nuevas también se usan por conversación.
+- No se revisa el contenido de trabajo externo ni se leen carpetas personales del autor.
+- Sin comparación de capturas base/head ni ejecución de e2e que gasten IA, cuentas reales o servicios de pago.
+- Sin actualizar la instalación personal ni el banco del revisor en esta entrega.
 
 ## Criterios
 
-- «todas estas mejoras» → paleta, ejecución, continuidad, evidencia, revisor, diseño y experimento → recorridos y pruebas del plan.
-- «haciendo commits» → una unidad útil por commit, con documentación y comprobaciones.
-- «PR explicando» → cambios, demostraciones, pruebas y límites; publicación posterior a revisión.
+- «pasarle el WORK.md del árbol de trabajo» → `engine.review`/`reviewPrompt`, almacén, web, CLI → test: repo con `WORK.md` en `.gitignore` → el prompt lleva su texto como dato con fecha y la ejecución guarda `spec.source = worktree`; sin WORK.md → «sin especificación» en web y CLI; WORK.md versionado → `head` sin duplicarlo; árbol en otra rama → no se usa. En vivo: el revisor lo cita en su recorrido sobre anaco-ob.
+- «resumen de los cambios externos» → `reviewer.md` → la revisión en vivo de anaco-ob nombra el vault como no revisado.
+- «Separa en el informe» → `report.parseReport`, almacén, web, CLI → test: `skipped` se guarda y se pinta aparte de «pendiente»; en vivo, el skip de Windows no aparece como pendiente.
+- «e2e que el proyecto documenta … adjuntar capturas» → `reviewer.md`, prompt, motor, almacén, servidor, web, CLI → test: una captura declarada sobrevive a la copia y se ve en la web; enlace, no imagen, ruta fuera y exceso se apartan con motivo; el prompt nombra el CSS cambiado. En vivo: anaco-ob ejecuta una e2e documentada y adjunta capturas, o da el bloqueo exacto.
+- Seams: `review()` con agente falso, `parseReport`, `ReviewStore`, `createHandler`/`renderPage`.
 
 ## Tareas
 
-- [x] T1 · Confianza — continuidad de correcciones, consumo desconocido y versión de Claude en CI.
-- [x] T2 · Paleta — catálogo, búsqueda, descripciones, disponibilidad, borrador y acceso por host.
-- [x] T3 · Procesos — segundo plano, monitores acotados, vista, avisos y parada antes del relevo.
-- [x] T4 · Sesiones — objetivo/avance/siguiente paso, búsqueda, estado fechado y consulta sin inferencia.
-- [x] T5 · Encargo — peticiones, tareas y comprobaciones con identidad de archivos y vigencia.
-- [x] T6 · Revisor — cobertura por riesgos y evaluación con control y casos reservados.
-- [x] T7 · Diseño — variantes, comentarios, dirección elegida y comprobación visual.
-- [x] T8 · Contexto — observación y ensayo de directo/continuación/delegación.
-- [x] T9 · Entrega — revisión integrada, suite/tipos, paquete, documentación, push y PR con CI.
-
-- [x] R1 · Preparar 0.5.0-alpha.1, bootstrap, notas y candidato instalado.
-- [x] R2 · Verificar e integrar la preparación en main y publicar el tag con su matriz.
-- [x] R3 · Comprobar adjuntos publicados y bootstrap de Pages; registrar entrega.
+- [ ] T1 · Especificación — WORK.md fuera de git como dato fechado, «sin especificación», trabajo externo nombrado; esquema 6. Blocked by: none.
+- [ ] T2 · Pendiente real — `skipped` separado de `gaps` en informe, almacén, web y CLI. Blocked by: T1.
+- [ ] T3 · Comprobaciones del proyecto y capturas — guía de e2e, CSS en el prompt, capturas conservadas y visibles. Blocked by: T2.
+- [ ] T4 · Cierre — documentación, revisión de riesgo, suite y tipos, aceptación en vivo sobre anaco-ob. Blocked by: T1–T3.
 
 ## Evidencia
 
-Base `b0f6f27`; árbol limpio y origin/main sin commits adicionales. Auditoría previa: diez scripts pasan, incluido Pi con proveedor determinista. No acredita el código nuevo.
-
-T1: regresión nueva de consumo en rojo antes del módulo; usage, engine y web pasan. CI deriva Claude de runtime.json. Instrucciones de revisión continúan correcciones recuperables dentro del alcance.
-
-T2: búsqueda local, disponibilidad, borrador y terminal estrecha comprobados; 15 pruebas del plugin pasan con Claude 2.1.302, incluida interacción del panel. Diferencia de acceso por host documentada.
-
-T3: procesos reales con backend nativo Pi, códigos de salida, monitor ruidoso, cancelación de grupo y parada sin despertar al origen pasan. Tipos contra Pi 1.0.2 pasan. Claude conserva sus tareas nativas.
-
-T4: sesiones de Pi y Claude con identidad independiente, búsqueda por proyecto/todos, conservación al cerrar y rechazo de registro corrupto comprobados. CLI empaquetada y notas incorporadas al Panel.
-
-T5: comando real, error, criterio inexistente, cambios durante la comprobación y archivo nuevo invalidando evidencia pasan. Web real compila; API comprueba Host/Origin/token y dibuja contenido como texto. Se añade al smoke instalado.
-
-T7: variantes, diez comentarios concurrentes, elección/implementación/aceptación, rutas y captura comprobados. En Zen real: encargo visible, token retirado, elemento señalado, comentario persistido y elección de dirección. Se corrigió la carga ESM detectada en ese recorrido y se añadió regresión.
-
-T6: [comparación de foco](evals/results/2026-10-30-review-focus.md), doce intentos. Base 3/4 referencias; candidata 2/4 y un timeout. Candidata no promovida, revisor ordinario intacto; 1,38044 USD estimados.
-
-Revisión integrada: los trabajos pasan ahora por `executeTool` para conservar los hooks/permisos de bash, además de su backend. Una prueba con Pi real confirma entrega en segundo plano y rechazo nativo sin ejecutar el comando.
-
-T8: [piloto de contexto](evals/results/2026-10-30-context.md), tres rutas. Código aceptado en las tres, pero la delegada agotó plazo y dejó la guía pendiente; no se promueve. Directo fue más rápido/barato.
-
-T9: suite completa y paquete instalado pasan sobre `40c02a1`; la regresión posterior de comentarios largos pasa en `4fc2eaf`. [PR #22](https://github.com/samuhlo/n_ein/pull/22) integrada en `72b64ab`; su árbol coincide con el head revisado `6f22636`. [Matriz CI](https://github.com/samuhlo/n_ein/actions/runs/41045558424) completa en verde sobre `4fc2eaf`: macOS, Linux, payload común y artefacto instalado como usuario sin privilegios en Ubuntu y Arch. [Aceptación y límites](evals/results/2026-10-30-experience.md).
-
-Corrección de CI: la ejecución posterior `41046772452` detectó una carrera entre el sondeo y el arranque en la prueba de lectores. Se sustituye el polling que adquiere flock por una señal de preparación del hijo, sin cambiar los bloqueos del producto; el test nativo pasa localmente. La PR conserva ambas ejecuciones.
-
-R1: versión/ bootstrap/enlaces comprobados; `build-release.sh 0.5.0-alpha.1` pasó sobre `7f5a025`, incluida instalación desde tarball y doctor. Candidato local macOS arm64 SHA-256 `5115251552fcdf377a49cc1f94b98bbcc795d7e34fed80bba944769fcc2635b9`. La publicación construirá y verificará sus propios adjuntos desde el tag definitivo.
-
-R2–R3: [0.5.0-alpha.1 publicada](https://github.com/samuhlo/n_ein/releases/tag/v0.5.0-alpha.1), prerelease preview, tag en `99e0d0642ecd10d124eef21c6662c6dc9ef27309`. [PR #23](https://github.com/samuhlo/n_ein/pull/23) integrada tras [matriz verde](https://github.com/samuhlo/n_ein/actions/runs/41083397059). [Workflow del tag](https://github.com/samuhlo/n_ein/actions/runs/41084441165) completo, incluidos publicación, attestation y Pages.
-
-Los nueve adjuntos descargados se verificaron con `verify-release-assets.py`: mismas fuentes, manifiestos, modos, hashes e instaladores. `gh attestation verify` validó ambos tarballs y `install.sh`, exigiendo repositorio, workflow de release, ref del tag, commit de origen y runners alojados. SHA-256 de los tarballs publicados: macOS `58e85dff2e18e12892454533bc3fec1dfe4b1cd0ae6360ea3fb39a196f1f0c61`; Linux `476d0c509eb27eba79e389b3d475b850e59b5a193d75f61f82d627230630a09e`. El bootstrap público coincide byte a byte con el adjunto y su dry-run selecciona 0.5.0-alpha.1 sin crear el hogar ni el enlace del ensayo. Assets locales en `dist/published-0.5.0/`; log del dry-run en `/private/tmp/nein-050-public-dryrun.log`. No se actualizó la instalación personal ni se tocó el legado.
+Base `99e91ea`. Run original en el portátil: `gaps` = «No ejecuté pruebas con un navegador real ni comprobé visualmente los ajustes CSS.» y «La suite Python omitió una prueba exclusiva de Windows.»; el revisor buscó `rg --files -g '*WORK*'` y `git ls-files '*WORK*'` sin resultado; `WORK.md` ignorado en `.gitignore:9`; coste estimado 0,43 USD en 7 min.
 
 ## Siguiente paso
 
-Versión publicada. La actualización personal queda para cuando Samu la pida. Continúan los pendientes ya declarados de Omarchy gráfico y cobertura/valoraciones humanas de p_reviewer; no bloquean ni se presentan como resueltos por esta release.
+T1.

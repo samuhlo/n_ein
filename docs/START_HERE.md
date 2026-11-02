@@ -24,11 +24,11 @@ El experimento de equipo se conserva desactivado: `N_EIN_TEAM=1` lo habilita exp
 
 ## Trabajo del 30 de octubre
 
-La incorporación autorizada de paleta, procesos, sesiones, evidencia, diseño y contexto se sigue en [WORK.md](../WORK.md) y [plan de experiencia](13-experiencia.md). La PR #22 está integrada y sus mejoras se publican en 0.5.0-alpha.1, con la verificación de entrega en WORK.md. El documento de p_reviewer anterior y sus pendientes se conservan en [archivo de trabajo](archive/work/2026-10-30-previewer.md).
+La incorporación autorizada de paleta, procesos, sesiones, evidencia, diseño y contexto se siguió en [su encargo, ya archivado](archive/work/2026-11-02-encargo-visible.md) y el [plan de experiencia](13-experiencia.md). La PR #22 está integrada y sus mejoras se publican en 0.5.0-alpha.1, con la verificación de entrega en ese encargo. El documento de p_reviewer anterior y sus pendientes se conservan en [archivo de trabajo](archive/work/2026-10-30-previewer.md).
 
 ## Entrega actual
 
-`0.5.0-alpha.1` incorpora la paleta buscable, procesos en segundo plano, resúmenes de sesiones, vista del encargo con evidencia, diseño con comentarios y continuación explícita de contexto. Conserva el revisor ordinario y el agente directo tras los pilotos. No añade migración de SQLite: p_reviewer sigue en el esquema 5. Estado de publicación y evidencia en WORK.md.
+`0.5.0-alpha.1` incorpora la paleta buscable, procesos en segundo plano, resúmenes de sesiones, vista del encargo con evidencia, diseño con comentarios y continuación explícita de contexto. Conserva el revisor ordinario y el agente directo tras los pilotos. No añade migración de SQLite: p_reviewer sigue en el esquema 5. Estado de publicación y evidencia en [su encargo archivado](archive/work/2026-11-02-encargo-visible.md).
 
 ## Ruta de lectura
 
