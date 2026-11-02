@@ -234,6 +234,7 @@ try {
       if (item.status !== "resolved") for (const citation of item.citations) console.log(`▏ ${citation.ref}`);
     });
     for (const gap of run.gaps) console.log(`\n· pendiente: ${gap}`);
+    for (const item of run.skipped) console.log(`\n· omitido por la suite (esperado): ${item}`);
     if (run.rejected.length) console.log(`\n· apartados: ${run.rejected.length} (sin citas válidas o mal formados)`);
     if (opened) console.log(`\n// 003  REVISOR\n▏ ${opened}`);
   }

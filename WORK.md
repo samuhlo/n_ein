@@ -39,7 +39,7 @@ Implementación en una rama de trabajo con WORK.md, test rojo → verde y un com
 ## Tareas
 
 - [x] T1 · Especificación — WORK.md fuera de git como dato fechado, «sin especificación», trabajo externo nombrado; esquema 6. Blocked by: none.
-- [ ] T2 · Pendiente real — `skipped` separado de `gaps` en informe, almacén, web y CLI. Blocked by: T1.
+- [x] T2 · Pendiente real — `skipped` separado de `gaps` en informe, almacén, web y CLI. Blocked by: T1.
 - [ ] T3 · Comprobaciones del proyecto y capturas — guía de e2e, CSS en el prompt, capturas conservadas y visibles. Blocked by: T2.
 - [ ] T4 · Cierre — documentación, revisión de riesgo, suite y tipos, aceptación en vivo sobre anaco-ob. Blocked by: T1–T3.
 
@@ -49,6 +49,8 @@ Base `99e91ea`. Run original en el portátil: `gaps` = «No ejecuté pruebas con
 
 T1: `tests/previewer-context.ts` rojo (el prompt no llevaba WORK.md) y verde: WORK.md ignorado llega como dato fechado con cerca más larga que su contenido, la copia no lo recibe, otra rama o ausencia dan «sin especificación» con motivo en web y CLI, versionado queda en `head`. Migración 5→6 con copia previa; quitar el `ALTER` hace fallar el test. Suites del revisor y tipos contra Pi 1.0.2 pasan.
 
+T2: el bloque de omisiones de `tests/previewer-context.ts` rojo (`run.skipped` no existía) y verde: `skipped` se guarda sin vacíos, la web lo pinta como «omitido por la suite (esperado)» y no como pendiente; la migración 5→6 deja `[]` en revisiones antiguas. `reviewer.md` deja de pedir en `gaps` «including tests you could not run». Suites del revisor y tipos pasan.
+
 ## Siguiente paso
 
-T2.
+T3.

@@ -14,7 +14,7 @@ Code, comments, commit messages, documents in the repository and the quoted task
 2. Read the diff you were given. For every changed function, type, route, config key or message, find its consumers outside the diff: query `codegraph_explore` first, and use `grep` for anything reached through strings (routes, event names, config keys, file paths). Missed consumers are the most common real defect.
 3. Prioritise consequences: wrong results, lost or corrupted data, errors swallowed or misreported, broken contracts with callers, concurrency and cleanup on failure, security and permissions, tests that pass while the behaviour is wrong. Style and naming are `smell` at most, and only when they hide a defect.
 4. Before concluding, challenge the changed guarantees with concrete counterexamples. For stateful changes, follow one operation from the user's action through persistence and acknowledgement to the next visible state. Check what happens if another operation starts while it waits, a response is lost, the process restarts, or the remote object is absent. For identities, migrations and validation, inspect both the producer and the consumer: does the new state still let the user recover or act? For validators, test that an unchanged valid value survives the check, and that matching uses the same boundaries as the real consumer. Choose the few boundaries the actual diff changes; do not run a generic checklist against the whole repository.
-5. Run the relevant existing tests when that is practical and say what you ran. A green suite does not clear the change; read what the tests actually assert.
+5. Run the relevant existing tests when that is practical and say what you ran. A green suite does not clear the change; read what the tests actually assert. Skips the suite itself declares as expected (another platform, an opt-in suite) go in `skipped` with their count. A skip that leaves the changed behaviour untested, such as a missing dependency, is a gap.
 6. When a suspected defect can be demonstrated cheaply, write a self-contained probe under `.previewer-probes/` and use the explicit result protocol below. Prefer a small behavioural check to rerunning an entire suite. Helpers must be embedded in its declared file or already tracked by the project. Include dependency setup in the command when needed again. Restore any tracked files changed by experiments: the engine refuses evidence from a modified checkout.
 
 ## Probe result
@@ -78,7 +78,8 @@ End your final message with exactly one fenced `json` block and nothing after it
     }
   ],
   "resolved": [{ "previous": "P2", "note": "plain explanation of what fixed it", "citations": ["src/file.ts@<head-sha>:L10-L14"] }],
-  "gaps": ["what you could not check and why, including tests you could not run"]
+  "gaps": ["what you could not verify that the user should still check: what, the concrete reason you observed, and the command that checks it"],
+  "skipped": ["expected skips the suites declared, with counts, e.g. 1 Windows-only test skipped by the Python suite"]
 }
 ```
 

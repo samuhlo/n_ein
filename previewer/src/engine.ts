@@ -416,7 +416,7 @@ export async function review(options: ReviewOptions): Promise<ReviewOutcome> {
         log(`[REVIEW] :: CHECK :: previous: ${key} | outcome: ${resolutionCheck.outcome} | probe: ${probe ? (probe.exitCode ?? "timeout") : "none"}`);
       }
       if (!execute) gaps.push("sin aislamiento del sistema (sandbox-exec o bwrap utilizable): revisión solo de lectura, sin tests ni sondas");
-      result = signal.aborted ? { status: "cancelled", error: "cancelada", usage: agent.usage } : { status: "done", summary: report.summary, tour, gaps, rejected, usage: agent.usage, findings, checks };
+      result = signal.aborted ? { status: "cancelled", error: "cancelada", usage: agent.usage } : { status: "done", summary: report.summary, tour, gaps, skipped: report.skipped, rejected, usage: agent.usage, findings, checks };
     }
   } catch (error) {
     result = { status: signal.aborted ? "cancelled" : "failed", error: error instanceof Error ? error.message : String(error) };

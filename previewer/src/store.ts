@@ -51,6 +51,8 @@ export type Run = {
   /** Recorrido guiado del cambio, en orden de lectura. */
   tour: TourStep[];
   gaps: string[];
+  /** Omisiones que la suite declara esperadas: se enseñan, pero no son pendiente. */
+  skipped: string[];
   rejected: string[];
   usage: Usage | null;
   /** De dónde salió la especificación del encargo; null en revisiones anteriores al esquema 6. */
@@ -83,6 +85,7 @@ export type RunResult = {
   summary?: string;
   tour?: TourStep[];
   gaps?: string[];
+  skipped?: string[];
   rejected?: string[];
   usage?: Usage;
   spec?: Spec;
@@ -93,7 +96,8 @@ export type RunResult = {
 
 // La v4 cambia el significado de la evidencia y añade comprobaciones «unchecked».
 // Un lector antiguo no debe interpretar not_applicable + exit 0 como un arreglo.
-// La v6 añade a cada revisión de dónde salió la especificación del encargo.
+// La v6 añade a cada revisión de dónde salió la especificación del encargo y las
+// omisiones esperadas de la suite, separadas de lo pendiente.
 const SCHEMA = 6;
 
 /** Base de datos del canal: `~/.n_ein/<canal>/previewer/previewer.db`. */
@@ -105,7 +109,7 @@ type SessionRow = { id: string; repo: string; branch: string; pr_url: string | n
 type RunRow = {
   id: string; session_id: string; base_sha: string; head_sha: string; model: string; thinking: string; status: RunStatus;
   error: string | null; summary: string; tour: string; gaps: string; rejected: string; usage: string | null; started: string; ended: string | null;
-  spec: string | null;
+  spec: string | null; skipped: string;
 };
 type FindingRow = {
   id: string; session_id: string; run_id: string; head_sha: string; kind: Kind; severity: Severity; title: string; plain: string;
@@ -123,7 +127,7 @@ function session(row: SessionRow): Session {
 function run(row: RunRow): Run {
   return {
     id: row.id, sessionId: row.session_id, baseSha: row.base_sha, headSha: row.head_sha, model: row.model, thinking: row.thinking,
-    status: row.status, error: row.error, summary: row.summary, tour: JSON.parse(row.tour), gaps: JSON.parse(row.gaps), rejected: JSON.parse(row.rejected),
+    status: row.status, error: row.error, summary: row.summary, tour: JSON.parse(row.tour), gaps: JSON.parse(row.gaps), skipped: JSON.parse(row.skipped), rejected: JSON.parse(row.rejected),
     usage: row.usage ? JSON.parse(row.usage) : null, spec: row.spec ? JSON.parse(row.spec) : null, started: row.started, ended: row.ended,
   };
 }
@@ -206,7 +210,10 @@ export class ReviewStore {
           revision_id TEXT NOT NULL REFERENCES chain_revisions(id), position INTEGER NOT NULL,
           run_id TEXT PRIMARY KEY REFERENCES runs(id))`);
       }
-      if (version < 6) this.db.run("ALTER TABLE runs ADD COLUMN spec TEXT");
+      if (version < 6) {
+        this.db.run("ALTER TABLE runs ADD COLUMN spec TEXT");
+        this.db.run("ALTER TABLE runs ADD COLUMN skipped TEXT NOT NULL DEFAULT '[]'");
+      }
       this.db.run(`PRAGMA user_version = ${SCHEMA}`);
     }).immediate();
   }
@@ -308,9 +315,9 @@ export class ReviewStore {
     if (current.status !== "running") throw new Error(`la ejecución ${runId} ya terminó (${current.status})`);
     this.db.transaction(() => {
       this.db.query(`UPDATE runs SET status = $status, error = $error, summary = $summary, tour = $tour, gaps = $gaps,
-        rejected = $rejected, usage = $usage, spec = $spec, ended = $ended WHERE id = $id`).run({
+        skipped = $skipped, rejected = $rejected, usage = $usage, spec = $spec, ended = $ended WHERE id = $id`).run({
         id: runId, status: result.status, error: result.error ?? null, summary: result.summary ?? "", tour: JSON.stringify(result.tour ?? []),
-        gaps: JSON.stringify(result.gaps ?? []), rejected: JSON.stringify(result.rejected ?? []),
+        gaps: JSON.stringify(result.gaps ?? []), skipped: JSON.stringify(result.skipped ?? []), rejected: JSON.stringify(result.rejected ?? []),
         usage: result.usage ? JSON.stringify(result.usage) : null, spec: result.spec ? JSON.stringify(result.spec) : null, ended: now(),
       });
       if (result.status !== "done") return;

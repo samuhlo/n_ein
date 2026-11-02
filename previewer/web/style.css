@@ -98,7 +98,8 @@ details.group[open] > summary::before { content: "▾ "; }
 .probe { margin-top: 8px; }
 .probe code { color: var(--concrete); }
 
-.gaps { list-style: none; padding: 0; display: grid; gap: 4px; max-width: 88ch; }
+.gaps, .skipped { list-style: none; padding: 0; display: grid; gap: 4px; max-width: 88ch; }
+.skipped { margin-top: 8px; color: var(--dim); }
 .rejected { margin-top: 12px; }
 .rejected summary { cursor: pointer; list-style: none; }
 .rejected ul { color: var(--dim); margin-top: 8px; padding-left: 16px; }

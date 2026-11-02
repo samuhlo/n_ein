@@ -110,5 +110,18 @@ const page = (outcome: Awaited<ReturnType<typeof review>>): string => text(rende
   assert.match(page(outcome), /especificación: WORK\.md del head/);
 }
 
+// --- Pendiente real frente a omisiones esperadas de la suite --------------------------------
+{
+  const unchecked = "No probé en un navegador los cambios de app.css: el e2e documentado necesita Zen y no está instalado.";
+  const expected = "La suite Python omitió 1 prueba exclusiva de Windows.";
+  const { outcome } = await reviewWith({ gaps: [unchecked], skipped: [expected, "  "] });
+  assert.deepEqual(outcome.run.gaps, [unchecked]);
+  assert.deepEqual(outcome.run.skipped, [expected], "las omisiones esperadas se guardan aparte y sin vacíos");
+  const shown = page(outcome);
+  assert.match(shown, new RegExp(`· pendiente: ${unchecked.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}`));
+  assert.doesNotMatch(shown, /pendiente: La suite Python/, "un skip esperado no es trabajo pendiente");
+  assert.match(shown, /omitido por la suite \(esperado\): La suite Python omitió 1 prueba exclusiva de Windows\./);
+}
+
 store.close();
 console.log("previewer context: OK");

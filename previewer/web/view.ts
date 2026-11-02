@@ -55,7 +55,7 @@ const WORDS = {
     valid: "¿es válido?", reason: "motivo (opcional)", pick: "enviar a n_ein",
     detail: "detalle técnico", condition: "condición", consequence: "consecuencia", cited: "citas",
     probe: "sonda", check: "última comprobación", unproven: "falta comprobar", seenAt: "visto en",
-    output: "salida", gap: "pendiente", rejected: (n: number) => `apartados: ${n} (sin citas válidas o mal formados)`,
+    output: "salida", gap: "pendiente", skipped: "omitido por la suite (esperado)", rejected: (n: number) => `apartados: ${n} (sin citas válidas o mal formados)`,
     spec: { head: (path: string) => `especificación: ${path} del head`, none: (note: string) => `sin especificación: ${note}`,
       worktree: (path: string, modified: string) => `especificación: ${path} del árbol de trabajo, fuera de git · modificado ${modified}` },
     noLines: "sin líneas de texto que mostrar",
@@ -85,7 +85,7 @@ const WORDS = {
     valid: "is it valid?", reason: "reason (optional)", pick: "send to n_ein",
     detail: "technical detail", condition: "condition", consequence: "consequence", cited: "citations",
     probe: "probe", check: "latest check", unproven: "still unproven", seenAt: "seen at",
-    output: "output", gap: "pending", rejected: (n: number) => `set aside: ${n} (no valid citations or malformed)`,
+    output: "output", gap: "pending", skipped: "skipped by the suite (expected)", rejected: (n: number) => `set aside: ${n} (no valid citations or malformed)`,
     spec: { head: (path: string) => `specification: ${path} at the head`, none: (note: string) => `no specification: ${note}`,
       worktree: (path: string, modified: string) => `specification: ${path} from the working tree, outside git · modified ${modified}` },
     noLines: "no text lines to show",
@@ -261,6 +261,7 @@ export function renderPage(view: SessionView): Html {
     ${group(words.unchecked, listed.filter((item) => item.status === "unchecked"))}
     ${group(words.resolved, listed.filter((item) => item.status === "resolved"), true)}
     ${run.gaps.length ? html`<ul class="gaps">${run.gaps.map((gap) => html`<li>· ${words.gap}: ${gap}</li>`)}</ul>` : null}
+    ${run.skipped.length ? html`<ul class="skipped">${run.skipped.map((item) => html`<li>· ${words.skipped}: ${item}</li>`)}</ul>` : null}
     ${run.rejected.length ? html`<details class="rejected"><summary>· ${words.rejected(run.rejected.length)}</summary><ul>${run.rejected.map((item) => html`<li>${item}</li>`)}</ul></details>` : null}
   </section>
   <section id="changes">

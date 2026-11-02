@@ -24,7 +24,8 @@ export type ProposedFinding = {
 /** Un hallazgo anterior que el revisor da por corregido en este head. */
 export type Resolution = { previous: string; note: string; citations: string[]; probe: ProbeSpec | null };
 
-export type Report = { summary: string; tour: TourStep[]; findings: ProposedFinding[]; resolved: Resolution[]; gaps: string[]; rejected: string[] };
+/** `gaps`: lo que el usuario aún debería comprobar; `skipped`: lo que la propia suite omite a propósito. */
+export type Report = { summary: string; tour: TourStep[]; findings: ProposedFinding[]; resolved: Resolution[]; gaps: string[]; skipped: string[]; rejected: string[] };
 
 /** Más avisos que esto suelen ser ruido; el resto se aparta, no se muestra. */
 export const MAX_FINDINGS = 10;
@@ -86,5 +87,5 @@ export function parseReport(message: string): Report {
     isFields(item) && text(item.previous) ? [{ previous: text(item.previous), note: text(item.note), citations: texts(item.citations), probe: probeSpec(item.probe) }] : []);
   const tour = (Array.isArray(value.tour) ? value.tour : []).flatMap((item): TourStep[] =>
     isFields(item) && text(item.title) && text(item.plain) ? [{ title: text(item.title), plain: text(item.plain), why: text(item.why), files: texts(item.files) }] : []);
-  return { summary: text(value.summary), tour: tour.slice(0, MAX_TOUR_STEPS), findings, resolved, gaps: texts(value.gaps), rejected };
+  return { summary: text(value.summary), tour: tour.slice(0, MAX_TOUR_STEPS), findings, resolved, gaps: texts(value.gaps), skipped: texts(value.skipped), rejected };
 }
