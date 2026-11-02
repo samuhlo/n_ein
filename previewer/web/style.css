@@ -46,6 +46,7 @@ h1, h2, h3, p, ol, ul, dl { margin: 0; }
 .warn::before { content: "▏ "; color: var(--red); }
 
 /* // 001 recorrido */
+.spec { color: var(--secondary); margin-bottom: 12px; }
 .summary { max-width: 72ch; margin-bottom: 28px; }
 .tour { list-style: none; padding: 0; display: grid; gap: 24px; }
 .tour li { padding-left: 16px; border-left: 1px solid var(--dark); max-width: 80ch; }

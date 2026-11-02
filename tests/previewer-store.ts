@@ -166,6 +166,7 @@ store.close();
   } }] });
   old.rate(item!.id, "vale", "decisión anterior"); old.select(item!.id, true);
   old.db.run("DROP TABLE chain_runs"); old.db.run("DROP TABLE chain_revisions"); old.db.run("DROP TABLE chains");
+  old.db.run("ALTER TABLE runs DROP COLUMN spec");
   old.db.run("PRAGMA user_version = 3");
   // Mantener la conexión abierta deja los commits recientes en WAL al hacer la copia.
   const upgraded = new ReviewStore(path);
@@ -183,8 +184,28 @@ store.close();
   assert.equal(kept.probe?.reproduced, false, "también la API y el traspaso JSON reciben la semántica nueva");
   assert.equal(JSON.parse((upgraded.db.query("SELECT probe FROM findings WHERE id=?").get(item!.id) as { probe: string }).probe).reproduced, true,
     "la evidencia histórica original permanece guardada");
-  assert.equal((upgraded.db.query("PRAGMA user_version").get() as { user_version: number }).user_version, 5,
+  assert.equal((upgraded.db.query("PRAGMA user_version").get() as { user_version: number }).user_version, 6,
     "un lector v3 rechaza los nuevos datos en vez de llamar arreglo a not_applicable + exit 0");
+  upgraded.close();
+  old.close();
+}
+
+// La v6 añade a cada revisión la procedencia de la especificación; lo anterior queda sin ella.
+{
+  const path = join(mkdtempSync(join(tmpdir(), "nein-previewer-v5-")), "previewer.db");
+  const old = new ReviewStore(path);
+  const session = old.openSession({ repo: "/old", branch: "spec" });
+  const before = old.startRun({ sessionId: session.id, baseSha: "b", headSha: "h", model: "m/x", thinking: "high" });
+  old.finishRun(before.id, { status: "done", summary: "anterior", gaps: ["algo"] });
+  old.db.run("ALTER TABLE runs DROP COLUMN spec");
+  old.db.run("PRAGMA user_version = 5");
+  const upgraded = new ReviewStore(path);
+  assert.equal(readdirSync(join(path, "..", "backups")).length, 1, "copia antes de migrar");
+  assert.deepEqual([upgraded.run(before.id)?.summary, upgraded.run(before.id)?.gaps, upgraded.run(before.id)?.spec], ["anterior", ["algo"], null]);
+  const after = upgraded.startRun({ sessionId: session.id, baseSha: "b", headSha: "h2", model: "m/x", thinking: "high" });
+  const spec = { source: "worktree" as const, path: "WORK.md", modified: "2026-11-02 13:16 +01:00", note: "fuera de git" };
+  upgraded.finishRun(after.id, { status: "done", spec });
+  assert.deepEqual(upgraded.run(after.id)?.spec, spec);
   upgraded.close();
   old.close();
 }

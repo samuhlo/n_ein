@@ -38,7 +38,7 @@ Implementación en una rama de trabajo con WORK.md, test rojo → verde y un com
 
 ## Tareas
 
-- [ ] T1 · Especificación — WORK.md fuera de git como dato fechado, «sin especificación», trabajo externo nombrado; esquema 6. Blocked by: none.
+- [x] T1 · Especificación — WORK.md fuera de git como dato fechado, «sin especificación», trabajo externo nombrado; esquema 6. Blocked by: none.
 - [ ] T2 · Pendiente real — `skipped` separado de `gaps` en informe, almacén, web y CLI. Blocked by: T1.
 - [ ] T3 · Comprobaciones del proyecto y capturas — guía de e2e, CSS en el prompt, capturas conservadas y visibles. Blocked by: T2.
 - [ ] T4 · Cierre — documentación, revisión de riesgo, suite y tipos, aceptación en vivo sobre anaco-ob. Blocked by: T1–T3.
@@ -47,6 +47,8 @@ Implementación en una rama de trabajo con WORK.md, test rojo → verde y un com
 
 Base `99e91ea`. Run original en el portátil: `gaps` = «No ejecuté pruebas con un navegador real ni comprobé visualmente los ajustes CSS.» y «La suite Python omitió una prueba exclusiva de Windows.»; el revisor buscó `rg --files -g '*WORK*'` y `git ls-files '*WORK*'` sin resultado; `WORK.md` ignorado en `.gitignore:9`; coste estimado 0,43 USD en 7 min.
 
+T1: `tests/previewer-context.ts` rojo (el prompt no llevaba WORK.md) y verde: WORK.md ignorado llega como dato fechado con cerca más larga que su contenido, la copia no lo recibe, otra rama o ausencia dan «sin especificación» con motivo en web y CLI, versionado queda en `head`. Migración 5→6 con copia previa; quitar el `ALTER` hace fallar el test. Suites del revisor y tipos contra Pi 1.0.2 pasan.
+
 ## Siguiente paso
 
-T1.
+T2.

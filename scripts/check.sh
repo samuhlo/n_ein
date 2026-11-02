@@ -59,6 +59,7 @@ bun run tests/bench.ts
 bun run tests/previewer-usage.ts
 bun run tests/previewer-store.ts
 bun run tests/previewer-engine.ts
+bun run tests/previewer-context.ts
 bun run tests/previewer-probes.ts
 bun run tests/previewer-probe-protocol.ts
 bun run tests/previewer-evidence-loop.ts

@@ -212,6 +212,8 @@ try {
     const { run, findings } = outcome;
     console.log(`// 000  REVISIÓN ${run.status.toUpperCase()}`);
     if (run.error) console.log(`▏ ${run.error}`);
+    if (run.spec) console.log(run.spec.source === "none" ? `▏ sin especificación: ${run.spec.note}`
+      : `▏ especificación: ${run.spec.path} ${run.spec.source === "head" ? "del head" : `del árbol de trabajo, fuera de git · modificado ${run.spec.modified}`}`);
     if (run.summary) console.log(`\n${run.summary}`);
     if (run.tour.length) console.log("\n// 001  RECORRIDO");
     run.tour.forEach((step, index) => {

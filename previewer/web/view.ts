@@ -10,6 +10,7 @@ import type { Probe } from "../src/finding.ts";
 import { probeLabel, probeState as evidenceState } from "../src/probe-result.ts";
 import type { Run, Session, Status, StoredFinding, Verdict } from "../src/store.ts";
 import type { ChainView, ChainEvent } from "../src/chains.ts";
+import type { Spec } from "../src/spec.ts";
 import { marksFor, rowMarks, splitDiff, type FileDiff, type Mark, type Row } from "./diff.ts";
 import { html, type Html } from "./html.ts";
 
@@ -55,6 +56,8 @@ const WORDS = {
     detail: "detalle técnico", condition: "condición", consequence: "consecuencia", cited: "citas",
     probe: "sonda", check: "última comprobación", unproven: "falta comprobar", seenAt: "visto en",
     output: "salida", gap: "pendiente", rejected: (n: number) => `apartados: ${n} (sin citas válidas o mal formados)`,
+    spec: { head: (path: string) => `especificación: ${path} del head`, none: (note: string) => `sin especificación: ${note}`,
+      worktree: (path: string, modified: string) => `especificación: ${path} del árbol de trabajo, fuera de git · modificado ${modified}` },
     noLines: "sin líneas de texto que mostrar",
     picked: (n: number) => n === 0
       ? "marca «enviar a n_ein» en lo que quieras corregir"
@@ -83,6 +86,8 @@ const WORDS = {
     detail: "technical detail", condition: "condition", consequence: "consequence", cited: "citations",
     probe: "probe", check: "latest check", unproven: "still unproven", seenAt: "seen at",
     output: "output", gap: "pending", rejected: (n: number) => `set aside: ${n} (no valid citations or malformed)`,
+    spec: { head: (path: string) => `specification: ${path} at the head`, none: (note: string) => `no specification: ${note}`,
+      worktree: (path: string, modified: string) => `specification: ${path} from the working tree, outside git · modified ${modified}` },
     noLines: "no text lines to show",
     picked: (n: number) => n === 0
       ? "mark «send to n_ein» on what you want fixed"
@@ -179,6 +184,12 @@ function ordered(files: FileDiff[], run: Run | null): FileDiff[] {
   return [...files].sort((a, b) => (order.get(a.path) ?? order.size + files.indexOf(a)) - (order.get(b.path) ?? order.size + files.indexOf(b)));
 }
 
+/** Contra qué se juzgó el cambio; sin especificación se avisa, no se calla. */
+function specLine(spec: Spec, words: Words): Html {
+  if (spec.source === "none") return html`<p class="warn spec">${words.spec.none(spec.note)}</p>`;
+  return html`<p class="spec">${spec.source === "head" ? words.spec.head(spec.path) : words.spec.worktree(spec.path, spec.modified ?? "?")}</p>`;
+}
+
 export function renderPage(view: SessionView): Html {
   const words = WORDS[view.lang];
   const { session, run, latest } = view;
@@ -234,6 +245,7 @@ export function renderPage(view: SessionView): Html {
   ${run ? html`<main>
   <section id="tour">
     ${heading(1, words.tour)}
+    ${run.spec ? specLine(run.spec, words) : null}
     ${run.summary ? html`<p class="summary">${run.summary}</p>` : null}
     <ol class="tour">${run.tour.map((step, index) => html`<li>
       <h3><span class="num">${index + 1}.</span> ${step.title}</h3>
