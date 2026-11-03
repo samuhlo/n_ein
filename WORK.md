@@ -41,7 +41,7 @@ Pedidos:
 
 - [x] T0 · Ensayo del puente — un turno de Opus en Pi con la persona y las herramientas, y el paso a Sol con «hazlo». Blocked by: none.
 - [x] T1 · Empaquetado del puente — runtime fijado con lockfile, instalador, doctor, configuración y entorno del launcher, NOTICE. Blocked by: T0.
-- [ ] T2 · Enrutado opcional de `abierto` a Opus — valor elegible en `/nein:models`, error accionable si falta el modelo. Blocked by: T1 para la prueba en vivo.
+- [x] T2 · Enrutado opcional de `abierto` a Opus — valor elegible en `/nein:models`, error accionable si falta el modelo. Blocked by: none.
 - [x] T3 · Medidores de cuota en Pi. Blocked by: none.
 - [x] T4 · Guarda de comandos destructivos. Blocked by: none.
 - [x] T5 · Regla de preservar. Blocked by: none.
@@ -69,9 +69,14 @@ Pedidos:
   - `git switch -f`, `--discard-changes` y `-C` descartan cambios como `checkout` y pasaban;
   - dos llamadas de Opus a `nein_set_task` dejaban dos turnos de obra en cola: ahora uno por elección pendiente;
   - el launcher quitaba `ANTHROPIC_*` a todo Pi, y los comandos del proyecto las perdían aunque no se usara Opus: ahora solo las quita el envoltorio `bin/n-ein-claude-bridge`, que lanza el Claude gestionado (`N_EIN_BRIDGE_CLAUDE_BIN`); sin Claude gestionado falla con `BRIDGE_CLAUDE_MISSING` en vez de usar otro.
+- T2 en vivo (Samu, 16:58-17:00, `ensayo-instalado.sh`):
+  - `n-ein-install runtime` dejó `runtimes/claude-bridge/0.9.3` con su marcador.
+  - El launcher lo cargó sin `-e` ni configuración a mano, y `claude-bridge.json` apunta a `bin/n-ein-claude-bridge`; el Agent SDK arrancó Claude Code a través del envoltorio.
+  - Opus diseñó y, con «Hazlo.», llamó a `nein_set_task` y cerró; el turno en cola fue a `openai-codex/gpt-6-sol`, que dejó `70e85c4` con 5/5 pruebas y `tsc` limpio.
+  - Cero avisos `left state behind`, ningún hijo de Claude vivo y `isUsingOverage: false`.
 - Suite completa sobre `b26a5e7` (código final tras la revisión): exit 0; `dist/n-ein-install runtime --dry-run` planea solo `runtimes/claude-bridge/0.9.3`.
 - Suite completa sobre `95fa2d1` más README: exit 0 (el `[ERR] :: TEAM_SAVE` del log sale igual antes de este encargo: lo provoca un test de equipo).
 
 ## Siguiente paso
 
-T2 en vivo: Samu ejecuta `ensayo-instalado.sh` (scratchpad de la sesión). Instala el runtime del puente en `~/.n_ein/runtimes` y repite diseño y «Hazlo» con el launcher, sin `-e` ni configuración a mano. Si sale bien, T2 queda hecho. Hacer de Opus el valor por defecto de abierto queda para después de 2-3 encargos reales y es decisión de Samu.
+Encargo terminado. Si Samu lo pide, se revisa la rama con p_reviewer y se integra. Decisiones suyas para después: hacer de Opus el valor por defecto de abierto tras 2-3 encargos reales, y si hace falta abrir una incidencia en pi-claude-bridge para que `session_shutdown` cierre las consultas activas.
