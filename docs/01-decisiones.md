@@ -121,6 +121,31 @@ Samu propuso convertir su proyecto `lang-pr-review` (Python y LangGraph, hecho p
 
 Detalle, criterios y tareas en `WORK.md`.
 
+### p_reviewer: especificación, pendiente y comprobaciones del proyecto (2 de noviembre)
+
+Tras usarlo en anaco-ob, Samu pidió que viera el `WORK.md` ignorado por git, que no presentara la rama como todo el trabajo, que no llamara pendiente a un skip esperado y que ejecutara las e2e documentadas. Decisiones:
+
+- El motor lee el `WORK.md` del árbol de trabajo solo si no está en el head y el árbol está en lo revisado, y lo pasa como dato fechado en el prompt, nunca a la copia. Sin él, el informe dice «sin especificación».
+- No hay canal aparte para el trabajo fuera del repositorio: `WORK.md` ya es la única guía del encargo y el de anaco-ob registraba el vault. El revisor nombra esas entregas como no revisadas.
+- `gaps` es lo que el usuario aún debería comprobar, con motivo y comando; las omisiones que la suite declara esperadas van aparte.
+- No se abre el sandbox para las e2e. En anaco-ob fallaban por `.venv`/driver ignorados y por escribir en `~/.mozilla`; reconstruyendo eso en la copia y con un `HOME` temporal pasaron dentro del sandbox. La guía enseña ese camino y las capturas se guardan con la revisión.
+
+Evidencia y tareas en `WORK.md` de la rama `feat/revisor-contexto`.
+
+### Opus piensa, GPT ejecuta (3 de noviembre)
+
+Samu pidió el equilibrio que ve en Gentle Shell: Opus 5.5 high como cabeza pensante y los modelos de OpenAI para ejecutar, y de paso lo que mejorase n_ein. Con «Hazlo, con tus recomendaciones» autorizó el plan. Decisiones:
+
+- **Por fase, no por delegación.** Opus entra como modelo de la clase `abierto` (intent, diseño, decisiones) y la transición `start_implementation` ya existente lleva la obra entera a Sol o Luna en la misma sesión. Sin subagentes ni orquestador: el banco del 5 de octubre y el de Gentle (T24, 4 oct: 3,12 frente a 1,59 USD; Luna hizo 3 de 5 soluciones defectuosas) dan pérdida al delegar la obra en un modelo más barato.
+- **Opción, no valor por defecto**, hasta que el ensayo y 2-3 encargos reales lo confirmen.
+- **Proveedor `pi-claude-bridge`** (MIT), como hace Gentle: lanza el Claude Code oficial con el Agent SDK y gasta la cuota de la suscripción. Si no supera el ensayo, la alternativa sin dependencia es pensar en `nein claude` y relevar con `to-pi`.
+- **Entran también** medidores de cuota de las dos suscripciones en Pi, guarda de comandos destructivos y la regla de preservar el comportamiento que comparte el código tocado. Quedan fuera el aviso de tamaño de rama, los perfiles con pin por repositorio y la delegación por ratio de precio.
+- Un fallo o una cuota agotada del modelo pensante se informa con la salida (`[sol high]`, `/nein:models`); nunca se cambia de modelo en silencio.
+
+Tras la aceptación en vivo con el puente instalado, Samu declinó el revisor y pidió «saca nueva versión»: autoriza preparar 0.6.0-alpha.1, integrarla en main con su PR, crear el tag y publicar la preview. La instalación personal sigue fuera de alcance.
+
+Fuentes: [gentle-shell `2c06244`](https://github.com/Gentleman-Programming/gentle-shell/tree/2c06244), [delegar con motivo](https://github.com/Gentleman-Programming/gentle-shell/blob/2c06244/odd/tasks/delegate-for-reason.md), [pi-claude-bridge 0.9.3](https://www.npmjs.com/package/pi-claude-bridge/v/0.9.3). Estado y evidencia en `WORK.md` de la rama `feat/opus-piensa`.
+
 ## Recomendaciones de diseño, revisables
 
 El 7 de octubre Samu autorizó implementar y evaluar el reparto temprano y la investigación acotada con el mismo mecanismo de equipo, tras la [auditoría del piloto](../evals/results/2026-10-07-auditoria-paralelismo.md). La lectura puede delegarse sin preparar un encargo de escritura. Se mide por separado el ahorro de contexto y el avance paralelo, conservando checks e integración. Esto amplía el experimento; no demuestra ahorro ni activa por sí solo la preview personal. El estado de implementación y evaluación vive en WORK.md.

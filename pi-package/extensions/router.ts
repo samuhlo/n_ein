@@ -120,16 +120,24 @@ export function nextState(
   return RANK[found.clase] > RANK[current.clase] ? found : current;
 }
 
+// Proveedor de Opus en Pi (pi-claude-bridge): conserva una consulta viva de Claude Code entre herramientas.
+const BRIDGE = "claude-bridge";
+
 function physical(ctx: ExtensionContext, route: Route) {
   const slash = route.model.indexOf("/");
   const model = ctx.modelRegistry.find(
     route.model.slice(0, slash),
     route.model.slice(slash + 1),
   );
-  if (!model)
+  // El modelo nunca se sustituye en silencio: el error dice cómo seguir y lo decide el usuario.
+  if (!model) {
+    const source = route.model.startsWith("claude-bridge/")
+      ? "el puente de Claude no está cargado o Claude no tiene sesión iniciada"
+      : "inicia sesión en su proveedor con /login";
     throw new Error(
-      `[ERR] :: ROUTE_MODEL :: modelo ${route.model} fuera del catálogo`,
+      `[ERR] :: ROUTE_MODEL :: modelo ${route.model} fuera del catálogo | fix: ${source}; para seguir con Sol escribe [sol high] al principio del mensaje, o elige otro modelo en /nein:models`,
     );
+  }
   return model;
 }
 
@@ -165,6 +173,8 @@ export default function (pi: ExtensionAPI, fixedTable?: RoutingTable) {
   // Pi corre una sesión por proceso: lo pendiente vale para la próxima petición de esta sesión.
   const pending: PendingRoute = {};
   let lastState: RouterState | undefined;
+  // El turno que arranca la obra tras Opus se pone en cola una vez por elección pendiente.
+  let handoverQueued = false;
   const classSelectedByUser = () =>
     pending.force !== undefined || lastState?.fuente === "usuario";
   let table = fixedTable;
@@ -180,6 +190,7 @@ export default function (pi: ExtensionAPI, fixedTable?: RoutingTable) {
     delete pending.choice;
     table = fixedTable;
     lastState = undefined;
+    handoverQueued = false;
   });
 
   pi.registerVirtualModel<RouterState>({
@@ -224,10 +235,24 @@ export default function (pi: ExtensionAPI, fixedTable?: RoutingTable) {
           ? request.state.route
           : routing(Boolean(fresh))[state.clase];
       const model = physical(ctx, route);
+      // BLINDAJE -> El puente espera los resultados de las herramientas que pidió Opus; cambiar de
+      // proveedor a mitad de la ejecución deja huérfana su consulta y Pi no termina. Lo pendiente
+      // se aplica en la próxima petición del usuario.
+      if (
+        request.reason === "continuation" &&
+        request.previous?.model.provider === BRIDGE &&
+        model.provider !== BRIDGE
+      )
+        return {
+          model: request.previous.model,
+          thinkingLevel: (request.previous.thinkingLevel ??
+            lastState?.route?.thinking) as never,
+        };
       lastState = { ...state, route };
       delete pending.escalate;
       delete pending.force;
       delete pending.choice;
+      handoverQueued = false;
       if (request.reason === "user") delete pending.newJob;
       const changed =
         !request.state ||
@@ -336,6 +361,28 @@ export default function (pi: ExtensionAPI, fixedTable?: RoutingTable) {
         transition: params.transition,
         reason: params.reason.slice(0, 240),
       };
+      // [FLOW] Opus piensa, otro modelo ejecuta: Opus cierra su mensaje y la obra empieza en un turno nuevo.
+      if (lastState?.route?.model.startsWith(`${BRIDGE}/`)) {
+        if (params.transition === "start_implementation" && !handoverQueued) {
+          handoverQueued = true;
+          pi.sendUserMessage(
+            `Continue with the authorized implementation ("${params.request.slice(0, 200)}"). n_ein sends this message to start the build with the executor model; the agreed design and the authorization above still apply.`,
+            { deliverAs: "followUp" },
+          );
+        }
+        return {
+          content: [
+            {
+              type: "text",
+              text:
+                params.transition === "start_implementation"
+                  ? `Task assessment recorded: ${params.clase}. The build starts in a new turn that n_ein has queued for the executor model. End this turn now with one short line and no more tool calls.`
+                  : `Task assessment recorded: ${params.clase}. It applies on the next user request; finish this turn on the current model.`,
+            },
+          ],
+          details: undefined,
+        };
+      }
       return {
         content: [
           {

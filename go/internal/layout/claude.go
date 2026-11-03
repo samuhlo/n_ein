@@ -19,6 +19,18 @@ func ClaudeRuntime(version string) (string, error) {
 	return filepath.Join(root, "runtimes", "claude", version), nil
 }
 
+// ClaudeBridgeRuntime es la extensión de Pi que usa Claude Code como proveedor (pi-claude-bridge).
+func ClaudeBridgeRuntime(version string) (string, error) {
+	if !piVersion.MatchString(version) {
+		return "", fmt.Errorf("versión del puente de Claude inválida: %s", version)
+	}
+	root, err := Root()
+	if err != nil {
+		return "", err
+	}
+	return filepath.Join(root, "runtimes", "claude-bridge", version), nil
+}
+
 func ClaudeBinary(version string) (string, error) {
 	runtime, err := ClaudeRuntime(version)
 	if err != nil {

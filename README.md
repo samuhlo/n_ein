@@ -41,7 +41,7 @@ nein
   <img src="docs/assets/nein-setup.png" alt="Plan de nein-setup --dry-run" width="720" />
 </div>
 
-macOS arm64 y Linux amd64 (Ubuntu, Arch). Requisitos: Bash, curl, Git y ripgrep. El instalador verifica SHA-256 antes de ejecutar nada e instala como usuario, sin sudo, dentro de `~/.n_ein`: Node, Bun, Pi, Claude Code y CodeGraph fijados, sin tocar el `pi` ni el `claude` globales ni Ein legado. El primer arranque pide `/login` en el hogar aislado; ninguna credencial se copia. Mientras no haya release estable se instala la alpha del canal preview; [notas de 0.5.0-alpha.1](docs/releases/0.5.0-alpha.1.md).
+macOS arm64 y Linux amd64 (Ubuntu, Arch). Requisitos: Bash, curl, Git y ripgrep. El instalador verifica SHA-256 antes de ejecutar nada e instala como usuario, sin sudo, dentro de `~/.n_ein`: Node, Bun, Pi, Claude Code, el puente de Claude para Pi y CodeGraph fijados, sin tocar el `pi` ni el `claude` globales ni Ein legado. El primer arranque pide `/login` en el hogar aislado; ninguna credencial se copia. Mientras no haya release estable se instala la alpha del canal preview; [notas de 0.5.0-alpha.1](docs/releases/0.5.0-alpha.1.md).
 
 > _note: `curl -fsSL https://samuhlo.github.io/n_ein/install.sh | bash -s -- --dry-run` enseña el plan sin escribir. Sobre una preview anterior se actualiza con backup y `n-ein-install restore --channel preview` vuelve atrás._
 
@@ -81,7 +81,7 @@ Abre `nein`, entra en Pi y cuenta qué necesitas. El agente elige las skills y n
 | **riesgo** | Datos, permisos, contratos, concurrencia, despliegue | `gpt-6-sol` · high |
 | **abierto** | Diseño sin cerrar | `gpt-6-sol` · high |
 
-Un prefijo (`[luna]`, `[sol high]`) o `/nein:modo` lo fija a mano; `/nein:models` abre el panel de la tabla. La elección sale del [banco del 5 de octubre](evals/results/2026-10-05-modelos-de-trabajo.md).
+Un prefijo (`[luna]`, `[sol high]`) o `/nein:modo` lo fija a mano; `/nein:models` abre el panel de la tabla. La elección sale del [banco del 5 de octubre](evals/results/2026-10-05-modelos-de-trabajo.md). Opcional: **abierto** puede ir a Opus 5.5 high con tu suscripción de Claude (`claude-bridge/claude-opus-5-5` en el panel); Opus diseña y decide, y tras «hazlo» la obra sigue en Sol o Luna. La línea de estado de Pi enseña la cuota de Codex y de Claude. [Guía](docs/guia.md#modelos-por-encargo).
 
 ---
 
@@ -185,7 +185,7 @@ n_ein/
 
 ## // 09_ ESTADO
 
-Preview. La versión de esta entrega es [0.5.0-alpha.1](https://github.com/samuhlo/n_ein/releases/tag/v0.5.0-alpha.1); las notas de cada versión están en [docs/releases](docs/releases/). Pendientes: promoción a estable y aceptación gráfica de Omarchy. El modelo local sigue descartado.
+Preview. La versión de esta entrega es [0.6.0-alpha.1](https://github.com/samuhlo/n_ein/releases/tag/v0.6.0-alpha.1); las notas de cada versión están en [docs/releases](docs/releases/). Pendientes: promoción a estable y aceptación gráfica de Omarchy. El modelo local sigue descartado.
 
 ---
 

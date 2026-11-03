@@ -37,3 +37,9 @@ La skill `commit` toma la idea del comando `commit` del mismo repositorio (grupo
 ## Flujo de trabajo
 
 El flujo de n_ein (`flow.md`) se inspira en el Organic Driven Development de [Gentle Shell](https://github.com/Gentleman-Programming/gentle-shell) (licencia MIT); no reproduce su texto. Los nombres y logos de Gentle Shell no se usan.
+
+## Guarda, medidores de Pi y puente de Claude
+
+La guarda de comandos destructivos (`extensions/guard-core.ts`), la lectura de cuota por cabeceras (`extensions/usage-core.ts`) y la regla de preservar el comportamiento que comparte el código tocado toman ideas de [Gentle Shell](https://github.com/Gentleman-Programming/gentle-shell) (revisión `2c06244`, licencia MIT); el código y el texto son propios.
+
+`n-ein-install runtime` instala desde npm [pi-claude-bridge](https://github.com/elidickinson/pi-claude-bridge) 0.9.3, de Eli Dickinson, con licencia MIT (`Copyright (c) 2026 Eli Dickinson`), con el lockfile de `claude-bridge-runtime/`. n_ein no copia ni modifica su código; lo carga como extensión de Pi.

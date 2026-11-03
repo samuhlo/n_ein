@@ -10,6 +10,7 @@ import type { Probe } from "../src/finding.ts";
 import { probeLabel, probeState as evidenceState } from "../src/probe-result.ts";
 import type { Run, Session, Status, StoredFinding, Verdict } from "../src/store.ts";
 import type { ChainView, ChainEvent } from "../src/chains.ts";
+import type { Spec } from "../src/spec.ts";
 import { marksFor, rowMarks, splitDiff, type FileDiff, type Mark, type Row } from "./diff.ts";
 import { html, type Html } from "./html.ts";
 
@@ -25,6 +26,8 @@ export type SessionView = {
   runs: { count: number; usd: number; coverage?: "complete" | "partial" | "unknown" };
   findings: StoredFinding[];
   patch: string;
+  /** Capturas de la revisión vigente como `data:`, por nombre; falta la que ya no está en disco. */
+  images?: Record<string, string>;
   lang: Lang;
   chain?: ChainView | null;
   historical?: boolean;
@@ -54,7 +57,10 @@ const WORDS = {
     valid: "¿es válido?", reason: "motivo (opcional)", pick: "enviar a n_ein",
     detail: "detalle técnico", condition: "condición", consequence: "consecuencia", cited: "citas",
     probe: "sonda", check: "última comprobación", unproven: "falta comprobar", seenAt: "visto en",
-    output: "salida", gap: "pendiente", rejected: (n: number) => `apartados: ${n} (sin citas válidas o mal formados)`,
+    screenshots: "capturas", shotMissing: "la imagen ya no está en la carpeta de la revisión",
+    output: "salida", gap: "pendiente", skipped: "omitido por la suite (esperado)", rejected: (n: number) => `apartados: ${n} (sin citas válidas o mal formados)`,
+    spec: { head: (path: string) => `especificación: ${path} del head`, none: (note: string) => `sin especificación: ${note}`,
+      worktree: (path: string, modified: string) => `especificación: ${path} del árbol de trabajo, fuera de git · modificado ${modified}` },
     noLines: "sin líneas de texto que mostrar",
     picked: (n: number) => n === 0
       ? "marca «enviar a n_ein» en lo que quieras corregir"
@@ -82,7 +88,10 @@ const WORDS = {
     valid: "is it valid?", reason: "reason (optional)", pick: "send to n_ein",
     detail: "technical detail", condition: "condition", consequence: "consequence", cited: "citations",
     probe: "probe", check: "latest check", unproven: "still unproven", seenAt: "seen at",
-    output: "output", gap: "pending", rejected: (n: number) => `set aside: ${n} (no valid citations or malformed)`,
+    screenshots: "screenshots", shotMissing: "the image is no longer in the review folder",
+    output: "output", gap: "pending", skipped: "skipped by the suite (expected)", rejected: (n: number) => `set aside: ${n} (no valid citations or malformed)`,
+    spec: { head: (path: string) => `specification: ${path} at the head`, none: (note: string) => `no specification: ${note}`,
+      worktree: (path: string, modified: string) => `specification: ${path} from the working tree, outside git · modified ${modified}` },
     noLines: "no text lines to show",
     picked: (n: number) => n === 0
       ? "mark «send to n_ein» on what you want fixed"
@@ -179,6 +188,12 @@ function ordered(files: FileDiff[], run: Run | null): FileDiff[] {
   return [...files].sort((a, b) => (order.get(a.path) ?? order.size + files.indexOf(a)) - (order.get(b.path) ?? order.size + files.indexOf(b)));
 }
 
+/** Contra qué se juzgó el cambio; sin especificación se avisa, no se calla. */
+function specLine(spec: Spec, words: Words): Html {
+  if (spec.source === "none") return html`<p class="warn spec">${words.spec.none(spec.note)}</p>`;
+  return html`<p class="spec">${spec.source === "head" ? words.spec.head(spec.path) : words.spec.worktree(spec.path, spec.modified ?? "?")}</p>`;
+}
+
 export function renderPage(view: SessionView): Html {
   const words = WORDS[view.lang];
   const { session, run, latest } = view;
@@ -234,6 +249,7 @@ export function renderPage(view: SessionView): Html {
   ${run ? html`<main>
   <section id="tour">
     ${heading(1, words.tour)}
+    ${run.spec ? specLine(run.spec, words) : null}
     ${run.summary ? html`<p class="summary">${run.summary}</p>` : null}
     <ol class="tour">${run.tour.map((step, index) => html`<li>
       <h3><span class="num">${index + 1}.</span> ${step.title}</h3>
@@ -241,6 +257,11 @@ export function renderPage(view: SessionView): Html {
       ${step.why ? html`<p class="why">${step.why}</p>` : null}
       <p class="files">${step.files.map((path, i) => html`${i ? " · " : ""}<a href="#file-${fileIndex.get(path) ?? ""}">${path}</a>`)}</p>
     </li>`)}</ol>
+    ${run.screenshots.length ? html`<div class="shots"><p class="group-label">${words.screenshots} · ${run.screenshots.length}</p>
+      ${run.screenshots.map((shot) => html`<figure>
+        ${view.images?.[shot.name] ? html`<img src="${view.images[shot.name]}" alt="${shot.caption}">` : html`<p class="warn">${words.shotMissing}</p>`}
+        <figcaption>${shot.caption}<span class="where"> · ${shot.source}</span>${shot.command ? html`<br><code>${shot.command}</code>` : null}</figcaption>
+      </figure>`)}</div>` : null}
   </section>
   <section id="findings">
     ${heading(2, words.findings)}
@@ -249,6 +270,7 @@ export function renderPage(view: SessionView): Html {
     ${group(words.unchecked, listed.filter((item) => item.status === "unchecked"))}
     ${group(words.resolved, listed.filter((item) => item.status === "resolved"), true)}
     ${run.gaps.length ? html`<ul class="gaps">${run.gaps.map((gap) => html`<li>· ${words.gap}: ${gap}</li>`)}</ul>` : null}
+    ${run.skipped.length ? html`<ul class="skipped">${run.skipped.map((item) => html`<li>· ${words.skipped}: ${item}</li>`)}</ul>` : null}
     ${run.rejected.length ? html`<details class="rejected"><summary>· ${words.rejected(run.rejected.length)}</summary><ul>${run.rejected.map((item) => html`<li>${item}</li>`)}</ul></details>` : null}
   </section>
   <section id="changes">

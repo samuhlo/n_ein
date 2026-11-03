@@ -17,7 +17,7 @@ import { handoffBrief } from "./handoff.ts";
 import { ensureServer, reviewerLink } from "./open.ts";
 import { sandboxFor } from "./sandbox.ts";
 import { bundle } from "./server.ts";
-import { ReviewStore, storePath } from "./store.ts";
+import { ReviewStore, runDirOf, storePath } from "./store.ts";
 import { ChainStore, planChain, reviewChain } from "./chains.ts";
 
 const packageRoot = resolve(import.meta.dir, "../..");
@@ -212,6 +212,8 @@ try {
     const { run, findings } = outcome;
     console.log(`// 000  REVISIÓN ${run.status.toUpperCase()}`);
     if (run.error) console.log(`▏ ${run.error}`);
+    if (run.spec) console.log(run.spec.source === "none" ? `▏ sin especificación: ${run.spec.note}`
+      : `▏ especificación: ${run.spec.path} ${run.spec.source === "head" ? "del head" : `del árbol de trabajo, fuera de git · modificado ${run.spec.modified}`}`);
     if (run.summary) console.log(`\n${run.summary}`);
     if (run.tour.length) console.log("\n// 001  RECORRIDO");
     run.tour.forEach((step, index) => {
@@ -232,6 +234,8 @@ try {
       if (item.status !== "resolved") for (const citation of item.citations) console.log(`▏ ${citation.ref}`);
     });
     for (const gap of run.gaps) console.log(`\n· pendiente: ${gap}`);
+    for (const item of run.skipped) console.log(`\n· omitido por la suite (esperado): ${item}`);
+    for (const shot of run.screenshots) console.log(`\n· captura: ${shot.caption} · ${join(runDirOf(packageRoot, run.id), "screenshots", shot.name)}`);
     if (run.rejected.length) console.log(`\n· apartados: ${run.rejected.length} (sin citas válidas o mal formados)`);
     if (opened) console.log(`\n// 003  REVISOR\n▏ ${opened}`);
   }

@@ -13,7 +13,6 @@ import { createInterface } from "node:readline";
 import { StringDecoder } from "node:string_decoder";
 import { existsSync, lstatSync, mkdirSync, readFileSync, realpathSync, writeFileSync } from "node:fs";
 import { basename, dirname, isAbsolute, join, relative, resolve } from "node:path";
-import { channelDir } from "../../pi-package/models.ts";
 import { makeCitationChecker } from "./citations.ts";
 import { createCopy, sweepCopies, type ReviewCopy } from "./copy.ts";
 import type { Citation, Finding, Probe, TourStep } from "./finding.ts";
@@ -22,8 +21,10 @@ import { reviewGuard } from "./guard-rules.ts";
 import { parseReport, type ProposedFinding } from "./report.ts";
 import { assessProbe, probeLabel, probeState, PROBE_PREFIX } from "./probe-result.ts";
 import { sandboxFor, type Sandbox } from "./sandbox.ts";
+import { keepScreenshots } from "./screenshots.ts";
+import { readSpec, specSection, type TaskSpec } from "./spec.ts";
 import { piRunner, type AgentRunner } from "./runner.ts";
-import { ReviewStore, type Run, type RunResult, type Session, type StoredFinding } from "./store.ts";
+import { ReviewStore, runDirOf, type Run, type RunResult, type Session, type StoredFinding } from "./store.ts";
 import type { ChainStage } from "./chains.ts";
 
 type Check = NonNullable<RunResult["checks"]>[number];
@@ -62,6 +63,8 @@ const PROBE_OUTPUT_LIMIT = 4_000;
 const PROBE_SOURCE_LIMIT = 20_000;
 const DEFAULT_TIMEOUT_MS = 20 * 60_000;
 const DEFAULT_PROBE_TIMEOUT_MS = 2 * 60_000;
+/** Hojas de estilo: su efecto solo se ve en pantalla, no en un test unitario. */
+const STYLESHEET = /\.(css|scss|sass|less|styl)$/i;
 
 const short = (sha: string): string => sha.slice(0, 12);
 /** Como existsSync, pero un enlace roto también cuenta: ahí hay algo del head. */
@@ -119,17 +122,24 @@ function sameIssue(a: IssueEvidence, b: IssueEvidence): boolean {
     && cited(a) === cited(b);
 }
 
-export function reviewPrompt(range: Range, execute = true, previous: Previous = { pending: [], dismissed: [] }): string {
+function stylesheetHint(range: Range): string {
+  const styles = changedFiles(range).filter((path) => STYLESHEET.test(path));
+  return styles.length ? `This change touches stylesheets: ${styles.join(", ")}. If the project documents a browser check that renders them, run it and attach its screenshots.` : "";
+}
+
+export function reviewPrompt(range: Range, execute = true, previous: Previous = { pending: [], dismissed: [] }, spec: TaskSpec = readSpec(range)): string {
   const diff = diffOf(range);
   const truncated = diff.length > DIFF_LIMIT;
   return [
     `Review the branch ${range.branch || "(detached head)"} of ${basename(range.repo)}.`,
     `Base: ${range.baseSha} (refs/previewer/base)\nHead: ${range.headSha} (checked out here)`,
     `Commits, oldest first:\n${commitsOf(range)}`,
+    specSection(spec, range),
     `Changed files:\n${diffOf(range, "--stat=200")}`,
     `Diff from base to head${truncated ? `, truncated at ${DIFF_LIMIT} characters: read the rest with \`git diff ${short(range.baseSha)} ${short(range.headSha)} -- <path>\`` : ""}:`,
     "```diff\n" + (truncated ? diff.slice(0, DIFF_LIMIT) : diff) + "\n```",
     previousSection(previous, execute),
+    execute ? stylesheetHint(range) : "",
     execute ? "" : "This review is read-only: no OS sandbox is available, so you cannot run commands, tests or probes. Omit `probe` and list what you would have run in `gaps`.",
   ].filter(Boolean).join("\n\n");
 }
@@ -262,13 +272,14 @@ export async function review(options: ReviewOptions): Promise<ReviewOutcome> {
   const model = options.model ?? REVIEWER.model;
   const thinking = options.thinking ?? REVIEWER.thinking;
   const signal = options.signal ?? new AbortController().signal;
+  const spec = readSpec(range);
   const session = options.chain ? store.session(options.chain.sessionId)
     : store.openSession({ repo: range.repo, branch: range.branch || `detached@${short(range.headSha)}`, prUrl: options.prUrl });
   if (!session || session.repo !== range.repo) throw new Error("la sesión de revisión no pertenece a este repositorio");
   const run = store.startRun({ sessionId: session.id, baseSha: range.baseSha, headSha: range.headSha, model, thinking, chain: options.chain });
-  const runDir = join(channelDir(options.packageRoot), "previewer", "runs", run.id);
+  const runDir = runDirOf(options.packageRoot, run.id);
   mkdirSync(runDir, { recursive: true, mode: 0o700 });
-  log(`[REVIEW] >> RUN_START :: run: ${run.id.slice(0, 8)} | head: ${short(range.headSha)} | base: ${short(range.baseSha)} | model: ${model}`);
+  log(`[REVIEW] >> RUN_START :: run: ${run.id.slice(0, 8)} | head: ${short(range.headSha)} | base: ${short(range.baseSha)} | model: ${model} | spec: ${spec.source}`);
 
   // Lo abierto de revisiones anteriores; lo descartado por el usuario solo se menciona para no repetirlo.
   const open = store.findings(session.id).filter((item) => options.chain || item.status !== "resolved");
@@ -296,7 +307,7 @@ export async function review(options: ReviewOptions): Promise<ReviewOutcome> {
     const restorable = new Set(previous.pending.filter(({ item }) => item.probe?.file && !lexists(resolve(reviewCopy, item.probe.file))).map(({ item }) => item.thread));
     for (const { item } of previous.pending) if (item.probe && restorable.has(item.thread) && !restoreProbe(reviewCopy, guard, item.probe)) restorable.delete(item.thread);
     const agent = await (options.runner ?? piRunner(options.packageRoot))({
-      cwd: copy.path, origin: range.repo, prompt: [reviewPrompt(range, execute, previous), options.chain ? chainPrompt(options.chain) : ""].filter(Boolean).join("\n\n"), runDir, model, thinking, signal, execute,
+      cwd: copy.path, origin: range.repo, prompt: [reviewPrompt(range, execute, previous, spec), options.chain ? chainPrompt(options.chain) : ""].filter(Boolean).join("\n\n"), runDir, model, thinking, signal, execute,
       timeoutMs: options.timeoutMs ?? DEFAULT_TIMEOUT_MS,
     });
     if (signal.aborted) result = { status: "cancelled", error: "cancelada", usage: agent.usage };
@@ -314,6 +325,11 @@ export async function review(options: ReviewOptions): Promise<ReviewOutcome> {
       const check = makeCitationChecker(range.repo, [range.headSha, range.baseSha]);
       const { tour, dropped } = settleTour(report.tour, changedFiles(range));
       const rejected = [...report.rejected, ...dropped];
+      // Antes de repetir sondas: una sonda podría reescribir los archivos que el revisor declaró.
+      const shots = execute ? keepScreenshots(reviewCopy, join(runDir, "screenshots"), report.screenshots)
+        : { kept: [], rejected: report.screenshots.map((item) => `captura «${item.caption || item.file}»: revisión de solo lectura, sin ejecución que capturar`) };
+      rejected.push(...shots.rejected);
+      if (report.screenshots.length) log(`[REVIEW] :: SCREENSHOTS :: kept: ${shots.kept.length} | rejected: ${shots.rejected.length}`);
       const probes: ProbeContext = { copy: reviewCopy, sha: range.headSha, guard, sandbox, timeoutMs: options.probeTimeoutMs ?? DEFAULT_PROBE_TIMEOUT_MS, signal };
       const baseRestored = new Set<string>();
       const measure = async (proposed: NonNullable<ProposedFinding["probe"]>): Promise<Probe> => {
@@ -413,7 +429,7 @@ export async function review(options: ReviewOptions): Promise<ReviewOutcome> {
         log(`[REVIEW] :: CHECK :: previous: ${key} | outcome: ${resolutionCheck.outcome} | probe: ${probe ? (probe.exitCode ?? "timeout") : "none"}`);
       }
       if (!execute) gaps.push("sin aislamiento del sistema (sandbox-exec o bwrap utilizable): revisión solo de lectura, sin tests ni sondas");
-      result = signal.aborted ? { status: "cancelled", error: "cancelada", usage: agent.usage } : { status: "done", summary: report.summary, tour, gaps, rejected, usage: agent.usage, findings, checks };
+      result = signal.aborted ? { status: "cancelled", error: "cancelada", usage: agent.usage } : { status: "done", summary: report.summary, tour, gaps, skipped: report.skipped, screenshots: shots.kept, rejected, usage: agent.usage, findings, checks };
     }
   } catch (error) {
     result = { status: signal.aborted ? "cancelled" : "failed", error: error instanceof Error ? error.message : String(error) };
@@ -423,6 +439,8 @@ export async function review(options: ReviewOptions): Promise<ReviewOutcome> {
     copy?.remove();
   }
 
+  // Sin el texto: la guía del autor no se copia al almacén, solo de dónde salió.
+  result.spec = { source: spec.source, path: spec.path, modified: spec.modified, note: spec.note };
   const tipAfter = branchTip(range.repo, range.branch);
   if (tipBefore !== tipAfter) {
     // El head revisado está fijado por SHA: los hallazgos siguen valiendo para él, pero hay que saberlo.

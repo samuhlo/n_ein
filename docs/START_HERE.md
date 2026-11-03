@@ -15,20 +15,20 @@ El experimento de equipo se conserva desactivado: `N_EIN_TEAM=1` lo habilita exp
 ## Estado y continuidad
 
 - Rama del proyecto: consultar Git y WORK.md; la conversación actual prevalece sobre propuestas anteriores.
-- Versión del checkout: consultar `VERSION`. Entrega actual: `0.5.0-alpha.1`, canal preview. [Notas de versión](releases/0.5.0-alpha.1.md). La versión personal instalada se comprueba en su `install.json`; publicar no la actualiza por sí solo.
-- Pi 1.0.2 y CodeGraph 1.6.1 fijados en `runtime.json`. No asumir que los binarios globales coinciden.
+- Versión del checkout: consultar `VERSION`. Entrega actual: `0.6.0-alpha.1`, canal preview. [Notas de versión](releases/0.6.0-alpha.1.md). La versión personal instalada se comprueba en su `install.json`; publicar no la actualiza por sí solo.
+- Pi 1.0.2, Claude Code 2.1.302, el puente de Claude 0.9.3 y CodeGraph 1.6.1 fijados en `runtime.json`. No asumir que los binarios globales coinciden.
 - Preferencias y ajustes personales viven fuera del paquete, en `~/.n_ein`. Mantener credenciales en su hogar nativo; no copiarlas desde el banco.
 - `WORK.md` es la única guía del encargo; decisiones duraderas, glosario e instrucciones del proyecto aportan memoria selectiva.
 - El relevo ordinario Pi→Claude→Pi y la recuperación en una sesión nueva están probados. El ensayo con equipo y Claude real quedó pendiente por cuota y ahora está aplazado con el experimento.
 - Modelo local descartado el 5 de octubre. No descargar modelos ni preparar servidores.
 
-## Trabajo del 30 de octubre
+## Trabajo del 2 y 3 de noviembre
 
-La incorporación autorizada de paleta, procesos, sesiones, evidencia, diseño y contexto se sigue en [WORK.md](../WORK.md) y [plan de experiencia](13-experiencia.md). La PR #22 está integrada y sus mejoras se publican en 0.5.0-alpha.1, con la verificación de entrega en WORK.md. El documento de p_reviewer anterior y sus pendientes se conservan en [archivo de trabajo](archive/work/2026-10-30-previewer.md).
+La especificación, el pendiente real y las comprobaciones de p_reviewer se siguieron en [su encargo, ya archivado](archive/work/2026-11-03-revisor-contexto.md). «Opus piensa, GPT ejecuta» y las mejoras de Gentle (cuota, guarda, regla de preservar) se siguen en `WORK.md`, con la publicación de 0.6.0-alpha.1. Los encargos anteriores se conservan en [archive/work](archive/work/).
 
 ## Entrega actual
 
-`0.5.0-alpha.1` incorpora la paleta buscable, procesos en segundo plano, resúmenes de sesiones, vista del encargo con evidencia, diseño con comentarios y continuación explícita de contexto. Conserva el revisor ordinario y el agente directo tras los pilotos. No añade migración de SQLite: p_reviewer sigue en el esquema 5. Estado de publicación y evidencia en WORK.md.
+`0.6.0-alpha.1` permite usar Opus 5.5 high en la fase abierta de Pi, mediante el puente de Claude, con la obra en Sol o Luna tras «hazlo»; por defecto, abierto sigue en Sol high. Añade la cuota de Codex y Claude en la línea de estado, la guarda de comandos destructivos y la regla de preservar el comportamiento que comparte el código tocado. p_reviewer lee el `WORK.md` ignorado como dato, separa lo pendiente de las omisiones esperadas y ejecuta las comprobaciones documentadas con capturas; su almacén migra al esquema 6 con copia previa. Estado de publicación y evidencia en `WORK.md`.
 
 ## Ruta de lectura
 

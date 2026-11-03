@@ -131,6 +131,9 @@ func run(args []string, output io.Writer, self string) error {
 		if err := installClaudeRuntime(absSource, *dryRun, output); err != nil {
 			return err
 		}
+		if err := installClaudeBridgeRuntime(absSource, *dryRun, output); err != nil {
+			return err
+		}
 		return installCodeGraphRuntime(absSource, *dryRun, output)
 	}
 	if *target == "" {
@@ -256,7 +259,25 @@ func checkRuntime(root string, output io.Writer) error {
 	if err := checkCodeGraph(config.CodeGraph.Version, output); err != nil {
 		return err
 	}
-	return checkPreviewer(root, output)
+	if err := checkPreviewer(root, output); err != nil {
+		return err
+	}
+	checkClaudeBridge(root, output)
+	return nil
+}
+
+// checkClaudeBridge informa sin exigir: Pi funciona sin el puente y Opus en Pi es una opción.
+func checkClaudeBridge(root string, output io.Writer) {
+	version, err := claudeBridgeVersionFrom(root)
+	if err != nil || version == "" {
+		return
+	}
+	target, err := layout.ClaudeBridgeRuntime(version)
+	if err == nil && inspectRuntime(claudeBridgeRuntime(version), target) == nil {
+		say(output, "// 004 PUENTE · %s · modelos de Claude en Pi con la suscripción\n", version)
+		return
+	}
+	say(output, "// 004 PUENTE · %s · ausente: nein-setup lo instala; Pi funciona sin él\n", version)
 }
 
 // checkPreviewer pregunta al revisor instalado: el aislamiento se detecta con la misma lógica que usa al revisar.

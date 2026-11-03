@@ -69,6 +69,42 @@ export N_EIN_ROOT="$repo_dir"
     if (!("quietStartup" in settings)) await Bun.write(path, JSON.stringify({ ...settings, quietStartup: true }, null, 2) + "\n");
   ' "$agent_dir/settings.json" 2>/dev/null || printf '[WARN] :: SETTINGS_SKIP :: path: %s\n' "$agent_dir/settings.json" >&2
 }
+# [FLOW] PUENTE DE CLAUDE
+# Con el runtime instalado, Pi ofrece los modelos de Claude con la suscripción, mediante el Claude
+# Code de n_ein y el mismo hogar y login que `nein claude`. Sin él, Pi arranca igual.
+bridge_args=()
+IFS=$'\t' read -r bridge_version claude_version < <(bun -e '
+  const c = await Bun.file(process.argv[1]).json();
+  console.log([c.claudeBridge?.version ?? "", c.claude?.version ?? ""].join("\t"));
+' "$repo_dir/runtime.json") || true
+bridge_dir="$n_ein_home/runtimes/claude-bridge/${bridge_version:-none}/global/node_modules/pi-claude-bridge"
+if [[ -n "${bridge_version:-}" && -f "$bridge_dir/package.json" ]]; then
+  claude_dir="${N_EIN_CLAUDE_DIR:-$n_ein_home/$channel/claude}"
+  case "$claude_dir" in
+    "$HOME/.claude"|"$HOME/.claude-ein")
+      printf '[ERR] :: HOME_INVALID :: path: %s\n' "$claude_dir" >&2
+      exit 64
+      ;;
+  esac
+  mkdir -p "$claude_dir" "$agent_dir"
+  # El puente escribe sus sesiones en este hogar y su Claude las retoma desde el mismo.
+  export CLAUDE_CONFIG_DIR="$claude_dir"
+  # BLINDAJE -> El puente arranca Claude con el entorno de Pi; el envoltorio le quita las claves de
+  # Anthropic exportadas para que no pase a la API de pago. Sin Claude gestionado, el envoltorio falla.
+  claude_bin="$(command -v "${N_EIN_CLAUDE_BIN:-$n_ein_home/runtimes/claude/${claude_version:-none}/bin/claude}" 2>/dev/null || true)"
+  if [[ -n "$claude_bin" ]]; then export N_EIN_BRIDGE_CLAUDE_BIN="$claude_bin"; else unset N_EIN_BRIDGE_CLAUDE_BIN; fi
+  # n_ein fija el Claude del puente y apaga AskClaude salvo que el usuario lo encienda; el resto es suyo.
+  bun -e '
+    const [path, claude] = process.argv.slice(1);
+    const file = Bun.file(path);
+    const before = (await file.exists()) ? await file.json() : {};
+    const config = { ...before, askClaude: { enabled: false, ...before.askClaude } };
+    if (await Bun.file(claude).exists()) config.provider = { ...before.provider, pathToClaudeCodeExecutable: claude };
+    if (JSON.stringify(config) !== JSON.stringify(before)) await Bun.write(path, JSON.stringify(config, null, 2) + "\n");
+  ' "$agent_dir/claude-bridge.json" "$repo_dir/bin/n-ein-claude-bridge" \
+    || printf '[WARN] :: BRIDGE_CONFIG_SKIP :: path: %s\n' "$agent_dir/claude-bridge.json" >&2
+  bridge_args=(-e "$bridge_dir")
+fi
 export PI_CODING_AGENT_SESSION_DIR="$agent_dir/sessions"
 handoff_signal="$(mktemp "${TMPDIR:-/tmp}/n-ein-handoff.XXXXXX")"
 trap 'rm -f "$handoff_signal"' EXIT
@@ -78,6 +114,7 @@ export N_EIN_HANDOFF_SIGNAL="$handoff_signal"
 if "$pi_bin" \
   --no-extensions --no-skills --no-prompt-templates --no-themes \
   -e "$repo_dir/pi-package" \
+  ${bridge_args[@]+"${bridge_args[@]}"} \
   --append-system-prompt "$repo_dir/pi-package/persona.md" \
   ${flow_args[@]+"${flow_args[@]}"} \
   --append-system-prompt "$lang_directive" \

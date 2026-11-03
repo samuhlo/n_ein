@@ -11,7 +11,8 @@ import { join, resolve } from "node:path";
 import { loadLang } from "../../pi-package/lang.ts";
 import { channelDir } from "../../pi-package/models.ts";
 import { git } from "./git.ts";
-import { ReviewStore, VERDICTS, type Verdict } from "./store.ts";
+import { screenshotData } from "./screenshots.ts";
+import { ReviewStore, runDirOf, VERDICTS, type Verdict } from "./store.ts";
 import { usageSummary } from "./usage.ts";
 import { ChainStore } from "./chains.ts";
 import type { SessionView } from "../web/view.ts";
@@ -30,7 +31,7 @@ export function serverBuildId(packageRoot: string): string {
   const hash = createHash("sha256");
   if (existsSync(manifest)) return hash.update(readFileSync(manifest)).digest("hex");
   for (const path of ["VERSION", "previewer/src/server.ts", "previewer/src/open.ts", "previewer/src/store.ts", "previewer/src/chains.ts",
-    "previewer/src/probe-result.ts", "previewer/src/usage.ts", "previewer/web/main.ts", "previewer/web/view.ts", "previewer/web/html.ts", "previewer/web/diff.ts",
+    "previewer/src/probe-result.ts", "previewer/src/usage.ts", "previewer/src/screenshots.ts", "previewer/web/main.ts", "previewer/web/view.ts", "previewer/web/html.ts", "previewer/web/diff.ts",
     "previewer/web/style.css", "pi-package/lang.ts", "brand.json", "pi-package/themes/ein.json"])
     hash.update(path).update(readFileSync(join(packageRoot, path)));
   return hash.digest("hex");
@@ -61,7 +62,8 @@ export async function bundle(): Promise<string> {
 const PAGE = `<!doctype html><html lang="es"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><meta name="referrer" content="no-referrer"><title>p_reviewer</title><link rel="stylesheet" href="/app.css"></head><body><div id="app"><p>…</p></div><script type="module" src="/app.js"></script></body></html>`;
 
 const SECURITY = {
-  "content-security-policy": "default-src 'none'; script-src 'self'; style-src 'self'; connect-src 'self'; base-uri 'none'; form-action 'none'; frame-ancestors 'none'",
+  // Las capturas llegan incrustadas como data: dentro de la API con token; ninguna imagen se pide aparte.
+  "content-security-policy": "default-src 'none'; script-src 'self'; style-src 'self'; img-src data:; connect-src 'self'; base-uri 'none'; form-action 'none'; frame-ancestors 'none'",
   "x-content-type-options": "nosniff",
   "referrer-policy": "no-referrer",
   "cache-control": "no-store",
@@ -108,6 +110,10 @@ export async function createHandler(options: HandlerOptions): Promise<(request: 
       session, run, latest: !inspect && latest && latest.id !== run?.id ? latest : null,
       runs: { count: runs.length, ...usageSummary(runs.map(item => item.usage)) },
       findings: options.store.findings(sessionId, inspect ?? undefined), patch, lang: loadLang(options.packageRoot).chat,
+      images: run ? Object.fromEntries(run.screenshots.flatMap((shot) => {
+        const data = screenshotData(join(runDirOf(options.packageRoot, run.id), "screenshots"), shot);
+        return data ? [[shot.name, data]] : [];
+      })) : {},
       chain: new ChainStore(options.store).view(sessionId), historical: !!inspect,
       reviewLabel: run ? new ChainStore(options.store).location(run.id) : null,
     };

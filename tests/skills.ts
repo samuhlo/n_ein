@@ -25,6 +25,10 @@ assert.match(readFileSync(join(root, "pi-package/flow.md"), "utf8"), /`vision`/,
 const commit = readFileSync(join(skillsDir, "commit", "SKILL.md"), "utf8");
 assert.equal(Bun.YAML.parse(commit.split("---")[1])["disable-model-invocation"], true, "commit: debe ser de invocación manual");
 assert.match(readFileSync(join(root, "pi-package/flow.md"), "utf8"), /suggest the `commit` skill/, "flow.md debe sugerir commit ante cambios sueltos");
+// Los defectos que nadie pidió salen del código compartido que se tocó: el flujo y tdd piden probar que sigue igual.
+const sharedCode = /shares the code you change \(options, parsers, helpers, validation\)/;
+assert.match(readFileSync(join(root, "pi-package/flow.md"), "utf8"), sharedCode, "flow.md debe pedir sonda para lo que comparte el código tocado");
+assert.match(readFileSync(join(skillsDir, "tdd", "SKILL.md"), "utf8"), sharedCode, "tdd debe pedir test para lo que comparte el código tocado");
 const sketch = readFileSync(join(visionDir, "SKETCH.md"), "utf8");
 for (const [file, text] of [["SKILL.md", vision], ["SKETCH.md", sketch]]) {
   for (const [, link] of text.matchAll(/\]\(([^)#]+)\)/g)) {

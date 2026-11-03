@@ -14,6 +14,10 @@ Dos asignaciones iniciales bastan: modelo de la sesión y modelo del trabajador 
 
 Al comparar costes, etiquetar estimaciones de tokens por tarifa, importes facturados y datos desconocidos. `usage.cost` de Pi puede ser una estimación de catálogo; no equivale por sí solo a factura ni permite atribuir un coste marginal a una suscripción. Incluir revisión y rescates en todas las rutas comparadas.
 
+## Opus en la fase abierta
+
+Desde el 3 de noviembre la clase **abierto** puede ir a Opus 5.5 high por el puente de Claude, como opción en `/nein:models`. Es un reparto por fase, no una delegación: Opus diseña y decide, y la obra entera la hace el modelo de su clase tras «hazlo», en la misma sesión. El ensayo con el puente real dio la persona y las herramientas de n_ein, el paso a Sol y consumo de la suscripción sin uso extra. Pasa a ser el valor por defecto solo después de 2-3 encargos reales. [Decisión](01-decisiones.md#opus-piensa-gpt-ejecuta-3-de-noviembre).
+
 ## Qué tomar de GVS5H
 
 Instancias nuevas del mismo modelo comparten plan/notas/solución; la coordinación no requiere siempre un modelo caro. Un resultado de tests fallido invalida la declaración de finalización. Notas acotadas y detección de falta de progreso son prácticas a ensayar.

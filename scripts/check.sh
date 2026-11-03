@@ -29,7 +29,7 @@ export GOMODCACHE="$HOME/.n_ein/dev/go-cache/mod"
 export GOCACHE="$HOME/.n_ein/dev/go-cache/build"
 export GOPATH="$HOME/.n_ein/dev/go-cache/path"
 
-bash -n bin/nein bin/nein-setup bin/n-ein-codegraph bin/n-ein-dev bin/n-ein-claude-dev bin/n-ein-prepare-pi bin/n-ein-previewer scripts/check.sh scripts/smoke-package.sh scripts/build-preview.sh scripts/hotfix-preview.sh scripts/verify-hotfix-branch.sh
+bash -n bin/nein bin/nein-setup bin/n-ein-codegraph bin/n-ein-dev bin/n-ein-claude-dev bin/n-ein-claude-bridge bin/n-ein-prepare-pi bin/n-ein-previewer scripts/check.sh scripts/smoke-package.sh scripts/build-preview.sh scripts/hotfix-preview.sh scripts/verify-hotfix-branch.sh
 tests/launcher.sh
 tests/handoff-launcher.sh
 tests/reverse-launcher.sh
@@ -38,6 +38,10 @@ bun run tests/work-doc.ts
 bun run tests/actions.ts
 bun run tests/jobs.ts
 bun run tests/jobs-pi.ts
+bun run tests/guard.ts
+bun run tests/guard-pi.ts
+bun run tests/usage.ts
+bun run tests/usage-pi.ts
 bun run tests/workspace.ts
 bun run tests/work-evidence.ts
 bun run tests/work-web.ts
@@ -53,12 +57,14 @@ bun run tests/claude-meters.ts
 bun run tests/tools-view.ts
 bun run tests/skills.ts
 bun run tests/router.ts
+bun run tests/bridge-handover-pi.ts
 bun run tests/context.ts
 bun run tests/context-panel.ts
 bun run tests/bench.ts
 bun run tests/previewer-usage.ts
 bun run tests/previewer-store.ts
 bun run tests/previewer-engine.ts
+bun run tests/previewer-context.ts
 bun run tests/previewer-probes.ts
 bun run tests/previewer-probe-protocol.ts
 bun run tests/previewer-evidence-loop.ts

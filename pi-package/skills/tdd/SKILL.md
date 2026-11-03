@@ -31,6 +31,7 @@ When the shape of the interface itself is in question (how deep the module is, w
 
 - **Red before green.** Write the failing test and watch it fail, then write only the code that makes it pass. No speculative features, no tests for the future.
 - **One slice at a time.** One seam, one test, one minimal implementation per cycle.
+- **Preserve what you touch.** An existing behaviour that shares the code you change (options, parsers, helpers, validation) counts as touched: keep one test proving it still holds, through the same public interface. Adding an option to a shared parser, for example, needs a test that a sibling command which never accepted it still rejects it the same way.
 - **Refactor at review, not inside the loop.** It belongs to `review`, after green.
 - **No red possible** (docs, untestable change, no runner): say so and run the proportionate functional or structural check instead.
 - **Replacing a test**: list its intended behaviours before changing its mechanics, carry them into the new assertions, and check that removing a relevant behaviour makes the replacement fail. Mounting a component alone proves nothing about its visible states or interactions.

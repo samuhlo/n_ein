@@ -46,12 +46,17 @@ h1, h2, h3, p, ol, ul, dl { margin: 0; }
 .warn::before { content: "▏ "; color: var(--red); }
 
 /* // 001 recorrido */
+.spec { color: var(--secondary); margin-bottom: 12px; }
 .summary { max-width: 72ch; margin-bottom: 28px; }
 .tour { list-style: none; padding: 0; display: grid; gap: 24px; }
 .tour li { padding-left: 16px; border-left: 1px solid var(--dark); max-width: 80ch; }
 .tour h3 { font-size: 14px; margin-bottom: 4px; }
 .tour .why { color: var(--secondary); margin-top: 4px; }
 .tour .files { margin-top: 6px; color: var(--dim); }
+.shots { margin-top: 32px; display: grid; gap: 24px; }
+.shots figure { margin: 0; max-width: 100ch; }
+.shots img { display: block; max-width: 100%; height: auto; border: 1px solid var(--dark); }
+.shots figcaption { margin-top: 6px; color: var(--secondary); }
 
 /* // 002 hallazgos */
 .group { margin-bottom: 40px; }
@@ -97,7 +102,8 @@ details.group[open] > summary::before { content: "▾ "; }
 .probe { margin-top: 8px; }
 .probe code { color: var(--concrete); }
 
-.gaps { list-style: none; padding: 0; display: grid; gap: 4px; max-width: 88ch; }
+.gaps, .skipped { list-style: none; padding: 0; display: grid; gap: 4px; max-width: 88ch; }
+.skipped { margin-top: 8px; color: var(--dim); }
 .rejected { margin-top: 12px; }
 .rejected summary { cursor: pointer; list-style: none; }
 .rejected ul { color: var(--dim); margin-top: 8px; padding-left: 16px; }
