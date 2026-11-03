@@ -747,39 +747,72 @@ assert.equal(
 );
 rmSync(taskRoot, { recursive: true, force: true });
 
-// Opus como cabeza pensante: abierto va al puente de Claude y «hazlo» pasa la obra a Sol en la misma sesión.
+// Opus como cabeza pensante: abierto va al puente de Claude y «hazlo» pasa la obra a Sol.
 {
-  let thinking: any, thinkingTask: any;
-  registerRouter(
-    {
-      events: { emit() {} },
-      on() {},
-      sendUserMessage() {},
-      registerVirtualModel(v: unknown) { thinking = v; },
-      registerTool(t: any) { if (t.name === "nein_set_task") thinkingTask = t; },
-      registerCommand() {},
-    } as never,
-    { ...DEFAULT_ROUTING, abierto: { model: "claude-bridge/claude-opus-5-5", thinking: "high" } },
-  );
+  const thinkingRouter = () => {
+    const instance: { route?: any; task?: any; escalate?: any; sent: Array<[string, unknown]> } = { sent: [] };
+    registerRouter(
+      {
+        events: { emit() {} },
+        on() {},
+        sendUserMessage(text: string, options: unknown) { instance.sent.push([text, options]); },
+        registerVirtualModel(v: any) { instance.route = (request: any, ctx: unknown) => v.route(request, ctx); },
+        registerTool(t: any) {
+          if (t.name === "nein_set_task") instance.task = t;
+          if (t.name === "nein_escalate") instance.escalate = t;
+        },
+        registerCommand() {},
+      } as never,
+      { ...DEFAULT_ROUTING, abierto: { model: "claude-bridge/claude-opus-5-5", thinking: "high" } },
+    );
+    return instance;
+  };
   const design = user("¿Cómo lo planteamos? Quiero exportar los pedidos a CSV");
   const withBridge = { modelRegistry: { find: (provider: string, id: string) => ({ provider, id }) } } as never;
   const withoutBridge = {
     modelRegistry: { find: (provider: string, id: string) => (provider === "claude-bridge" ? undefined : { provider, id }) },
   } as never;
-  assert.throws(
-    () => thinking.route({ reason: "user", state: undefined, messages: design, thinkingLevel: "medium" }, withoutBridge),
-    /claude-bridge\/claude-opus-5-5[\s\S]*\[sol high\][\s\S]*\/nein:models/,
-    "sin el puente o sin login, el error dice cómo seguir con Sol",
-  );
-  const opus = await thinking.route({ reason: "user", state: undefined, messages: design, thinkingLevel: "medium" }, withBridge);
-  assert.deepEqual([opus.model.provider, opus.model.id, opus.thinkingLevel, opus.state.clase], ["claude-bridge", "claude-opus-5-5", "high", "abierto"]);
+  const bridge = { model: { provider: "claude-bridge", id: "claude-opus-5-5" }, thinkingLevel: "high" };
   const authorized = {
     cwd: taskRoot,
     model: { provider: "nein", id: "auto" },
     sessionManager: { getBranch: () => [{ type: "message", message: { role: "user", content: "Hazlo" } }] },
   };
-  const result = await thinkingTask.execute("t", { ...choice, request: "Hazlo" }, undefined, undefined, authorized);
+
+  const thinking = thinkingRouter();
+  assert.throws(
+    () => thinking.route({ reason: "user", state: undefined, messages: design, thinkingLevel: "medium" }, withoutBridge),
+    /claude-bridge\/claude-opus-5-5[\s\S]*\[sol high\][\s\S]*\/nein:models/,
+    "sin el puente o sin login, el error dice cómo seguir con Sol",
+  );
+  const opus = thinking.route({ reason: "user", state: undefined, messages: design, thinkingLevel: "medium" }, withBridge);
+  assert.deepEqual([opus.model.provider, opus.model.id, opus.thinkingLevel, opus.state.clase], ["claude-bridge", "claude-opus-5-5", "high", "abierto"]);
+  const result = await thinking.task.execute("t", { ...choice, request: "Hazlo" }, undefined, undefined, authorized);
   assert.notEqual(result.isError, true);
-  const build = await thinking.route({ reason: "continuation", state: opus.state, messages: user("Hazlo"), thinkingLevel: "medium" }, withBridge);
+  assert.match(result.content[0].text, /end this turn/i, "Opus cierra su mensaje: la obra empieza en el turno siguiente");
+  // El puente espera los resultados de las herramientas que pidió: cambiar a mitad de la ejecución deja su consulta huérfana.
+  const held = thinking.route({ reason: "continuation", state: opus.state, previous: bridge, messages: user("Hazlo"), thinkingLevel: "medium" }, withBridge);
+  assert.deepEqual([held.model.provider, held.thinkingLevel, held.state], ["claude-bridge", "high", undefined]);
+  assert.equal(thinking.sent.length, 1, "n_ein deja en cola el turno que arranca la obra");
+  assert.deepEqual(thinking.sent[0]![1], { deliverAs: "followUp" });
+  assert.match(thinking.sent[0]![0], /Hazlo/);
+  const build = thinking.route({ reason: "user", state: opus.state, previous: bridge, messages: user(thinking.sent[0]![0]), thinkingLevel: "medium" }, withBridge);
   assert.deepEqual([build.model.provider, build.model.id, build.thinkingLevel, build.state.clase], ["openai-codex", "gpt-6-sol", "medium", "ordinario"]);
+
+  // Escalar mientras piensa Opus: sigue en el puente hasta que acaba la ejecución; después, riesgo en Sol high.
+  const risky = thinkingRouter();
+  const opus2 = risky.route({ reason: "user", state: undefined, messages: design, thinkingLevel: "medium" }, withBridge);
+  await risky.escalate.execute("e", { reason: "toca permisos" }, undefined, undefined, { model: { provider: "nein", id: "auto" } });
+  const stays = risky.route({ reason: "continuation", state: opus2.state, previous: bridge, messages: design, thinkingLevel: "medium" }, withBridge);
+  assert.equal(stays.model.provider, "claude-bridge");
+  const next = risky.route({ reason: "user", state: opus2.state, previous: bridge, messages: user("Sigue"), thinkingLevel: "medium" }, withBridge);
+  assert.deepEqual([next.model.id, next.thinkingLevel, next.state.clase], ["gpt-6-sol", "high", "riesgo"]);
+  assert.equal(risky.sent.length, 0, "escalar no inventa mensajes del usuario");
+
+  // Un reintento tras un fallo del puente no se queda en él.
+  const failing = thinkingRouter();
+  const opus3 = failing.route({ reason: "user", state: undefined, messages: design, thinkingLevel: "medium" }, withBridge);
+  await failing.escalate.execute("e", { reason: "cuota" }, undefined, undefined, { model: { provider: "nein", id: "auto" } });
+  const retried = failing.route({ reason: "retry", state: opus3.state, previous: bridge, messages: design, thinkingLevel: "medium" }, withBridge);
+  assert.equal(retried.model.provider, "openai-codex");
 }

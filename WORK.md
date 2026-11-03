@@ -39,7 +39,7 @@ Pedidos:
 
 ## Tareas
 
-- [ ] T0 · Ensayo del puente — un turno de Opus en Pi con la persona y las herramientas, y el paso a Sol con «hazlo». Blocked by: permiso de Samu para ejecutar el puente con su login.
+- [x] T0 · Ensayo del puente — un turno de Opus en Pi con la persona y las herramientas, y el paso a Sol con «hazlo». Blocked by: none.
 - [ ] T1 · Empaquetado del puente — runtime fijado con lockfile, instalador, doctor, configuración y entorno del launcher, NOTICE. Blocked by: T0.
 - [ ] T2 · Enrutado opcional de `abierto` a Opus — valor elegible en `/nein:models`, error accionable si falta el modelo. Blocked by: T1 para la prueba en vivo.
 - [x] T3 · Medidores de cuota en Pi. Blocked by: none.
@@ -51,7 +51,12 @@ Pedidos:
 
 - Investigación: gentle-shell `2c06244` en el scratchpad; `pi-claude-bridge` 0.9.3 revisado (4.723 líneas en `src/`, sin `fetch` ni URL propias).
 - Pi 1.0.2 trae `claude-opus-5-5` en su catálogo de Anthropic.
-- T0: el clasificador de permisos de la sesión bloqueó ejecutar el paquete descargado con el login de Claude.
+- T0: el clasificador de permisos de la sesión bloqueó ejecutar el paquete descargado con el login de Claude; Samu lanzó `ensayo-puente.sh` (3 nov, 09:20). Resultado:
+  - Opus por el puente responde como Ein y ve `nein_job`, `nein_work` y `codegraph_explore`.
+  - Con `nein/auto` y `abierto` en Opus, el diseño lo da Opus y deja una decisión; con «Hazlo.», Opus llama a `nein_set_task` (`start_implementation → ordinario`) y Sol hace la obra: `suma.ts`, test, configuración, 3 pruebas en verde y commit `35eb513` en una rama.
+  - Cuota: `rate_limit_event` con `isUsingOverage: false` y uso extra desactivado en la organización; consume la ventana de 5 h (49 % al terminar, con el resto de la sesión).
+  - **Fallo:** el proceso no terminó. El puente dejó su consulta de Claude Code esperando el resultado de `nein_set_task` (`session_shutdown left state behind — pendingToolCalls=1`) porque la continuación fue a Sol; el hijo de Claude siguió vivo hasta cerrarlo a mano. Gentle no lo sufre porque no cambia de proveedor a mitad de una ejecución.
+- Arreglo en n_ein, sin parchear el puente: con el puente como último proveedor, una continuación no cambia de modelo; `nein_set_task` con `start_implementation` pide a Opus cerrar su mensaje y deja en cola un turno nuevo que arranca la obra en el ejecutor. `tests/router.ts` rojo → verde (incluye escalado diferido y reintento que sí cambia). `tests/bridge-handover-pi.ts`, Pi 1.0.2 real en print con puente simulado: llamadas `claude-bridge(user) → claude-bridge(toolResult) → exec-test(user)` y el proceso termina; con el router anterior la secuencia es `claude-bridge → exec-test(toolResult)` y la prueba falla.
 - T5: `tests/skills.ts` rojo («flow.md debe pedir sonda para lo que comparte el código tocado») → verde tras añadir la regla a `flow.md` (paso 4) y a `tdd` (reglas del bucle).
 - T4: `tests/guard.ts` rojo (módulo ausente) → verde: 70 comandos clasificados y la rama con interfaz (confirmar, rechazar, `nein_job`). `tests/guard-pi.ts` con Pi 1.0.2 real y proveedor determinista: sin interfaz, `rm -rf victima` queda bloqueado y `rm -rf node_modules` pasa; sin cargar la guarda, la misma prueba falla («la guarda debía impedir el borrado»). Typecheck contra Pi 1.0.2: OK.
 - T3: `tests/usage.ts` rojo (módulo ausente) → verde: cabeceras de Codex y Claude, entradas inválidas sin ventanas, ventana reiniciada a 0, aviso de cuota agotada. `tests/usage-pi.ts` con Pi 1.0.2 en RPC: la cabecera del proveedor llega a `setStatus` como «Codex 5h 37%»; sin cargar la extensión, la prueba falla. Pi no mostraba estas ventanas: `02-diseno.md` decía lo contrario y queda corregido. Typecheck: OK. Después (`6ee9300`): con la cuota agotada, Claude puede responder con uso extra de pago y solo `overage-status` lo dice; la línea y el aviso lo marcan.
@@ -60,4 +65,4 @@ Pedidos:
 
 ## Siguiente paso
 
-Samu ejecuta el ensayo T0 (`ensayo-puente.sh` en el scratchpad de la sesión: un turno de Opus, un diseño en `abierto` y «Hazlo» en un proyecto temporal). Con su salida: sí o no al puente; si es sí, T1 (empaquetado) y la prueba en vivo de T2; si es no, documentar la alternativa con `to-pi`.
+Samu repite `ensayo-puente.sh` para confirmar con el puente real que Pi termina tras «Hazlo». Después, T1 (empaquetado) y la prueba en vivo de T2.

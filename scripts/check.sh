@@ -57,6 +57,7 @@ bun run tests/claude-meters.ts
 bun run tests/tools-view.ts
 bun run tests/skills.ts
 bun run tests/router.ts
+bun run tests/bridge-handover-pi.ts
 bun run tests/context.ts
 bun run tests/context-panel.ts
 bun run tests/bench.ts
