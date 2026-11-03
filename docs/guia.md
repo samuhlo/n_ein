@@ -186,7 +186,7 @@ Claude conserva sus tareas en segundo plano y avisos nativos; la paleta expone `
 
 ## Comandos destructivos
 
-Pi ejecuta los comandos sin preguntar, así que n_ein detiene en bash y en `nein_job` lo que no se deshace: push forzado o que borra ramas remotas, `reset --hard`, `clean -f`, borrar ramas, descartar cambios con `checkout`/`restore`, `stash drop`/`clear`, reescribir la historia, `rm` recursivo fuera del temporal y SQL o clientes que borran datos. Con interfaz te pide confirmar el comando exacto; sin ella (print, JSON), lo bloquea y el agente te lo devuelve. Pasan el temporal y las carpetas regenerables del proyecto (`node_modules`, `dist`, `build`, `coverage`…). Reconoce formas directas: no interpreta scripts, variables ni `find -delete`. Claude conserva sus permisos nativos.
+Pi ejecuta los comandos sin preguntar, así que n_ein detiene en bash y en `nein_job` lo que no se deshace: push forzado o que borra ramas remotas, `reset --hard`, `clean -f`, borrar ramas, descartar cambios con `checkout`/`restore`, `stash drop`/`clear`, reescribir la historia, `rm` recursivo fuera del temporal y SQL o clientes que borran datos. Con interfaz te pide confirmar el comando exacto; sin ella (print, JSON), lo bloquea y el agente te lo devuelve. Pasan las carpetas regenerables del proyecto (`node_modules`, `dist`, `build`, `coverage`…) y el temporal fuera del proyecto. Reconoce formas directas: no interpreta scripts, variables ni `find -delete`. Claude conserva sus permisos nativos.
 
 ## Encontrar y retomar trabajo
 

@@ -4,12 +4,21 @@
 // confirmación del usuario; sin interfaz que pregunte, se detiene.
 // =============================================================================
 
+import { realpathSync } from "node:fs";
 import { homedir, tmpdir } from "node:os";
 import type { ExtensionAPI } from "@earendil-works/pi-coding-agent";
 import { dangerous } from "./guard-core.ts";
 
+// Pi trabaja con rutas reales: en macOS el temporal `/var/…` es `/private/var/…`.
 function scratchDirs(): string[] {
-  return [tmpdir(), process.env.TMPDIR, "/tmp", "/private/tmp"].filter((dir): dir is string => Boolean(dir));
+  const dirs = [tmpdir(), process.env.TMPDIR, "/tmp"].filter((dir): dir is string => Boolean(dir));
+  return [...new Set(dirs.flatMap((dir) => {
+    try {
+      return [dir, realpathSync(dir)];
+    } catch {
+      return [dir];
+    }
+  }))];
 }
 
 export default function (pi: ExtensionAPI) {

@@ -52,6 +52,7 @@ Publicación: «saca nueva versión», como el 30 de octubre, autoriza preparar 
 - [x] T6 · Documentación y cierre — decisiones, modelos, diseño, README. Blocked by: T1-T5.
 - [x] R1 · Preparar 0.6.0-alpha.1 — versión, bootstrap, notas, archivo del encargo de p_reviewer y candidato local. Blocked by: none.
 - [ ] R2 · Integrar en main por PR con la matriz verde, crear el tag y publicar. Blocked by: R1.
+  - Primera matriz de la PR #24 (run `41681572735`): Linux falló en `tests/guard-pi.ts` («la guarda debía impedir el borrado»). La guarda daba por seguro todo el temporal, incluido un proyecto que vive en él; en macOS pasaba porque Pi usa la ruta real `/private/var/…` y la guarda solo conocía `/var/…`. Corregido con test rojo → verde: dentro del proyecto solo pasa lo regenerable, y la guarda conoce también la ruta real del temporal. macOS no llegó a correr: GitHub no asignó máquina por falta de capacidad.
 - [ ] R3 · Comprobar adjuntos publicados, attestation y bootstrap de Pages; registrar la entrega en main. Blocked by: R2.
 
 ## Evidencia

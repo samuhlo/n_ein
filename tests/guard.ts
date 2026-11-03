@@ -82,6 +82,13 @@ passes("rm -rf ./coverage");
 passes("rm -f archivo.txt");
 passes("rm archivo.txt");
 
+// Un proyecto dentro del temporal: el temporal no vuelve seguro el propio proyecto.
+const inScratch = { cwd: join(tmpdir(), "proyecto"), scratch, home: homedir() };
+assert.equal(dangerous("rm -rf victima", inScratch)?.kind, "archivos");
+assert.equal(dangerous("rm -rf .", inScratch)?.kind, "archivos");
+assert.equal(dangerous("rm -rf node_modules", inScratch), undefined);
+assert.equal(dangerous("rm -rf ../otro-temporal", inScratch), undefined);
+
 // Datos.
 asks('psql "$DATABASE_URL" -c "DROP TABLE users"', "datos");
 asks("sqlite3 app.db 'truncate table pedidos'", "datos");

@@ -153,7 +153,7 @@ function within(path: string, root: string): boolean {
   return path.startsWith(base + sep) && path.length > base.length + 1;
 }
 
-/** Un objetivo es seguro si vive dentro del temporal o es una carpeta regenerable del propio proyecto. */
+/** Seguro: una carpeta regenerable del proyecto, o algo del temporal fuera del proyecto. */
 function safeTarget(raw: string, context: GuardContext): boolean {
   let target = raw;
   const tmpVar = /^\$\{?(TMPDIR|TMP|TEMP)\}?(?=\/|$)/.exec(target);
@@ -162,8 +162,10 @@ function safeTarget(raw: string, context: GuardContext): boolean {
   if (target === "~" || target.startsWith("~/")) target = join(context.home, target.slice(1));
   if (/[$`*?{[]/.test(target)) return false;
   const path = normalize(isAbsolute(target) ? target : resolve(context.cwd, target)).replace(/[\\/]+$/, "");
-  if (context.scratch.some((root) => within(path, root))) return true;
-  return GENERATED.has(basename(path)) && within(path, context.cwd);
+  const project = normalize(context.cwd).replace(/[\\/]+$/, "");
+  // BLINDAJE -> Un proyecto que vive en el temporal sigue siendo el proyecto: solo pasa lo regenerable.
+  if (path === project || within(path, project)) return GENERATED.has(basename(path)) && within(path, project);
+  return context.scratch.some((root) => within(path, root));
 }
 
 function rm(args: string[], context: GuardContext): Danger | undefined {
