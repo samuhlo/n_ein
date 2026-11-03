@@ -126,10 +126,15 @@ function physical(ctx: ExtensionContext, route: Route) {
     route.model.slice(0, slash),
     route.model.slice(slash + 1),
   );
-  if (!model)
+  // El modelo nunca se sustituye en silencio: el error dice cómo seguir y lo decide el usuario.
+  if (!model) {
+    const source = route.model.startsWith("claude-bridge/")
+      ? "el puente de Claude no está cargado o Claude no tiene sesión iniciada"
+      : "inicia sesión en su proveedor con /login";
     throw new Error(
-      `[ERR] :: ROUTE_MODEL :: modelo ${route.model} fuera del catálogo`,
+      `[ERR] :: ROUTE_MODEL :: modelo ${route.model} fuera del catálogo | fix: ${source}; para seguir con Sol escribe [sol high] al principio del mensaje, o elige otro modelo en /nein:models`,
     );
+  }
   return model;
 }
 

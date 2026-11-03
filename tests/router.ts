@@ -746,3 +746,40 @@ assert.equal(
   "new jobs preserve a manual model but still stop previous workers",
 );
 rmSync(taskRoot, { recursive: true, force: true });
+
+// Opus como cabeza pensante: abierto va al puente de Claude y «hazlo» pasa la obra a Sol en la misma sesión.
+{
+  let thinking: any, thinkingTask: any;
+  registerRouter(
+    {
+      events: { emit() {} },
+      on() {},
+      sendUserMessage() {},
+      registerVirtualModel(v: unknown) { thinking = v; },
+      registerTool(t: any) { if (t.name === "nein_set_task") thinkingTask = t; },
+      registerCommand() {},
+    } as never,
+    { ...DEFAULT_ROUTING, abierto: { model: "claude-bridge/claude-opus-5-5", thinking: "high" } },
+  );
+  const design = user("¿Cómo lo planteamos? Quiero exportar los pedidos a CSV");
+  const withBridge = { modelRegistry: { find: (provider: string, id: string) => ({ provider, id }) } } as never;
+  const withoutBridge = {
+    modelRegistry: { find: (provider: string, id: string) => (provider === "claude-bridge" ? undefined : { provider, id }) },
+  } as never;
+  assert.throws(
+    () => thinking.route({ reason: "user", state: undefined, messages: design, thinkingLevel: "medium" }, withoutBridge),
+    /claude-bridge\/claude-opus-5-5[\s\S]*\[sol high\][\s\S]*\/nein:models/,
+    "sin el puente o sin login, el error dice cómo seguir con Sol",
+  );
+  const opus = await thinking.route({ reason: "user", state: undefined, messages: design, thinkingLevel: "medium" }, withBridge);
+  assert.deepEqual([opus.model.provider, opus.model.id, opus.thinkingLevel, opus.state.clase], ["claude-bridge", "claude-opus-5-5", "high", "abierto"]);
+  const authorized = {
+    cwd: taskRoot,
+    model: { provider: "nein", id: "auto" },
+    sessionManager: { getBranch: () => [{ type: "message", message: { role: "user", content: "Hazlo" } }] },
+  };
+  const result = await thinkingTask.execute("t", { ...choice, request: "Hazlo" }, undefined, undefined, authorized);
+  assert.notEqual(result.isError, true);
+  const build = await thinking.route({ reason: "continuation", state: opus.state, messages: user("Hazlo"), thinkingLevel: "medium" }, withBridge);
+  assert.deepEqual([build.model.provider, build.model.id, build.thinkingLevel, build.state.clase], ["openai-codex", "gpt-6-sol", "medium", "ordinario"]);
+}
