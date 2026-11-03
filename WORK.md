@@ -45,7 +45,7 @@ Pedidos:
 - [x] T3 · Medidores de cuota en Pi. Blocked by: none.
 - [x] T4 · Guarda de comandos destructivos. Blocked by: none.
 - [x] T5 · Regla de preservar. Blocked by: none.
-- [ ] T6 · Documentación y cierre — decisiones, modelos, diseño, README. Blocked by: T1-T5.
+- [x] T6 · Documentación y cierre — decisiones, modelos, diseño, README. Blocked by: T1-T5.
 
 ## Evidencia
 
@@ -69,8 +69,9 @@ Pedidos:
   - `git switch -f`, `--discard-changes` y `-C` descartan cambios como `checkout` y pasaban;
   - dos llamadas de Opus a `nein_set_task` dejaban dos turnos de obra en cola: ahora uno por elección pendiente;
   - el launcher quitaba `ANTHROPIC_*` a todo Pi, y los comandos del proyecto las perdían aunque no se usara Opus: ahora solo las quita el envoltorio `bin/n-ein-claude-bridge`, que lanza el Claude gestionado (`N_EIN_BRIDGE_CLAUDE_BIN`); sin Claude gestionado falla con `BRIDGE_CLAUDE_MISSING` en vez de usar otro.
+- Suite completa sobre `b26a5e7` (código final tras la revisión): exit 0; `dist/n-ein-install runtime --dry-run` planea solo `runtimes/claude-bridge/0.9.3`.
 - Suite completa sobre `95fa2d1` más README: exit 0 (el `[ERR] :: TEAM_SAVE` del log sale igual antes de este encargo: lo provoca un test de equipo).
 
 ## Siguiente paso
 
-T1: runtime fijado del puente, instalador, launcher y documentación; después la prueba en vivo de T2 con la instalación de desarrollo.
+T2 en vivo: Samu ejecuta `ensayo-instalado.sh` (scratchpad de la sesión). Instala el runtime del puente en `~/.n_ein/runtimes` y repite diseño y «Hazlo» con el launcher, sin `-e` ni configuración a mano. Si sale bien, T2 queda hecho. Hacer de Opus el valor por defecto de abierto queda para después de 2-3 encargos reales y es decisión de Samu.
