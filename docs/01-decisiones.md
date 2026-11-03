@@ -142,6 +142,8 @@ Samu pidió el equilibrio que ve en Gentle Shell: Opus 5.5 high como cabeza pens
 - **Entran también** medidores de cuota de las dos suscripciones en Pi, guarda de comandos destructivos y la regla de preservar el comportamiento que comparte el código tocado. Quedan fuera el aviso de tamaño de rama, los perfiles con pin por repositorio y la delegación por ratio de precio.
 - Un fallo o una cuota agotada del modelo pensante se informa con la salida (`[sol high]`, `/nein:models`); nunca se cambia de modelo en silencio.
 
+Tras la aceptación en vivo con el puente instalado, Samu declinó el revisor y pidió «saca nueva versión»: autoriza preparar 0.6.0-alpha.1, integrarla en main con su PR, crear el tag y publicar la preview. La instalación personal sigue fuera de alcance.
+
 Fuentes: [gentle-shell `2c06244`](https://github.com/Gentleman-Programming/gentle-shell/tree/2c06244), [delegar con motivo](https://github.com/Gentleman-Programming/gentle-shell/blob/2c06244/odd/tasks/delegate-for-reason.md), [pi-claude-bridge 0.9.3](https://www.npmjs.com/package/pi-claude-bridge/v/0.9.3). Estado y evidencia en `WORK.md` de la rama `feat/opus-piensa`.
 
 ## Recomendaciones de diseño, revisables

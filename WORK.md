@@ -4,6 +4,8 @@
 
 Samu quiere el equilibrio que ve en Gentle Shell: «la parte pensante, de arquitectura y de decisiones usa opus 5.5 y la de ejecución usa los modelos de OpenAI … no me importaría poder tener de cabeza pensante opus 5.5 en high». También pidió «busca bien lo que mejoraría el nuestro ya de paso» y hacer un plan para integrarlo. Tras la investigación (gentle-shell 4.5.1, `2c06244`, 3 nov) respondió: «Hazlo, con tus recomendaciones en las dos decisiones».
 
+Después de la aceptación en vivo, declinó el revisor y pidió: «No, saca nueva version».
+
 Pedidos:
 1. Opus 5.5 high como cabeza pensante en Pi: la fase abierta (intent, diseño, decisiones) en Opus y la obra en GPT.
 2. Medidores de cuota de las dos suscripciones en Pi.
@@ -13,6 +15,8 @@ Pedidos:
 ## Autorización
 
 «Hazlo» sobre el plan de cinco tramos, el ensayo T0 incluido: implementación en esta rama con commit por tarea. Sin fusionar, publicar ni tocar la instalación personal. Ejecutar el puente con el login de Claude quedó bloqueado por el clasificador de permisos de la sesión; necesita que Samu lo ejecute o lo permita.
+
+Publicación: «saca nueva versión», como el 30 de octubre, autoriza preparar 0.6.0-alpha.1, integrarla en main con su PR, crear el tag y publicar la preview. No autoriza actualizar la instalación personal.
 
 ## Decisiones
 
@@ -46,6 +50,9 @@ Pedidos:
 - [x] T4 · Guarda de comandos destructivos. Blocked by: none.
 - [x] T5 · Regla de preservar. Blocked by: none.
 - [x] T6 · Documentación y cierre — decisiones, modelos, diseño, README. Blocked by: T1-T5.
+- [ ] R1 · Preparar 0.6.0-alpha.1 — versión, bootstrap, notas, archivo del encargo de p_reviewer y candidato local. Blocked by: none.
+- [ ] R2 · Integrar en main por PR con la matriz verde, crear el tag y publicar. Blocked by: R1.
+- [ ] R3 · Comprobar adjuntos publicados, attestation y bootstrap de Pages; registrar la entrega en main. Blocked by: R2.
 
 ## Evidencia
 
@@ -79,4 +86,4 @@ Pedidos:
 
 ## Siguiente paso
 
-Encargo terminado. Si Samu lo pide, se revisa la rama con p_reviewer y se integra. Decisiones suyas para después: hacer de Opus el valor por defecto de abierto tras 2-3 encargos reales, y si hace falta abrir una incidencia en pi-claude-bridge para que `session_shutdown` cierre las consultas activas.
+R1: `scripts/build-release.sh 0.6.0-alpha.1` sobre la rama `release/0.6.0-alpha.1`; después PR, matriz, merge, tag y verificación de lo publicado. No actualizar la instalación personal.
