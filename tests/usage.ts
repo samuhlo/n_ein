@@ -46,6 +46,17 @@ const exhausted = readingFrom({
 })!;
 assert.equal(exhausted.reached, true);
 assert.match(reachedNotice(exhausted, now), /Claude.*30m.*\[sol high\].*\/nein:models/s);
+assert.equal(exhausted.overage, false);
+assert.doesNotMatch(reachedNotice(exhausted, now), /uso extra/);
+// Rechazada pero servida con uso extra: se cobra aparte, y solo esta cabecera lo dice.
+const paid = readingFrom({
+  "anthropic-ratelimit-unified-5h-utilization": "1",
+  "anthropic-ratelimit-unified-status": "rejected",
+  "anthropic-ratelimit-unified-overage-status": "allowed",
+})!;
+assert.equal(paid.overage, true);
+assert.match(statusText([paid], now)!, /uso extra/);
+assert.match(reachedNotice(paid, now), /uso extra/);
 const codexOut = readingFrom({ "x-codex-primary-used-percent": "100", "x-codex-primary-window-minutes": "300", "x-codex-rate-limit-reached-type": "primary" })!;
 assert.equal(codexOut.reached, true);
 assert.match(reachedNotice(codexOut, now), /Codex.*\/nein:models/s);

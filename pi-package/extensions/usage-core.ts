@@ -8,7 +8,8 @@
 import { until } from "../claude-plugin/hooks/meter-core.ts";
 
 export type UsageWindow = { label: string; percent: number; resetsAt?: number };
-export type Reading = { provider: "Codex" | "Claude"; windows: UsageWindow[]; reached: boolean };
+/** `overage`: Claude rechazó por cuota y aun así responde con uso extra, que se cobra aparte. */
+export type Reading = { provider: "Codex" | "Claude"; windows: UsageWindow[]; reached: boolean; overage: boolean };
 
 const CODEX = "x-codex-";
 const CLAUDE = "anthropic-ratelimit-unified-";
@@ -41,7 +42,7 @@ export function readingFrom(raw: Record<string, string>): Reading | undefined {
   const codex = [codexWindow(headers, "primary"), codexWindow(headers, "secondary")].filter((w): w is UsageWindow => w !== undefined);
   if (codex.length > 0) {
     const reached = Boolean(headers[`${CODEX}rate-limit-reached-type`]) || codex.some((w) => w.percent >= 100);
-    return { provider: "Codex", windows: codex, reached };
+    return { provider: "Codex", windows: codex, reached, overage: false };
   }
   const claude = (
     [["5h", "5h"], ["7d", "sem"]] as const
@@ -50,7 +51,9 @@ export function readingFrom(raw: Record<string, string>): Reading | undefined {
     return Number.isFinite(fraction) ? [{ label, percent: fraction * 100, resetsAt: resetAt(headers[`${CLAUDE}${key}-reset`]) }] : [];
   });
   if (claude.length === 0) return undefined;
-  return { provider: "Claude", windows: claude, reached: headers[`${CLAUDE}status`] === "rejected" };
+  const reached = headers[`${CLAUDE}status`] === "rejected";
+  const overage = reached && /^allowed/.test(headers[`${CLAUDE}overage-status`] ?? "");
+  return { provider: "Claude", windows: claude, reached, overage };
 }
 
 function windowText(window: UsageWindow, now: number): string {
@@ -64,14 +67,17 @@ function windowText(window: UsageWindow, now: number): string {
 /** «Codex 5h 23% · sem 40% │ Claude 5h 82% (2h 0m)», o nada si aún no hay lecturas. */
 export function statusText(readings: readonly Reading[], now: number): string | undefined {
   if (readings.length === 0) return undefined;
-  return readings.map((reading) => `${reading.provider} ${reading.windows.map((w) => windowText(w, now)).join(" · ")}`).join(" │ ");
+  return readings
+    .map((reading) => `${reading.provider} ${reading.windows.map((w) => windowText(w, now)).join(" · ")}${reading.overage ? " · uso extra" : ""}`)
+    .join(" │ ");
 }
 
 /** Qué pasa y cómo seguir; el modelo nunca cambia por su cuenta. */
 export function reachedNotice(reading: Reading, now: number): string {
   const fullest = [...reading.windows].sort((a, b) => b.percent - a.percent)[0];
   const reset = fullest?.resetsAt !== undefined && fullest.resetsAt > now ? `; se reinicia en ${until(fullest.resetsAt - now)}` : "";
+  const paid = reading.overage ? " Las respuestas se están cobrando como uso extra." : "";
   return reading.provider === "Claude"
-    ? `Cuota de Claude agotada${reset}. Para seguir sin Opus, escribe [sol high] al principio del mensaje o cambia «abierto» en /nein:models.`
+    ? `Cuota de Claude agotada${reset}.${paid} Para seguir sin Opus, escribe [sol high] al principio del mensaje o cambia «abierto» en /nein:models.`
     : `Cuota de Codex agotada${reset}. Los modelos de OpenAI no responderán hasta entonces; /nein:models permite elegir otro modelo.`;
 }
