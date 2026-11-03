@@ -56,7 +56,8 @@ Pedidos:
 - T4: `tests/guard.ts` rojo (módulo ausente) → verde: 70 comandos clasificados y la rama con interfaz (confirmar, rechazar, `nein_job`). `tests/guard-pi.ts` con Pi 1.0.2 real y proveedor determinista: sin interfaz, `rm -rf victima` queda bloqueado y `rm -rf node_modules` pasa; sin cargar la guarda, la misma prueba falla («la guarda debía impedir el borrado»). Typecheck contra Pi 1.0.2: OK.
 - T3: `tests/usage.ts` rojo (módulo ausente) → verde: cabeceras de Codex y Claude, entradas inválidas sin ventanas, ventana reiniciada a 0, aviso de cuota agotada. `tests/usage-pi.ts` con Pi 1.0.2 en RPC: la cabecera del proveedor llega a `setStatus` como «Codex 5h 37%»; sin cargar la extensión, la prueba falla. Pi no mostraba estas ventanas: `02-diseno.md` decía lo contrario y queda corregido. Typecheck: OK. Después (`6ee9300`): con la cuota agotada, Claude puede responder con uso extra de pago y solo `overage-status` lo dice; la línea y el aviso lo marcan.
 - T2 (parcial, sin puente real): `tests/router.ts` rojo (el error no decía cómo seguir) → verde. Con `abierto` en `claude-bridge/claude-opus-5-5` high, el diseño va a Opus y `nein_set_task` con `start_implementation` lleva la obra a `openai-codex/gpt-6-sol` medium; sin el modelo en el catálogo, el error nombra el puente y ofrece `[sol high]` o `/nein:models`. Los hogares de Claude de n_ein no guardan hooks: los de n_ein llegan por argumentos, así que no se disparan dentro de los turnos del puente.
+- Suite completa (`scripts/check.sh`) sobre `194392a`: exit 0, Go, plugin de Claude y paquete instalado incluidos.
 
 ## Siguiente paso
 
-T5, T4 y T3; después pedir a Samu que ejecute el ensayo T0.
+Samu ejecuta el ensayo T0 (`ensayo-puente.sh` en el scratchpad de la sesión: un turno de Opus, un diseño en `abierto` y «Hazlo» en un proyecto temporal). Con su salida: sí o no al puente; si es sí, T1 (empaquetado) y la prueba en vivo de T2; si es no, documentar la alternativa con `to-pi`.
