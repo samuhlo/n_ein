@@ -17,13 +17,20 @@ import (
 
 const piPackage = "@earendil-works/pi-coding-agent"
 const claudePackage = "@anthropic-ai/claude-code"
+const claudeBridgePackage = "pi-claude-bridge"
 
-// npmRuntime describe un agente que n_ein instala desde npm con su propio lockfile: Pi y Claude.
+// npmRuntime describe lo que n_ein instala desde npm con su propio lockfile: Pi, Claude y el puente de Claude.
 type npmRuntime struct {
-	name    string // clave de runtime.json y carpeta en runtimes/
+	name    string // carpeta en runtimes/ y prefijo de <name>-runtime/
 	label   string // cómo se nombra en mensajes
 	pkg     string
 	version string
+	// Extensión de Pi: sin ejecutable propio, y sin dependencias peer porque Pi aporta las suyas.
+	extension bool
+}
+
+func claudeBridgeRuntime(version string) npmRuntime {
+	return npmRuntime{name: "claude-bridge", label: "puente de Claude", pkg: claudeBridgePackage, version: version, extension: true}
 }
 
 func (r npmRuntime) lockDir() string { return r.name + "-runtime" }
@@ -46,6 +53,29 @@ func piVersionFrom(source string) (string, error) {
 		return "", err
 	}
 	return config.Pi.Version, nil
+}
+
+// claudeBridgeVersionFrom devuelve "" en paquetes sin puente: setup omite ese paso.
+func claudeBridgeVersionFrom(source string) (string, error) {
+	data, err := os.ReadFile(filepath.Join(source, "runtime.json"))
+	if err != nil {
+		return "", err
+	}
+	var config struct {
+		ClaudeBridge *struct {
+			Version string `json:"version"`
+		} `json:"claudeBridge"`
+	}
+	if json.Unmarshal(data, &config) != nil {
+		return "", fmt.Errorf("runtime.json inválido")
+	}
+	if config.ClaudeBridge == nil {
+		return "", nil
+	}
+	if _, err := layout.ClaudeBridgeRuntime(config.ClaudeBridge.Version); err != nil {
+		return "", err
+	}
+	return config.ClaudeBridge.Version, nil
 }
 
 // claudeVersionFrom devuelve "" en paquetes anteriores a Claude gestionado: setup omite ese paso.
@@ -72,7 +102,7 @@ func claudeVersionFrom(source string) (string, error) {
 }
 
 func inspectPiRuntime(root, expected string) error {
-	return inspectRuntime(npmRuntime{"pi", "Pi", piPackage, expected}, root)
+	return inspectRuntime(npmRuntime{name: "pi", label: "Pi", pkg: piPackage, version: expected}, root)
 }
 
 func inspectRuntime(r npmRuntime, root string) error {
@@ -98,6 +128,9 @@ func inspectRuntime(r npmRuntime, root string) error {
 	data, err = os.ReadFile(filepath.Join(root, "global", "node_modules", filepath.FromSlash(r.pkg), "package.json"))
 	if err != nil || json.Unmarshal(data, &packageJSON) != nil || packageJSON.Name != r.pkg || packageJSON.Version != r.version {
 		return fmt.Errorf("paquete %s incorrecto: %s", r.label, root)
+	}
+	if r.extension {
+		return nil
 	}
 	binPath := filepath.Join(root, "bin", r.name)
 	canonicalRoot, err := filepath.EvalSymlinks(root)
@@ -132,7 +165,7 @@ func installPiRuntime(source string, dryRun bool, output io.Writer) error {
 	if err != nil {
 		return err
 	}
-	return installRuntime(npmRuntime{"pi", "Pi", piPackage, version}, source, target, dryRun, output)
+	return installRuntime(npmRuntime{name: "pi", label: "Pi", pkg: piPackage, version: version}, source, target, dryRun, output)
 }
 
 // [FLOW] Claude, como Pi, tiene copia propia: el claude del sistema, si existe, no se usa ni se toca.
@@ -145,7 +178,20 @@ func installClaudeRuntime(source string, dryRun bool, output io.Writer) error {
 	if err != nil {
 		return err
 	}
-	return installRuntime(npmRuntime{"claude", "Claude", claudePackage, version}, source, target, dryRun, output)
+	return installRuntime(npmRuntime{name: "claude", label: "Claude", pkg: claudePackage, version: version}, source, target, dryRun, output)
+}
+
+// [FLOW] El puente de Claude da a Pi los modelos de Claude con la suscripción, mediante el Claude Code oficial.
+func installClaudeBridgeRuntime(source string, dryRun bool, output io.Writer) error {
+	version, err := claudeBridgeVersionFrom(source)
+	if err != nil || version == "" {
+		return err
+	}
+	target, err := layout.ClaudeBridgeRuntime(version)
+	if err != nil {
+		return err
+	}
+	return installRuntime(claudeBridgeRuntime(version), source, target, dryRun, output)
 }
 
 func installRuntime(r npmRuntime, source, target string, dryRun bool, output io.Writer) error {
@@ -215,7 +261,11 @@ func installRuntime(r npmRuntime, source, target string, dryRun bool, output io.
 	if err := copyLock(r, source, global); err != nil {
 		return err
 	}
-	cmd := exec.CommandContext(ctx, bun, "install", "--frozen-lockfile", "--cwd", global)
+	args := []string{"install", "--frozen-lockfile"}
+	if r.extension {
+		args = append(args, "--omit", "peer")
+	}
+	cmd := exec.CommandContext(ctx, bun, append(args, "--cwd", global)...)
 	cmd.Dir = global
 	cmd.Env = append(os.Environ(),
 		"BUN_INSTALL_GLOBAL_DIR="+filepath.Join(stage, "global"),
@@ -225,13 +275,15 @@ func installRuntime(r npmRuntime, source, target string, dryRun bool, output io.
 	if data, err := cmd.CombinedOutput(); err != nil {
 		return fmt.Errorf("instalación de %s falló: %w: %s", r.label, err, strings.TrimSpace(string(data)))
 	}
-	if err := os.MkdirAll(filepath.Join(stage, "bin"), 0755); err != nil {
-		return err
-	}
-	binary := filepath.Join(stage, "bin", r.name)
-	if _, err := os.Lstat(binary); os.IsNotExist(err) {
-		if err := os.Symlink("../global/node_modules/.bin/"+r.name, binary); err != nil {
+	if !r.extension {
+		if err := os.MkdirAll(filepath.Join(stage, "bin"), 0755); err != nil {
 			return err
+		}
+		binary := filepath.Join(stage, "bin", r.name)
+		if _, err := os.Lstat(binary); os.IsNotExist(err) {
+			if err := os.Symlink("../global/node_modules/.bin/"+r.name, binary); err != nil {
+				return err
+			}
 		}
 	}
 	marker, err := json.MarshalIndent(map[string]string{"package": r.pkg, "version": r.version}, "", "  ")

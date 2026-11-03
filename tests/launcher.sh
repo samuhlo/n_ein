@@ -4,6 +4,9 @@ set -euo pipefail
 repo_dir="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd -P)"
 test_dir="$(mktemp -d)"
 trap 'rm -rf "$test_dir"' EXIT
+# Hogar propio: lo instalado en el hogar real (como el puente de Claude) no cambia lo esperado.
+export N_EIN_HOME="$test_dir/n_ein"
+unset CLAUDE_CONFIG_DIR ANTHROPIC_API_KEY
 # La versión de Pi la marca runtime.json: el Pi falso la repite para no tocar los tests en cada subida.
 # El modelo principal por defecto también sale de runtime.json (desde el 5 de octubre, nein/auto).
 export N_EIN_TEST_PI_MODEL="$(bun -e 'console.log((await Bun.file(process.argv[1]).json()).pi.model)' "$repo_dir/runtime.json")"
@@ -21,6 +24,7 @@ fi
   printf '%s\n' "$@"
 } > "$N_EIN_CAPTURE"
 printf '%s\n' "${N_EIN_CODEGRAPH_BIN:-}" > "$N_EIN_CAPTURE.codegraph"
+printf '%s\n' "${CLAUDE_CONFIG_DIR:-}" "${ANTHROPIC_API_KEY:-}" > "$N_EIN_CAPTURE.env"
 FAKE_PI
 chmod +x "$test_dir/pi"
 
@@ -158,5 +162,34 @@ unset N_EIN_TEST_PARENT_INDEX
 "$repo_dir/bin/n-ein-dev" --print 'temporal' 2> "$test_dir/err"
 rg -q 'CODEGRAPH_SKIP :: reason: no se indexan temporales' "$test_dir/err"
 rg -Fxq 'temporal' "$N_EIN_CAPTURE"
+
+# [FLOW] Con el puente instalado, Pi lo carga con el hogar de Claude de n_ein y sin claves de Anthropic.
+cd "$test_dir/project"
+IFS=$'\t' read -r bridge_version claude_version < <(bun -e 'const c = await Bun.file(process.argv[1]).json(); console.log(c.claudeBridge.version + "\t" + c.claude.version)' "$repo_dir/runtime.json")
+bridge_dir="$N_EIN_HOME/runtimes/claude-bridge/$bridge_version/global/node_modules/pi-claude-bridge"
+"$repo_dir/bin/n-ein-dev" --print 'sin puente'
+! rg -q 'pi-claude-bridge' "$N_EIN_CAPTURE"
+test -z "$(sed -n 1p "$N_EIN_CAPTURE.env")"
+mkdir -p "$bridge_dir"
+printf '{"name":"pi-claude-bridge","version":"%s"}\n' "$bridge_version" > "$bridge_dir/package.json"
+claude_bin="$N_EIN_HOME/runtimes/claude/$claude_version/bin/claude"
+mkdir -p "$(dirname "$claude_bin")" "$N_EIN_AGENT_DIR"
+printf '#!/bin/sh\n' > "$claude_bin"
+printf '{"askClaude":{"enabled":true},"provider":{"plan":"max"}}\n' > "$N_EIN_AGENT_DIR/claude-bridge.json"
+ANTHROPIC_API_KEY=sk-test "$repo_dir/bin/n-ein-dev" --print 'con puente'
+rg -Fxq "$bridge_dir" "$N_EIN_CAPTURE"
+test "$(sed -n 1p "$N_EIN_CAPTURE.env")" == "$N_EIN_HOME/dev/claude"
+test -z "$(sed -n 2p "$N_EIN_CAPTURE.env")"
+bun -e '
+  const [path, claude] = process.argv.slice(1);
+  const c = await Bun.file(path).json();
+  if (c.askClaude.enabled !== true || c.provider.plan !== "max" || c.provider.pathToClaudeCodeExecutable !== claude) {
+    console.error("configuración del puente: " + JSON.stringify(c));
+    process.exit(1);
+  }
+' "$N_EIN_AGENT_DIR/claude-bridge.json" "$claude_bin"
+rm "$N_EIN_AGENT_DIR/claude-bridge.json"
+"$repo_dir/bin/n-ein-dev" --print 'puente nuevo'
+test "$(bun -e 'console.log((await Bun.file(process.argv[1]).json()).askClaude.enabled)' "$N_EIN_AGENT_DIR/claude-bridge.json")" == false
 
 printf 'launcher: OK\n'

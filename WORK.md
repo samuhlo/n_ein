@@ -40,7 +40,7 @@ Pedidos:
 ## Tareas
 
 - [x] T0 · Ensayo del puente — un turno de Opus en Pi con la persona y las herramientas, y el paso a Sol con «hazlo». Blocked by: none.
-- [ ] T1 · Empaquetado del puente — runtime fijado con lockfile, instalador, doctor, configuración y entorno del launcher, NOTICE. Blocked by: T0.
+- [x] T1 · Empaquetado del puente — runtime fijado con lockfile, instalador, doctor, configuración y entorno del launcher, NOTICE. Blocked by: T0.
 - [ ] T2 · Enrutado opcional de `abierto` a Opus — valor elegible en `/nein:models`, error accionable si falta el modelo. Blocked by: T1 para la prueba en vivo.
 - [x] T3 · Medidores de cuota en Pi. Blocked by: none.
 - [x] T4 · Guarda de comandos destructivos. Blocked by: none.
@@ -63,6 +63,7 @@ Pedidos:
 - T3: `tests/usage.ts` rojo (módulo ausente) → verde: cabeceras de Codex y Claude, entradas inválidas sin ventanas, ventana reiniciada a 0, aviso de cuota agotada. `tests/usage-pi.ts` con Pi 1.0.2 en RPC: la cabecera del proveedor llega a `setStatus` como «Codex 5h 37%»; sin cargar la extensión, la prueba falla. Pi no mostraba estas ventanas: `02-diseno.md` decía lo contrario y queda corregido. Typecheck: OK. Después (`6ee9300`): con la cuota agotada, Claude puede responder con uso extra de pago y solo `overage-status` lo dice; la línea y el aviso lo marcan.
 - T2 (parcial, sin puente real): `tests/router.ts` rojo (el error no decía cómo seguir) → verde. Con `abierto` en `claude-bridge/claude-opus-5-5` high, el diseño va a Opus y `nein_set_task` con `start_implementation` lleva la obra a `openai-codex/gpt-6-sol` medium; sin el modelo en el catálogo, el error nombra el puente y ofrece `[sol high]` o `/nein:models`. Los hogares de Claude de n_ein no guardan hooks: los de n_ein llegan por argumentos, así que no se disparan dentro de los turnos del puente.
 - Suite completa (`scripts/check.sh`) sobre `194392a`: exit 0, Go, plugin de Claude y paquete instalado incluidos.
+- T1: tests de Go rojos (runtime del puente inexistente) → verdes. Ahora `runtime` y `setup` instalan `runtimes/claude-bridge/0.9.3` con `--frozen-lockfile --omit peer`, sin ejecutable propio; son idempotentes, el paquete lleva `claude-bridge-runtime/` y `doctor --runtime` informa del puente sin exigirlo. El lockfile es el del ensayo; instalarlo congelado da 97 paquetes, sin peers. `tests/launcher.sh` rojo (sin `claudeBridge` en `runtime.json`) → verde: sin el runtime, Pi no carga el puente; con él, carga `-e <puente>`, usa `CLAUDE_CONFIG_DIR=<hogar>/<canal>/claude`, descarta `ANTHROPIC_API_KEY` y fija en `claude-bridge.json` el Claude gestionado, conservando las elecciones del usuario (AskClaude, plan). El test aísla `N_EIN_HOME` y el entorno de Claude. `go vet`: OK.
 
 ## Siguiente paso
 

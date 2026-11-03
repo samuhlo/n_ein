@@ -91,11 +91,13 @@ func sourceFixture(t *testing.T) (source, self, target, data string) {
 	writeFixture(t, source, "bin/n-ein-previewer", "#!/bin/sh\n[ \"$1\" = check ] || exit 64\nif [ -n \"$N_EIN_TEST_PREVIEWER_FAIL\" ]; then echo 'la web no compila' >&2; exit 1; fi\necho '// 003 REVISOR · aislamiento sandbox-exec · web compila'\n", 0o755)
 	writeFixture(t, source, "brand.json", `{"colors":{"yellow":"#FFCA40"}}`, 0o644)
 	key, hash := fakeCodeGraphRelease(t, "1.6.1")
-	writeFixture(t, source, "runtime.json", fmt.Sprintf(`{"schema":1,"pi":{"version":"0.87.1","model":"openai-codex/gpt-6-sol","thinking":"high"},"claude":{"version":"2.1.302"},"worker":{"model":"openai-codex/gpt-6-luna","thinking":"high"},"codegraph":{"version":"1.6.1","sha256":{%q:%q}}}`, key, hash), 0o644)
+	writeFixture(t, source, "runtime.json", fmt.Sprintf(`{"schema":1,"pi":{"version":"0.87.1","model":"openai-codex/gpt-6-sol","thinking":"high"},"claude":{"version":"2.1.302"},"claudeBridge":{"version":"0.9.3"},"worker":{"model":"openai-codex/gpt-6-luna","thinking":"high"},"codegraph":{"version":"1.6.1","sha256":{%q:%q}}}`, key, hash), 0o644)
 	writeFixture(t, source, "pi-runtime/package.json", `{"dependencies":{"@earendil-works/pi-coding-agent":"0.87.1"}}`, 0o644)
 	writeFixture(t, source, "pi-runtime/bun.lock", "{\"lockfileVersion\":1}\n", 0o644)
 	writeFixture(t, source, "claude-runtime/package.json", `{"dependencies":{"@anthropic-ai/claude-code":"2.1.302"},"trustedDependencies":["@anthropic-ai/claude-code"]}`, 0o644)
 	writeFixture(t, source, "claude-runtime/bun.lock", "{\"lockfileVersion\":1}\n", 0o644)
+	writeFixture(t, source, "claude-bridge-runtime/package.json", `{"dependencies":{"pi-claude-bridge":"0.9.3"}}`, 0o644)
+	writeFixture(t, source, "claude-bridge-runtime/bun.lock", "{\"lockfileVersion\":1}\n", 0o644)
 	writeFixture(t, source, "pi-package/package.json", `{"name":"n-ein-pi"}`, 0o644)
 	writeFixture(t, source, "pi-package/persona.md", "persona v1\n", 0o644)
 	writeFixture(t, source, "pi-package/pi-only.md", "Pi worker\n", 0o644)
@@ -137,6 +139,11 @@ func TestWorkerRuntimeIsPackaged(t *testing.T) {
 	content, err := os.ReadFile(filepath.Join(target, "pi-package/agents/summary.ts"))
 	if err != nil || string(content) != "export const marker = true\n" {
 		t.Fatalf("worker dependency missing: %s %v", content, err)
+	}
+	for _, rel := range []string{"claude-bridge-runtime/package.json", "claude-bridge-runtime/bun.lock"} {
+		if _, err := os.Stat(filepath.Join(target, rel)); err != nil {
+			t.Fatalf("lockfile del puente ausente: %v", err)
+		}
 	}
 }
 
@@ -336,7 +343,7 @@ func TestDoctorRuntimeSeparatesPackageAndDependencies(t *testing.T) {
 	t.Setenv("N_EIN_PI_BIN", pi)
 	codegraph := writeFixture(t, bin, "codegraph", "#!/bin/sh\nprintf '1.6.1\\n'\n", 0o755)
 	t.Setenv("N_EIN_CODEGRAPH_BIN", codegraph)
-	if output, err := call(t, self, "doctor", "--target", target, "--runtime"); err != nil || !strings.Contains(output, "Pi 0.87.1") || !strings.Contains(output, "CODEGRAPH · 1.6.1") || !strings.Contains(output, "REVISOR · aislamiento sandbox-exec") {
+	if output, err := call(t, self, "doctor", "--target", target, "--runtime"); err != nil || !strings.Contains(output, "Pi 0.87.1") || !strings.Contains(output, "CODEGRAPH · 1.6.1") || !strings.Contains(output, "REVISOR · aislamiento sandbox-exec") || !strings.Contains(output, "PUENTE · 0.9.3") {
 		t.Fatalf("doctor de runtime: %s %v", output, err)
 	}
 	t.Setenv("N_EIN_TEST_PREVIEWER_FAIL", "1")
@@ -382,6 +389,13 @@ set -eu
 # Sin lockfile congelado Bun resolvería rangos nuevos de las dependencias de Pi.
 [ "$1 $2" = "install --frozen-lockfile" ] && [ -f "$BUN_INSTALL_GLOBAL_DIR/bun.lock" ] || { echo "install sin lockfile" >&2; exit 1; }
 mkdir -p "$BUN_INSTALL_BIN"
+if grep -q pi-claude-bridge "$BUN_INSTALL_GLOBAL_DIR/package.json"; then
+  # Pi aporta sus propios paquetes a las extensiones: el puente no instala sus peers.
+  [ "$3 $4" = "--omit peer" ] || { echo "puente sin --omit peer" >&2; exit 1; }
+  mkdir -p "$BUN_INSTALL_GLOBAL_DIR/node_modules/pi-claude-bridge"
+  printf '{"name":"pi-claude-bridge","version":"0.9.3"}\n' > "$BUN_INSTALL_GLOBAL_DIR/node_modules/pi-claude-bridge/package.json"
+  exit 0
+fi
 if grep -q claude-code "$BUN_INSTALL_GLOBAL_DIR/package.json"; then
   package="$BUN_INSTALL_GLOBAL_DIR/node_modules/@anthropic-ai/claude-code"
   mkdir -p "$package/bin" "$BUN_INSTALL_GLOBAL_DIR/node_modules/.bin"
@@ -435,8 +449,15 @@ func TestManagedPiRuntimeIsolatedAndRepairable(t *testing.T) {
 		t.Fatalf("runtime no dejó CodeGraph verificado: %v", err)
 	}
 	claudeTarget := filepath.Join(home, "runtimes", "claude", "2.1.302")
-	if err := inspectRuntime(npmRuntime{"claude", "Claude", claudePackage, "2.1.302"}, claudeTarget); err != nil {
+	if err := inspectRuntime(npmRuntime{name: "claude", label: "Claude", pkg: claudePackage, version: "2.1.302"}, claudeTarget); err != nil {
 		t.Fatalf("runtime no dejó Claude propio: %v", err)
+	}
+	bridgeTarget := filepath.Join(home, "runtimes", "claude-bridge", "0.9.3")
+	if err := inspectRuntime(claudeBridgeRuntime("0.9.3"), bridgeTarget); err != nil {
+		t.Fatalf("runtime no dejó el puente de Claude: %v", err)
+	}
+	if _, err := os.Lstat(filepath.Join(bridgeTarget, "bin", "claude-bridge")); !os.IsNotExist(err) {
+		t.Fatalf("el puente es una extensión, sin ejecutable propio: %v", err)
 	}
 	t.Setenv("N_EIN_CLAUDE_BIN", "")
 	t.Setenv("PATH", t.TempDir())
@@ -524,7 +545,7 @@ func TestSetupInstallsEverythingOnceFromPackage(t *testing.T) {
 	if err != nil {
 		t.Fatalf("%v\n%s", err, first)
 	}
-	for _, want := range []string{"// 000  INSTALAR", "✓ pi", "✓ claude", "✓ código", "✓ entrada", "✓ doctor", "instalador · preview", "listo."} {
+	for _, want := range []string{"// 000  INSTALAR", "✓ pi", "✓ claude", "✓ puente", "✓ código", "✓ entrada", "✓ doctor", "instalador · preview", "listo."} {
 		if !strings.Contains(first, want) {
 			t.Fatalf("falta %q en la salida:\n%s", want, first)
 		}
@@ -539,7 +560,7 @@ func TestSetupInstallsEverythingOnceFromPackage(t *testing.T) {
 		t.Fatalf("enlace nein: %s %v", value, err)
 	}
 	again, err := call(t, self, "setup", "--source", artifact)
-	if err != nil || strings.Count(again, "ya instalado") != 4 {
+	if err != nil || strings.Count(again, "ya instalado") != 5 {
 		t.Fatalf("setup repetido reinstaló: %v\n%s", err, again)
 	}
 	if _, err := os.Stat(filepath.Join(home, "installations", "preview.backups")); !os.IsNotExist(err) {

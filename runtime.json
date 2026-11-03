@@ -66,5 +66,8 @@
   },
   "claude": {
     "version": "2.1.302"
+  },
+  "claudeBridge": {
+    "version": "0.9.3"
   }
 }

@@ -166,6 +166,10 @@ func setup(source, channel, self string, dryRun bool, output io.Writer) error {
 	if err != nil {
 		return err
 	}
+	bridgeVersion, err := claudeBridgeVersionFrom(source)
+	if err != nil {
+		return err
+	}
 	_, statErr := os.Stat(target)
 	existing := statErr == nil
 	unchanged := false
@@ -203,6 +207,22 @@ func setup(source, channel, self string, dryRun bool, output io.Writer) error {
 				return claudeVersion + " · se instalará en runtimes/claude", nil
 			default:
 				return claudeVersion + " · instalado en runtimes/claude", nil
+			}
+		}},
+		{"puente", func(report io.Writer) (string, error) {
+			if bridgeVersion == "" {
+				return "sin puente de Claude en este paquete", nil
+			}
+			if err := installClaudeBridgeRuntime(source, dryRun, report); err != nil {
+				return "", err
+			}
+			switch text := report.(*bytes.Buffer).String(); {
+			case strings.Contains(text, "ya instalado"):
+				return bridgeVersion + " · ya instalado", nil
+			case dryRun:
+				return bridgeVersion + " · se instalará en runtimes/claude-bridge", nil
+			default:
+				return bridgeVersion + " · instalado en runtimes/claude-bridge", nil
 			}
 		}},
 		{"codegraph", func(report io.Writer) (string, error) {
