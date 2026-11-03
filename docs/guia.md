@@ -180,6 +180,10 @@ En Pi, pide «ejecuta el build en segundo plano» o abre `/nein:procesos` desde 
 
 Claude conserva sus tareas en segundo plano y avisos nativos; la paleta expone `/tasks` cuando está disponible. No se crean ejecutores paralelos al host.
 
+## Comandos destructivos
+
+Pi ejecuta los comandos sin preguntar, así que n_ein detiene en bash y en `nein_job` lo que no se deshace: push forzado o que borra ramas remotas, `reset --hard`, `clean -f`, borrar ramas, descartar cambios con `checkout`/`restore`, `stash drop`/`clear`, reescribir la historia, `rm` recursivo fuera del temporal y SQL o clientes que borran datos. Con interfaz te pide confirmar el comando exacto; sin ella (print, JSON), lo bloquea y el agente te lo devuelve. Pasan el temporal y las carpetas regenerables del proyecto (`node_modules`, `dist`, `build`, `coverage`…). Reconoce formas directas: no interpreta scripts, variables ni `find -delete`. Claude conserva sus permisos nativos.
+
 ## Encontrar y retomar trabajo
 
 `/nein:sesiones` en Pi, `/nein-sesiones búsqueda` en Claude y `nein work sessions --query texto` buscan resúmenes publicados del proyecto. Añade `--all` en la CLI para buscar otros proyectos del mismo canal. Cada resumen conserva objetivo, avance, siguiente paso, bloqueos y fecha. Una nota de más de cinco minutos se marca antigua: no acredita actividad actual ni propiedad de archivos. El Panel muestra hasta cien sesiones recientes del proyecto (antes cinco) y enriquece las que puede reanudar con sus resúmenes; su buscador habitual también encuentra esos textos.

@@ -38,6 +38,8 @@ bun run tests/work-doc.ts
 bun run tests/actions.ts
 bun run tests/jobs.ts
 bun run tests/jobs-pi.ts
+bun run tests/guard.ts
+bun run tests/guard-pi.ts
 bun run tests/workspace.ts
 bun run tests/work-evidence.ts
 bun run tests/work-web.ts

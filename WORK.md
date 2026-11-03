@@ -33,7 +33,7 @@ Pedidos:
 
 - «opus 5.5 en high … cabeza pensante» → `runtime.json`, `router.ts`, `/nein:models`, launcher `bin/n-ein-dev`, instalador → con `abierto` en `claude-bridge/claude-opus-5-5` high, una pregunta de diseño responde Opus con la persona de n_ein, y «hazlo» pasa la obra a Sol o Luna en la misma sesión; sin el puente o sin login, el error dice cómo seguir con Sol.
 - «medidores» → nueva extensión de Pi sobre `after_provider_response` → test: cabeceras `x-codex-*` y `anthropic-ratelimit-unified-*` producen la línea de estado; cabeceras ajenas o inválidas no inventan ventanas; ventana agotada avisa con la salida.
-- «guarda» → `tool_call` de bash en la sesión principal → test: `git push --force`, `reset --hard`, `clean -fd`, `branch -D`, `rm -rf` fuera del temporal y `DROP TABLE` piden confirmación con interfaz y se bloquean sin ella; `--force-with-lease` sin `--force`, `rm -rf` en el temporal y texto dentro de un `echo` o heredoc pasan.
+- «guarda» → `tool_call` de `bash` y `nein_job` en la sesión principal → test: `git push --force` (también `--force-with-lease`, que reescribe igual la historia publicada), `reset --hard`, `clean -fd`, `branch -D`, `rm -rf` fuera del temporal y `DROP TABLE` piden confirmación con interfaz y se bloquean sin ella; `rm -rf` en el temporal o de carpetas regenerables del proyecto y texto dentro de un `echo`, un mensaje de commit o un heredoc pasan.
 - «preservar» → `flow.md`, skill `tdd` → test de skills: el texto pide un test para el comportamiento existente que comparte el código tocado.
 - Seams: `nextState` y `physical` del router, parsers puros de cabeceras y de comandos, `tests/skills.ts`.
 
@@ -43,7 +43,7 @@ Pedidos:
 - [ ] T1 · Empaquetado del puente — runtime fijado con lockfile, instalador, doctor, configuración y entorno del launcher, NOTICE. Blocked by: T0.
 - [ ] T2 · Enrutado opcional de `abierto` a Opus — valor elegible en `/nein:models`, error accionable si falta el modelo. Blocked by: T1 para la prueba en vivo.
 - [ ] T3 · Medidores de cuota en Pi. Blocked by: none.
-- [ ] T4 · Guarda de comandos destructivos. Blocked by: none.
+- [x] T4 · Guarda de comandos destructivos. Blocked by: none.
 - [x] T5 · Regla de preservar. Blocked by: none.
 - [ ] T6 · Documentación y cierre — decisiones, modelos, diseño, README. Blocked by: T1-T5.
 
@@ -53,6 +53,7 @@ Pedidos:
 - Pi 1.0.2 trae `claude-opus-5-5` en su catálogo de Anthropic.
 - T0: el clasificador de permisos de la sesión bloqueó ejecutar el paquete descargado con el login de Claude.
 - T5: `tests/skills.ts` rojo («flow.md debe pedir sonda para lo que comparte el código tocado») → verde tras añadir la regla a `flow.md` (paso 4) y a `tdd` (reglas del bucle).
+- T4: `tests/guard.ts` rojo (módulo ausente) → verde: 74 comandos clasificados y la rama con interfaz (confirmar, rechazar, `nein_job`). `tests/guard-pi.ts` con Pi 1.0.2 real y proveedor determinista: sin interfaz, `rm -rf victima` queda bloqueado y `rm -rf node_modules` pasa; sin cargar la guarda, la misma prueba falla («la guarda debía impedir el borrado»). Typecheck contra Pi 1.0.2: OK.
 
 ## Siguiente paso
 

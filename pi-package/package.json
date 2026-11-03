@@ -10,6 +10,7 @@
       "./extensions/workspace.ts",
       "./extensions/tools-view.ts",
       "./extensions/router.ts",
+      "./extensions/guard.ts",
       "./extensions/todo.ts",
       "./extensions/handoff.ts",
       "./extensions/models.ts",
