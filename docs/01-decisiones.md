@@ -132,6 +132,18 @@ Tras usarlo en anaco-ob, Samu pidió que viera el `WORK.md` ignorado por git, qu
 
 Evidencia y tareas en `WORK.md` de la rama `feat/revisor-contexto`.
 
+### Opus piensa, GPT ejecuta (3 de noviembre)
+
+Samu pidió el equilibrio que ve en Gentle Shell: Opus 5.5 high como cabeza pensante y los modelos de OpenAI para ejecutar, y de paso lo que mejorase n_ein. Con «Hazlo, con tus recomendaciones» autorizó el plan. Decisiones:
+
+- **Por fase, no por delegación.** Opus entra como modelo de la clase `abierto` (intent, diseño, decisiones) y la transición `start_implementation` ya existente lleva la obra entera a Sol o Luna en la misma sesión. Sin subagentes ni orquestador: el banco del 5 de octubre y el de Gentle (T24, 4 oct: 3,12 frente a 1,59 USD; Luna hizo 3 de 5 soluciones defectuosas) dan pérdida al delegar la obra en un modelo más barato.
+- **Opción, no valor por defecto**, hasta que el ensayo y 2-3 encargos reales lo confirmen.
+- **Proveedor `pi-claude-bridge`** (MIT), como hace Gentle: lanza el Claude Code oficial con el Agent SDK y gasta la cuota de la suscripción. Si no supera el ensayo, la alternativa sin dependencia es pensar en `nein claude` y relevar con `to-pi`.
+- **Entran también** medidores de cuota de las dos suscripciones en Pi, guarda de comandos destructivos y la regla de preservar el comportamiento que comparte el código tocado. Quedan fuera el aviso de tamaño de rama, los perfiles con pin por repositorio y la delegación por ratio de precio.
+- Un fallo o una cuota agotada del modelo pensante se informa con la salida (`[sol high]`, `/nein:models`); nunca se cambia de modelo en silencio.
+
+Fuentes: [gentle-shell `2c06244`](https://github.com/Gentleman-Programming/gentle-shell/tree/2c06244), [delegar con motivo](https://github.com/Gentleman-Programming/gentle-shell/blob/2c06244/odd/tasks/delegate-for-reason.md), [pi-claude-bridge 0.9.3](https://www.npmjs.com/package/pi-claude-bridge/v/0.9.3). Estado y evidencia en `WORK.md` de la rama `feat/opus-piensa`.
+
 ## Recomendaciones de diseño, revisables
 
 El 7 de octubre Samu autorizó implementar y evaluar el reparto temprano y la investigación acotada con el mismo mecanismo de equipo, tras la [auditoría del piloto](../evals/results/2026-10-07-auditoria-paralelismo.md). La lectura puede delegarse sin preparar un encargo de escritura. Se mide por separado el ahorro de contexto y el avance paralelo, conservando checks e integración. Esto amplía el experimento; no demuestra ahorro ni activa por sí solo la preview personal. El estado de implementación y evaluación vive en WORK.md.
