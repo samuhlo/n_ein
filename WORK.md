@@ -51,9 +51,9 @@ Publicación: «saca nueva versión», como el 30 de octubre, autoriza preparar 
 - [x] T5 · Regla de preservar. Blocked by: none.
 - [x] T6 · Documentación y cierre — decisiones, modelos, diseño, README. Blocked by: T1-T5.
 - [x] R1 · Preparar 0.6.0-alpha.1 — versión, bootstrap, notas, archivo del encargo de p_reviewer y candidato local. Blocked by: none.
-- [ ] R2 · Integrar en main por PR con la matriz verde, crear el tag y publicar. Blocked by: R1.
+- [x] R2 · Integrar en main por PR con la matriz verde, crear el tag y publicar. Blocked by: R1.
   - Primera matriz de la PR #24 (run `41681572735`): Linux falló en `tests/guard-pi.ts` («la guarda debía impedir el borrado»). La guarda daba por seguro todo el temporal, incluido un proyecto que vive en él; en macOS pasaba porque Pi usa la ruta real `/private/var/…` y la guarda solo conocía `/var/…`. Corregido con test rojo → verde: dentro del proyecto solo pasa lo regenerable, y la guarda conoce también la ruta real del temporal. macOS no llegó a correr: GitHub no asignó máquina por falta de capacidad.
-- [ ] R3 · Comprobar adjuntos publicados, attestation y bootstrap de Pages; registrar la entrega en main. Blocked by: R2.
+- [x] R3 · Comprobar adjuntos publicados, attestation y bootstrap de Pages; registrar la entrega en main. Blocked by: R2.
 
 ## Evidencia
 
@@ -83,9 +83,15 @@ Publicación: «saca nueva versión», como el 30 de octubre, autoriza preparar 
   - Opus diseñó y, con «Hazlo.», llamó a `nein_set_task` y cerró; el turno en cola fue a `openai-codex/gpt-6-sol`, que dejó `70e85c4` con 5/5 pruebas y `tsc` limpio.
   - Cero avisos `left state behind`, ningún hijo de Claude vivo y `isUsingOverage: false`.
 - R1: preparación en `07ad55f` (versión, bootstrap, README, START_HERE, notas, encargo de p_reviewer archivado en `docs/archive/work/2026-11-03-revisor-contexto.md`). Las notas se contrastaron con el código; una afirmación sobre las revisiones antiguas no era cierta y quedó corregida. `scripts/build-release.sh 0.6.0-alpha.1` pasó, con instalación desde el paquete y `doctor --runtime`. Candidato macOS arm64: tarball SHA-256 `215d9fc680feb359dee1c6d42ccf7fa619e359ee5bbda90185e5358f2d6b9f2c`; manifiesto `0.6.0-alpha.1` en `07ad55f`, con `claude-bridge-runtime/`, `bin/n-ein-claude-bridge` y las extensiones nuevas. La publicación construirá y verificará sus propios adjuntos desde el tag.
+- R2–R3: [0.6.0-alpha.1 publicada](https://github.com/samuhlo/n_ein/releases/tag/v0.6.0-alpha.1), prerelease preview, tag anotado en `8177cae0e5408c9051c234973896181b0541bd7b`.
+  - [PR #24](https://github.com/samuhlo/n_ein/pull/24) integrada tras la [matriz verde](https://github.com/samuhlo/n_ein/actions/runs/41684656402) sobre `e5e05b5`; el merge tiene el mismo árbol. Merge y tag con permiso explícito de Samu, tras bloquearlos el clasificador de la sesión.
+  - [Workflow del tag](https://github.com/samuhlo/n_ein/actions/runs/41708112598) completo, con publicación y Pages.
+  - Los nueve adjuntos descargados pasan `verify-release-assets.py` (mismas fuentes, manifiestos, modos, hashes e instaladores). `gh attestation verify` valida ambos tarballs e `install.sh`, exigiendo repositorio, workflow de release, ref del tag, commit de origen y runners alojados.
+  - SHA-256 publicados: macOS `eb2c1dafe1a4b3b865d20d6006d4e8cdff87bd4d14bd7ffed41e050ffe8002a1`, Linux `4549dbd825454b9452feabb2797d50ef623cc06c669cb7645aba6e249f06435f`.
+  - El bootstrap de Pages coincide byte a byte con el adjunto; su dry-run en un hogar temporal elige 0.6.0-alpha.1 sin crear hogar ni enlace. Assets en `dist/published-0.6.0/`. No se actualizó la instalación personal.
 - Suite completa sobre `b26a5e7` (código final tras la revisión): exit 0; `dist/n-ein-install runtime --dry-run` planea solo `runtimes/claude-bridge/0.9.3`.
 - Suite completa sobre `95fa2d1` más README: exit 0 (el `[ERR] :: TEAM_SAVE` del log sale igual antes de este encargo: lo provoca un test de equipo).
 
 ## Siguiente paso
 
-R1: `scripts/build-release.sh 0.6.0-alpha.1` sobre la rama `release/0.6.0-alpha.1`; después PR, matriz, merge, tag y verificación de lo publicado. No actualizar la instalación personal.
+Versión publicada. La actualización personal queda para cuando Samu la pida (`nein` ofrece `u Actualizar`, o el `curl` de las notas con `--channel preview`). Decisiones suyas para después: hacer de Opus el valor por defecto de abierto tras 2-3 encargos reales, y si se abre una incidencia en pi-claude-bridge para que `session_shutdown` cierre las consultas activas.
