@@ -173,6 +173,8 @@ export default function (pi: ExtensionAPI, fixedTable?: RoutingTable) {
   // Pi corre una sesión por proceso: lo pendiente vale para la próxima petición de esta sesión.
   const pending: PendingRoute = {};
   let lastState: RouterState | undefined;
+  // El turno que arranca la obra tras Opus se pone en cola una vez por elección pendiente.
+  let handoverQueued = false;
   const classSelectedByUser = () =>
     pending.force !== undefined || lastState?.fuente === "usuario";
   let table = fixedTable;
@@ -188,6 +190,7 @@ export default function (pi: ExtensionAPI, fixedTable?: RoutingTable) {
     delete pending.choice;
     table = fixedTable;
     lastState = undefined;
+    handoverQueued = false;
   });
 
   pi.registerVirtualModel<RouterState>({
@@ -249,6 +252,7 @@ export default function (pi: ExtensionAPI, fixedTable?: RoutingTable) {
       delete pending.escalate;
       delete pending.force;
       delete pending.choice;
+      handoverQueued = false;
       if (request.reason === "user") delete pending.newJob;
       const changed =
         !request.state ||
@@ -359,11 +363,13 @@ export default function (pi: ExtensionAPI, fixedTable?: RoutingTable) {
       };
       // [FLOW] Opus piensa, otro modelo ejecuta: Opus cierra su mensaje y la obra empieza en un turno nuevo.
       if (lastState?.route?.model.startsWith(`${BRIDGE}/`)) {
-        if (params.transition === "start_implementation")
+        if (params.transition === "start_implementation" && !handoverQueued) {
+          handoverQueued = true;
           pi.sendUserMessage(
             `Continue with the authorized implementation ("${params.request.slice(0, 200)}"). n_ein sends this message to start the build with the executor model; the agreed design and the authorization above still apply.`,
             { deliverAs: "followUp" },
           );
+        }
         return {
           content: [
             {

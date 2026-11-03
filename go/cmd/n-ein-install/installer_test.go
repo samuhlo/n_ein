@@ -85,7 +85,7 @@ func sourceFixture(t *testing.T) (source, self, target, data string) {
 	data = filepath.Join(root, "user-data")
 	self = writeFixture(t, root, "self-binary", "installer", 0o755)
 	writeFixture(t, source, "dist/n-ein", "launcher", 0o755)
-	for _, rel := range []string{"bin/nein", "bin/nein-setup", "bin/n-ein-dev", "bin/n-ein-claude-dev", "bin/n-ein-prepare-pi", "bin/n-ein-codegraph", "bin/n-ein-todo", "bin/n-ein-previewer", "bin/n-ein-work"} {
+	for _, rel := range []string{"bin/nein", "bin/nein-setup", "bin/n-ein-dev", "bin/n-ein-claude-dev", "bin/n-ein-claude-bridge", "bin/n-ein-prepare-pi", "bin/n-ein-codegraph", "bin/n-ein-todo", "bin/n-ein-previewer", "bin/n-ein-work"} {
 		writeFixture(t, source, rel, "#!/bin/sh\nexit 0\n", 0o755)
 	}
 	writeFixture(t, source, "bin/n-ein-previewer", "#!/bin/sh\n[ \"$1\" = check ] || exit 64\nif [ -n \"$N_EIN_TEST_PREVIEWER_FAIL\" ]; then echo 'la web no compila' >&2; exit 1; fi\necho '// 003 REVISOR · aislamiento sandbox-exec · web compila'\n", 0o755)

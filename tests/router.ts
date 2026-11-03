@@ -793,7 +793,8 @@ rmSync(taskRoot, { recursive: true, force: true });
   // El puente espera los resultados de las herramientas que pidió: cambiar a mitad de la ejecución deja su consulta huérfana.
   const held = thinking.route({ reason: "continuation", state: opus.state, previous: bridge, messages: user("Hazlo"), thinkingLevel: "medium" }, withBridge);
   assert.deepEqual([held.model.provider, held.thinkingLevel, held.state], ["claude-bridge", "high", undefined]);
-  assert.equal(thinking.sent.length, 1, "n_ein deja en cola el turno que arranca la obra");
+  await thinking.task.execute("t2", { ...choice, request: "Hazlo" }, undefined, undefined, authorized);
+  assert.equal(thinking.sent.length, 1, "n_ein deja en cola un solo turno que arranca la obra, aunque Opus repita la llamada");
   assert.deepEqual(thinking.sent[0]![1], { deliverAs: "followUp" });
   assert.match(thinking.sent[0]![0], /Hazlo/);
   const build = thinking.route({ reason: "user", state: opus.state, previous: bridge, messages: user(thinking.sent[0]![0]), thinkingLevel: "medium" }, withBridge);

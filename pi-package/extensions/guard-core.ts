@@ -130,6 +130,10 @@ function git(args: string[]): Danger | undefined {
       return has(rest, "--force") || flags.includes("f") || rest.includes(".") || (rest.includes("--") && rest.indexOf("--") < rest.length - 1)
         ? stop("git checkout descarta cambios del árbol de trabajo", "this checkout discards working-tree changes")
         : undefined;
+    case "switch":
+      return has(rest, "--force", "--discard-changes") || /[fC]/.test(flags)
+        ? stop("git switch descarta cambios o reinicia una rama", "this switch discards working-tree changes or resets a branch")
+        : undefined;
     case "restore":
       return (has(rest, "--staged") || flags.includes("S")) && !has(rest, "--worktree") && !flags.includes("W")
         ? undefined
@@ -153,7 +157,8 @@ function within(path: string, root: string): boolean {
 function safeTarget(raw: string, context: GuardContext): boolean {
   let target = raw;
   const tmpVar = /^\$\{?(TMPDIR|TMP|TEMP)\}?(?=\/|$)/.exec(target);
-  if (tmpVar) return target.length > tmpVar[0].length + 1;
+  // BLINDAJE -> `..` saldría del temporal que da por seguro el prefijo.
+  if (tmpVar) return target.length > tmpVar[0].length + 1 && !target.split("/").includes("..");
   if (target === "~" || target.startsWith("~/")) target = join(context.home, target.slice(1));
   if (/[$`*?{[]/.test(target)) return false;
   const path = normalize(isAbsolute(target) ? target : resolve(context.cwd, target)).replace(/[\\/]+$/, "");

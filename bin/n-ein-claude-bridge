@@ -1,0 +1,13 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+# [FLOW] CLAUDE DEL PUENTE
+# pi-claude-bridge lanza este ejecutable en lugar de Claude Code. Quita las claves y pasarelas de
+# Anthropic exportadas, que lo llevarían a la API de pago, y abre el Claude que fijó el launcher.
+# Los comandos del proyecto en Pi conservan esas variables.
+if [[ -z "${N_EIN_BRIDGE_CLAUDE_BIN:-}" || ! -x "$N_EIN_BRIDGE_CLAUDE_BIN" ]]; then
+  printf '[ERR] :: BRIDGE_CLAUDE_MISSING :: binary: %s | fix: nein-setup y abrir Pi con nein\n' "${N_EIN_BRIDGE_CLAUDE_BIN:-unset}" >&2
+  exit 69
+fi
+unset ANTHROPIC_API_KEY ANTHROPIC_AUTH_TOKEN ANTHROPIC_BASE_URL
+exec "$N_EIN_BRIDGE_CLAUDE_BIN" "$@"

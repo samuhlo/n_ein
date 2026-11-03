@@ -24,7 +24,7 @@ fi
   printf '%s\n' "$@"
 } > "$N_EIN_CAPTURE"
 printf '%s\n' "${N_EIN_CODEGRAPH_BIN:-}" > "$N_EIN_CAPTURE.codegraph"
-printf '%s\n' "${CLAUDE_CONFIG_DIR:-}" "${ANTHROPIC_API_KEY:-}" > "$N_EIN_CAPTURE.env"
+printf '%s\n' "${CLAUDE_CONFIG_DIR:-}" "${ANTHROPIC_API_KEY:-}" "${N_EIN_BRIDGE_CLAUDE_BIN:-}" > "$N_EIN_CAPTURE.env"
 FAKE_PI
 chmod +x "$test_dir/pi"
 
@@ -175,11 +175,14 @@ printf '{"name":"pi-claude-bridge","version":"%s"}\n' "$bridge_version" > "$brid
 claude_bin="$N_EIN_HOME/runtimes/claude/$claude_version/bin/claude"
 mkdir -p "$(dirname "$claude_bin")" "$N_EIN_AGENT_DIR"
 printf '#!/bin/sh\n' > "$claude_bin"
+chmod +x "$claude_bin"
 printf '{"askClaude":{"enabled":true},"provider":{"plan":"max"}}\n' > "$N_EIN_AGENT_DIR/claude-bridge.json"
 ANTHROPIC_API_KEY=sk-test "$repo_dir/bin/n-ein-dev" --print 'con puente'
 rg -Fxq "$bridge_dir" "$N_EIN_CAPTURE"
 test "$(sed -n 1p "$N_EIN_CAPTURE.env")" == "$N_EIN_HOME/dev/claude"
-test -z "$(sed -n 2p "$N_EIN_CAPTURE.env")"
+# Los comandos del proyecto conservan sus claves; solo el Claude del puente arranca sin ellas.
+test "$(sed -n 2p "$N_EIN_CAPTURE.env")" == sk-test
+test "$(sed -n 3p "$N_EIN_CAPTURE.env")" == "$claude_bin"
 bun -e '
   const [path, claude] = process.argv.slice(1);
   const c = await Bun.file(path).json();
@@ -187,7 +190,15 @@ bun -e '
     console.error("configuración del puente: " + JSON.stringify(c));
     process.exit(1);
   }
-' "$N_EIN_AGENT_DIR/claude-bridge.json" "$claude_bin"
+' "$N_EIN_AGENT_DIR/claude-bridge.json" "$repo_dir/bin/n-ein-claude-bridge"
+cat > "$claude_bin" <<'FAKE_CLAUDE'
+#!/usr/bin/env bash
+printf '%s|%s|%s\n' "${ANTHROPIC_API_KEY:-}" "${ANTHROPIC_BASE_URL:-}" "$*"
+FAKE_CLAUDE
+chmod +x "$claude_bin"
+test "$(ANTHROPIC_API_KEY=sk-test ANTHROPIC_BASE_URL=https://gateway N_EIN_BRIDGE_CLAUDE_BIN="$claude_bin" "$repo_dir/bin/n-ein-claude-bridge" --print hola)" == "||--print hola"
+if "$repo_dir/bin/n-ein-claude-bridge" --version 2> "$test_dir/err"; then exit 1; fi
+rg -q 'BRIDGE_CLAUDE_MISSING' "$test_dir/err"
 rm "$N_EIN_AGENT_DIR/claude-bridge.json"
 "$repo_dir/bin/n-ein-dev" --print 'puente nuevo'
 test "$(bun -e 'console.log((await Bun.file(process.argv[1]).json()).askClaude.enabled)' "$N_EIN_AGENT_DIR/claude-bridge.json")" == false

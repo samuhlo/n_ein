@@ -87,9 +87,12 @@ if [[ -n "${bridge_version:-}" && -f "$bridge_dir/package.json" ]]; then
       ;;
   esac
   mkdir -p "$claude_dir" "$agent_dir"
+  # El puente escribe sus sesiones en este hogar y su Claude las retoma desde el mismo.
   export CLAUDE_CONFIG_DIR="$claude_dir"
-  # BLINDAJE -> Una clave o pasarela de Anthropic exportada llevaría el puente a la API de pago.
-  unset ANTHROPIC_API_KEY ANTHROPIC_AUTH_TOKEN ANTHROPIC_BASE_URL
+  # BLINDAJE -> El puente arranca Claude con el entorno de Pi; el envoltorio le quita las claves de
+  # Anthropic exportadas para que no pase a la API de pago. Sin Claude gestionado, el envoltorio falla.
+  claude_bin="$(command -v "${N_EIN_CLAUDE_BIN:-$n_ein_home/runtimes/claude/${claude_version:-none}/bin/claude}" 2>/dev/null || true)"
+  if [[ -n "$claude_bin" ]]; then export N_EIN_BRIDGE_CLAUDE_BIN="$claude_bin"; else unset N_EIN_BRIDGE_CLAUDE_BIN; fi
   # n_ein fija el Claude del puente y apaga AskClaude salvo que el usuario lo encienda; el resto es suyo.
   bun -e '
     const [path, claude] = process.argv.slice(1);
@@ -98,7 +101,7 @@ if [[ -n "${bridge_version:-}" && -f "$bridge_dir/package.json" ]]; then
     const config = { ...before, askClaude: { enabled: false, ...before.askClaude } };
     if (await Bun.file(claude).exists()) config.provider = { ...before.provider, pathToClaudeCodeExecutable: claude };
     if (JSON.stringify(config) !== JSON.stringify(before)) await Bun.write(path, JSON.stringify(config, null, 2) + "\n");
-  ' "$agent_dir/claude-bridge.json" "${N_EIN_CLAUDE_BIN:-$n_ein_home/runtimes/claude/${claude_version:-none}/bin/claude}" \
+  ' "$agent_dir/claude-bridge.json" "$repo_dir/bin/n-ein-claude-bridge" \
     || printf '[WARN] :: BRIDGE_CONFIG_SKIP :: path: %s\n' "$agent_dir/claude-bridge.json" >&2
   bridge_args=(-e "$bridge_dir")
 fi
