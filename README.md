@@ -81,7 +81,7 @@ Abre `nein`, entra en Pi y cuenta qué necesitas. El agente elige las skills y n
 | **riesgo** | Datos, permisos, contratos, concurrencia, despliegue | `gpt-6-sol` · high |
 | **abierto** | Diseño sin cerrar | `gpt-6-sol` · high |
 
-Un prefijo (`[luna]`, `[sol high]`) o `/nein:modo` lo fija a mano; `/nein:models` abre el panel de la tabla. La elección sale del [banco del 5 de octubre](evals/results/2026-10-05-modelos-de-trabajo.md).
+Un prefijo (`[luna]`, `[sol high]`) o `/nein:modo` lo fija a mano; `/nein:models` abre el panel de la tabla. La elección sale del [banco del 5 de octubre](evals/results/2026-10-05-modelos-de-trabajo.md). Opcional: **abierto** puede ir a Opus 5.5 high con tu suscripción de Claude (`claude-bridge/claude-opus-5-5` en el panel); Opus diseña y decide, y tras «hazlo» la obra sigue en Sol o Luna. La línea de estado de Pi enseña la cuota de Codex y de Claude. [Guía](docs/guia.md#modelos-por-encargo).
 
 ---
 
