@@ -42,7 +42,7 @@ Pedidos:
 - [ ] T0 · Ensayo del puente — un turno de Opus en Pi con la persona y las herramientas, y el paso a Sol con «hazlo». Blocked by: permiso de Samu para ejecutar el puente con su login.
 - [ ] T1 · Empaquetado del puente — runtime fijado con lockfile, instalador, doctor, configuración y entorno del launcher, NOTICE. Blocked by: T0.
 - [ ] T2 · Enrutado opcional de `abierto` a Opus — valor elegible en `/nein:models`, error accionable si falta el modelo. Blocked by: T1 para la prueba en vivo.
-- [ ] T3 · Medidores de cuota en Pi. Blocked by: none.
+- [x] T3 · Medidores de cuota en Pi. Blocked by: none.
 - [x] T4 · Guarda de comandos destructivos. Blocked by: none.
 - [x] T5 · Regla de preservar. Blocked by: none.
 - [ ] T6 · Documentación y cierre — decisiones, modelos, diseño, README. Blocked by: T1-T5.
@@ -53,7 +53,8 @@ Pedidos:
 - Pi 1.0.2 trae `claude-opus-5-5` en su catálogo de Anthropic.
 - T0: el clasificador de permisos de la sesión bloqueó ejecutar el paquete descargado con el login de Claude.
 - T5: `tests/skills.ts` rojo («flow.md debe pedir sonda para lo que comparte el código tocado») → verde tras añadir la regla a `flow.md` (paso 4) y a `tdd` (reglas del bucle).
-- T4: `tests/guard.ts` rojo (módulo ausente) → verde: 74 comandos clasificados y la rama con interfaz (confirmar, rechazar, `nein_job`). `tests/guard-pi.ts` con Pi 1.0.2 real y proveedor determinista: sin interfaz, `rm -rf victima` queda bloqueado y `rm -rf node_modules` pasa; sin cargar la guarda, la misma prueba falla («la guarda debía impedir el borrado»). Typecheck contra Pi 1.0.2: OK.
+- T4: `tests/guard.ts` rojo (módulo ausente) → verde: 70 comandos clasificados y la rama con interfaz (confirmar, rechazar, `nein_job`). `tests/guard-pi.ts` con Pi 1.0.2 real y proveedor determinista: sin interfaz, `rm -rf victima` queda bloqueado y `rm -rf node_modules` pasa; sin cargar la guarda, la misma prueba falla («la guarda debía impedir el borrado»). Typecheck contra Pi 1.0.2: OK.
+- T3: `tests/usage.ts` rojo (módulo ausente) → verde: cabeceras de Codex y Claude, entradas inválidas sin ventanas, ventana reiniciada a 0, aviso de cuota agotada. `tests/usage-pi.ts` con Pi 1.0.2 en RPC: la cabecera del proveedor llega a `setStatus` como «Codex 5h 37%»; sin cargar la extensión, la prueba falla. Pi no mostraba estas ventanas: `02-diseno.md` decía lo contrario y queda corregido. Typecheck: OK.
 
 ## Siguiente paso
 
