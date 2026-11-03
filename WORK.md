@@ -50,7 +50,7 @@ Publicación: «saca nueva versión», como el 30 de octubre, autoriza preparar 
 - [x] T4 · Guarda de comandos destructivos. Blocked by: none.
 - [x] T5 · Regla de preservar. Blocked by: none.
 - [x] T6 · Documentación y cierre — decisiones, modelos, diseño, README. Blocked by: T1-T5.
-- [ ] R1 · Preparar 0.6.0-alpha.1 — versión, bootstrap, notas, archivo del encargo de p_reviewer y candidato local. Blocked by: none.
+- [x] R1 · Preparar 0.6.0-alpha.1 — versión, bootstrap, notas, archivo del encargo de p_reviewer y candidato local. Blocked by: none.
 - [ ] R2 · Integrar en main por PR con la matriz verde, crear el tag y publicar. Blocked by: R1.
 - [ ] R3 · Comprobar adjuntos publicados, attestation y bootstrap de Pages; registrar la entrega en main. Blocked by: R2.
 
@@ -81,6 +81,7 @@ Publicación: «saca nueva versión», como el 30 de octubre, autoriza preparar 
   - El launcher lo cargó sin `-e` ni configuración a mano, y `claude-bridge.json` apunta a `bin/n-ein-claude-bridge`; el Agent SDK arrancó Claude Code a través del envoltorio.
   - Opus diseñó y, con «Hazlo.», llamó a `nein_set_task` y cerró; el turno en cola fue a `openai-codex/gpt-6-sol`, que dejó `70e85c4` con 5/5 pruebas y `tsc` limpio.
   - Cero avisos `left state behind`, ningún hijo de Claude vivo y `isUsingOverage: false`.
+- R1: preparación en `07ad55f` (versión, bootstrap, README, START_HERE, notas, encargo de p_reviewer archivado en `docs/archive/work/2026-11-03-revisor-contexto.md`). Las notas se contrastaron con el código; una afirmación sobre las revisiones antiguas no era cierta y quedó corregida. `scripts/build-release.sh 0.6.0-alpha.1` pasó, con instalación desde el paquete y `doctor --runtime`. Candidato macOS arm64: tarball SHA-256 `215d9fc680feb359dee1c6d42ccf7fa619e359ee5bbda90185e5358f2d6b9f2c`; manifiesto `0.6.0-alpha.1` en `07ad55f`, con `claude-bridge-runtime/`, `bin/n-ein-claude-bridge` y las extensiones nuevas. La publicación construirá y verificará sus propios adjuntos desde el tag.
 - Suite completa sobre `b26a5e7` (código final tras la revisión): exit 0; `dist/n-ein-install runtime --dry-run` planea solo `runtimes/claude-bridge/0.9.3`.
 - Suite completa sobre `95fa2d1` más README: exit 0 (el `[ERR] :: TEAM_SAVE` del log sale igual antes de este encargo: lo provoca un test de equipo).
 
