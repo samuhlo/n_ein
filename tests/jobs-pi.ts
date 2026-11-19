@@ -1,16 +1,16 @@
 import { strict as assert } from "node:assert";
 import { spawn } from "node:child_process";
 import { mkdtempSync, existsSync, mkdirSync } from "node:fs";
-import { tmpdir, homedir } from "node:os";
+import { tmpdir } from "node:os";
 import { join, resolve } from "node:path";
+import { piBinary } from "./pi-runtime.ts";
 const root = resolve("."),
   area = mkdtempSync(join(tmpdir(), "nein-jobs-pi-"));
 async function run(deny: boolean) {
   const cwd = join(area, deny ? "denied" : "allowed");
   mkdirSync(cwd);
   const child = spawn(
-    process.env.N_EIN_PI_BIN ||
-      join(homedir(), ".n_ein/runtimes/pi/1.0.2/bin/pi"),
+    piBinary,
     [
       "--mode",
       "rpc",

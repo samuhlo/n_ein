@@ -179,6 +179,8 @@ func setup(source, channel, self string, dryRun bool, output io.Writer) error {
 		unchanged = readErr == nil && candidateErr == nil && bytes.Equal(current, candidate)
 	}
 
+	// replaced: el código nuevo ocupa ya el sitio del anterior, que quedó en un backup.
+	replaced := false
 	steps := []setupStep{
 		{"pi", func(report io.Writer) (string, error) {
 			if err := installPiRuntime(source, dryRun, report); err != nil {
@@ -249,6 +251,7 @@ func setup(source, channel, self string, dryRun bool, output io.Writer) error {
 			if err := install(source, target, channel, self, existing, dryRun, report); err != nil {
 				return "", err
 			}
+			replaced = existing && !dryRun
 			detail := artifact.Version + " · " + channel
 			if existing {
 				detail += " · backup del anterior"
@@ -280,6 +283,20 @@ func setup(source, channel, self string, dryRun bool, output io.Writer) error {
 				return "", err
 			}
 			return fmt.Sprintf("%d archivos · Pi %s · CodeGraph · Bun", len(meta.Files), version), nil
+		}},
+		{"limpieza", func(report io.Writer) (string, error) {
+			if dryRun {
+				return "runtimes sin uso y backups antiguos, al terminar", nil
+			}
+			runtimes, copies, err := prune(root)
+			if err != nil {
+				// La limpieza nunca invalida una instalación que ya pasó doctor.
+				return "pendiente: " + err.Error(), nil
+			}
+			if runtimes+copies == 0 {
+				return "nada que limpiar", nil
+			}
+			return fmt.Sprintf("%d runtimes sin uso · %d backups antiguos", runtimes, copies), nil
 		}},
 	}
 
@@ -316,6 +333,14 @@ func setup(source, channel, self string, dryRun bool, output io.Writer) error {
 		if report, err := view.step(index, item); err != nil {
 			if trimmed := strings.TrimSpace(report); trimmed != "" {
 				fmt.Fprintf(output, "\n%s\n", p.Fg(brand.Faint, trimmed))
+			}
+			// BLINDAJE -> Una actualización que no pasa doctor no se queda: vuelve la instalación anterior.
+			if replaced {
+				if restoreErr := restore(target, false, io.Discard); restoreErr != nil {
+					return fmt.Errorf("%w; tampoco se pudo restaurar la versión anterior: %v", err, restoreErr)
+				}
+				fmt.Fprintf(output, "\n  %s\n", p.Fg(brand.Concrete, "restaurada la versión anterior: la nueva no pasó "+item.label))
+				return fmt.Errorf("actualización revertida: %w", err)
 			}
 			return err
 		}

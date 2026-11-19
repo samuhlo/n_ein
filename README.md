@@ -7,7 +7,7 @@
 
   <img src="https://img.shields.io/badge/STATUS-PREVIEW-FFCA40?style=for-the-badge&labelColor=000000" alt="Status" />
   <br/>
-  <img src="https://img.shields.io/badge/Pi_1.0.2-0C0011?style=for-the-badge&labelColor=000000" alt="Pi" />
+  <img src="https://img.shields.io/badge/Pi-0C0011?style=for-the-badge&labelColor=000000" alt="Pi" />
   <img src="https://img.shields.io/badge/CodeGraph-0C0011?style=for-the-badge&labelColor=000000" alt="CodeGraph" />
   <br/>
   <img src="https://img.shields.io/badge/Go-0C0011?style=for-the-badge&logo=go&logoColor=FFCA40&labelColor=000000" alt="Go" />
@@ -41,9 +41,9 @@ nein
   <img src="docs/assets/nein-setup.png" alt="Plan de nein-setup --dry-run" width="720" />
 </div>
 
-macOS arm64 y Linux amd64 (Ubuntu, Arch). Requisitos: Bash, curl, Git y ripgrep. El instalador verifica SHA-256 antes de ejecutar nada e instala como usuario, sin sudo, dentro de `~/.n_ein`: Node, Bun, Pi, Claude Code, el puente de Claude para Pi y CodeGraph fijados, sin tocar el `pi` ni el `claude` globales ni Ein legado. El primer arranque pide `/login` en el hogar aislado; ninguna credencial se copia. Mientras no haya release estable se instala la alpha del canal preview; [notas de 0.5.0-alpha.1](docs/releases/0.5.0-alpha.1.md).
+macOS arm64 y Linux amd64 (Ubuntu, Arch). Requisitos: Bash, curl, Git y ripgrep. El instalador verifica SHA-256 antes de ejecutar nada e instala como usuario, sin sudo, dentro de `~/.n_ein`: Node, Bun, Pi, Claude Code, el puente de Claude para Pi y CodeGraph fijados, sin tocar el `pi` ni el `claude` globales ni Ein legado. El primer arranque pide `/login` en el hogar aislado; ninguna credencial se copia. Mientras no haya release estable se instala la alpha del canal preview; [notas de 0.7.0-alpha.1](docs/releases/0.7.0-alpha.1.md).
 
-> _note: `curl -fsSL https://samuhlo.github.io/n_ein/install.sh | bash -s -- --dry-run` enseña el plan sin escribir. Sobre una preview anterior se actualiza con backup y `n-ein-install restore --channel preview` vuelve atrás._
+> _note: `curl -fsSL https://samuhlo.github.io/n_ein/install.sh | bash -s -- --dry-run` enseña el plan sin escribir. Sobre una preview anterior se actualiza con backup y `n-ein-install restore --channel preview` vuelve atrás. Desde el launcher, `u` actualiza cuando hay versión nueva (también las que solo suben Pi, Claude Code, el puente o CodeGraph, comprobadas antes en CI) y Sistema → «versión anterior» vuelve atrás._
 
 ---
 
@@ -151,7 +151,7 @@ n_ein/
 | **Runtime** | Pi Coding Agent |
 | **Launcher e instalador** | Go 1.27 |
 | **Dentro de Pi** | TypeScript + Bun |
-| **Índice de código** | CodeGraph 1.6.1 |
+| **Índice de código** | CodeGraph |
 | **Delivery** | GitHub Actions · releases preview |
 
 ---
@@ -185,7 +185,7 @@ n_ein/
 
 ## // 09_ ESTADO
 
-Preview. La versión de esta entrega es [0.6.0-alpha.1](https://github.com/samuhlo/n_ein/releases/tag/v0.6.0-alpha.1); las notas de cada versión están en [docs/releases](docs/releases/). Pendientes: promoción a estable y aceptación gráfica de Omarchy. El modelo local sigue descartado.
+Preview. La versión de esta entrega es [0.7.0-alpha.1](https://github.com/samuhlo/n_ein/releases/tag/v0.7.0-alpha.1); las notas de cada versión están en [docs/releases](docs/releases/). Pendientes: promoción a estable y aceptación gráfica de Omarchy. El modelo local sigue descartado.
 
 ---
 

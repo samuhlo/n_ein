@@ -3,6 +3,7 @@ import { mkdtempSync, writeFileSync, readFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join, resolve } from "node:path";
 import { startWorker } from "../pi-package/agents/rpc.ts";
+import { piBinary, piVersion } from "./pi-runtime.ts";
 const root = mkdtempSync(join(tmpdir(), "nein-rpc-"));
 const fixture = join(root, "child.cjs");
 writeFileSync(
@@ -70,7 +71,6 @@ assert.equal(readFileSync(nestedTicks, "utf8"), nestedBefore);
 execFileSync(resolve("dist/n-ein"), ["--worker-probe", "--project", root]);
 console.log("owned bash descendants: OK");
 // Pi real, sin modelo: RPC y la herramienta bash del host cierran ordenadamente.
-const { homedir } = await import("node:os");
 const realTicks = join(root, "pi-ticks");
 const real = spawn(
   resolve("dist/n-ein"),
@@ -79,8 +79,7 @@ const real = spawn(
     "--project",
     root,
     "--",
-    process.env.N_EIN_PI_BIN ||
-      join(homedir(), ".n_ein/runtimes/pi/1.0.2/bin/pi"),
+    piBinary,
     "--mode",
     "rpc",
     "--no-session",
@@ -135,7 +134,7 @@ const realBefore = readFileSafe(realTicks);
 await new Promise((r) => setTimeout(r, 120));
 assert.equal(readFileSafe(realTicks), realBefore);
 execFileSync(resolve("dist/n-ein"), ["--worker-probe", "--project", root]);
-console.log("Pi 1.0.2 RPC lifecycle: OK");
+console.log(`Pi ${piVersion} RPC lifecycle: OK`);
 function readFileSafe(path: string) {
   try {
     return readFileSync(path, "utf8");

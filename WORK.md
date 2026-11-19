@@ -1,97 +1,66 @@
-# Opus piensa, GPT ejecuta: puente de Claude en Pi y mejoras de Gentle
+# Runtimes al día: comprobados en CI y actualizables desde el launcher
 
 ## Objetivo
 
-Samu quiere el equilibrio que ve en Gentle Shell: «la parte pensante, de arquitectura y de decisiones usa opus 5.5 y la de ejecución usa los modelos de OpenAI … no me importaría poder tener de cabeza pensante opus 5.5 en high». También pidió «busca bien lo que mejoraría el nuestro ya de paso» y hacer un plan para integrarlo. Tras la investigación (gentle-shell 4.5.1, `2c06244`, 3 nov) respondió: «Hazlo, con tus recomendaciones en las dos decisiones».
+Samu detectó que Pi y Claude Code se quedan atrás y que usar un modelo nuevo exige subir esa base en n_ein. El 19 de noviembre había Pi 1.0.2 frente a 1.5.2, el puente 0.9.3 frente a 0.13.0 (que exige Pi ≥ 1.5.1), Claude Code 2.1.302 frente a 2.1.311 estable y CodeGraph 1.6.1 frente a 1.6.3.
 
-Después de la aceptación en vivo, declinó el revisor y pidió: «No, saca nueva version».
+Rechazó el aviso solo informativo: «la idea es que comprobara si la actualización rompe algo, y si no rompe nada, apareciera para actualizar en el launcher y lo hiciera desde ahí». Pidió «un plan con arquitectura profesional (tampoco te pases, que es un proyecto personal)» y «sugerencias y recomendaciones». Aprobó el plan: «Me encanta, hazlo. Y sí, autorizo todo».
 
 Pedidos:
-1. Opus 5.5 high como cabeza pensante en Pi: la fase abierta (intent, diseño, decisiones) en Opus y la obra en GPT.
-2. Medidores de cuota de las dos suscripciones en Pi.
-3. Guarda de comandos destructivos en Pi.
-4. Regla de preservar el comportamiento que comparte el código cambiado.
+1. Comprobar automáticamente si una versión nueva de Pi, el puente, Claude Code o CodeGraph rompe n_ein.
+2. Si no rompe, que aparezca en el launcher y se actualice desde ahí.
+3. Las recomendaciones aceptadas: Claude Code por su canal estable, cuarentena de 3 días, revisión del puente si trae red nueva, grupos con publicación parcial, aviso de sesiones al volver atrás y pendiente de adaptar en Sistema.
 
 ## Autorización
 
-«Hazlo» sobre el plan de cinco tramos, el ensayo T0 incluido: implementación en esta rama con commit por tarea. Sin fusionar, publicar ni tocar la instalación personal. Ejecutar el puente con el login de Claude quedó bloqueado por el clasificador de permisos de la sesión; necesita que Samu lo ejecute o lo permita.
-
-Publicación: «saca nueva versión», como el 30 de octubre, autoriza preparar 0.6.0-alpha.1, integrarla en main con su PR, crear el tag y publicar la preview. No autoriza actualizar la instalación personal.
+«Hazlo» y «autorizo todo» sobre el plan de cinco tramos: implementación en esta rama con commit por tarea, PR e integración en main, publicar la preview con la primera subida y el vigía que publica previews solo cuando la matriz pasa. La estable sigue siendo manual. Cambiar el ajuste del repositorio que deja a Actions abrir PR entra en «todo». No autoriza actualizar la instalación personal: eso es pulsar `u`.
 
 ## Decisiones
 
-- **Por fase, no por delegación.** El router ya separa la clase `abierto` y la transición `start_implementation`, que deja bajar a ordinario o mecánico (`pi-package/extensions/router.ts:107`). Opus entra como modelo de `abierto`; no hay subagentes ni orquestador. Motivo: el banco del 5 de octubre de n_ein y el de Gentle (T24, 4 oct: 3,12 USD frente a 1,59) dan pérdida al delegar la obra en un modelo más barato.
-- **Opus como opción, no por defecto** (decisión 1). `abierto` sigue en Sol high hasta que el ensayo y 2-3 encargos reales lo confirmen.
-- **Proveedor: `pi-claude-bridge` 0.9.3** (MIT, Eli Dickinson). Lanza el Claude Code oficial mediante el Agent SDK y gasta la cuota de la suscripción. El código no hace llamadas de red propias ni lee tokens; escribe su configuración, sus logs de depuración y sesiones de Claude Code en `CLAUDE_CONFIG_DIR`. Alternativa sin dependencia si el ensayo falla: pensar en `nein claude` y relevar con `to-pi`, que ya existe.
-- **Mejoras de Gentle que entran** (decisión 2): medidores, guarda y regla de preservar. Fuera: aviso de tamaño de rama, perfiles con pin por repositorio y delegación por ratio de precio. Opus como revisor no se propone: Samu fijó p_reviewer en Sol 6.1 el 21 de octubre.
-- **Fallo del modelo pensante:** se informa y se ofrece Sol; nunca se cambia de modelo en silencio (`docs/06-modelos.md`).
+- **La subida de runtimes es una versión normal de n_ein.** Reutiliza matriz macOS+Linux, `check.sh` sin modelos, instalación limpia con upgrade y restore, attestation y el `u` del launcher. Descartados: comprobar en la máquina (el paquete no lleva los tests) y conjuntos de runtimes aparte del paquete (segunda vía de instalación).
+- **El vigía publica preview sin aprobación previa;** la puerta es `u`. La estable no se publica sola.
+- **Versión:** siguiente prerelease desde el último tag publicado del canal (alpha.1 → alpha.2), en una rama `hotfix/runtimes-<versión>`. La PR a main lleva el mismo commit.
+- **Guarda contra bajadas:** ninguna release publica runtimes más antiguos que el tag anterior.
+- **Reglas de selección:** Pi y puente van juntos (el puente más nuevo cuyo peer admite ese Pi); Claude Code por la etiqueta `stable`; CodeGraph por su última release con el SHA-256 que publica GitHub; 3 días de cuarentena salvo Claude Code, cuya etiqueta ya va con retraso.
+- **Memoria del vigía en issues con la etiqueta `runtimes`:** una versión que rompe queda bloqueada hasta cerrar su issue; un puente con red nueva espera a que su issue de revisión se cierre como completado.
+- **Herramientas en TypeScript con Bun** (`scripts/runtimes/`), como el resto de scripts; el launcher en Go.
 
 ## Límites
 
-- Claude Code no cambia: ya usa Opus y su esfuerzo se fija en `/nein:models`.
-- Sin AskClaude, MCP de claude.ai ni memoria automática de Claude Code dentro del puente.
-- La guarda reconoce formas directas de comandos; no interpreta shell, scripts ni variables.
-- Sin migrar la instalación personal ni publicar versión.
+- Sin actualizar nada sin pulsar `u`; sin avisos fuera del launcher; sin Renovate ni Dependabot.
+- Sin turnos con modelos reales en CI ni credenciales de suscripción en GitHub.
+- El vigía solo publica en preview.
 
 ## Criterios
 
-- «opus 5.5 en high … cabeza pensante» → `runtime.json`, `router.ts`, `/nein:models`, launcher `bin/n-ein-dev`, instalador → con `abierto` en `claude-bridge/claude-opus-5-5` high, una pregunta de diseño responde Opus con la persona de n_ein, y «hazlo» pasa la obra a Sol o Luna en la misma sesión; sin el puente o sin login, el error dice cómo seguir con Sol.
-- «medidores» → nueva extensión de Pi sobre `after_provider_response` → test: cabeceras `x-codex-*` y `anthropic-ratelimit-unified-*` producen la línea de estado; cabeceras ajenas o inválidas no inventan ventanas; ventana agotada avisa con la salida.
-- «guarda» → `tool_call` de `bash` y `nein_job` en la sesión principal → test: `git push --force` (también `--force-with-lease`, que reescribe igual la historia publicada), `reset --hard`, `clean -fd`, `branch -D`, `rm -rf` fuera del temporal y `DROP TABLE` piden confirmación con interfaz y se bloquean sin ella; `rm -rf` en el temporal o de carpetas regenerables del proyecto y texto dentro de un `echo`, un mensaje de commit o un heredoc pasan.
-- «preservar» → `flow.md`, skill `tdd` → test de skills: el texto pide un test para el comportamiento existente que comparte el código tocado.
-- Seams: `nextState` y `physical` del router, parsers puros de cabeceras y de comandos, `tests/skills.ts`.
+- «comprobara si la actualización rompe algo» → `scripts/runtimes/`, `.github/workflows/runtimes.yml`, `candidate.yml` → tests de la selección con registro falso (cuarentena, peer, stable, bloqueos, sin bajadas); el vigía ejecuta la matriz completa sobre la rama del bump y solo publica si pasa; si falla, prueba por grupos y abre un issue.
+- «apareciera para actualizar en el launcher» → `go/cmd/n-ein/update.go`, `ui.go`, `state.go` → test: con una release nueva, la portada ofrece `u` y dice qué runtimes trae; Sistema muestra la versión nueva por runtime.
+- «lo hiciera desde ahí» → `fetch`/`setup` del instalador → test: una actualización cuyo doctor falla restaura sola la anterior; doctor arranca Pi con las extensiones de n_ein y un proveedor de prueba; Sistema ofrece volver a la versión anterior con confirmación y aviso de sesiones.
+- Guarda → `release.yml` → test: bajar Pi respecto al tag anterior falla con mensaje claro.
+- Limpieza → setup → test: tras actualizar se conservan los runtimes de la instalación actual y de su backup más reciente; los backups se recortan a 3.
+- Primera subida → `runtime.json`, lockfiles → `check.sh` verde con las versiones que elige la propia regla (cuarentena incluida).
 
 ## Tareas
 
-- [x] T0 · Ensayo del puente — un turno de Opus en Pi con la persona y las herramientas, y el paso a Sol con «hazlo». Blocked by: none.
-- [x] T1 · Empaquetado del puente — runtime fijado con lockfile, instalador, doctor, configuración y entorno del launcher, NOTICE. Blocked by: T0.
-- [x] T2 · Enrutado opcional de `abierto` a Opus — valor elegible en `/nein:models`, error accionable si falta el modelo. Blocked by: none.
-- [x] T3 · Medidores de cuota en Pi. Blocked by: none.
-- [x] T4 · Guarda de comandos destructivos. Blocked by: none.
-- [x] T5 · Regla de preservar. Blocked by: none.
-- [x] T6 · Documentación y cierre — decisiones, modelos, diseño, README. Blocked by: T1-T5.
-- [x] R1 · Preparar 0.6.0-alpha.1 — versión, bootstrap, notas, archivo del encargo de p_reviewer y candidato local. Blocked by: none.
-- [x] R2 · Integrar en main por PR con la matriz verde, crear el tag y publicar. Blocked by: R1.
-  - Primera matriz de la PR #24 (run `41681572735`): Linux falló en `tests/guard-pi.ts` («la guarda debía impedir el borrado»). La guarda daba por seguro todo el temporal, incluido un proyecto que vive en él; en macOS pasaba porque Pi usa la ruta real `/private/var/…` y la guarda solo conocía `/var/…`. Corregido con test rojo → verde: dentro del proyecto solo pasa lo regenerable, y la guarda conoce también la ruta real del temporal. macOS no llegó a correr: GitHub no asignó máquina por falta de capacidad.
-- [x] R3 · Comprobar adjuntos publicados, attestation y bootstrap de Pages; registrar la entrega en main. Blocked by: R2.
+- [x] T1 · Selección y aplicación de versiones — `scripts/runtimes/` con plan, apply, guard y revisión del puente; tests con registro falso. Blocked by: none.
+- [x] T2 · Primera subida — Pi 1.5.2, puente 0.12.0, Claude Code 2.1.311 y CodeGraph 1.6.2 con T1 (0.13.0 y 1.6.3 seguían en cuarentena); arreglar lo que rompa Pi 1.5. Blocked by: T1.
+- [x] T3 · Vigía — workflow diario, candidato sobre otra rama, publicación reutilizable, guarda en release, grupos, issues y PR a main. Blocked by: T1.
+- [x] T4 · Launcher — qué trae la versión, doctor con Pi real y restore automático, volver a la anterior. Blocked by: none.
+- [x] T5 · Limpieza — runtimes sin uso y backups. Blocked by: T4.
+- [ ] T6 · Documentación, PR, release y prueba del vigía. Blocked by: T1-T5.
+  - Documentación y revisión hechas; preparada 0.7.0-alpha.1 (VERSION, bootstrap, notas, README, START_HERE). Falta: PR con la matriz verde, integrar, activar el ajuste que deja a Actions abrir PR, tag, publicación y disparo manual del vigía.
 
 ## Evidencia
 
-- Investigación: gentle-shell `2c06244` en el scratchpad; `pi-claude-bridge` 0.9.3 revisado (4.723 líneas en `src/`, sin `fetch` ni URL propias).
-- Pi 1.0.2 trae `claude-opus-5-5` en su catálogo de Anthropic.
-- T0: el clasificador de permisos de la sesión bloqueó ejecutar el paquete descargado con el login de Claude; Samu lanzó `ensayo-puente.sh` (3 nov, 09:20). Resultado:
-  - Opus por el puente responde como Ein y ve `nein_job`, `nein_work` y `codegraph_explore`.
-  - Con `nein/auto` y `abierto` en Opus, el diseño lo da Opus y deja una decisión; con «Hazlo.», Opus llama a `nein_set_task` (`start_implementation → ordinario`) y Sol hace la obra: `suma.ts`, test, configuración, 3 pruebas en verde y commit `35eb513` en una rama.
-  - Cuota: `rate_limit_event` con `isUsingOverage: false` y uso extra desactivado en la organización; consume la ventana de 5 h (49 % al terminar, con el resto de la sesión).
-  - **Fallo:** el proceso no terminó. El puente dejó su consulta de Claude Code esperando el resultado de `nein_set_task` (`session_shutdown left state behind — pendingToolCalls=1`) porque la continuación fue a Sol; el hijo de Claude siguió vivo hasta cerrarlo a mano. Gentle no lo sufre porque no cambia de proveedor a mitad de una ejecución.
-- Arreglo en n_ein, sin parchear el puente: con el puente como último proveedor, una continuación no cambia de modelo; `nein_set_task` con `start_implementation` pide a Opus cerrar su mensaje y deja en cola un turno nuevo que arranca la obra en el ejecutor. `tests/router.ts` rojo → verde (incluye escalado diferido y reintento que sí cambia). `tests/bridge-handover-pi.ts`, Pi 1.0.2 real en print con puente simulado: llamadas `claude-bridge(user) → claude-bridge(toolResult) → exec-test(user)` y el proceso termina; con el router anterior la secuencia es `claude-bridge → exec-test(toolResult)` y la prueba falla.
-- Reensayo con el puente real tras `9a94702` (Samu, 11:05-11:07): Opus llama a `nein_set_task` y cierra («Empiezo a implementarlo en el siguiente turno…»); el turno en cola arranca en Sol, que deja `0e0cab1` con 4/4 pruebas. El proceso termina solo, sin avisos de fuga en el log del puente y sin hijos de Claude vivos. Cuota: sin uso extra.
-- T5: `tests/skills.ts` rojo («flow.md debe pedir sonda para lo que comparte el código tocado») → verde tras añadir la regla a `flow.md` (paso 4) y a `tdd` (reglas del bucle).
-- T4: `tests/guard.ts` rojo (módulo ausente) → verde: 70 comandos clasificados y la rama con interfaz (confirmar, rechazar, `nein_job`). `tests/guard-pi.ts` con Pi 1.0.2 real y proveedor determinista: sin interfaz, `rm -rf victima` queda bloqueado y `rm -rf node_modules` pasa; sin cargar la guarda, la misma prueba falla («la guarda debía impedir el borrado»). Typecheck contra Pi 1.0.2: OK.
-- T3: `tests/usage.ts` rojo (módulo ausente) → verde: cabeceras de Codex y Claude, entradas inválidas sin ventanas, ventana reiniciada a 0, aviso de cuota agotada. `tests/usage-pi.ts` con Pi 1.0.2 en RPC: la cabecera del proveedor llega a `setStatus` como «Codex 5h 37%»; sin cargar la extensión, la prueba falla. Pi no mostraba estas ventanas: `02-diseno.md` decía lo contrario y queda corregido. Typecheck: OK. Después (`6ee9300`): con la cuota agotada, Claude puede responder con uso extra de pago y solo `overage-status` lo dice; la línea y el aviso lo marcan.
-- T2 (parcial, sin puente real): `tests/router.ts` rojo (el error no decía cómo seguir) → verde. Con `abierto` en `claude-bridge/claude-opus-5-5` high, el diseño va a Opus y `nein_set_task` con `start_implementation` lleva la obra a `openai-codex/gpt-6-sol` medium; sin el modelo en el catálogo, el error nombra el puente y ofrece `[sol high]` o `/nein:models`. Los hogares de Claude de n_ein no guardan hooks: los de n_ein llegan por argumentos, así que no se disparan dentro de los turnos del puente.
-- Suite completa (`scripts/check.sh`) sobre `194392a`: exit 0, Go, plugin de Claude y paquete instalado incluidos.
-- T1: tests de Go rojos (runtime del puente inexistente) → verdes. Ahora `runtime` y `setup` instalan `runtimes/claude-bridge/0.9.3` con `--frozen-lockfile --omit peer`, sin ejecutable propio; son idempotentes, el paquete lleva `claude-bridge-runtime/` y `doctor --runtime` informa del puente sin exigirlo. El lockfile es el del ensayo; instalarlo congelado da 97 paquetes, sin peers. `tests/launcher.sh` rojo (sin `claudeBridge` en `runtime.json`) → verde: sin el runtime, Pi no carga el puente; con él, carga `-e <puente>`, usa `CLAUDE_CONFIG_DIR=<hogar>/<canal>/claude` y fija en `claude-bridge.json` el envoltorio `bin/n-ein-claude-bridge`, conservando las elecciones del usuario (AskClaude, plan). El test aísla `N_EIN_HOME` y el entorno de Claude. `go vet`: OK.
-- Revisión (`review`, desde `b8794d1`), cuatro hallazgos importantes corregidos con test rojo → verde:
-  - la guarda daba por seguro `rm -rf "$TMPDIR/../../etc"`: ahora `..` tras el prefijo del temporal pide confirmación;
-  - `git switch -f`, `--discard-changes` y `-C` descartan cambios como `checkout` y pasaban;
-  - dos llamadas de Opus a `nein_set_task` dejaban dos turnos de obra en cola: ahora uno por elección pendiente;
-  - el launcher quitaba `ANTHROPIC_*` a todo Pi, y los comandos del proyecto las perdían aunque no se usara Opus: ahora solo las quita el envoltorio `bin/n-ein-claude-bridge`, que lanza el Claude gestionado (`N_EIN_BRIDGE_CLAUDE_BIN`); sin Claude gestionado falla con `BRIDGE_CLAUDE_MISSING` en vez de usar otro.
-- T2 en vivo (Samu, 16:58-17:00, `ensayo-instalado.sh`):
-  - `n-ein-install runtime` dejó `runtimes/claude-bridge/0.9.3` con su marcador.
-  - El launcher lo cargó sin `-e` ni configuración a mano, y `claude-bridge.json` apunta a `bin/n-ein-claude-bridge`; el Agent SDK arrancó Claude Code a través del envoltorio.
-  - Opus diseñó y, con «Hazlo.», llamó a `nein_set_task` y cerró; el turno en cola fue a `openai-codex/gpt-6-sol`, que dejó `70e85c4` con 5/5 pruebas y `tsc` limpio.
-  - Cero avisos `left state behind`, ningún hijo de Claude vivo y `isUsingOverage: false`.
-- R1: preparación en `07ad55f` (versión, bootstrap, README, START_HERE, notas, encargo de p_reviewer archivado en `docs/archive/work/2026-11-03-revisor-contexto.md`). Las notas se contrastaron con el código; una afirmación sobre las revisiones antiguas no era cierta y quedó corregida. `scripts/build-release.sh 0.6.0-alpha.1` pasó, con instalación desde el paquete y `doctor --runtime`. Candidato macOS arm64: tarball SHA-256 `215d9fc680feb359dee1c6d42ccf7fa619e359ee5bbda90185e5358f2d6b9f2c`; manifiesto `0.6.0-alpha.1` en `07ad55f`, con `claude-bridge-runtime/`, `bin/n-ein-claude-bridge` y las extensiones nuevas. La publicación construirá y verificará sus propios adjuntos desde el tag.
-- R2–R3: [0.6.0-alpha.1 publicada](https://github.com/samuhlo/n_ein/releases/tag/v0.6.0-alpha.1), prerelease preview, tag anotado en `8177cae0e5408c9051c234973896181b0541bd7b`.
-  - [PR #24](https://github.com/samuhlo/n_ein/pull/24) integrada tras la [matriz verde](https://github.com/samuhlo/n_ein/actions/runs/41684656402) sobre `e5e05b5`; el merge tiene el mismo árbol. Merge y tag con permiso explícito de Samu, tras bloquearlos el clasificador de la sesión.
-  - [Workflow del tag](https://github.com/samuhlo/n_ein/actions/runs/41708112598) completo, con publicación y Pages.
-  - Los nueve adjuntos descargados pasan `verify-release-assets.py` (mismas fuentes, manifiestos, modos, hashes e instaladores). `gh attestation verify` valida ambos tarballs e `install.sh`, exigiendo repositorio, workflow de release, ref del tag, commit de origen y runners alojados.
-  - SHA-256 publicados: macOS `eb2c1dafe1a4b3b865d20d6006d4e8cdff87bd4d14bd7ffed41e050ffe8002a1`, Linux `4549dbd825454b9452feabb2797d50ef623cc06c669cb7645aba6e249f06435f`.
-  - El bootstrap de Pages coincide byte a byte con el adjunto; su dry-run en un hogar temporal elige 0.6.0-alpha.1 sin crear hogar ni enlace. Assets en `dist/published-0.6.0/`. No se actualizó la instalación personal.
-- Suite completa sobre `b26a5e7` (código final tras la revisión): exit 0; `dist/n-ein-install runtime --dry-run` planea solo `runtimes/claude-bridge/0.9.3`.
-- Suite completa sobre `95fa2d1` más README: exit 0 (el `[ERR] :: TEAM_SAVE` del log sale igual antes de este encargo: lo provoca un test de equipo).
+- Investigación (19 nov): npm `dist-tags` de Pi, Claude Code y puente; release de CodeGraph v1.6.3 con `digest` por asset; changelog de Pi 1.0.2→1.5.2 con cambios incompatibles en 1.2.0 y 1.5.0.
+- T1: `bun run tests/runtimes.ts` OK (selección, cuarentena, peer, stable, bloqueos, issues, red nueva, apply, tags y guarda); `scripts/typecheck-agents.ts` OK con `scripts/runtimes/`. `plan` contra los registros reales: Pi 1.5.2, puente 0.12.0, Claude Code 2.1.311, CodeGraph 1.6.2; 0.13.0 y 1.6.3 siguen en cuarentena. Revisión manual del puente 0.9.3→0.12.0: sin red nueva, como el escáner.
+- T2: `cli.ts apply` sobre el repo; `n-ein-install runtime` en un hogar aislado instala Pi 1.5.2, Claude 2.1.311, puente 0.12.0 y CodeGraph 1.6.2 con lockfile congelado (20 s). `check.sh` completo con ese hogar y el Claude fijado en PATH: `checks locales: OK` (incluye plugin de Claude y tipos contra Pi 1.5.2). Pi 1.5 no rompió nada de n_ein; sí rompían los tests con `runtimes/pi/1.0.2` escrito a mano: ahora leen `runtime.json` (`tests/pi-runtime.ts`), igual que `installer-e2e.sh` con CodeGraph. README, NOTICE y START_HERE dejan de citar versiones que el vigía cambiará.
+- T3: `runtimes.yml` (plan → candidato sobre `hotfix/runtimes-<v>` → guarda y tag → `publish.yml` → PR a main; si falla, ramas por grupo, issue de bloqueo y relanzamiento), `publish.yml` reutilizable desde `release.yml`, guarda en `release.yml`, `candidate.yml` con `ref` y prefijo de artefacto. Tests del CLI con las invocaciones del workflow: OK. Los seis workflows se leen como YAML; `actionlint` no se pudo ejecutar (el permiso de la sesión no deja descargar y ejecutar la herramienta). La prueba real es la release de T6 y un disparo manual del vigía.
+- T4: el aviso lee el `runtime.json` de la versión publicada (raw de GitHub, en caché con la versión) y dice qué trae en la portada y en Sistema, fila a fila; Sistema enseña el puente y ofrece «versión anterior» con confirmación fuera de la TUI y aviso de sesiones. `doctor --runtime` arranca el Pi instalado con las extensiones de n_ein y `pi-package/doctor-provider.ts`, en hogares temporales y sin red: contra Pi 1.5.2 real responde en <1 s con `codegraph_explore` y el puente cargado. `setup` restaura la instalación anterior si la nueva no pasa doctor; el test falla sin esa restauración. `go test ./...` y `go vet` OK.
+- T5: paso «limpieza» de `setup` tras doctor: conserva los runtimes de cada instalación y de su backup más reciente, borra solo carpetas con marcador de n_ein y deja 3 backups y 1 recovery; sin instalaciones no borra nada y un fallo no invalida la instalación. `prune_test.go` y `go test ./...` OK. En el hogar de Samu, la próxima actualización quitará Pi 0.87.1 y 13 de sus 16 backups.
+- Documentación (commit `a62ed9c`): decisión del 19 de noviembre, despliegue, distribución, guía, diseño, README y pruebas. `check.sh` completo sobre el código final, con el hogar aislado y Claude 2.1.311: `checks locales: OK`.
+- Revisión (desde `49cc45b`): faltaba «pendiente de adaptar en Sistema» (ahora el launcher lee los issues abiertos del vigía en la misma caché y los enseña sin ofrecer `u`); el arranque de Pi en doctor leía el `models.json`, el idioma y las preferencias reales, así que un ajuste inválido revertía una actualización sana (ahora usa archivos temporales, con test rojo → verde); una rama del vigía de una vuelta cancelada bloqueaba el push del día siguiente (ahora se retira antes, ya que esa versión no tiene tag). Menor, sin cambiar: la lectura de versiones de `runtime.json` se repite en launcher, instalador y `layout`.
 
 ## Siguiente paso
 
-Versión publicada. La actualización personal queda para cuando Samu la pida (`nein` ofrece `u Actualizar`, o el `curl` de las notas con `--channel preview`). Decisiones suyas para después: hacer de Opus el valor por defecto de abierto tras 2-3 encargos reales, y si se abre una incidencia en pi-claude-bridge para que `session_shutdown` cierre las consultas activas.
+T6: documentación, suite completa, PR, release 0.7.0-alpha.1 y prueba del vigía.

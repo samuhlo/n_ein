@@ -1,6 +1,6 @@
 import { strict as assert } from "node:assert";
 import { mkdtempSync, readFileSync } from "node:fs";
-import { tmpdir, homedir } from "node:os";
+import { tmpdir } from "node:os";
 import { join } from "node:path";
 import {
   Jobs,
@@ -8,11 +8,9 @@ import {
   stopSessionJobs,
   type Notice,
 } from "../pi-package/extensions/jobs-core.ts";
+import { piRuntime } from "./pi-runtime.ts";
 const { createLocalBashOperations } = await import(
-  join(
-    process.env.N_EIN_HOME || join(homedir(), ".n_ein"),
-    "runtimes/pi/1.0.2/global/node_modules/@earendil-works/pi-coding-agent/dist/index.js",
-  )
+  join(piRuntime, "global/node_modules/@earendil-works/pi-coding-agent/dist/index.js")
 );
 const area = mkdtempSync(join(tmpdir(), "nein-jobs-test-"));
 const events: Notice[] = [],

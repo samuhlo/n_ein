@@ -44,7 +44,7 @@ Pi vanilla, Ein legado, desarrollo n_ein y estable n_ein deben tener identidades
 
 La primera instalación es local y acotada: un lanzador de shell que exporta `PI_CODING_AGENT_DIR` hacia el hogar de n_ein y carga el paquete local. Ein ya usa lanzadores con configuración propia para Pi y Claude ([ejemplo Pi archivado](archive/ein-workspace/ein-pi/launchers/ein-pi.fish)). En otras integraciones, comprobar las ubicaciones y la precedencia reales: `CLAUDE_CONFIG_DIR`, `CODEX_HOME` y `OPENCODE_CONFIG_DIR` no son contratos intercambiables. En particular, `OPENCODE_CONFIG_DIR` añade configuración a fuentes globales/de proyecto; no basta para afirmar aislamiento completo ([documentación oficial](https://opencode.ai/docs/config/#custom-directory)). Probar también instrucciones/skills, sesiones y credenciales antes de declarar una integración aislada.
 
-El instalador es un binario Go separado del launcher, con `package`, `install`, `update`, `doctor`, `restore` y `uninstall` comprobados en destinos temporales ([evidencia](../evals/results/2026-09-29-installer.md)). `doctor` valida el paquete; `doctor --runtime` añade presencia de Bun y versión de Pi, pero no confirma autenticación ni acceso al modelo. Se reescribió a partir de los comportamientos útiles de Ein, sin portar sus migraciones SDD. La primera distribución usa `.tar.gz` por plataforma con SHA-256; script o brew siguen pendientes.
+El instalador es un binario Go separado del launcher, con `package`, `install`, `update`, `doctor`, `restore` y `uninstall` comprobados en destinos temporales ([evidencia](../evals/results/2026-09-29-installer.md)). `doctor` valida el paquete; `doctor --runtime` añade presencia de Bun, versión de Pi y un arranque de Pi con las extensiones de n_ein y un proveedor local, en hogares temporales y sin red; no confirma autenticación ni acceso al modelo. Se reescribió a partir de los comportamientos útiles de Ein, sin portar sus migraciones SDD. La primera distribución usa `.tar.gz` por plataforma con SHA-256; script o brew siguen pendientes.
 
 ### Hogar gestionado y entrada `nein`
 
@@ -78,6 +78,23 @@ Las evaluaciones pagadas van separadas, con modelo/endpoint/configuración y pre
 Fijar una combinación conocida de Pi, runner y extensiones. Actualizarla en preview con compatibilidad observada. Evitar `latest` como promesa implícita de soporte perpetuo: Ein instala hoy los paquetes de su hogar Pi con `@latest`, y eso no se hereda. Pi pasó de 0.84 a 0.87 en un mes con cambios incompatibles en su API de extensiones.
 
 Si una dependencia cambia un payload, corregir un único borde y comprobarlo con el paquete real. No añadir parsers o adaptadores generales para versiones hipotéticas. La configuración efectiva se puede inspeccionar sin leer archivos internos a mano.
+
+### Runtimes al día
+
+`scripts/runtimes/cli.ts` decide y aplica las versiones: `plan` (cuarentena de 3 días, Pi y puente por el peer, Claude Code por `stable`, CodeGraph con el `digest` de su release), `apply` (`runtime.json`, lockfiles regenerados con `bun install --lockfile-only`, `VERSION`, bootstrap de `install.sh` y notas), `next-version` y `guard`. Ein usa los mismos comandos para una subida a mano.
+
+`.github/workflows/runtimes.yml` corre cada día y a demanda:
+
+1. Lee los issues con la etiqueta `runtimes` (bloqueos y revisiones) y toma el último tag publicado de la preview.
+2. Si hay versiones nuevas, crea `hotfix/runtimes-<versión>` desde ese tag con el cambio y pasa `candidate.yml` completo sobre esa rama.
+3. Si pasa: guarda contra bajadas, tag, `publish.yml` (la misma publicación que usa `release.yml`) y PR del mismo commit a main, que sustituye a las anteriores del vigía.
+4. Si falla con varios grupos (Pi y puente, Claude Code, CodeGraph): prueba cada uno en `runtimes-probe/<grupo>-<versión>`, abre un issue de bloqueo con lo que rompe (todo, si nada rompe por separado), borra esas ramas y se relanza para publicar el resto.
+
+Un puente con líneas de red nuevas respecto al actual no entra: el vigía abre un issue de revisión y Pi sigue con el puente actual si este lo admite. Cerrar ese issue como completado aprueba la versión; como no planificado, la descarta.
+
+La PR a main debe integrarse antes de la siguiente release normal: `release.yml` compara los runtimes con el tag anterior y falla si alguno baja. Crearla exige el ajuste del repositorio que deja a Actions abrir PR. Si la matriz falló por la infraestructura de GitHub, cerrar el issue de bloqueo desbloquea esas versiones.
+
+En la máquina, el launcher dice qué runtimes trae la versión nueva y enseña en Sistema lo que el vigía no publicó; `setup` revierte una actualización que no pasa `doctor` y después limpia runtimes sin uso y backups antiguos ([distribución](11-distribucion.md#instalación)).
 
 ## Fuera de alcance inicial
 

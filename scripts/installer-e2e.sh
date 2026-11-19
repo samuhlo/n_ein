@@ -6,6 +6,8 @@ assets="$(cd "${1:?directorio de assets}" && pwd -P)"
 version="${2:?versión candidata}"
 channel=stable
 [[ "$version" != *-* ]] || channel=preview
+# El índice se prueba con el CodeGraph que fija el paquete.
+codegraph_version="$(sed -n '/"codegraph": {/,/}/s/^ *"version": "\([^"]*\)".*/\1/p' "$repo_dir/runtime.json")"
 area="$(mktemp -d)"
 server_pid=""
 cleanup() { [[ -z "$server_pid" ]] || { kill "$server_pid" 2>/dev/null || true; wait "$server_pid" 2>/dev/null || true; }; rm -rf "$area"; }
@@ -77,8 +79,8 @@ curl -fsS "$base/install.sh" | bash -s -- --version "$version"
 mkdir "$area/project"
 git -C "$area/project" init -q
 printf 'export function alphaSmoke() { return 42; }\n' > "$area/project/example.ts"
-DO_NOT_TRACK=1 "$N_EIN_HOME/runtimes/codegraph/1.6.1/bin/codegraph" init --yes "$area/project" > "$area/index.log" 2>&1
-(cd "$area/project" && DO_NOT_TRACK=1 "$N_EIN_HOME/runtimes/codegraph/1.6.1/bin/codegraph" explore alphaSmoke --max-files 1) > "$area/explore.log"
+DO_NOT_TRACK=1 "$N_EIN_HOME/runtimes/codegraph/$codegraph_version/bin/codegraph" init --yes "$area/project" > "$area/index.log" 2>&1
+(cd "$area/project" && DO_NOT_TRACK=1 "$N_EIN_HOME/runtimes/codegraph/$codegraph_version/bin/codegraph" explore alphaSmoke --max-files 1) > "$area/explore.log"
 grep -q 'alphaSmoke' "$area/explore.log"
 # Actualizar desde la última preview publicada con los mismos datos de usuario.
 export PATH="$("$installer" runtime-path --source "$N_EIN_HOME/installations/$channel"):$original_path"

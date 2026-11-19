@@ -2,6 +2,7 @@
 package main
 
 import (
+	"bytes"
 	"context"
 	"encoding/json"
 	"flag"
@@ -263,7 +264,52 @@ func checkRuntime(root string, output io.Writer) error {
 		return err
 	}
 	checkClaudeBridge(root, output)
+	return checkPiExtensions(root, output)
+}
+
+// checkPiExtensions arranca el Pi instalado con las extensiones de n_ein y un proveedor local:
+// sin red ni modelo, prueba que esta combinación de Pi, puente y paquete carga y responde.
+// Los paquetes anteriores al proveedor de doctor no tienen esta comprobación.
+func checkPiExtensions(root string, output io.Writer) error {
+	launcher := filepath.Join(root, "bin", "n-ein-dev")
+	provider := filepath.Join(root, "pi-package", "doctor-provider.ts")
+	if _, err := os.Stat(provider); err != nil || !executable(launcher) {
+		return nil
+	}
+	area, err := os.MkdirTemp("", "n-ein-doctor-")
+	if err != nil {
+		return err
+	}
+	defer os.RemoveAll(area)
+	ctx, cancel := context.WithTimeout(context.Background(), 90*time.Second)
+	defer cancel()
+	cmd := exec.CommandContext(ctx, launcher, "--mode", "json", "--print", "--no-session", "-e", provider, "--provider", "nein-doctor", "--model", "ok", "doctor")
+	cmd.Dir = area
+	// BLINDAJE -> Hogares y ajustes temporales: el diagnóstico no toca sesiones ni login, y un ajuste
+	// personal inválido no hace fallar (ni revertir) una instalación sana.
+	cmd.Env = append(os.Environ(),
+		"N_EIN_AGENT_DIR="+filepath.Join(area, "agent"), "N_EIN_CLAUDE_DIR="+filepath.Join(area, "claude"),
+		"N_EIN_MODELS_FILE="+filepath.Join(area, "models.json"), "N_EIN_LANG_FILE="+filepath.Join(area, "lang.json"),
+		"N_EIN_PREFERENCES_FILE="+filepath.Join(area, "preferences.md"), "PI_OFFLINE=1")
+	var stderr bytes.Buffer
+	cmd.Stderr = &stderr
+	data, err := cmd.Output()
+	if err != nil {
+		return fmt.Errorf("Pi no arranca con las extensiones de n_ein: %w: %s", err, lastLines(stderr.String(), 6))
+	}
+	if !bytes.Contains(data, []byte("nein-doctor-ok")) || !bytes.Contains(data, []byte("codegraph_explore")) {
+		return fmt.Errorf("Pi arrancó sin las extensiones de n_ein: %s", lastLines(stderr.String(), 6))
+	}
+	say(output, "// 005 EXTENSIONES · Pi carga n_ein y responde sin red\n")
 	return nil
+}
+
+func lastLines(text string, count int) string {
+	lines := strings.Split(strings.TrimSpace(text), "\n")
+	if len(lines) > count {
+		lines = lines[len(lines)-count:]
+	}
+	return strings.Join(lines, " | ")
 }
 
 // checkClaudeBridge informa sin exigir: Pi funciona sin el puente y Opus en Pi es una opción.

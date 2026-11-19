@@ -78,6 +78,27 @@ func candidate(r Published, channel, platform string) (Candidate, bool) {
 	}
 	return out, out.Archive != "" && out.Checksum != ""
 }
+// Issue es lo que el launcher lee de un issue: el cuerpo, donde el vigía de runtimes deja su marcador.
+type Issue struct {
+	Body        string    `json:"body"`
+	PullRequest *struct{} `json:"pull_request"`
+}
+
+// OpenIssues lista los issues abiertos con esa etiqueta; la API también devuelve PR y se descartan.
+func (c Client) OpenIssues(label string) ([]Issue, error) {
+	var all []Issue
+	if err := c.get("/issues?state=open&per_page=100&labels="+url.QueryEscape(label), &all); err != nil {
+		return nil, err
+	}
+	issues := all[:0]
+	for _, issue := range all {
+		if issue.PullRequest == nil {
+			issues = append(issues, issue)
+		}
+	}
+	return issues, nil
+}
+
 func (c Client) Select(channel, version, platform string) (Candidate, error) {
 	if channel != "preview" && channel != "stable" {
 		return Candidate{}, fmt.Errorf("canal inválido: %s", channel)

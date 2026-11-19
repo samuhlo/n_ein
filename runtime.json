@@ -1,15 +1,15 @@
 {
   "schema": 1,
   "pi": {
-    "version": "1.0.2",
+    "version": "1.5.2",
     "model": "nein/auto",
     "thinking": "medium"
   },
   "codegraph": {
-    "version": "1.6.1",
+    "version": "1.6.2",
     "sha256": {
-      "darwin-arm64": "7a08cf8cf26cdf9e4ba5f8b2a36bb9c039b8966a6cb30b5e27c4b82074abf499",
-      "linux-amd64": "767c112faf8175a3dd768defc1688203fef459de29c4b52c02e16a472b8f5d26"
+      "darwin-arm64": "d74d1bfb4060db63ec3c2b72c4e17f76c31978af3bad6ace4370d1501ac0662e",
+      "linux-amd64": "ef0af416092128fb1ccc723786000b7edf4a6971fe604acd08bf966e4f37b828"
     }
   },
   "routing": {
@@ -65,9 +65,9 @@
     }
   },
   "claude": {
-    "version": "2.1.302"
+    "version": "2.1.311"
   },
   "claudeBridge": {
-    "version": "0.9.3"
+    "version": "0.12.0"
   }
 }
