@@ -316,6 +316,8 @@ Se mantienen atajos (`tab`, `j/k`, `g/G`, `f` o `/`, `enter`, `q`), `--once`, `-
 
 Para un hotfix entre releases de preview, construir un candidato desde un commit limpio y pasarle los checks; `update` hace backup y sustitución atómica, `doctor` comprueba la nueva instalación y `restore` recupera la anterior. El identificador `+hotfix.<commit>` distingue el código instalado del tag público sin alterar ese tag. Los datos del canal, incluido `models.json`, permanecen fuera del árbol sustituido.
 
+Las versiones que solo suben runtimes las publica el [vigía](05-despliegue.md#runtimes-al-día). `setup` revierte sola una actualización que no pasa `doctor` y, tras una correcta, limpia los runtimes sin uso y los backups antiguos.
+
 Cambio respecto a Ein: los paquetes del runtime aislado se instalan con **versión fijada**, no con `@latest`.
 
 ### Frontera entre lenguajes

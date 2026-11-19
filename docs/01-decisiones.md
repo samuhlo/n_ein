@@ -146,12 +146,25 @@ Tras la aceptación en vivo con el puente instalado, Samu declinó el revisor y 
 
 Fuentes: [gentle-shell `2c06244`](https://github.com/Gentleman-Programming/gentle-shell/tree/2c06244), [delegar con motivo](https://github.com/Gentleman-Programming/gentle-shell/blob/2c06244/odd/tasks/delegate-for-reason.md), [pi-claude-bridge 0.9.3](https://www.npmjs.com/package/pi-claude-bridge/v/0.9.3). Estado y evidencia en `WORK.md` de la rama `feat/opus-piensa`.
 
+### Runtimes al día desde el launcher (19 de noviembre)
+
+Samu vio que Pi y Claude Code se quedaban atrás (Pi 1.0.2 frente a 1.5.2, Claude Code 2.1.302 frente a 2.1.311) y que usar un modelo nuevo exige subir esa base. Rechazó el aviso solo informativo: quiere que se compruebe si la actualización rompe algo y, si no, actualizar desde el launcher. Aprobó el plan con «hazlo» y «autorizo todo». Decisiones:
+
+- **Una subida de runtimes es una versión normal de n_ein.** Reutiliza matriz, attestation y `u` en el launcher. Descartados: comprobar en la máquina del usuario (el paquete no lleva los tests) y conjuntos de runtimes aparte del paquete (otra vía de instalación).
+- **El vigía (`runtimes.yml`) publica preview sin aprobación previa;** la puerta es pulsar `u`. La estable no se publica sola. Su PR a main lleva el mismo commit, y `release.yml` rechaza una release que baje runtimes ya publicados.
+- **Selección:** cuarentena de 3 días; Pi y puente juntos según el peer del puente; Claude Code por su etiqueta `stable`, que ya va con retraso; CodeGraph con el SHA-256 que publica GitHub.
+- **Grupos y memoria en issues:** si la matriz falla, cada grupo se prueba por separado, lo que rompe queda bloqueado en un issue `runtimes` y el resto se publica en otra vuelta. Cerrar el issue desbloquea esas versiones.
+- **Puente revisado:** una versión del puente con llamadas de red nuevas espera a que Samu cierre su issue de revisión como completado; la revisión de 0.9.3 no se hereda.
+- **En la máquina:** `doctor` arranca Pi con las extensiones de n_ein sin red, una actualización que no lo pasa se revierte sola, Sistema ofrece volver a la versión anterior y la limpieza conserva los runtimes de la instalación y de su backup más reciente.
+
+La primera subida siguió la propia regla: Pi 1.5.2, puente 0.12.0, Claude Code 2.1.311 y CodeGraph 1.6.2; el puente 0.13.0 y CodeGraph 1.6.3 seguían en cuarentena. Detalle en [despliegue](05-despliegue.md#runtimes-al-día).
+
 ## Recomendaciones de diseño, revisables
 
 El 7 de octubre Samu autorizó implementar y evaluar el reparto temprano y la investigación acotada con el mismo mecanismo de equipo, tras la [auditoría del piloto](../evals/results/2026-10-07-auditoria-paralelismo.md). La lectura puede delegarse sin preparar un encargo de escritura. Se mide por separado el ahorro de contexto y el avance paralelo, conservando checks e integración. Esto amplía el experimento; no demuestra ahorro ni activa por sí solo la preview personal. El estado de implementación y evaluación vive en WORK.md.
 
 - Pi como runtime inicial; n_ein como capa pequeña: un paquete Pi (skills, extensiones mínimas, prompts, tema) más un launcher que fija el hogar aislado. Pi ya ofrece el aislamiento (`PI_CODING_AGENT_DIR`) y la carga de paquetes (`pi install`, `pi -e`).
-- Pi al día y comprobado. El 5 de octubre Samu pidió no quedarse en una versión antigua: n_ein sube a cada versión nueva de Pi en cuanto sale y pasa sus comprobaciones. Cada versión de n_ein sigue declarando en `runtime.json` la versión de Pi con que se comprobó. Pi cambia su API de extensiones con frecuencia; se prefieren skills y configuración a código de extensión.
+- Runtimes al día y comprobados. El 5 de octubre Samu pidió no quedarse en una versión antigua de Pi; desde el 19 de noviembre lo hace el [vigía de runtimes](#runtimes-al-día-desde-el-launcher-19-de-noviembre) para Pi, el puente, Claude Code y CodeGraph: los prueba con la matriz completa y publica una preview de mantenimiento cuando pasa. Cada versión de n_ein sigue declarando en `runtime.json` los runtimes con que se comprobó. Pi cambia su API de extensiones con frecuencia; se prefieren skills y configuración a código de extensión.
 - Formatos portables desde el primer día: `AGENTS.md`, skills en formato Agent Skills (`SKILL.md`), documento de trabajo en markdown y resumen de relevo en markdown. No se construyen adaptadores para Codex u OpenCode hasta que se usen.
 - Un documento de trabajo para esfuerzo prolongado; ninguno obligatorio para correcciones pequeñas.
 - Skills bajo demanda, un registro y una fuente por regla.

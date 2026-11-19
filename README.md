@@ -43,7 +43,7 @@ nein
 
 macOS arm64 y Linux amd64 (Ubuntu, Arch). Requisitos: Bash, curl, Git y ripgrep. El instalador verifica SHA-256 antes de ejecutar nada e instala como usuario, sin sudo, dentro de `~/.n_ein`: Node, Bun, Pi, Claude Code, el puente de Claude para Pi y CodeGraph fijados, sin tocar el `pi` ni el `claude` globales ni Ein legado. El primer arranque pide `/login` en el hogar aislado; ninguna credencial se copia. Mientras no haya release estable se instala la alpha del canal preview; [notas de 0.5.0-alpha.1](docs/releases/0.5.0-alpha.1.md).
 
-> _note: `curl -fsSL https://samuhlo.github.io/n_ein/install.sh | bash -s -- --dry-run` enseña el plan sin escribir. Sobre una preview anterior se actualiza con backup y `n-ein-install restore --channel preview` vuelve atrás._
+> _note: `curl -fsSL https://samuhlo.github.io/n_ein/install.sh | bash -s -- --dry-run` enseña el plan sin escribir. Sobre una preview anterior se actualiza con backup y `n-ein-install restore --channel preview` vuelve atrás. Desde el launcher, `u` actualiza cuando hay versión nueva (también las que solo suben Pi, Claude Code, el puente o CodeGraph, comprobadas antes en CI) y Sistema → «versión anterior» vuelve atrás._
 
 ---
 
