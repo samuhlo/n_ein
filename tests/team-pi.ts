@@ -9,8 +9,9 @@ import {
   statSync,
   existsSync,
 } from "node:fs";
-import { tmpdir, homedir } from "node:os";
+import { tmpdir } from "node:os";
 import { join, resolve } from "node:path";
+import { piBinary } from "./pi-runtime.ts";
 const sourceRepo = resolve(".");
 const repo = process.env.N_EIN_PRODUCT_ROOT || sourceRepo,
   area = mkdtempSync(join(tmpdir(), "nein-team-pi-")),
@@ -30,8 +31,7 @@ git("commit", "-qm", "base");
 git("switch", "-qc", "feature");
 const quote = (s: string) => "'" + s.replace(/'/g, "'\\''") + "'";
 const real =
-    process.env.N_EIN_PI_BIN ||
-    join(homedir(), ".n_ein/runtimes/pi/1.0.2/bin/pi"),
+    piBinary,
   wrapper = join(area, "pi");
 writeFileSync(
   wrapper,

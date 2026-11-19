@@ -1,10 +1,11 @@
 import { strict as assert } from "node:assert";
 import { execFileSync, spawn } from "node:child_process";
 import { mkdtempSync, writeFileSync, readFileSync, existsSync } from "node:fs";
-import { tmpdir, homedir } from "node:os";
+import { tmpdir } from "node:os";
 import { join, resolve } from "node:path";
 import { TeamManager } from "../pi-package/agents/manager.ts";
 import { taskLease } from "../pi-package/agents/store.ts";
+import { piBinary } from "./pi-runtime.ts";
 const root = process.env.N_EIN_PRODUCT_ROOT || resolve(".");
 const area = mkdtempSync(join(tmpdir(), "nein-read-pi-"));
 const cwd = join(area, "project");
@@ -24,8 +25,7 @@ const host = existsSync(join(root, "bin/n-ein"))
   ? join(root, "bin/n-ein")
   : join(root, "dist/n-ein");
 const pi =
-  process.env.N_EIN_PI_BIN ||
-  join(homedir(), ".n_ein/runtimes/pi/1.0.2/bin/pi");
+  piBinary;
 const wrapper = join(area, "pi");
 const quote = (s: string) => "'" + s.replace(/'/g, "'\\''") + "'";
 writeFileSync(

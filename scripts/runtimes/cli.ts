@@ -12,7 +12,7 @@
 import { spawnSync } from "node:child_process";
 import { mkdirSync, mkdtempSync, readFileSync, readdirSync, rmSync, statSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
-import { join, relative } from "node:path";
+import { join, relative, resolve as resolvePath } from "node:path";
 import {
   EMPTY_STATE, LABEL, breakingChanges, commitSubject, downgrades, newNetwork, newer, nextVersion, releaseNotes, resolve, restrict, stateFromIssues,
   type Change, type Group, type Issue, type Name, type Pins, type Plan, type Registry, type State,
@@ -141,7 +141,7 @@ export type Lock = (dir: string) => void;
 
 // Un lockfile nuevo resuelve también las dependencias transitivas; la matriz las prueba antes de publicar.
 export const bunLock: Lock = (dir) => {
-  const result = spawnSync("bun", ["install", "--lockfile-only", "--cwd", dir], { cwd: dir, encoding: "utf8" });
+  const result = spawnSync("bun", ["install", "--lockfile-only"], { cwd: resolvePath(dir), encoding: "utf8" });
   if (result.status !== 0) throw new Error(`bun install --lockfile-only en ${dir}: ${result.stderr.trim()}`);
 };
 

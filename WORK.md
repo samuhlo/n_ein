@@ -38,12 +38,12 @@ Pedidos:
 - «lo hiciera desde ahí» → `fetch`/`setup` del instalador → test: una actualización cuyo doctor falla restaura sola la anterior; doctor arranca Pi con las extensiones de n_ein y un proveedor de prueba; Sistema ofrece volver a la versión anterior con confirmación y aviso de sesiones.
 - Guarda → `release.yml` → test: bajar Pi respecto al tag anterior falla con mensaje claro.
 - Limpieza → setup → test: tras actualizar se conservan los runtimes de la instalación actual y de su backup más reciente; los backups se recortan a 3.
-- Primera subida → `runtime.json`, lockfiles → `check.sh` verde con Pi 1.5.2, puente 0.13.0, Claude Code 2.1.311 y CodeGraph 1.6.3.
+- Primera subida → `runtime.json`, lockfiles → `check.sh` verde con las versiones que elige la propia regla (cuarentena incluida).
 
 ## Tareas
 
 - [x] T1 · Selección y aplicación de versiones — `scripts/runtimes/` con plan, apply, guard y revisión del puente; tests con registro falso. Blocked by: none.
-- [ ] T2 · Primera subida — Pi 1.5.2, puente 0.13.0, Claude Code 2.1.311 y CodeGraph 1.6.3 con T1; arreglar lo que rompa Pi 1.5. Blocked by: T1.
+- [x] T2 · Primera subida — Pi 1.5.2, puente 0.12.0, Claude Code 2.1.311 y CodeGraph 1.6.2 con T1 (0.13.0 y 1.6.3 seguían en cuarentena); arreglar lo que rompa Pi 1.5. Blocked by: T1.
 - [ ] T3 · Vigía — workflow diario, candidato sobre otra rama, publicación reutilizable, guarda en release, grupos, issues y PR a main. Blocked by: T1.
 - [ ] T4 · Launcher — qué trae la versión, doctor con Pi real y restore automático, volver a la anterior. Blocked by: none.
 - [ ] T5 · Limpieza — runtimes sin uso y backups. Blocked by: T4.
@@ -53,7 +53,8 @@ Pedidos:
 
 - Investigación (19 nov): npm `dist-tags` de Pi, Claude Code y puente; release de CodeGraph v1.6.3 con `digest` por asset; changelog de Pi 1.0.2→1.5.2 con cambios incompatibles en 1.2.0 y 1.5.0.
 - T1: `bun run tests/runtimes.ts` OK (selección, cuarentena, peer, stable, bloqueos, issues, red nueva, apply, tags y guarda); `scripts/typecheck-agents.ts` OK con `scripts/runtimes/`. `plan` contra los registros reales: Pi 1.5.2, puente 0.12.0, Claude Code 2.1.311, CodeGraph 1.6.2; 0.13.0 y 1.6.3 siguen en cuarentena. Revisión manual del puente 0.9.3→0.12.0: sin red nueva, como el escáner.
+- T2: `cli.ts apply` sobre el repo; `n-ein-install runtime` en un hogar aislado instala Pi 1.5.2, Claude 2.1.311, puente 0.12.0 y CodeGraph 1.6.2 con lockfile congelado (20 s). `check.sh` completo con ese hogar y el Claude fijado en PATH: `checks locales: OK` (incluye plugin de Claude y tipos contra Pi 1.5.2). Pi 1.5 no rompió nada de n_ein; sí rompían los tests con `runtimes/pi/1.0.2` escrito a mano: ahora leen `runtime.json` (`tests/pi-runtime.ts`), igual que `installer-e2e.sh` con CodeGraph. README, NOTICE y START_HERE dejan de citar versiones que el vigía cambiará.
 
 ## Siguiente paso
 
-T2: aplicar el plan, instalar los runtimes en un hogar aislado y pasar `check.sh`.
+T3: vigía en GitHub Actions.

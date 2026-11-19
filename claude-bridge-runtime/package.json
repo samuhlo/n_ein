@@ -1,5 +1,5 @@
 {
   "dependencies": {
-    "pi-claude-bridge": "0.9.3"
+    "pi-claude-bridge": "0.12.0"
   }
 }

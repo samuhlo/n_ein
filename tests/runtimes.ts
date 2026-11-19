@@ -5,7 +5,7 @@ import { tmpdir } from "node:os";
 import { join, resolve as resolvePath } from "node:path";
 import {
   EMPTY_STATE, breakingChanges, downgrades, markerText, newNetwork, nextVersion, releaseNotes, resolve, restrict, stateFromIssues,
-  type GithubRelease, type Packument, type Pins, type Registry,
+  type GithubRelease, type Packument, type Pins, type Plan, type Registry,
 } from "../scripts/runtimes/resolve.ts";
 import { applyPlan, freshVersion, guard, plan, previousTag, readPins } from "../scripts/runtimes/cli.ts";
 
@@ -119,23 +119,29 @@ try {
     cpSync(join(root, path), join(tree, path));
   }
   mkdirSync(join(tree, "docs", "releases"), { recursive: true });
+  // Destinos ficticios: la prueba no depende de las versiones que fije hoy el repositorio.
   const base = readPins(tree);
-  const target = resolve(base, registry, options);
+  const target: Plan = {
+    pins: { pi: "99.0.0", claudeBridge: "99.0.1", claude: "99.0.2", codegraph: { version: "99.0.3", sha256: { "darwin-arm64": sha("c"), "linux-amd64": sha("d") } } },
+    changes: [
+      { name: "pi", group: "pi", from: base.pi, to: "99.0.0" },
+      { name: "claudeBridge", group: "pi", from: base.claudeBridge, to: "99.0.1" },
+      { name: "claude", group: "claude", from: base.claude, to: "99.0.2" },
+      { name: "codegraph", group: "codegraph", from: base.codegraph.version, to: "99.0.3" },
+    ],
+  };
   const locked: string[] = [];
   applyPlan(tree, target, { version: "9.9.9-alpha.2", piBreaking: [], lock: (dir) => { locked.push(dir.slice(tree.length + 1)); writeFileSync(join(dir, "bun.lock"), "fake\n"); } });
-  const written = readPins(tree);
-  assert.equal(written.pi, target.pins.pi);
-  assert.equal(written.claude, target.pins.claude);
-  assert.deepEqual(written.codegraph, target.pins.codegraph);
+  assert.deepEqual(readPins(tree), target.pins);
   const runtime = JSON.parse(readFileSync(join(tree, "runtime.json"), "utf8"));
   assert.deepEqual(runtime.routing, JSON.parse(readFileSync(join(root, "runtime.json"), "utf8")).routing, "el resto de runtime.json no cambia");
   assert.deepEqual(locked.sort(), ["claude-bridge-runtime", "claude-runtime", "pi-runtime"], "un lockfile nuevo por runtime de npm cambiado");
   const claudeManifest = readFileSync(join(tree, "claude-runtime/package.json"), "utf8");
-  assert.match(claudeManifest, /"@anthropic-ai\/claude-code": "2\.1\.311"/);
+  assert.match(claudeManifest, /"@anthropic-ai\/claude-code": "99\.0\.2"/);
   assert.match(claudeManifest, /"trustedDependencies": \["@anthropic-ai\/claude-code"\]/, "el manifiesto conserva su forma");
   assert.equal(readFileSync(join(tree, "VERSION"), "utf8"), "9.9.9-alpha.2\n");
-  assert.match(readFileSync(join(tree, "docs/releases/9.9.9-alpha.2.md"), "utf8"), /CodeGraph: 1\.6\.1 → 1\.6\.3/);
-  assert.throws(() => applyPlan(tree, target, { lock: () => {} }), /el plan parte de 1\.0\.2/, "un plan que no parte de lo fijado se rechaza");
+  assert.ok(readFileSync(join(tree, "docs/releases/9.9.9-alpha.2.md"), "utf8").includes(`CodeGraph: ${base.codegraph.version} → 99.0.3`));
+  assert.throws(() => applyPlan(tree, target, { lock: () => {} }), /el plan parte de/, "un plan que no parte de lo fijado se rechaza");
 
   // [FLOW] Tags: siguiente versión y guarda contra bajadas
   const repo = join(temp, "repo");
@@ -186,14 +192,14 @@ try {
     const served: Registry = JSON.parse(JSON.stringify(registry).replaceAll("http://registry.invalid", `http://localhost:${server.port}`));
     const planTree = join(temp, "plan");
     mkdirSync(planTree);
-    cpSync(join(root, "runtime.json"), join(planTree, "runtime.json"));
-    const pinsNow = readPins(planTree);
-    const reviewed = await plan(planTree, { quarantineDays: 3, state: EMPTY_STATE, now: NOW, registry: { ...served, pi: packument({ [pinsNow.pi]: { days: 40 }, "1.5.2": { days: 8 } }) } });
+    writeFileSync(join(planTree, "runtime.json"), JSON.stringify({ schema: 1, pi: { version: current.pi }, claudeBridge: { version: current.claudeBridge }, claude: { version: current.claude }, codegraph: current.codegraph }));
+    const reviewed = await plan(planTree, { quarantineDays: 3, state: EMPTY_STATE, now: NOW, registry: served });
     assert.equal(reviewed.held.length, 1, "un puente con red nueva queda retenido");
     assert.equal(reviewed.held[0].version, "0.13.0");
     assert.match(reviewed.held[0].lines[0], /telemetry\.invalid/);
-    assert.equal(reviewed.pins.claudeBridge, pinsNow.claudeBridge, "el plan sigue con el puente actual");
-    const approved = await plan(planTree, { quarantineDays: 3, state: { blocked: {}, approved: { claudeBridge: ["0.13.0"] } }, now: NOW, registry: { ...served, pi: packument({ [pinsNow.pi]: { days: 40 }, "1.5.2": { days: 8 } }) } });
+    assert.equal(reviewed.pins.claudeBridge, "0.9.3", "el plan sigue con el puente actual");
+    assert.equal(reviewed.pins.pi, "1.5.2", "y Pi avanza porque ese puente lo admite");
+    const approved = await plan(planTree, { quarantineDays: 3, state: { blocked: {}, approved: { claudeBridge: ["0.13.0"] } }, now: NOW, registry: served });
     assert.equal(approved.pins.claudeBridge, "0.13.0", "una revisión aprobada deja pasar el puente");
     assert.equal(approved.held.length, 0);
   } finally {

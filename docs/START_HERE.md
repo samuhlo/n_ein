@@ -16,7 +16,7 @@ El experimento de equipo se conserva desactivado: `N_EIN_TEAM=1` lo habilita exp
 
 - Rama del proyecto: consultar Git y WORK.md; la conversación actual prevalece sobre propuestas anteriores.
 - Versión del checkout: consultar `VERSION`. Entrega actual: `0.6.0-alpha.1`, canal preview. [Notas de versión](releases/0.6.0-alpha.1.md). La versión personal instalada se comprueba en su `install.json`; publicar no la actualiza por sí solo.
-- Pi 1.0.2, Claude Code 2.1.302, el puente de Claude 0.9.3 y CodeGraph 1.6.1 fijados en `runtime.json`. No asumir que los binarios globales coinciden.
+- Pi, Claude Code, el puente de Claude y CodeGraph se fijan en `runtime.json`, con sus lockfiles; el vigía de runtimes los sube cuando la matriz pasa. No asumir que los binarios globales coinciden.
 - Preferencias y ajustes personales viven fuera del paquete, en `~/.n_ein`. Mantener credenciales en su hogar nativo; no copiarlas desde el banco.
 - `WORK.md` es la única guía del encargo; decisiones duraderas, glosario e instrucciones del proyecto aportan memoria selectiva.
 - El relevo ordinario Pi→Claude→Pi y la recuperación en una sesión nueva están probados. El ensayo con equipo y Claude real quedó pendiente por cuota y ahora está aplazado con el experimento.

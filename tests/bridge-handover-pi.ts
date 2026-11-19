@@ -1,8 +1,9 @@
 import { strict as assert } from "node:assert";
 import { spawnSync } from "node:child_process";
 import { existsSync, mkdtempSync, readFileSync, writeFileSync } from "node:fs";
-import { homedir, tmpdir } from "node:os";
+import { tmpdir } from "node:os";
 import { join, resolve } from "node:path";
+import { piBinary } from "./pi-runtime.ts";
 
 // Pi real en print: Opus (puente simulado) autoriza la obra, cierra su mensaje y la obra va al ejecutor en un turno nuevo.
 const root = resolve("."),
@@ -17,7 +18,7 @@ writeFileSync(models, JSON.stringify({
   },
 }));
 const result = spawnSync(
-  process.env.N_EIN_PI_BIN || join(homedir(), ".n_ein/runtimes/pi/1.0.2/bin/pi"),
+  piBinary,
   [
     "-p", "--no-session", "--no-extensions", "--no-skills", "--no-themes", "--no-prompt-templates", "--no-context-files",
     "-e", join(root, "pi-package/extensions/router.ts"),

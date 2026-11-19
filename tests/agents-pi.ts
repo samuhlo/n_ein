@@ -1,11 +1,12 @@
 import { strict as assert } from "node:assert";
 import { mkdtempSync, readFileSync, existsSync } from "node:fs";
-import { homedir, tmpdir } from "node:os";
+import { tmpdir } from "node:os";
 import { join, resolve } from "node:path";
 import { startWorker } from "../pi-package/agents/rpc.ts";
+import { piBinary } from "./pi-runtime.ts";
 const cwd = mkdtempSync(join(tmpdir(), "nein-pi-worker-"));
 const host = resolve("dist/n-ein"),
-  binary = process.env.N_EIN_PI_BIN || join(process.env.N_EIN_HOME || join(homedir(), ".n_ein"), "runtimes/pi/1.0.2/bin/pi");
+  binary = piBinary;
 const args = [
   "--mode",
   "rpc",

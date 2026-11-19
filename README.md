@@ -7,7 +7,7 @@
 
   <img src="https://img.shields.io/badge/STATUS-PREVIEW-FFCA40?style=for-the-badge&labelColor=000000" alt="Status" />
   <br/>
-  <img src="https://img.shields.io/badge/Pi_1.0.2-0C0011?style=for-the-badge&labelColor=000000" alt="Pi" />
+  <img src="https://img.shields.io/badge/Pi-0C0011?style=for-the-badge&labelColor=000000" alt="Pi" />
   <img src="https://img.shields.io/badge/CodeGraph-0C0011?style=for-the-badge&labelColor=000000" alt="CodeGraph" />
   <br/>
   <img src="https://img.shields.io/badge/Go-0C0011?style=for-the-badge&logo=go&logoColor=FFCA40&labelColor=000000" alt="Go" />
@@ -151,7 +151,7 @@ n_ein/
 | **Runtime** | Pi Coding Agent |
 | **Launcher e instalador** | Go 1.27 |
 | **Dentro de Pi** | TypeScript + Bun |
-| **Índice de código** | CodeGraph 1.6.1 |
+| **Índice de código** | CodeGraph |
 | **Delivery** | GitHub Actions · releases preview |
 
 ---

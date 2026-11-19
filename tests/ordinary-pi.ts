@@ -7,9 +7,10 @@ import {
   readFileSync,
   readdirSync,
 } from "node:fs";
-import { tmpdir, homedir } from "node:os";
+import { tmpdir } from "node:os";
 import { join, resolve } from "node:path";
 import registerRouter from "../pi-package/extensions/router.ts";
+import { piBinary } from "./pi-runtime.ts";
 const source = resolve("."),
   root = process.env.N_EIN_PRODUCT_ROOT || source;
 const area = mkdtempSync(join(tmpdir(), "nein-ordinary-pi-")),
@@ -20,8 +21,7 @@ const models = join(area, "models.json"),
   index = join(area, "codegraph"),
   wrapper = join(area, "pi");
 const real =
-  process.env.N_EIN_PI_BIN ||
-  join(homedir(), ".n_ein/runtimes/pi/1.0.2/bin/pi");
+  piBinary;
 const quote = (s: string) => "'" + s.replace(/'/g, "'\\''") + "'";
 writeFileSync(
   wrapper,
