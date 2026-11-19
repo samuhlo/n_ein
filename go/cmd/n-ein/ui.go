@@ -43,9 +43,10 @@ type uiModel struct {
 	started time.Time
 	now     time.Time
 	intro   bool
-	// update es la versión nueva del canal, cuando la hay. noticeAt marca cuándo se vio el
-	// aviso por primera vez: el parpadeo cuenta desde ahí, no desde la apertura.
+	// update es la versión nueva del canal, cuando la hay, y brings los runtimes que cambia.
+	// noticeAt marca cuándo se vio el aviso por primera vez: el parpadeo cuenta desde ahí.
 	update   string
+	brings   string
 	noticeAt time.Time
 }
 
@@ -131,8 +132,9 @@ func (m uiModel) Update(message tea.Msg) (tea.Model, tea.Cmd) {
 		return m, nil
 	case updateFound:
 		ticking := m.intro
-		m.update = string(msg)
-		m.state = withUpdate(m.state, m.update)
+		m.update = msg.version
+		m.brings = strings.Join(runtimeChanges(m.state.home.runtimes, msg.runtimes), " · ")
+		m.state = withUpdate(m.state, msg)
 		// El foco sigue en lo que estaba: un enter por costumbre no debe actualizar.
 		if m.view == homeView {
 			m.row++
@@ -229,7 +231,7 @@ func (m uiModel) View() tea.View {
 	if m.intro {
 		elapsed = m.now.Sub(m.started).Seconds()
 	}
-	frame := screen{width: m.width, height: m.height, elapsed: elapsed, update: m.update, blinkOff: !blink(m.now.Sub(m.noticeAt).Seconds())}
+	frame := screen{width: m.width, height: m.height, elapsed: elapsed, update: m.update, brings: m.brings, blinkOff: !blink(m.now.Sub(m.noticeAt).Seconds())}
 	view := tea.NewView(render(m.state, m.view, m.row, m.filter, m.focus, painter, frame))
 	view.AltScreen = true
 	if painter.Color {
@@ -244,6 +246,7 @@ type screen struct {
 	height   int
 	elapsed  float64
 	update   string // versión nueva, si la hay
+	brings   string // runtimes que cambia la versión nueva: «Pi 1.5.2 · Claude Code 2.1.311»
 	blinkOff bool   // el aviso está en la parte apagada de su parpadeo
 }
 
@@ -320,11 +323,16 @@ func renderHome(state appState, selected int, p brand.Painter, s screen) string 
 		context := strings.Join([]string{home.name, home.branch, home.changes}, " · ")
 		b.WriteString(center(p.Fg(brand.Muted, clip(context, total-4)), total) + "\n\n")
 		// El aviso tiene su fila: al apagarse en el parpadeo deja el hueco y el menú no se mueve.
+		// Lo que trae queda fijo debajo, sin parpadear.
 		if s.update != "" {
 			if !s.blinkOff {
 				b.WriteString(center(p.Bold(p.Fg(brand.Yellow, "▲ nueva versión "+s.update))+p.Fg(brand.Faint, " · u actualizar"), total))
 			}
-			b.WriteString("\n\n")
+			b.WriteString("\n")
+			if s.brings != "" {
+				b.WriteString(center(p.Fg(brand.Faint, clip("trae "+s.brings, total-4)), total) + "\n")
+			}
+			b.WriteString("\n")
 		}
 	} else {
 		b.WriteString("\n\n\n")

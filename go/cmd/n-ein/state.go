@@ -44,6 +44,8 @@ type homeContext struct {
 	root    string
 	channel string
 	version string
+	// runtimes son las versiones que fija runtime.json: el aviso compara con ellas lo que trae una versión nueva.
+	runtimes map[string]string
 }
 
 type runtimeConfig struct {
@@ -323,6 +325,10 @@ func claudeRow(effort string, modelError error) row {
 func loadState(root, project string) appState {
 	var config runtimeConfig
 	_ = readJSON(filepath.Join(root, "runtime.json"), &config)
+	pins := map[string]string{}
+	if data, err := os.ReadFile(filepath.Join(root, "runtime.json")); err == nil {
+		pins = pinsFrom(data)
+	}
 	channel := "dev"
 	if marker, err := os.ReadFile(filepath.Join(root, ".n-ein-channel")); err == nil {
 		channel = strings.TrimSpace(string(marker))
@@ -412,6 +418,16 @@ func loadState(root, project string) appState {
 			doctor = row{"doctor", "integridad y runtimes", "n-ein-install", "doctor"}
 		}
 	}
+	system := []row{
+		{"paquete", installVersion, "install.json", ""}, {"Pi", piVersion, piSource, ""},
+		{"Claude", claudeVersion, claudeSource, ""}, {"CodeGraph", codegraphVersion, codegraphSource, ""},
+		{"puente", known(pins["claudeBridge"]), "runtime.json", ""}, doctor,
+		{"actualizaciones", "desconocido", "sin remoto", ""},
+	}
+	// La vuelta atrás restaura el backup que dejó la última actualización, con sus runtimes.
+	if previous := previousInstall(root); previous != "" {
+		system = append(system, row{"versión anterior", previous + " · enter para volver", "backup", "restore"})
+	}
 	piAction, piLabel := "pi", "abrir agente principal"
 	if piVersion == "desconocido" {
 		piAction, piLabel = "", "no disponible"
@@ -469,7 +485,7 @@ func loadState(root, project string) appState {
 	}
 	return appState{menu: menu, home: homeContext{
 		name: filepath.Base(project), branch: branch, changes: changes, root: displayRoot,
-		channel: channel, version: installVersion,
+		channel: channel, version: installVersion, runtimes: pins,
 	}, views: []panel{
 		{0, "INICIO", homeRows},
 		{1, "ESTADO", []row{
@@ -487,9 +503,6 @@ func loadState(root, project string) appState {
 			{"editar", "abrir Pi y usar /nein:models", "Pi", piAction},
 		}, langRows(channel)...), row{"canal", channel, ".n-ein-channel", ""})},
 		{3, "SESIONES", sessionRows},
-		{4, "SISTEMA", []row{
-			{"paquete", installVersion, "install.json", ""}, {"Pi", piVersion, piSource, ""},
-			{"Claude", claudeVersion, claudeSource, ""}, {"CodeGraph", codegraphVersion, codegraphSource, ""}, doctor, {"actualizaciones", "desconocido", "sin remoto", ""},
-		}},
+		{4, "SISTEMA", system},
 	}}
 }

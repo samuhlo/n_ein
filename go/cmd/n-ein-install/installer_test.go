@@ -88,6 +88,8 @@ func sourceFixture(t *testing.T) (source, self, target, data string) {
 	for _, rel := range []string{"bin/nein", "bin/nein-setup", "bin/n-ein-dev", "bin/n-ein-claude-dev", "bin/n-ein-claude-bridge", "bin/n-ein-prepare-pi", "bin/n-ein-codegraph", "bin/n-ein-todo", "bin/n-ein-previewer", "bin/n-ein-work"} {
 		writeFixture(t, source, rel, "#!/bin/sh\nexit 0\n", 0o755)
 	}
+	// El Pi de doctor: responde como el proveedor local salvo que la prueba pida una extensión rota.
+	writeFixture(t, source, "bin/n-ein-dev", "#!/bin/sh\nif [ -n \"$N_EIN_TEST_PI_FAIL\" ]; then echo 'extensión rota' >&2; exit 1; fi\nprintf '{\"text\":\"nein-doctor-ok codegraph_explore\"}\\n'\n", 0o755)
 	writeFixture(t, source, "bin/n-ein-previewer", "#!/bin/sh\n[ \"$1\" = check ] || exit 64\nif [ -n \"$N_EIN_TEST_PREVIEWER_FAIL\" ]; then echo 'la web no compila' >&2; exit 1; fi\necho '// 003 REVISOR · aislamiento sandbox-exec · web compila'\n", 0o755)
 	writeFixture(t, source, "brand.json", `{"colors":{"yellow":"#FFCA40"}}`, 0o644)
 	key, hash := fakeCodeGraphRelease(t, "1.6.1")
@@ -107,6 +109,7 @@ func sourceFixture(t *testing.T) (source, self, target, data string) {
 	writeFixture(t, source, "pi-package/memory.ts", "export const memory = 'test'\n", 0o644)
 	writeFixture(t, source, "pi-package/router.ts", "export const router = 'test'\n", 0o644)
 	writeFixture(t, source, "pi-package/NOTICE.md", "avisos\n", 0o644)
+	writeFixture(t, source, "pi-package/doctor-provider.ts", "export default () => {}\n", 0o644)
 	writeFixture(t, source, "pi-package/agents/summary.ts", "export const marker = true\n", 0o644)
 	writeFixture(t, source, "pi-package/extensions/agents.ts", "export default () => {}\n", 0o644)
 	writeFixture(t, source, "pi-package/themes/ein.json", `{"name":"ein"}`, 0o644)
@@ -343,9 +346,14 @@ func TestDoctorRuntimeSeparatesPackageAndDependencies(t *testing.T) {
 	t.Setenv("N_EIN_PI_BIN", pi)
 	codegraph := writeFixture(t, bin, "codegraph", "#!/bin/sh\nprintf '1.6.1\\n'\n", 0o755)
 	t.Setenv("N_EIN_CODEGRAPH_BIN", codegraph)
-	if output, err := call(t, self, "doctor", "--target", target, "--runtime"); err != nil || !strings.Contains(output, "Pi 0.87.1") || !strings.Contains(output, "CODEGRAPH · 1.6.1") || !strings.Contains(output, "REVISOR · aislamiento sandbox-exec") || !strings.Contains(output, "PUENTE · 0.9.3") {
+	if output, err := call(t, self, "doctor", "--target", target, "--runtime"); err != nil || !strings.Contains(output, "Pi 0.87.1") || !strings.Contains(output, "CODEGRAPH · 1.6.1") || !strings.Contains(output, "REVISOR · aislamiento sandbox-exec") || !strings.Contains(output, "PUENTE · 0.9.3") || !strings.Contains(output, "EXTENSIONES · Pi carga n_ein") {
 		t.Fatalf("doctor de runtime: %s %v", output, err)
 	}
+	t.Setenv("N_EIN_TEST_PI_FAIL", "1")
+	if _, err := call(t, self, "doctor", "--target", target, "--runtime"); err == nil || !strings.Contains(err.Error(), "Pi no arranca con las extensiones de n_ein") || !strings.Contains(err.Error(), "extensión rota") {
+		t.Fatalf("doctor aceptó un Pi que no carga n_ein: %v", err)
+	}
+	t.Setenv("N_EIN_TEST_PI_FAIL", "")
 	t.Setenv("N_EIN_TEST_PREVIEWER_FAIL", "1")
 	if _, err := call(t, self, "doctor", "--target", target, "--runtime"); err == nil || !strings.Contains(err.Error(), "la web no compila") {
 		t.Fatalf("doctor aceptó un revisor roto: %v", err)
@@ -565,6 +573,43 @@ func TestSetupInstallsEverythingOnceFromPackage(t *testing.T) {
 	}
 	if _, err := os.Stat(filepath.Join(home, "installations", "preview.backups")); !os.IsNotExist(err) {
 		t.Fatalf("setup repetido creó backup: %v", err)
+	}
+}
+
+func TestSetupRevertsUpdateThatFailsDoctor(t *testing.T) {
+	source, self, _, _ := sourceFixture(t)
+	first := filepath.Join(filepath.Dir(source), "first")
+	if _, err := call(t, self, "package", "--source", source, "--output", first); err != nil {
+		t.Fatal(err)
+	}
+	home := filepath.Join(t.TempDir(), "n_ein")
+	t.Setenv("N_EIN_HOME", home)
+	t.Setenv("N_EIN_LINK_DIR", filepath.Join(t.TempDir(), "local-bin"))
+	t.Setenv("N_EIN_PI_BIN", "")
+	t.Setenv("N_EIN_BUN_BIN", writeFixture(t, t.TempDir(), "bun", fakeBunScript, 0o755))
+	if output, err := call(t, self, "setup", "--source", first); err != nil {
+		t.Fatalf("%v\n%s", err, output)
+	}
+	installed := filepath.Join(home, "installations", "preview", "package-manifest.json")
+	before, err := os.ReadFile(installed)
+	if err != nil {
+		t.Fatal(err)
+	}
+	writeFixture(t, source, "pi-package/persona.md", "persona v2\n", 0o644)
+	second := filepath.Join(filepath.Dir(source), "second")
+	if _, err := call(t, self, "package", "--source", source, "--output", second); err != nil {
+		t.Fatal(err)
+	}
+	t.Setenv("N_EIN_TEST_PI_FAIL", "1")
+	output, err := call(t, self, "setup", "--source", second)
+	if err == nil || !strings.Contains(err.Error(), "actualización revertida") || !strings.Contains(output, "restaurada la versión anterior") {
+		t.Fatalf("una actualización que no pasa doctor se quedó instalada: %v\n%s", err, output)
+	}
+	if after, err := os.ReadFile(installed); err != nil || !bytes.Equal(before, after) {
+		t.Fatalf("no volvió la instalación anterior: %v", err)
+	}
+	if persona, err := os.ReadFile(filepath.Join(home, "installations", "preview", "pi-package", "persona.md")); err != nil || string(persona) != "persona v1\n" {
+		t.Fatalf("el código restaurado no es el anterior: %q %v", persona, err)
 	}
 }
 

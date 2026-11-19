@@ -45,7 +45,7 @@ Pedidos:
 - [x] T1 · Selección y aplicación de versiones — `scripts/runtimes/` con plan, apply, guard y revisión del puente; tests con registro falso. Blocked by: none.
 - [x] T2 · Primera subida — Pi 1.5.2, puente 0.12.0, Claude Code 2.1.311 y CodeGraph 1.6.2 con T1 (0.13.0 y 1.6.3 seguían en cuarentena); arreglar lo que rompa Pi 1.5. Blocked by: T1.
 - [x] T3 · Vigía — workflow diario, candidato sobre otra rama, publicación reutilizable, guarda en release, grupos, issues y PR a main. Blocked by: T1.
-- [ ] T4 · Launcher — qué trae la versión, doctor con Pi real y restore automático, volver a la anterior. Blocked by: none.
+- [x] T4 · Launcher — qué trae la versión, doctor con Pi real y restore automático, volver a la anterior. Blocked by: none.
 - [ ] T5 · Limpieza — runtimes sin uso y backups. Blocked by: T4.
 - [ ] T6 · Documentación, PR, release y prueba del vigía. Blocked by: T1-T5.
 
@@ -55,7 +55,8 @@ Pedidos:
 - T1: `bun run tests/runtimes.ts` OK (selección, cuarentena, peer, stable, bloqueos, issues, red nueva, apply, tags y guarda); `scripts/typecheck-agents.ts` OK con `scripts/runtimes/`. `plan` contra los registros reales: Pi 1.5.2, puente 0.12.0, Claude Code 2.1.311, CodeGraph 1.6.2; 0.13.0 y 1.6.3 siguen en cuarentena. Revisión manual del puente 0.9.3→0.12.0: sin red nueva, como el escáner.
 - T2: `cli.ts apply` sobre el repo; `n-ein-install runtime` en un hogar aislado instala Pi 1.5.2, Claude 2.1.311, puente 0.12.0 y CodeGraph 1.6.2 con lockfile congelado (20 s). `check.sh` completo con ese hogar y el Claude fijado en PATH: `checks locales: OK` (incluye plugin de Claude y tipos contra Pi 1.5.2). Pi 1.5 no rompió nada de n_ein; sí rompían los tests con `runtimes/pi/1.0.2` escrito a mano: ahora leen `runtime.json` (`tests/pi-runtime.ts`), igual que `installer-e2e.sh` con CodeGraph. README, NOTICE y START_HERE dejan de citar versiones que el vigía cambiará.
 - T3: `runtimes.yml` (plan → candidato sobre `hotfix/runtimes-<v>` → guarda y tag → `publish.yml` → PR a main; si falla, ramas por grupo, issue de bloqueo y relanzamiento), `publish.yml` reutilizable desde `release.yml`, guarda en `release.yml`, `candidate.yml` con `ref` y prefijo de artefacto. Tests del CLI con las invocaciones del workflow: OK. Los seis workflows se leen como YAML; `actionlint` no se pudo ejecutar (el permiso de la sesión no deja descargar y ejecutar la herramienta). La prueba real es la release de T6 y un disparo manual del vigía.
+- T4: el aviso lee el `runtime.json` de la versión publicada (raw de GitHub, en caché con la versión) y dice qué trae en la portada y en Sistema, fila a fila; Sistema enseña el puente y ofrece «versión anterior» con confirmación fuera de la TUI y aviso de sesiones. `doctor --runtime` arranca el Pi instalado con las extensiones de n_ein y `pi-package/doctor-provider.ts`, en hogares temporales y sin red: contra Pi 1.5.2 real responde en <1 s con `codegraph_explore` y el puente cargado. `setup` restaura la instalación anterior si la nueva no pasa doctor; el test falla sin esa restauración. `go test ./...` y `go vet` OK.
 
 ## Siguiente paso
 
-T4: launcher (qué trae la versión, doctor con Pi real, restore automático y volver a la anterior).
+T5: limpieza de runtimes sin uso y backups.
