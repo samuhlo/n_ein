@@ -48,6 +48,7 @@ Pedidos:
 - [x] T4 · Launcher — qué trae la versión, doctor con Pi real y restore automático, volver a la anterior. Blocked by: none.
 - [x] T5 · Limpieza — runtimes sin uso y backups. Blocked by: T4.
 - [ ] T6 · Documentación, PR, release y prueba del vigía. Blocked by: T1-T5.
+  - Documentación y revisión hechas; preparada 0.7.0-alpha.1 (VERSION, bootstrap, notas, README, START_HERE). Falta: PR con la matriz verde, integrar, activar el ajuste que deja a Actions abrir PR, tag, publicación y disparo manual del vigía.
 
 ## Evidencia
 
