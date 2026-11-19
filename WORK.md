@@ -47,8 +47,8 @@ Pedidos:
 - [x] T3 · Vigía — workflow diario, candidato sobre otra rama, publicación reutilizable, guarda en release, grupos, issues y PR a main. Blocked by: T1.
 - [x] T4 · Launcher — qué trae la versión, doctor con Pi real y restore automático, volver a la anterior. Blocked by: none.
 - [x] T5 · Limpieza — runtimes sin uso y backups. Blocked by: T4.
-- [ ] T6 · Documentación, PR, release y prueba del vigía. Blocked by: T1-T5.
-  - Documentación y revisión hechas; preparada 0.7.0-alpha.1 (VERSION, bootstrap, notas, README, START_HERE). Falta: PR con la matriz verde, integrar, activar el ajuste que deja a Actions abrir PR, tag, publicación y disparo manual del vigía.
+- [x] T6 · Documentación, PR, release y prueba del vigía. Blocked by: T1-T5.
+- [ ] T7 · Primera vuelta real del vigía — la ejecución programada del 20 de noviembre (05:37 UTC) debe probar el puente 0.13.0 (fuera de cuarentena desde el 19 a las 21:01 UTC): revisión de red, matriz sobre `hotfix/runtimes-0.7.0-alpha.2`, publicación y PR a main; el 21, CodeGraph 1.6.3. Blocked by: cuarentena.
 
 ## Evidencia
 
@@ -60,7 +60,11 @@ Pedidos:
 - T5: paso «limpieza» de `setup` tras doctor: conserva los runtimes de cada instalación y de su backup más reciente, borra solo carpetas con marcador de n_ein y deja 3 backups y 1 recovery; sin instalaciones no borra nada y un fallo no invalida la instalación. `prune_test.go` y `go test ./...` OK. En el hogar de Samu, la próxima actualización quitará Pi 0.87.1 y 13 de sus 16 backups.
 - Documentación (commit `a62ed9c`): decisión del 19 de noviembre, despliegue, distribución, guía, diseño, README y pruebas. `check.sh` completo sobre el código final, con el hogar aislado y Claude 2.1.311: `checks locales: OK`.
 - Revisión (desde `49cc45b`): faltaba «pendiente de adaptar en Sistema» (ahora el launcher lee los issues abiertos del vigía en la misma caché y los enseña sin ofrecer `u`); el arranque de Pi en doctor leía el `models.json`, el idioma y las preferencias reales, así que un ajuste inválido revertía una actualización sana (ahora usa archivos temporales, con test rojo → verde); una rama del vigía de una vuelta cancelada bloqueaba el push del día siguiente (ahora se retira antes, ya que esa versión no tiene tag). Menor, sin cambiar: la lectura de versiones de `runtime.json` se repite en launcher, instalador y `layout`.
+- Candidato local `build-release.sh 0.7.0-alpha.1`: su smoke y `doctor --runtime` del paquete instalado pasan, con `// 005 EXTENSIONES · Pi carga n_ein y responde sin red` sobre Pi 1.5.2 y el puente 0.12.0.
+- PR #25: matriz verde (macOS y Linux nativos, Arch y Ubuntu limpios, comparación de adjuntos), integrada en main como `18bebae`. Ajuste del repositorio: Actions puede abrir PR, permisos por defecto en lectura.
+- Release `v0.7.0-alpha.1` (run `44533429850`): `version` con `[RUNTIME] ++ GUARD_OK :: previous: v0.6.0-alpha.1`, candidato, `publish.yml` y Pages en verde; prerelease con los nueve adjuntos, `gh attestation verify` correcto y Pages sirve `bootstrap_tag="v0.7.0-alpha.1"`.
+- Vigía a mano (run `44535607350`): etiqueta `runtimes`, issues, base `v0.7.0-alpha.1` y plan en verde; `UP_TO_DATE` y el resto de jobs omitidos. El recorrido con rama, candidato con `ref`, tag y PR queda para T7: si fallara por el propio workflow, el issue de bloqueo sería falso y basta con cerrarlo.
 
 ## Siguiente paso
 
-T6: documentación, suite completa, PR, release 0.7.0-alpha.1 y prueba del vigía.
+T7: revisar la ejecución del vigía del 20 de noviembre. La instalación personal sigue en 0.6.0-alpha.1 hasta que Samu pulse `u`.
