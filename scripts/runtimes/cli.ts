@@ -13,7 +13,7 @@
 // =============================================================================
 
 import { spawnSync } from "node:child_process";
-import { mkdirSync, mkdtempSync, readFileSync, readdirSync, rmSync, statSync, writeFileSync } from "node:fs";
+import { existsSync, mkdirSync, mkdtempSync, readFileSync, readdirSync, rmSync, statSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join, relative, resolve as resolvePath } from "node:path";
 import {
@@ -174,6 +174,13 @@ export function applyPlan(source: string, chosen: Plan, options: { lock: Lock; v
   }
   if (options.version) {
     writeFileSync(join(source, "VERSION"), options.version + "\n");
+    // El bootstrap de la raíz sigue a VERSION, como al preparar cualquier release.
+    const bootstrap = join(source, "install.sh");
+    if (existsSync(bootstrap)) {
+      writeFileSync(bootstrap, readFileSync(bootstrap, "utf8")
+        .replace(/^bootstrap_tag="v[^"]*"$/m, `bootstrap_tag="v${options.version}"`)
+        .replace(/--version \d+\.\d+\.\d+[0-9A-Za-z.-]*\]/, `--version ${options.version}]`));
+    }
     writeFileSync(join(source, "docs", "releases", `${options.version}.md`), releaseNotes(options.version, chosen.changes, options.piBreaking ?? []));
   }
 }

@@ -114,7 +114,7 @@ try {
 
   // [FLOW] apply sobre una copia de los archivos reales
   const tree = join(temp, "tree");
-  for (const path of ["runtime.json", "VERSION", "pi-runtime/package.json", "claude-runtime/package.json", "claude-bridge-runtime/package.json"]) {
+  for (const path of ["runtime.json", "VERSION", "install.sh", "pi-runtime/package.json", "claude-runtime/package.json", "claude-bridge-runtime/package.json"]) {
     mkdirSync(join(tree, path, ".."), { recursive: true });
     cpSync(join(root, path), join(tree, path));
   }
@@ -140,6 +140,9 @@ try {
   assert.match(claudeManifest, /"@anthropic-ai\/claude-code": "99\.0\.2"/);
   assert.match(claudeManifest, /"trustedDependencies": \["@anthropic-ai\/claude-code"\]/, "el manifiesto conserva su forma");
   assert.equal(readFileSync(join(tree, "VERSION"), "utf8"), "9.9.9-alpha.2\n");
+  const bootstrap = readFileSync(join(tree, "install.sh"), "utf8");
+  assert.match(bootstrap, /^bootstrap_tag="v9\.9\.9-alpha\.2"$/m, "el bootstrap de la raíz sigue a VERSION");
+  assert.match(bootstrap, /--version 9\.9\.9-alpha\.2\]/);
   assert.ok(readFileSync(join(tree, "docs/releases/9.9.9-alpha.2.md"), "utf8").includes(`CodeGraph: ${base.codegraph.version} → 99.0.3`));
   assert.throws(() => applyPlan(tree, target, { lock: () => {} }), /el plan parte de/, "un plan que no parte de lo fijado se rechaza");
 
