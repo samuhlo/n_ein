@@ -6,6 +6,7 @@ import (
 	"net/http"
 	"os"
 	"path/filepath"
+	"regexp"
 	"runtime"
 	"strings"
 	"time"
@@ -22,21 +23,31 @@ import (
 // nunca espera a la red. La respuesta se guarda unas horas porque la API de
 // GitHub sin token admite 60 consultas por hora y por IP. Con la versión se lee
 // su runtime.json para decir qué runtimes trae: el vigía de CI publica versiones
-// que solo suben Pi, el puente, Claude Code o CodeGraph.
+// que solo suben Pi, el puente, Claude Code o CodeGraph. Sus issues abiertos dicen
+// qué versiones no publicó y por qué.
 // =============================================================================
 
 const updateCacheTTL = 6 * time.Hour
 
-// updateFound es la versión nueva y los runtimes que fija; runtimes es nil si no se pudo leer.
+// updateFound es la versión nueva, si la hay, con los runtimes que fija (nil si no se pudo leer) y lo que
+// el vigía dejó sin publicar (issues abiertos con la etiqueta runtimes).
 type updateFound struct {
 	version  string
 	runtimes map[string]string
+	pending  map[string]pendingRuntime
+}
+
+// pendingRuntime es una versión que el vigía no publicó: rompe n_ein (blocked) o espera revisión (review).
+type pendingRuntime struct {
+	Version string `json:"version"`
+	Kind    string `json:"kind"`
 }
 
 type updateCache struct {
-	Checked  time.Time         `json:"checked"`
-	Latest   string            `json:"latest"`
-	Runtimes map[string]string `json:"runtimes,omitempty"`
+	Checked  time.Time                 `json:"checked"`
+	Latest   string                    `json:"latest"`
+	Runtimes map[string]string         `json:"runtimes,omitempty"`
+	Pending  map[string]pendingRuntime `json:"pending,omitempty"`
 }
 
 // runtimeOrder y runtimeNames: cómo se nombra cada runtime en el aviso y su fila en Sistema.
@@ -85,11 +96,12 @@ func releaseRuntimes(version string) map[string]string {
 	return pinsFrom(data)
 }
 
-// newerRelease devuelve la última versión del canal y sus runtimes si supera a la instalada; "" en cualquier otro caso.
-func newerRelease(channel, installed string, now time.Time) (string, map[string]string) {
+// newerRelease devuelve la última versión del canal y sus runtimes si supera a la instalada (versión "" si no),
+// y lo que el vigía dejó pendiente.
+func newerRelease(channel, installed string, now time.Time) updateFound {
 	current, err := release.Parse(installed)
 	if err != nil || (channel != "preview" && channel != "stable") {
-		return "", nil
+		return updateFound{}
 	}
 	cachePath := ""
 	if root, err := layout.Root(); err == nil {
@@ -101,11 +113,14 @@ func newerRelease(channel, installed string, now time.Time) (string, map[string]
 		chosen, err := client.Select(channel, "", runtime.GOOS+"-"+runtime.GOARCH)
 		if err != nil {
 			// Sin red o sin release no hay aviso; tampoco se guarda, para reintentar en la próxima apertura.
-			return "", nil
+			return updateFound{}
 		}
 		cached = updateCache{Checked: now, Latest: chosen.Version}
 		if next, err := release.Parse(chosen.Version); err == nil && next.Compare(current) > 0 {
 			cached.Runtimes = releaseRuntimes(chosen.Version)
+		}
+		if issues, err := client.OpenIssues("runtimes"); err == nil {
+			cached.Pending = pendingFrom(issues)
 		}
 		if data, err := json.Marshal(cached); err == nil && cachePath != "" {
 			if os.MkdirAll(filepath.Dir(cachePath), 0o700) == nil {
@@ -113,20 +128,87 @@ func newerRelease(channel, installed string, now time.Time) (string, map[string]
 			}
 		}
 	}
-	next, err := release.Parse(cached.Latest)
-	if err != nil || next.Compare(current) <= 0 {
-		return "", nil
+	found := updateFound{pending: cached.Pending}
+	if next, err := release.Parse(cached.Latest); err == nil && next.Compare(current) > 0 {
+		found.version, found.runtimes = cached.Latest, cached.Runtimes
 	}
-	return cached.Latest, cached.Runtimes
+	return found
 }
 
 func checkUpdate(channel, installed string) tea.Cmd {
 	return func() tea.Msg {
-		if version, runtimes := newerRelease(channel, installed, time.Now()); version != "" {
-			return updateFound{version: version, runtimes: runtimes}
+		if found := newerRelease(channel, installed, time.Now()); found.version != "" || len(found.pending) > 0 {
+			return found
 		}
 		return nil
 	}
+}
+
+var runtimeMarker = regexp.MustCompile(`<!-- n_ein-runtimes (\{.*?\}) -->`)
+
+// pendingFrom lee los marcadores que deja el vigía (scripts/runtimes/resolve.ts); por runtime, la versión más nueva.
+func pendingFrom(issues []release.Issue) map[string]pendingRuntime {
+	pending := map[string]pendingRuntime{}
+	for _, issue := range issues {
+		match := runtimeMarker.FindStringSubmatch(issue.Body)
+		if match == nil {
+			continue
+		}
+		var marker struct {
+			Kind     string            `json:"kind"`
+			Versions map[string]string `json:"versions"`
+		}
+		if json.Unmarshal([]byte(match[1]), &marker) != nil || (marker.Kind != "blocked" && marker.Kind != "review") {
+			continue
+		}
+		for name, version := range marker.Versions {
+			next, err := release.Parse(version)
+			if err != nil {
+				continue
+			}
+			if known, ok := pending[name]; ok {
+				if old, err := release.Parse(known.Version); err == nil && old.Compare(next) >= 0 {
+					continue
+				}
+			}
+			pending[name] = pendingRuntime{Version: version, Kind: marker.Kind}
+		}
+	}
+	return pending
+}
+
+// withPending anota en Sistema lo que el vigía no publicó y aún no está instalado; no ofrece actualizar.
+func withPending(state appState, pending map[string]pendingRuntime) appState {
+	var rows []row
+	for _, name := range runtimeOrder {
+		item, ok := pending[name]
+		if !ok {
+			continue
+		}
+		next, err := release.Parse(item.Version)
+		if err != nil {
+			continue
+		}
+		if local, err := release.Parse(state.home.runtimes[name]); err == nil && local.Compare(next) >= 0 {
+			continue
+		}
+		reason := "necesita adaptar n_ein"
+		if item.Kind == "review" {
+			reason = "espera tu revisión del código"
+		}
+		rows = append(rows, row{"pendiente", runtimeNames[name] + " " + item.Version + " · " + reason, "issues runtimes", ""})
+	}
+	if len(rows) == 0 {
+		return state
+	}
+	views := append([]panel(nil), state.views...)
+	for i, panel := range views {
+		if panel.title == "SISTEMA" {
+			views[i].rows = append(append([]row(nil), panel.rows...), rows...)
+		}
+	}
+	state.views = views
+	return state
 }
 
 // runtimeChanges nombra los runtimes que la versión nueva cambia respecto a los instalados.

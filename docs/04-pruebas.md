@@ -105,7 +105,7 @@ Los tres tarballs contienen la evidencia previa preservada. Sus hashes se verifi
 
 ## Runtimes al día
 
-`tests/runtimes.ts` cubre la selección (cuarentena, peer del puente, etiqueta `stable`, bloqueos, sin bajadas), los issues del vigía y su vuelta como estado, la revisión de red del puente con tarballs locales, `apply`, los tags, la guarda y las invocaciones del CLI que usa `runtimes.yml`. Los tests de Go cubren el aviso con los runtimes de la versión nueva, «versión anterior» con confirmación, la restauración automática, el arranque de Pi en `doctor` y la limpieza. Los tests de Pi leen su versión de `runtime.json` (`tests/pi-runtime.ts`), así una subida no exige tocarlos. El vigía real se comprueba disparándolo en GitHub.
+`tests/runtimes.ts` cubre la selección (cuarentena, peer del puente, etiqueta `stable`, bloqueos, sin bajadas), los issues del vigía y su vuelta como estado, la revisión de red del puente con tarballs locales, `apply`, los tags, la guarda y las invocaciones del CLI que usa `runtimes.yml`. Los tests de Go cubren el aviso con los runtimes de la versión nueva, lo pendiente del vigía en Sistema, «versión anterior» con confirmación, la restauración automática, el arranque de Pi en `doctor` y la limpieza. Los tests de Pi leen su versión de `runtime.json` (`tests/pi-runtime.ts`), así una subida no exige tocarlos. El vigía real se comprueba disparándolo en GitHub.
 
 ## Experiencia del encargo
 

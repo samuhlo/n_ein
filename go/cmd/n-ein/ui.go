@@ -131,6 +131,12 @@ func (m uiModel) Update(message tea.Msg) (tea.Model, tea.Cmd) {
 		}
 		return m, nil
 	case updateFound:
+		if len(msg.pending) > 0 {
+			m.state = withPending(m.state, msg.pending)
+		}
+		if msg.version == "" {
+			return m, nil
+		}
 		ticking := m.intro
 		m.update = msg.version
 		m.brings = strings.Join(runtimeChanges(m.state.home.runtimes, msg.runtimes), " · ")

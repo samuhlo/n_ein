@@ -16,6 +16,13 @@ func TestNewerReleaseAsksOnceAndCaches(t *testing.T) {
 	platform := runtime.GOOS + "-" + runtime.GOARCH
 	calls, rawCalls, failing := 0, 0, false
 	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		if r.URL.Path == "/issues" {
+			if r.URL.Query().Get("labels") != "runtimes" || r.URL.Query().Get("state") != "open" {
+				t.Errorf("consulta de issues inesperada: %s", r.URL.RawQuery)
+			}
+			fmt.Fprint(w, `[{"body":"Rompe.\n<!-- n_ein-runtimes {\"kind\":\"blocked\",\"versions\":{\"pi\":\"1.6.0\"}} -->"},{"body":"<!-- n_ein-runtimes {\"kind\":\"review\",\"versions\":{\"claudeBridge\":\"0.14.0\"}} -->"},{"body":"<!-- n_ein-runtimes {\"kind\":\"blocked\",\"versions\":{\"pi\":\"9.0.0\"}} -->","pull_request":{}}]`)
+			return
+		}
 		if r.URL.Path == "/v0.2.0-alpha.2/runtime.json" {
 			rawCalls++
 			fmt.Fprint(w, `{"pi":{"version":"1.5.2"},"claude":{"version":"2.1.311"},"claudeBridge":{"version":"0.12.0"},"codegraph":{"version":"1.6.2"}}`)
@@ -34,21 +41,51 @@ func TestNewerReleaseAsksOnceAndCaches(t *testing.T) {
 	t.Setenv("N_EIN_RELEASE_RAW", server.URL)
 	t.Setenv("N_EIN_HOME", t.TempDir())
 	now := time.Now()
-	if got, runtimes := newerRelease("preview", "0.1.0-preview.3", now); got != "0.2.0-alpha.2" || runtimes["pi"] != "1.5.2" || runtimes["claudeBridge"] != "0.12.0" {
-		t.Fatalf("versión nueva o sus runtimes no detectados: %q %v", got, runtimes)
+	if found := newerRelease("preview", "0.1.0-preview.3", now); found.version != "0.2.0-alpha.2" || found.runtimes["pi"] != "1.5.2" || found.runtimes["claudeBridge"] != "0.12.0" {
+		t.Fatalf("versión nueva o sus runtimes no detectados: %+v", found)
 	}
-	if got, runtimes := newerRelease("preview", "0.1.0-preview.3", now.Add(time.Minute)); got != "0.2.0-alpha.2" || runtimes["codegraph"] != "1.6.2" || calls != 1 || rawCalls != 1 {
-		t.Fatalf("la caché no guardó versión y runtimes: %q %v, %d+%d consultas", got, runtimes, calls, rawCalls)
+	found := newerRelease("preview", "0.1.0-preview.3", now.Add(time.Minute))
+	if found.version != "0.2.0-alpha.2" || found.runtimes["codegraph"] != "1.6.2" || calls != 1 || rawCalls != 1 {
+		t.Fatalf("la caché no guardó versión y runtimes: %+v, %d+%d consultas", found, calls, rawCalls)
 	}
-	if got, _ := newerRelease("preview", "0.2.0-alpha.2", now.Add(time.Minute)); got != "" || calls != 1 {
-		t.Fatalf("la caché no evitó la consulta o avisó de la misma versión: %q, %d consultas", got, calls)
+	if want := (pendingRuntime{Version: "1.6.0", Kind: "blocked"}); found.pending["pi"] != want || found.pending["claudeBridge"].Kind != "review" || len(found.pending) != 2 {
+		t.Fatalf("lo que el vigía no publicó no llega, o cuenta una PR: %+v", found.pending)
+	}
+	if found := newerRelease("preview", "0.2.0-alpha.2", now.Add(time.Minute)); found.version != "" || found.pending["pi"].Version != "1.6.0" || calls != 1 {
+		t.Fatalf("sin versión nueva, lo pendiente sigue llegando y la caché evita la consulta: %+v, %d consultas", found, calls)
 	}
 	failing = true
-	if got, _ := newerRelease("preview", "0.1.0-preview.3", now.Add(updateCacheTTL+time.Minute)); got != "" {
-		t.Fatalf("un fallo de la API no debe avisar: %q", got)
+	if found := newerRelease("preview", "0.1.0-preview.3", now.Add(updateCacheTTL+time.Minute)); found.version != "" {
+		t.Fatalf("un fallo de la API no debe avisar: %+v", found)
 	}
-	if got, _ := newerRelease("dev", "checkout de desarrollo", now); got != "" || calls != 2 {
-		t.Fatalf("el checkout de desarrollo no consulta releases: %q, %d", got, calls)
+	if found := newerRelease("dev", "checkout de desarrollo", now); found.version != "" || calls != 2 {
+		t.Fatalf("el checkout de desarrollo no consulta releases: %+v, %d", found, calls)
+	}
+}
+
+func TestSystemShowsWhatTheWatcherHeldBack(t *testing.T) {
+	state := appState{
+		home:  homeContext{channel: "preview", runtimes: map[string]string{"pi": "1.5.2", "claudeBridge": "0.12.0", "codegraph": "1.6.3"}},
+		views: []panel{{0, "INICIO", nil}, {4, "SISTEMA", []row{{"actualizaciones", "desconocido", "sin remoto", ""}}}},
+	}
+	m := newUIModel(state, homeView, false)
+	updated, _ := m.Update(updateFound{pending: map[string]pendingRuntime{
+		"pi":           {Version: "1.6.0", Kind: "blocked"},
+		"claudeBridge": {Version: "0.14.0", Kind: "review"},
+		"codegraph":    {Version: "1.6.3", Kind: "blocked"},
+	}})
+	m = updated.(uiModel)
+	var values []string
+	for _, item := range m.state.views[1].rows {
+		if item.label == "pendiente" {
+			values = append(values, item.value)
+		}
+	}
+	if strings.Join(values, " | ") != "Pi 1.6.0 · necesita adaptar n_ein | puente 0.14.0 · espera tu revisión del código" {
+		t.Fatalf("Sistema no enseña lo pendiente, o enseña lo que ya está instalado: %q", values)
+	}
+	if m.update != "" || len(m.state.menu) != 0 {
+		t.Fatal("lo pendiente no es una actualización: la portada no ofrece u")
 	}
 }
 

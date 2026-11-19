@@ -82,6 +82,8 @@ jobs:
           subject="$(bun scripts/runtimes/cli.ts apply --source "$tree" --plan dist/runtimes/plan.json --version "$version")"
           git -C "$tree" add -A
           git -C "$tree" commit -qm "$subject"
+          # Esta versión no tiene tag: una rama con su nombre es de una vuelta cancelada y no se publicó.
+          git push -q origin --delete "$branch" 2>/dev/null || true
           git -C "$tree" push -q origin "$branch"
           multi=false
           [[ "$groups" != *,* ]] || multi=true
@@ -202,6 +204,7 @@ jobs:
             subject="$(bun scripts/runtimes/cli.ts apply --source "$tree" --plan dist/runtimes/plan.json --groups "$group" --version "$VERSION")"
             git -C "$tree" add -A
             git -C "$tree" commit -qm "$subject"
+            git push -q origin --delete "runtimes-probe/$group-$VERSION" 2>/dev/null || true
             git -C "$tree" push -q origin "runtimes-probe/$group-$VERSION"
           done
 

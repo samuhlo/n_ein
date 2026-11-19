@@ -94,7 +94,7 @@ Un puente con líneas de red nuevas respecto al actual no entra: el vigía abre 
 
 La PR a main debe integrarse antes de la siguiente release normal: `release.yml` compara los runtimes con el tag anterior y falla si alguno baja. Crearla exige el ajuste del repositorio que deja a Actions abrir PR. Si la matriz falló por la infraestructura de GitHub, cerrar el issue de bloqueo desbloquea esas versiones.
 
-En la máquina, el launcher dice qué runtimes trae la versión nueva; `setup` revierte una actualización que no pasa `doctor` y después limpia runtimes sin uso y backups antiguos ([distribución](11-distribucion.md#instalación)).
+En la máquina, el launcher dice qué runtimes trae la versión nueva y enseña en Sistema lo que el vigía no publicó; `setup` revierte una actualización que no pasa `doctor` y después limpia runtimes sin uso y backups antiguos ([distribución](11-distribucion.md#instalación)).
 
 ## Fuera de alcance inicial
 

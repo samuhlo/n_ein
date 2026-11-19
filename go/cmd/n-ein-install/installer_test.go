@@ -89,7 +89,7 @@ func sourceFixture(t *testing.T) (source, self, target, data string) {
 		writeFixture(t, source, rel, "#!/bin/sh\nexit 0\n", 0o755)
 	}
 	// El Pi de doctor: responde como el proveedor local salvo que la prueba pida una extensión rota.
-	writeFixture(t, source, "bin/n-ein-dev", "#!/bin/sh\nif [ -n \"$N_EIN_TEST_PI_FAIL\" ]; then echo 'extensión rota' >&2; exit 1; fi\nprintf '{\"text\":\"nein-doctor-ok codegraph_explore\"}\\n'\n", 0o755)
+	writeFixture(t, source, "bin/n-ein-dev", "#!/bin/sh\nif [ -n \"$N_EIN_TEST_PI_FAIL\" ]; then echo 'extensión rota' >&2; exit 1; fi\nif [ -f \"$N_EIN_MODELS_FILE\" ]; then echo 'models.json inválido' >&2; exit 64; fi\nprintf '{\"text\":\"nein-doctor-ok codegraph_explore\"}\\n'\n", 0o755)
 	writeFixture(t, source, "bin/n-ein-previewer", "#!/bin/sh\n[ \"$1\" = check ] || exit 64\nif [ -n \"$N_EIN_TEST_PREVIEWER_FAIL\" ]; then echo 'la web no compila' >&2; exit 1; fi\necho '// 003 REVISOR · aislamiento sandbox-exec · web compila'\n", 0o755)
 	writeFixture(t, source, "brand.json", `{"colors":{"yellow":"#FFCA40"}}`, 0o644)
 	key, hash := fakeCodeGraphRelease(t, "1.6.1")
@@ -348,6 +348,11 @@ func TestDoctorRuntimeSeparatesPackageAndDependencies(t *testing.T) {
 	t.Setenv("N_EIN_CODEGRAPH_BIN", codegraph)
 	if output, err := call(t, self, "doctor", "--target", target, "--runtime"); err != nil || !strings.Contains(output, "Pi 0.87.1") || !strings.Contains(output, "CODEGRAPH · 1.6.1") || !strings.Contains(output, "REVISOR · aislamiento sandbox-exec") || !strings.Contains(output, "PUENTE · 0.9.3") || !strings.Contains(output, "EXTENSIONES · Pi carga n_ein") {
 		t.Fatalf("doctor de runtime: %s %v", output, err)
+	}
+	// Los ajustes personales no deciden si una instalación sana pasa doctor.
+	t.Setenv("N_EIN_MODELS_FILE", writeFixture(t, t.TempDir(), "models.json", "{roto", 0o600))
+	if output, err := call(t, self, "doctor", "--target", target, "--runtime"); err != nil || !strings.Contains(output, "EXTENSIONES") {
+		t.Fatalf("doctor leyó el models.json del usuario: %v", err)
 	}
 	t.Setenv("N_EIN_TEST_PI_FAIL", "1")
 	if _, err := call(t, self, "doctor", "--target", target, "--runtime"); err == nil || !strings.Contains(err.Error(), "Pi no arranca con las extensiones de n_ein") || !strings.Contains(err.Error(), "extensión rota") {

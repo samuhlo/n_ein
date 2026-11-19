@@ -285,8 +285,12 @@ func checkPiExtensions(root string, output io.Writer) error {
 	defer cancel()
 	cmd := exec.CommandContext(ctx, launcher, "--mode", "json", "--print", "--no-session", "-e", provider, "--provider", "nein-doctor", "--model", "ok", "doctor")
 	cmd.Dir = area
-	// BLINDAJE -> Hogares de Pi y Claude temporales: el diagnóstico no toca sesiones, ajustes ni login.
-	cmd.Env = append(os.Environ(), "N_EIN_AGENT_DIR="+filepath.Join(area, "agent"), "N_EIN_CLAUDE_DIR="+filepath.Join(area, "claude"), "PI_OFFLINE=1")
+	// BLINDAJE -> Hogares y ajustes temporales: el diagnóstico no toca sesiones ni login, y un ajuste
+	// personal inválido no hace fallar (ni revertir) una instalación sana.
+	cmd.Env = append(os.Environ(),
+		"N_EIN_AGENT_DIR="+filepath.Join(area, "agent"), "N_EIN_CLAUDE_DIR="+filepath.Join(area, "claude"),
+		"N_EIN_MODELS_FILE="+filepath.Join(area, "models.json"), "N_EIN_LANG_FILE="+filepath.Join(area, "lang.json"),
+		"N_EIN_PREFERENCES_FILE="+filepath.Join(area, "preferences.md"), "PI_OFFLINE=1")
 	var stderr bytes.Buffer
 	cmd.Stderr = &stderr
 	data, err := cmd.Output()
