@@ -7,7 +7,7 @@ import {
   EMPTY_STATE, breakingChanges, downgrades, markerText, newNetwork, nextVersion, releaseNotes, resolve, restrict, stateFromIssues,
   type GithubRelease, type Packument, type Pins, type Plan, type Registry,
 } from "../scripts/runtimes/resolve.ts";
-import { applyPlan, freshVersion, guard, plan, previousTag, readPins } from "../scripts/runtimes/cli.ts";
+import { applyPlan, baseTag, freshVersion, guard, issueDrafts, plan, previousTag, readPins, type PlanFile } from "../scripts/runtimes/cli.ts";
 
 const root = resolvePath(import.meta.dir, "..");
 const temp = mkdtempSync(join(tmpdir(), "n-ein-runtimes-"));
@@ -172,6 +172,50 @@ try {
   run("tag", "v0.6.0-alpha.4");
   writeFileSync(join(repo, "VERSION"), "0.6.0-alpha.3\n");
   assert.equal(freshVersion(repo), "0.6.0-alpha.5", "salta los tags ya usados");
+
+  // [FLOW] Piezas del vigía: tag base e issues que vuelven como estado
+  const releases = [
+    { tagName: "v0.6.0-alpha.1", isPrerelease: true },
+    { tagName: "v0.6.0-alpha.10", isPrerelease: true },
+    { tagName: "v0.7.0-alpha.1", isPrerelease: true, isDraft: true },
+    { tagName: "v0.5.0", isPrerelease: false },
+    { tagName: "nightly", isPrerelease: true },
+  ];
+  assert.equal(baseTag(releases, "preview"), "v0.6.0-alpha.10", "orden SemVer, sin borradores");
+  assert.equal(baseTag(releases, "stable"), "v0.5.0");
+  assert.equal(baseTag([], "preview"), null);
+  const planned: PlanFile = { base: current, ...full, held: [{ name: "claudeBridge", version: "0.14.0", reason: "review", lines: ["src/a.ts: await fetch(x)"] }] };
+  const blockedDrafts = issueDrafts(planned, "blocked", ["pi"], "https://run");
+  assert.equal(blockedDrafts.length, 1);
+  assert.match(blockedDrafts[0].title, /Pi 1\.5\.2, puente de Claude 0\.13\.0 rompe n_ein/);
+  assert.match(blockedDrafts[0].body, /https:\/\/run/);
+  const reviewDrafts = issueDrafts(planned, "review", [], "https://run");
+  assert.match(reviewDrafts[0].body, /await fetch\(x\)/);
+  assert.deepEqual(issueDrafts(planned, "blocked", [], "x"), [], "sin grupos no hay bloqueo");
+  const roundTrip = stateFromIssues([...blockedDrafts, ...reviewDrafts].map((draft) => ({ state: "OPEN", body: draft.body })));
+  assert.deepEqual(roundTrip.blocked, { pi: ["1.5.2"], claudeBridge: ["0.13.0", "0.14.0"] }, "lo que escribe el vigía es lo que lee al día siguiente");
+
+  // [FLOW] El CLI con las mismas invocaciones que .github/workflows/runtimes.yml
+  const cli = (args: string[], input = ""): { status: number | null; stdout: string; stderr: string } => {
+    const result = spawnSync("bun", [join(root, "scripts/runtimes/cli.ts"), ...args], { input, encoding: "utf8" });
+    return { status: result.status, stdout: result.stdout.trim(), stderr: result.stderr };
+  };
+  const planPath = join(temp, "plan.json");
+  writeFileSync(planPath, JSON.stringify(planned));
+  assert.equal(cli(["base", "--channel", "preview"], JSON.stringify(releases)).stdout, "v0.6.0-alpha.10");
+  assert.equal(cli(["groups", "--plan", planPath]).stdout, "pi,claude,codegraph");
+  const drafts = JSON.parse(cli(["issues", "--plan", planPath, "--kind", "blocked", "--groups", "claude", "--run", "https://run"]).stdout);
+  assert.match(drafts[0].title, /Claude Code 2\.1\.311 rompe n_ein/);
+  const fromIssues = JSON.parse(cli(["state"], JSON.stringify([{ state: "OPEN", stateReason: "", body: drafts[0].body }])).stdout);
+  assert.deepEqual(fromIssues.blocked, { claude: ["2.1.311"] });
+  assert.equal(cli(["next-version", "--source", repo]).stdout, "0.6.0-alpha.5");
+  const guarded = cli(["guard", "--source", repo, "--previous", "v0.6.0-alpha.2"]);
+  assert.equal(guarded.status, 0, guarded.stderr);
+  writeFileSync(join(repo, "runtime.json"), JSON.stringify({ schema: 1, pi: { version: "1.0.2" }, claudeBridge: { version: "0.13.0" }, claude: { version: "2.1.311" }, codegraph: full.pins.codegraph }));
+  const refused = cli(["guard", "--source", repo, "--previous", "v0.6.0-alpha.2"]);
+  assert.equal(refused.status, 1, "la guarda corta la release");
+  assert.match(refused.stderr, /RUNTIME_DOWNGRADE :: previous: v0\.6\.0-alpha\.2 \| changes: Pi 1\.5\.2 → 1\.0\.2/);
+  assert.notEqual(cli(["base", "--channel", "preview"], "[]").status, 0, "sin release publicada no hay base");
 
   // [FLOW] plan con revisión del puente contra tarballs servidos localmente
   const packages = join(temp, "packages");

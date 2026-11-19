@@ -5,6 +5,9 @@
 //   apply        escribe runtime.json, lockfiles, VERSION y notas de un plan
 //   next-version siguiente versión de mantenimiento sin tag existente
 //   guard        falla si la release baja algún runtime respecto a la anterior
+//   base         último tag publicado del canal (releases de gh por stdin)
+//   issues       borradores de issue de bloqueo o de revisión del puente
+//   groups       grupos que cambia un plan
 //   state        convierte los issues del vigía en bloqueos y aprobaciones
 // Los diagnósticos van a stderr; stdout queda para el resultado.
 // =============================================================================
@@ -14,7 +17,7 @@ import { mkdirSync, mkdtempSync, readFileSync, readdirSync, rmSync, statSync, wr
 import { tmpdir } from "node:os";
 import { join, relative, resolve as resolvePath } from "node:path";
 import {
-  EMPTY_STATE, LABEL, breakingChanges, commitSubject, downgrades, newNetwork, newer, nextVersion, releaseNotes, resolve, restrict, stateFromIssues,
+  EMPTY_STATE, LABEL, breakingChanges, commitSubject, downgrades, markerText, newNetwork, newer, nextVersion, releaseNotes, resolve, restrict, stateFromIssues,
   type Change, type Group, type Issue, type Name, type Pins, type Plan, type Registry, type State,
 } from "./resolve.ts";
 
@@ -219,6 +222,63 @@ export function guard(source: string, previous: string | null = previousTag(sour
 }
 
 // -----------------------------------------------------------------------------
+// [FLOW] base e issue: piezas del vigía de CI
+// -----------------------------------------------------------------------------
+
+export type PublishedRelease = { tagName: string; isPrerelease: boolean; isDraft?: boolean };
+
+/** Último tag publicado del canal: de ahí parte la versión de mantenimiento. */
+export function baseTag(releases: PublishedRelease[], channel: "preview" | "stable"): string | null {
+  const versions = releases
+    .filter((release) => !release.isDraft && release.tagName.startsWith("v") && SEMVER.test(release.tagName.slice(1)))
+    .filter((release) => release.isPrerelease === (channel === "preview") && release.tagName.includes("-") === (channel === "preview"))
+    .map((release) => release.tagName.slice(1))
+    .sort((a, b) => Bun.semver.order(b, a));
+  return versions[0] ? `v${versions[0]}` : null;
+}
+
+export type IssueDraft = { title: string; body: string };
+
+/** Issues que deja el vigía: bloqueo de grupos que rompen n_ein y revisión de un puente con red nueva. */
+export function issueDrafts(planned: PlanFile, kind: "blocked" | "review", groups: readonly Group[], run: string): IssueDraft[] {
+  if (kind === "review") {
+    return planned.held.map((item) => ({
+      title: `runtimes: revisar ${LABEL[item.name]} ${item.version} (red nueva)`,
+      body: [
+        `El vigía retuvo ${LABEL[item.name]} ${item.version}: su código trae llamadas de red que ${planned.base[item.name as "claudeBridge"]} no tenía.`,
+        "",
+        "```text",
+        ...item.lines.slice(0, 60),
+        "```",
+        "",
+        "Ciérralo como **completado** para aprobar la versión, o como **no planificado** para descartarla. Mientras siga abierto, el vigía no la usa.",
+        "",
+        `Ejecución: ${run}`,
+        "",
+        markerText({ kind: "review", versions: { [item.name]: item.version } }),
+      ].join("\n"),
+    }));
+  }
+  const changes = planned.changes.filter((change) => groups.includes(change.group));
+  if (changes.length === 0) return [];
+  const versions = Object.fromEntries(changes.map((change) => [change.name, change.to]));
+  return [{
+    title: `runtimes: ${changes.map((change) => `${LABEL[change.name]} ${change.to}`).join(", ")} rompe n_ein`,
+    body: [
+      "La matriz de n_ein falla con estas versiones, así que el vigía no las publica:",
+      "",
+      ...changes.map((change) => `- ${LABEL[change.name]}: ${change.from} → ${change.to}`),
+      "",
+      `Log: ${run}`,
+      "",
+      "Para adaptarlo, pídele a Ein en el repositorio «arregla la compatibilidad con estas versiones» y publica la versión normal. Cerrar este issue desbloquea estas versiones para el vigía; una versión más nueva se prueba igualmente.",
+      "",
+      markerText({ kind: "blocked", versions }),
+    ].join("\n"),
+  }];
+}
+
+// -----------------------------------------------------------------------------
 // [FLOW] CLI
 // -----------------------------------------------------------------------------
 
@@ -267,13 +327,32 @@ async function main(argv: string[]): Promise<void> {
       log(`[RUNTIME] ++ GUARD_OK :: previous: ${previous ?? "ninguna"}`);
       return;
     }
+    case "base": {
+      const releases = JSON.parse(await Bun.stdin.text()) as PublishedRelease[];
+      const tag = baseTag(releases, flag(args, "channel", "preview") === "stable" ? "stable" : "preview");
+      if (!tag) throw new Error("no hay release publicada en el canal");
+      process.stdout.write(tag + "\n");
+      return;
+    }
+    case "issues": {
+      const planned = JSON.parse(readFileSync(flag(args, "plan"), "utf8")) as PlanFile;
+      const kind = flag(args, "kind") === "review" ? "review" : "blocked";
+      const groups = flag(args, "groups", "pi,claude,codegraph").split(",").filter(Boolean) as Group[];
+      process.stdout.write(JSON.stringify(issueDrafts(planned, kind, groups, flag(args, "run", "")), null, 2) + "\n");
+      return;
+    }
+    case "groups": {
+      const planned = JSON.parse(readFileSync(flag(args, "plan"), "utf8")) as PlanFile;
+      process.stdout.write([...new Set(planned.changes.map((change) => change.group))].join(",") + "\n");
+      return;
+    }
     case "state": {
       const issues = JSON.parse(await Bun.stdin.text()) as Issue[];
       process.stdout.write(JSON.stringify(stateFromIssues(issues), null, 2) + "\n");
       return;
     }
     default:
-      throw new Error("uso: cli.ts plan|apply|next-version|guard|state [--source DIR] ...");
+      throw new Error("uso: cli.ts plan|apply|next-version|guard|base|issues|groups|state [--source DIR] ...");
   }
 }
 
