@@ -72,6 +72,7 @@ try {
         join(root, "previewer/agent/*.ts"),
         join(root, "previewer/web/*.ts"),
         join(root, "evals/previewer/**/*.ts"),
+        join(root, "scripts/runtimes/*.ts"),
       ],
     }),
   );
