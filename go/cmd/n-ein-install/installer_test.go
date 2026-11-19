@@ -553,7 +553,7 @@ func TestSetupInstallsEverythingOnceFromPackage(t *testing.T) {
 	if err != nil {
 		t.Fatalf("%v\n%s", err, first)
 	}
-	for _, want := range []string{"// 000  INSTALAR", "✓ pi", "✓ claude", "✓ puente", "✓ código", "✓ entrada", "✓ doctor", "instalador · preview", "listo."} {
+	for _, want := range []string{"// 000  INSTALAR", "✓ pi", "✓ claude", "✓ puente", "✓ código", "✓ entrada", "✓ doctor", "✓ limpieza", "instalador · preview", "listo."} {
 		if !strings.Contains(first, want) {
 			t.Fatalf("falta %q en la salida:\n%s", want, first)
 		}

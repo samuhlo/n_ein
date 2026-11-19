@@ -284,6 +284,20 @@ func setup(source, channel, self string, dryRun bool, output io.Writer) error {
 			}
 			return fmt.Sprintf("%d archivos · Pi %s · CodeGraph · Bun", len(meta.Files), version), nil
 		}},
+		{"limpieza", func(report io.Writer) (string, error) {
+			if dryRun {
+				return "runtimes sin uso y backups antiguos, al terminar", nil
+			}
+			runtimes, copies, err := prune(root)
+			if err != nil {
+				// La limpieza nunca invalida una instalación que ya pasó doctor.
+				return "pendiente: " + err.Error(), nil
+			}
+			if runtimes+copies == 0 {
+				return "nada que limpiar", nil
+			}
+			return fmt.Sprintf("%d runtimes sin uso · %d backups antiguos", runtimes, copies), nil
+		}},
 	}
 
 	pins, err := dependencyPins(source)
