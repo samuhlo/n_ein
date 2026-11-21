@@ -1,13 +1,14 @@
 #!/usr/bin/env bun
 // =============================================================================
 // [UI] TODO FUERA DE PI
-// La barra de estado de Claude: marca, modelo y la línea compacta del TODO de
-// WORK.md (`▸ T9 · 6/10`). El bloque completo lo dibuja el plugin en la franja
+// La barra de estado de Claude: marca, modelo, rama y la línea compacta del TODO
+// de WORK.md (`▸ T9 · 6/10`). El bloque completo lo dibuja el plugin en la franja
 // sobre el prompt. Las casillas siguen siendo la fuente de verdad; Claude las
 // marca editando el archivo, como Pi.
 // =============================================================================
 
 import { fitSegments, STATUS_COLUMNS, todoCompact, type TodoSegment, type TodoTone } from "../pi-package/claude-plugin/hooks/todo-core.ts";
+import { branchOf, branchSegments } from "../pi-package/extensions/git-branch.ts";
 import { readTodoView, readWorkDoc, resolveWorkDoc } from "../pi-package/extensions/work-doc.ts";
 
 const color = !("NO_COLOR" in process.env);
@@ -37,9 +38,11 @@ if (process.argv[2] === "--statusline") {
   try { input = JSON.parse(await Bun.stdin.text()); } catch { /* sin estado: solo marca */ }
   const cwd = input.workspace?.current_dir ?? input.cwd ?? process.cwd();
   const model = [input.model?.display_name, process.env.N_EIN_CLAUDE_EFFORT].filter(Boolean).join(" · ");
+  const branch = await branchOf(cwd);
   const groups: TodoSegment[][] = [
     [{ tone: "text", text: "n" }, { tone: "accent", text: "_" }, { tone: "text", text: "ein" }],
     model ? [{ tone: "muted", text: model }] : [],
+    branch ? branchSegments(branch) : [],
     todoParts(cwd),
   ].filter((group) => group.length > 0);
   // GUARD -> nunca más ancha que STATUS_COLUMNS: el pie del plugin reserva justo eso.

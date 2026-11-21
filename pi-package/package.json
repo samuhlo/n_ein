@@ -14,6 +14,7 @@
       "./extensions/usage.ts",
       "./extensions/todo.ts",
       "./extensions/activity.ts",
+      "./extensions/branch.ts",
       "./extensions/handoff.ts",
       "./extensions/models.ts",
       "./extensions/codegraph.ts",
