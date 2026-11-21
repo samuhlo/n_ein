@@ -6,7 +6,7 @@
 import { existsSync, readFileSync, statSync, writeFileSync } from "node:fs";
 import { dirname, isAbsolute, join, resolve } from "node:path";
 
-import { parseTasks, TASKS_HEADING, type WorkTask } from "../claude-plugin/hooks/todo-core.ts";
+import { docTitle, parseTasks, TASKS_HEADING, type TodoView, type WorkTask } from "../claude-plugin/hooks/todo-core.ts";
 
 export type { WorkTask };
 export type WorkDoc = { path: string; tasks: WorkTask[] };
@@ -30,6 +30,12 @@ export function resolveWorkDoc(cwd: string, configured = process.env.N_EIN_WORK_
 
 export function readWorkDoc(path: string): WorkDoc {
   return { path, tasks: parseTasks(readFileSync(path, "utf8")) };
+}
+
+/** Lo que dibuja el TODO: el título del encargo y sus casillas. */
+export function readTodoView(path: string): TodoView {
+  const content = readFileSync(path, "utf8");
+  return { title: docTitle(content), tasks: parseTasks(content) };
 }
 
 export function markWorkTask(path: string, index: number): WorkDoc {

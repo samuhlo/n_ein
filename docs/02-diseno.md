@@ -202,7 +202,7 @@ La vista local del encargo cruza WORK.md con comandos ejecutados y sus identidad
 
 ### TODO
 
-Conserva el aspecto del de Ein: debajo del editor, la fila actual con `▸`, sin fondo propio. Cambia su fuente: proyecta el checklist del documento de trabajo activo en lugar del `tasks.md` de OpenSpec.
+Conserva el aspecto del de Ein, sin fondo propio: debajo del editor, una cabecera con el título del encargo a la izquierda y su avance a la derecha, y debajo lo último hecho (`✓`), la tarea actual (`▸`, en amarillo) y las siguientes, cada fila abierta por `▏` y su id. Lo que no cabe se cuenta en una nota final («2 más · abierta antes: T5»). Se dibuja al ancho real de la terminal y recorta con `…`; por debajo de 32 columnas queda una línea compacta. Se refresca tras cada herramienta, no solo al final de la respuesta. Cambia su fuente: proyecta el checklist del documento de trabajo activo en lugar del `tasks.md` de OpenSpec.
 
 La tarea actual es la primera abierta tras la última hecha; si no queda ninguna después, la primera abierta. Así una tarea del propietario que sigue abierta arriba (una puesta en servicio, una prueba de dos semanas) no detiene el TODO: se señala aparte. Cada tarea se nombra por su id y su título; el detalle tras « — » y lo bloqueado quedan en el documento. Pi, Claude, el banner y el launcher usan la misma regla.
 

@@ -3,7 +3,7 @@ import { spawnSync } from "node:child_process";
 import { mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join, resolve } from "node:path";
-import { focusOf, parseTasks, taskLabel, taskParts } from "../pi-package/claude-plugin/hooks/todo-core.ts";
+import { docTitle, focusOf, parseTasks, taskLabel, taskParts, todoCompact, todoRows, type TodoSegment } from "../pi-package/claude-plugin/hooks/todo-core.ts";
 
 const root = resolve(import.meta.dir, "..");
 const fixture = readFileSync(join(root, "tests/fixtures/work-focus.md"), "utf8");
@@ -43,6 +43,45 @@ assert.deepEqual(taskParts("Reproducir el defecto"), { key: "", title: "Reproduc
 assert.deepEqual(taskParts("Revisar. Blocked by: T1."), { key: "", title: "Revisar" });
 assert.equal(taskLabel("T9 · Autoría — detalle"), "T9 · Autoría");
 assert.equal(taskLabel("Reproducir el defecto"), "Reproducir el defecto");
+
+// [UI] El bloque de Ein: cabecera con qué y avance, filas con ▏ ✓ ▸, recorte al ancho real.
+const view = { title: docTitle(fixture), tasks: parseTasks(fixture) };
+const lines = (rows: TodoSegment[][]): string[] => rows.map((row) => row.map((part) => part.text).join(""));
+const width = (line: string): number => [...line].length;
+const block = todoRows(view, { width: 80 });
+const drawn = lines(block);
+assert.equal(drawn.length, 6, drawn.join("\n"));
+assert.match(drawn[0], /^ {2}Encargo de prueba +6\/10$/);
+assert.equal(width(drawn[0]), 80, "la cabecera ancla el avance al margen derecho");
+assert.match(drawn[1], /^ {2}▏ {2}✓ {2}T8 {3}Correcciones$/, "lo último hecho da contexto");
+assert.match(drawn[2], /^ {2}▏ {2}▸ {2}T9 {3}Autoría y emojis en la revisión$/);
+assert.match(drawn[3], /^ {2}▏ {5}T10 {2}El sitio de cada nota$/);
+assert.match(drawn[4], /^ {2}▏ {5}T6 {3}Prueba de dos semanas$/);
+assert.match(drawn[5], /^ {2}▏ {5}abierta antes: T5$/);
+assert.ok(block[2].some((part) => part.tone === "accent" && part.text.includes("Autoría")), "la fila actual lleva el acento");
+assert.ok(block[1].every((part) => part.tone !== "accent"), "lo hecho no compite con el foco");
+assert.ok(drawn.every((line) => !line.includes("—") && !line.includes("Blocked")), "el detalle se queda en el documento");
+
+const phased = lines(todoRows(view, { width: 80, phase: "coding" }));
+assert.match(phased[0], /^ {2}Encargo de prueba +▸ coding {3}6\/10$/, "la fase va junto al avance");
+
+const tight = lines(todoRows(view, { width: 80, maxLines: 4 }));
+assert.deepEqual(tight.map((line) => line.trim().split(/ {2,}/).at(-1)), ["6/10", "Correcciones", "Autoría y emojis en la revisión", "2 más · abierta antes: T5"]);
+
+const narrow = lines(todoRows(view, { width: 36 }));
+assert.ok(narrow.every((line) => width(line) <= 36), narrow.join("\n"));
+assert.ok(narrow.some((line) => line.endsWith("T9   Autoría y emojis en la…")), "el título se recorta con …");
+
+assert.deepEqual(lines(todoRows(view, { width: 24 })), ["▸ T9 · 6/10"], "sin sitio, una línea compacta");
+assert.deepEqual(lines(todoRows({ title: "Hecho", tasks: parseTasks(checklist("- [x] T1 · Uno", "- [x] T2 · Dos")) }, { width: 60 })),
+  [`  Hecho${" ".repeat(48)}✓ 2/2`]);
+const unnamed = lines(todoRows({ title: "Encargo", tasks: parseTasks(checklist("- [ ] Reproducir el defecto", "- [ ] Corregirlo")) }, { width: 60 }));
+assert.match(unnamed[1], /^ {2}▏ {2}▸ {2}Reproducir el defecto$/, "sin ids no hay columna de id");
+assert.equal(docTitle("Sin título\n\n## Tareas\n"), "WORK.md");
+assert.equal(docTitle("# **Miolo** · volver\n"), "Miolo · volver");
+
+assert.deepEqual(lines([todoCompact(view)]), ["▸ T9 · 6/10"]);
+assert.deepEqual(lines([todoCompact({ title: "E", tasks: parseTasks(checklist("- [ ] Reproducir el defecto con calma y con datos")) }, 20)]), ["▸ Reproducir el defec… · 0/1"]);
 
 // [FLOW] La barra de estado de Claude lee la misma regla.
 const project = mkdtempSync(join(tmpdir(), "n-ein-todo-core-"));

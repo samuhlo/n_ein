@@ -44,7 +44,7 @@ Pedidos:
 ## Tareas
 
 - [x] T1 · Tarea actual compartida — `todo-core.ts` con lectura, id y título y la regla nueva; Pi, barra de Claude, banner y launcher la usan. Blocked by: none.
-- [ ] T2 · TODO de Pi con el estilo de Ein — bloque con cabecera y filas, color, ancho real y refresco tras cada herramienta. Blocked by: T1.
+- [x] T2 · TODO de Pi con el estilo de Ein — bloque con cabecera y filas, color, ancho real y refresco tras cada herramienta. Blocked by: T1.
 - [ ] T3 · TODO en Claude — el bloque en la franja sobre el prompt, barra compacta y reserva del pie compartida. Blocked by: T2.
 - [ ] T4 · Modo de actividad — `activity-core.ts`, spinner de Claude, mensaje de trabajo de Pi y cabecera del TODO. Blocked by: T2, T3.
 - [ ] T5 · Rama — barra de Claude y estado de Pi. Blocked by: T3.
