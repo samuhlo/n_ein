@@ -2,6 +2,7 @@ import { strict as assert } from "node:assert";
 import { mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
+import { ACTIVITY_EVENT } from "../pi-package/claude-plugin/hooks/activity-core";
 import registerTodo from "../pi-package/extensions/todo";
 import { addWorkTask, readWorkDoc, resolveWorkDoc } from "../pi-package/extensions/work-doc";
 
@@ -19,13 +20,14 @@ delete process.env.NO_COLOR;
 let sessionStart: any;
 let toolEnd: any;
 let todoCommand: any;
+let onActivity: (data: unknown) => void = () => {};
 registerTodo({
   on(name: string, handler: any) {
     if (name === "session_start") sessionStart = handler;
     if (name === "tool_execution_end") toolEnd = handler;
   },
   registerCommand(name: string, command: any) { if (name === "todo") todoCommand = command; },
-  events: { on: () => () => {}, emit() {} },
+  events: { on(channel: string, handler: (data: unknown) => void) { if (channel === ACTIVITY_EVENT) onActivity = handler; return () => {}; }, emit() {} },
 } as any);
 
 type Widget = string[] | ((tui: unknown, theme: unknown) => { render(width: number): string[] }) | undefined;
@@ -79,6 +81,12 @@ try {
   toolEnd({}, ctx);
   toolEnd({}, ctx);
   assert.equal(widgets.length, repaints + 1, "sin cambios no se repinta");
+
+  // La fase llega de activity.ts por el bus de eventos y se va al acabar la respuesta.
+  onActivity("testing");
+  assert.match(plain(), /^ {2}Encargo +▸ testing {3}0\/2$/m);
+  onActivity(null);
+  assert.match(plain(), /^ {2}Encargo +0\/2$/m);
 
   process.env.NO_COLOR = "1";
   sessionStart({}, ctx);

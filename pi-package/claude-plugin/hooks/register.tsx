@@ -3,7 +3,8 @@
 // Claude Code dibuja; este módulo solo cambia cómo se ve:
 //   · cada herramienta, un recibo de una línea (la gramática de Pi),
 //   · el grupo plegado, una línea con sus verbos,
-//   · el spinner y el cierre de turno, en castellano y sin adornos,
+//   · el spinner con el modo de actividad (thinking, coding, testing…) y el
+//     cierre de turno sin adornos,
 //   · la marca 004 Panel sobre el prompt hasta la primera petición, y
 //     después, en ese mismo sitio, el TODO de WORK.md,
 //   · el consumo de la suscripción y los tokens, en el pie.
@@ -15,7 +16,8 @@
 
 import { registerWorkspace, publishClaude } from "./workspace-hooks.ts";
 import { registerActions } from "./actions-view.tsx";
-import { registerTodo, reloadTodo, startTodo, todoBand } from "./todo-view.tsx";
+import { clearActivity, noteTool, phase, spinnerWord } from "./activity-view.ts";
+import { reloadTodo, startTodo, todoBand } from "./todo-view.tsx";
 import { atom, read, update } from "claude-code";
 import type { EngineInterface, Register, RenderInput } from "claude-code";
 
@@ -40,15 +42,6 @@ const TONE: Record<Tone, string> = { accent: YELLOW, success: "success", error: 
 const BRAND: Record<BrandTone, string> = { concrete: "#FAF3F0", yellow: YELLOW, muted: "#9A9A9A", tileHigh: "#1A1A1A", tileLow: "#141414" };
 const TILE: Record<TileTone, string> = { tileHigh: "#1A1A1A", tileCard: "#161616", tileLow: "#141414" };
 const METER: Record<MeterTone, string> = { accent: YELLOW, warning: "warning", error: "error", text: "text", dim: "subtle" };
-
-// El verbo del spinner sale de lo que hace el turno, no de una lista de ocurrencias.
-const SPINNER_WORD: Record<string, string> = {
-  requesting: "pensando",
-  thinking: "pensando",
-  responding: "escribiendo",
-  "tool-input": "preparando",
-  "tool-use": "trabajando",
-};
 
 const FRAME_MS = 80;
 const FALLBACK_COLUMNS = 100;
@@ -101,7 +94,6 @@ async function adopt($: EngineInterface): Promise<void> {
 export const register: Register = (on) => {
   registerActions(on);
   registerWorkspace(on);
-  registerTodo(on);
   let place: Place = { cwd: "", home: "" };
   let opening: { cancel: () => void } | undefined;
   let metering: { cancel: () => void } | undefined;
@@ -155,7 +147,10 @@ export const register: Register = (on) => {
   // Solo el bucle principal: los subagentes cuentan dentro del turno que los lanzó, o no cuentan.
   // Al cerrarlo se relee WORK.md, que pudo cambiar por un subagente o un comando.
   on("turn.complete", async ($, e, next) => {
-    if (e.agentId === undefined) await reloadTodo($).catch(() => {});
+    if (e.agentId === undefined) {
+      await clearActivity($).catch(() => {});
+      await reloadTodo($).catch(() => {});
+    }
     if (e.usage && e.agentId === undefined) {
       const last = tokensOf(e.usage);
       await update($, turn, () => last);
@@ -163,6 +158,15 @@ export const register: Register = (on) => {
       await publishClaude($, "idle");
     }
     return next(e);
+  });
+
+  // Antes de la herramienta, su modo; después, se relee WORK.md si pudo escribir: el agente marca la
+  // casilla a mitad de turno. Solo el bucle principal; lo de un subagente llega al cerrar su turno.
+  on("tool.call", async ($, e, next) => {
+    await noteTool($, e.tool, e, e.agentId).catch(() => {});
+    const result = await next(e);
+    if (e.agentId === undefined && result.deny === undefined && result.isReadOnly !== true) await reloadTodo($).catch(() => {});
+    return result;
   });
 
   on("command.run", { command: "detalle" }, async ($) => {
@@ -199,8 +203,9 @@ export const register: Register = (on) => {
     return row($, e, [{ tone: "text", text: " " }, glyph, { tone: "muted", text: ` ${groupSummary(calls, place)}` }]);
   });
 
-  on("ui.render", { component: "Spinner" }, ($, e, next) =>
-    next({ ...e, props: { ...e.props, word: SPINNER_WORD[e.props.mode] ?? e.props.word } }));
+  // El verbo del spinner sale de lo que hace el turno, no de una lista de ocurrencias.
+  on("ui.render", { component: "Spinner" }, async ($, e, next) =>
+    next({ ...e, props: { ...e.props, word: (await spinnerWord($, e.props.mode)) ?? e.props.word } }));
 
   on("ui.render", { component: "TurnDuration" }, ($, e) =>
     row($, e, [{ tone: "dim", text: `${GLYPH.done} ${duration(e.props.durationMs)}` }]));
@@ -209,7 +214,7 @@ export const register: Register = (on) => {
   // y se retira con el primer mensaje. Desde entonces la franja es del TODO, salvo que llegue una encuesta.
   on("ui.render", { component: "AbovePrompt" }, async ($, e, next) => {
     const t = await read($, intro);
-    if (t === null) return (await todoBand($, e)) ?? next(e);
+    if (t === null) return (await todoBand($, e, await phase($, e.props.isWorking))) ?? next(e);
     const { Box, Text } = $.ui.resolve(e);
     return (
       <Box flexDirection="column" paddingLeft={1}>

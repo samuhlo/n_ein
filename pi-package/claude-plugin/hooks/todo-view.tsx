@@ -9,7 +9,7 @@
 // =============================================================================
 
 import { atom, read, update } from "claude-code";
-import type { EngineInterface, On, RenderInput } from "claude-code";
+import type { EngineInterface, RenderInput } from "claude-code";
 
 import { docTitle, parseTasks, todoRows, type TodoTone, type TodoView } from "./todo-core.ts";
 
@@ -51,10 +51,10 @@ export async function reloadTodo($: EngineInterface): Promise<void> {
 }
 
 /** La franja sobre el prompt con el TODO; sin documento, o con una encuesta, se queda para el motor. */
-export async function todoBand($: EngineInterface, e: RenderInput<"AbovePrompt">) {
+export async function todoBand($: EngineInterface, e: RenderInput<"AbovePrompt">, phase?: string) {
   const view = await read($, todo);
   if (!view || e.props.hasSurvey) return null;
-  const rows = todoRows(view, { width: e.props.bodyColumns, maxLines: Math.min(BAND_LINES, e.props.maxRows) });
+  const rows = todoRows(view, { width: e.props.bodyColumns, maxLines: Math.min(BAND_LINES, e.props.maxRows), phase });
   if (rows.length === 0) return null;
   const { Box, Text } = $.ui.resolve(e);
   return (
@@ -75,14 +75,4 @@ export async function startTodo($: EngineInterface): Promise<void> {
   await reloadTodo($);
   reloading?.cancel();
   reloading = $.clock.every(RELOAD_MS, () => { void reloadTodo($).catch(() => {}); });
-}
-
-export function registerTodo(on: On): void {
-  // Tras cada herramienta que pudo escribir: el agente marca la casilla a mitad de turno.
-  // Solo el bucle principal: lo que hace un subagente llega al cerrar el turno que lo lanzó.
-  on("tool.call", async ($, e, next) => {
-    const result = await next(e);
-    if (e.agentId === undefined && result.deny === undefined && result.isReadOnly !== true) await reloadTodo($).catch(() => {});
-    return result;
-  });
 }

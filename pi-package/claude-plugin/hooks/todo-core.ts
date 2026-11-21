@@ -38,12 +38,12 @@ export function parseTasks(content: string): WorkTask[] {
   const lines = content.split(/\r?\n/);
   const tasks: WorkTask[] = [];
   let inChecklist = false;
-  for (let line = 0; line < lines.length; line++) {
-    if (TASKS_HEADING.test(lines[line])) { inChecklist = true; continue; }
-    if (/^#{1,2}\s+/.test(lines[line])) inChecklist = false;
+  for (const [line, text] of lines.entries()) {
+    if (TASKS_HEADING.test(text)) { inChecklist = true; continue; }
+    if (/^#{1,2}\s+/.test(text)) inChecklist = false;
     if (!inChecklist) continue;
-    const match = /^(\s*[-*]\s+\[)([ xX])(\]\s+)(.+)$/.exec(lines[line]);
-    if (match) tasks.push({ index: tasks.length + 1, line, done: match[2].toLowerCase() === "x", text: match[4] });
+    const match = /^\s*[-*]\s+\[([ xX])\]\s+(.+)$/.exec(text);
+    if (match?.[1] && match[2]) tasks.push({ index: tasks.length + 1, line, done: match[1] !== " ", text: match[2] });
   }
   return tasks;
 }
@@ -69,9 +69,9 @@ export function focusOf(tasks: readonly WorkTask[]): Focus {
 export function taskParts(text: string): TaskParts {
   const clean = text.replace(/\*\*|__|`/g, "").replace(/\s+/g, " ").trim();
   const id = /^(T\d+[a-z]?)\s*·\s*(.*)$/i.exec(clean);
-  const rest = id ? id[2] : clean;
-  const title = rest.split(" — ")[0].replace(/\s*Blocked by:.*$/i, "").replace(/\.$/, "").trim();
-  return { key: id ? id[1] : "", title: title || rest };
+  const rest = id?.[2] ?? clean;
+  const title = (rest.split(" — ")[0] ?? "").replace(/\s*Blocked by:.*$/i, "").replace(/\.$/, "").trim();
+  return { key: id?.[1] ?? "", title: title || rest };
 }
 
 /** El nombre corto de una tarea: id y título, sin el detalle. */
@@ -82,8 +82,8 @@ export function taskLabel(text: string): string {
 
 /** El título del documento, sin marcas: lo que dice de qué va el encargo. */
 export function docTitle(content: string): string {
-  const heading = /^#\s+(.+)$/m.exec(content);
-  return heading ? heading[1].replace(/\*\*|__|`/g, "").trim() : "WORK.md";
+  const heading = /^#\s+(.+)$/m.exec(content)?.[1];
+  return heading ? heading.replace(/\*\*|__|`/g, "").trim() : "WORK.md";
 }
 
 // -----------------------------------------------------------------------------
@@ -194,8 +194,8 @@ export function todoRows(view: TodoView, options: TodoOptions): TodoSegment[][] 
     return { withPrevious, shown, note, lines: fixed + shown.length + (note ? 1 : 0) };
   };
   const fits = (plan: ReturnType<typeof layout>) => plan.lines <= available;
-  const candidates = [layout(Boolean(previous?.done), true), layout(false, true), layout(false, false)];
-  const plan = candidates.find(fits) ?? candidates[2];
+  // Lo primero que cede es lo último hecho; después, la nota. La actual siempre se queda.
+  const plan = [layout(Boolean(previous?.done), true), layout(false, true)].find(fits) ?? layout(false, false);
 
   const visible = [...(plan.withPrevious && previous ? [previous] : []), current, ...plan.shown];
   const keyWidth = visible.some((task) => keyOf(task)) ? Math.max(...visible.map((task) => keyOf(task).length)) + 2 : 0;

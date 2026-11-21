@@ -51,7 +51,7 @@ test("el spinner dice lo que hace el turno", async ($, on) => {
     return <Text>{e.props.word}</Text>;
   });
   const ui = await $.ui.mount({ plugin: "n-ein", surface: "terminal", component: "Spinner", props: { word: "Sauteing", message: null, suffix: "…", mode: "thinking" } });
-  expect(await ui.find({ text: "pensando" })).toBeDefined();
+  expect(await ui.find({ text: "thinking" })).toBeDefined();
 });
 
 test("el cierre de turno es la duración con ✓", async ($) => {
@@ -191,18 +191,20 @@ const BAND = { hasSurvey: false, isWorking: false, maxRows: 20, bodyColumns: 80,
 function workspace(on: On, files: Record<string, string>) {
   on("fs.exists", ($, e) => ({ value: e.path === "/repo/.git" || e.path in files }));
   on("fs.read", ($, e) => {
-    if (!(e.path in files)) throw new Error(`ENOENT: ${e.path}`);
-    return { value: files[e.path] };
+    const text = files[e.path];
+    if (text === undefined) throw new Error(`ENOENT: ${e.path}`);
+    return { value: text };
   });
   on("prompt.submit", ($, e) => ({ text: e.text }));
   on("tool.call", ($, e) => {
-    if (e.tool === "Edit" && e.file_path in files) files[e.file_path] = files[e.file_path].replace(e.old_string, e.new_string);
+    const text = e.tool === "Edit" ? files[e.file_path] : undefined;
+    if (e.tool === "Edit" && text !== undefined) files[e.file_path] = text.replace(e.old_string, e.new_string);
     return { result: { ok: true } as never };
   });
 }
 const band = ($: Engine, props: Partial<typeof BAND> = {}) =>
   $.ui.mount({ plugin: "n-ein", surface: "terminal", component: "AbovePrompt", props: { ...BAND, ...props }, viewport });
-const submit = ($: Engine) => $.prompt.submit({ text: "hola" });
+const submit = ($: Engine) => $.prompt.submit({ text: "hola", wait: false, origin: { kind: "composer" } });
 
 test("tras la primera petición la franja enseña el bloque del TODO", async ($, on) => {
   world(on);
@@ -240,4 +242,40 @@ test("una edición de WORK.md mueve la franja", async ($, on) => {
   const drawn = JSON.stringify(await (await band($)).drawn());
   expect(drawn).toContain("2/3");
   expect(drawn).toContain("Tres");
+});
+
+// --- Modo de actividad ---------------------------------------------------------------------------
+const spinner = ($: Engine, mode: "requesting" | "responding" | "thinking" | "tool-input" | "tool-use") =>
+  $.ui.mount({ plugin: "n-ein", surface: "terminal", component: "Spinner", props: { word: "Sauteing", message: null, suffix: "…", mode } });
+const word = (on: On) => on("ui.render", { component: "Spinner" }, ($, e) => {
+  const { Text } = $.ui.resolve(e);
+  return <Text>{e.props.word}</Text>;
+});
+
+test("el spinner dice el modo de la herramienta en curso", async ($, on) => {
+  // Antes que world: su hook genérico contesta cualquier dibujo sin pasar al siguiente.
+  word(on);
+  world(on);
+  workspace(on, { "/repo/WORK.md": WORK });
+  await start($);
+  const says = async (mode: Parameters<typeof spinner>[1]) => JSON.stringify(await (await spinner($, mode)).drawn());
+  expect(await says("tool-use")).toContain("working");
+  await $.tool.call({ tool: "Bash", command: "bun test --bail" });
+  expect(await says("tool-use")).toContain("testing");
+  expect(await says("responding")).toContain("writing");
+  // Las herramientas de un subagente no cambian lo que hace el bucle principal.
+  await $.tool.call({ tool: "Edit", file_path: "/repo/a.ts", old_string: "a", new_string: "b", agentId: "a1" });
+  expect(await says("tool-use")).toContain("testing");
+  await turnEnd($, USAGE);
+  expect(await says("tool-use")).toContain("working");
+});
+
+test("mientras trabaja, la franja lleva la fase junto al avance", async ($, on) => {
+  world(on);
+  workspace(on, { "/repo/WORK.md": WORK });
+  await start($);
+  await submit($);
+  await $.tool.call({ tool: "Edit", file_path: "/repo/src/a.ts", old_string: "a", new_string: "b" });
+  expect(JSON.stringify(await (await band($, { isWorking: true })).drawn())).toContain("▸ coding");
+  expect(JSON.stringify(await (await band($, { isWorking: false })).drawn())).not.toContain("coding");
 });

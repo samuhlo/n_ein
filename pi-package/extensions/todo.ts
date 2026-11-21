@@ -7,6 +7,7 @@
 
 import type { ExtensionAPI, ExtensionContext } from "@earendil-works/pi-coding-agent";
 import { truncateToWidth } from "@earendil-works/pi-tui";
+import { ACTIVITY_EVENT } from "../claude-plugin/hooks/activity-core.ts";
 import { todoRows, type TodoTone, type TodoView } from "../claude-plugin/hooks/todo-core.ts";
 import { COLORS, painter } from "./brand.ts";
 import { addWorkTask, markWorkTask, readTodoView, readWorkDoc, resolveWorkDoc } from "./work-doc";
@@ -22,19 +23,23 @@ const TONE: Record<TodoTone, string> = {
 
 export default function (pi: ExtensionAPI) {
   let view: TodoView | undefined;
+  // La fase de la última herramienta mientras el agente trabaja; la manda activity.ts.
+  let phase: string | undefined;
+  let context: ExtensionContext | undefined;
   // Lo último enviado: el widget se refresca tras cada herramienta y repintar lo idéntico es parpadeo gratis.
   let painted = "";
   let failure = "";
 
   const paint = (ctx: ExtensionContext): void => {
-    const sent = JSON.stringify([view, "NO_COLOR" in process.env]);
+    const sent = JSON.stringify([view, phase, "NO_COLOR" in process.env]);
     if (sent === painted) return;
     painted = sent;
     if (!view) { ctx.ui.setWidget(WIDGET, undefined); return; }
     const shown = view;
+    const current = phase;
     const p = painter();
     ctx.ui.setWidget(WIDGET, () => ({
-      render: (width: number) => todoRows(shown, { width })
+      render: (width: number) => todoRows(shown, { width, phase: current })
         .map((row) => truncateToWidth(row.map((part) => p.fg(TONE[part.tone], part.text)).join(""), width)),
       invalidate() {},
     }), { placement: "belowEditor" });
@@ -42,6 +47,7 @@ export default function (pi: ExtensionAPI) {
 
   const refresh = (ctx: ExtensionContext): void => {
     if (!ctx.hasUI) return;
+    context = ctx;
     const path = resolveWorkDoc(ctx.cwd);
     try {
       const next = path ? readTodoView(path) : undefined;
@@ -63,6 +69,10 @@ export default function (pi: ExtensionAPI) {
   pi.on("tool_execution_end", (_event, ctx) => refresh(ctx));
   pi.on("turn_end", (_event, ctx) => refresh(ctx));
   pi.on("agent_end", (_event, ctx) => refresh(ctx));
+  pi.events.on(ACTIVITY_EVENT, (data) => {
+    phase = typeof data === "string" ? data : undefined;
+    if (context) paint(context);
+  });
 
   pi.registerCommand("todo", {
     description: "Muestra o actualiza las casillas de WORK.md: /todo, /todo done N, /todo add texto",
