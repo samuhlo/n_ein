@@ -6,6 +6,7 @@
 // Claude las marca editando el archivo, como Pi.
 // =============================================================================
 
+import { focusOf, taskLabel } from "../pi-package/claude-plugin/hooks/todo-core.ts";
 import { readWorkDoc, resolveWorkDoc } from "../pi-package/extensions/work-doc.ts";
 
 const color = !("NO_COLOR" in process.env);
@@ -24,12 +25,11 @@ function todoLine(cwd: string): string {
   try {
     const { tasks } = readWorkDoc(path);
     if (tasks.length === 0) return "";
-    const done = tasks.filter((task) => task.done).length;
-    const current = tasks.find((task) => !task.done);
-    const counter = paint(STRUCTURE, `${done}/${tasks.length}`);
+    const { current, done, total } = focusOf(tasks);
+    const counter = paint(STRUCTURE, `${done}/${total}`);
     return current
-      ? `${paint(YELLOW, "▸")} ${paint(CONCRETE, clip(current.text, 60))} ${paint(MUTED, "·")} ${counter}`
-      : `${paint(STRUCTURE, "✓")} ${paint(MUTED, `${done}/${tasks.length} tareas`)}`;
+      ? `${paint(YELLOW, "▸")} ${paint(CONCRETE, clip(taskLabel(current.text), 60))} ${paint(MUTED, "·")} ${counter}`
+      : `${paint(STRUCTURE, "✓")} ${paint(MUTED, `${done}/${total} tareas`)}`;
   } catch {
     return paint(MUTED, "WORK.md ilegible");
   }

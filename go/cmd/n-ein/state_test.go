@@ -90,6 +90,24 @@ func TestFiveViewsUseObservedSources(t *testing.T) {
 	}
 }
 
+// Mismo fixture que tests/todo-core.ts: el launcher y el TODO deben señalar la misma tarea.
+func TestWorkStateFollowsTheLastDoneTask(t *testing.T) {
+	fixture, err := os.ReadFile(filepath.Join("..", "..", "..", "tests", "fixtures", "work-focus.md"))
+	if err != nil {
+		t.Fatal(err)
+	}
+	project := t.TempDir()
+	write(t, filepath.Join(project, "WORK.md"), string(fixture))
+	_, tasks, current, _ := workState(project)
+	if tasks != "6/10 hechas" || current != "T9 · Autoría y emojis en la revisión" {
+		t.Fatalf("tarea actual: %q, %q", tasks, current)
+	}
+	write(t, filepath.Join(project, "WORK.md"), "# E\n\n## Tareas\n- [x] T1 · Uno\n- [ ] T2 · Del dueño\n- [x] T3 · Tres\n")
+	if _, _, current, _ := workState(project); current != "T2 · Del dueño" {
+		t.Fatalf("sin nada tras lo hecho vuelve a la abierta: %q", current)
+	}
+}
+
 func TestRuntimeViewUsesConfiguredBinariesAndRejectsWrongPiVersion(t *testing.T) {
 	root := t.TempDir()
 	project := t.TempDir()

@@ -1,71 +1,58 @@
-# Runtimes al día: comprobados en CI y actualizables desde el launcher
+# TODO legible, modo de actividad y rama
 
 ## Objetivo
 
-Samu detectó que Pi y Claude Code se quedan atrás y que usar un modelo nuevo exige subir esa base en n_ein. El 19 de noviembre había Pi 1.0.2 frente a 1.5.2, el puente 0.9.3 frente a 0.13.0 (que exige Pi ≥ 1.5.1), Claude Code 2.1.302 frente a 2.1.311 estable y CodeGraph 1.6.1 frente a 1.6.3.
-
-Rechazó el aviso solo informativo: «la idea es que comprobara si la actualización rompe algo, y si no rompe nada, apareciera para actualizar en el launcher y lo hiciera desde ahí». Pidió «un plan con arquitectura profesional (tampoco te pases, que es un proyecto personal)» y «sugerencias y recomendaciones». Aprobó el plan: «Me encanta, hazlo. Y sí, autorizo todo».
+Samu ve que el TODO «no funciona muy bien»: «En pi, ni colores, ni el resumen o acortacion, aparece todo y queda horrible»; en Claude «aparece solo la tarea en si»; y «en la app de Miolo, no se mueve de T5 cuando va por la T33». Quiere además «que si esta orquestando ponga orchesting, si esta con codigo, coding, si esta con test testing… esto seria como un mod nuevo» y «otro que marque la rama donde esta trabajando. Todo con el estilo nein». El fin: «saber por donde va y que esta haciendo, tener mas claridad visual».
 
 Pedidos:
-1. Comprobar automáticamente si una versión nueva de Pi, el puente, Claude Code o CodeGraph rompe n_ein.
-2. Si no rompe, que aparezca en el launcher y se actualice desde ahí.
-3. Las recomendaciones aceptadas: Claude Code por su canal estable, cuarentena de 3 días, revisión del puente si trae red nueva, grupos con publicación parcial, aviso de sesiones al volver atrás y pendiente de adaptar en Sistema.
+1. Arreglar el TODO de Pi: color, recorte y resumen.
+2. Un TODO más completo en Claude.
+3. Que la tarea actual avance de verdad (Miolo en T5).
+4. Mod de modo de actividad: orchestrating, coding, testing…
+5. Mod de rama.
+6. Todo con el estilo de n_ein.
 
 ## Autorización
 
-«Hazlo» y «autorizo todo» sobre el plan de cinco tramos: implementación en esta rama con commit por tarea, PR e integración en main, publicar la preview con la primera subida y el vigía que publica previews solo cuando la matriz pasa. La estable sigue siendo manual. Cambiar el ajuste del repositorio que deja a Actions abrir PR entra en «todo». No autoriza actualizar la instalación personal: eso es pulsar `u`.
+«hazlo» sobre el plan propuesto el 21 de noviembre: implementación en esta rama con commit por tarea. No incluye integrar en main, publicar ni tocar la instalación personal.
 
 ## Decisiones
 
-- **La subida de runtimes es una versión normal de n_ein.** Reutiliza matriz macOS+Linux, `check.sh` sin modelos, instalación limpia con upgrade y restore, attestation y el `u` del launcher. Descartados: comprobar en la máquina (el paquete no lleva los tests) y conjuntos de runtimes aparte del paquete (segunda vía de instalación).
-- **El vigía publica preview sin aprobación previa;** la puerta es `u`. La estable no se publica sola.
-- **Versión:** siguiente prerelease desde el último tag publicado del canal (alpha.1 → alpha.2), en una rama `hotfix/runtimes-<versión>`. La PR a main lleva el mismo commit.
-- **Guarda contra bajadas:** ninguna release publica runtimes más antiguos que el tag anterior.
-- **Reglas de selección:** Pi y puente van juntos (el puente más nuevo cuyo peer admite ese Pi); Claude Code por la etiqueta `stable`; CodeGraph por su última release con el SHA-256 que publica GitHub; 3 días de cuarentena salvo Claude Code, cuya etiqueta ya va con retraso.
-- **Memoria del vigía en issues con la etiqueta `runtimes`:** una versión que rompe queda bloqueada hasta cerrar su issue; un puente con red nueva espera a que su issue de revisión se cierre como completado.
-- **Herramientas en TypeScript con Bun** (`scripts/runtimes/`), como el resto de scripts; el launcher en Go.
+- **Sin respuesta explícita a las tres preguntas, valen las recomendaciones del plan** («hazlo» tras proponerlas):
+  - Modos en inglés y minúscula, también las palabras del spinner de Claude (thinking, writing…): es lo que pidió Samu y mezclar «pensando» con «coding» queda peor. Sustituye la decisión anterior de un spinner en castellano. El resto de la interfaz sigue en castellano.
+  - En Claude, el bloque de tareas va en la franja sobre el prompt tras la marca de apertura, plegable con `ctrl+x ctrl+a` y cediendo ante las encuestas; la barra de estado queda compacta. Debajo del prompt solo cabe una línea y el panel lateral no se coloca solo en un portátil.
+  - Tarea actual = la primera sin marcar después de la última marcada (si no hay, la primera sin marcar); las abiertas anteriores se señalan aparte. Sin marca nueva en el markdown: GitHub no la pintaría como casilla y obligaría al agente a escribirla.
+- **El aspecto sigue el TODO de Ein** (`ein-agent/ein-pi/agent/lib/sdd-overlay.ts`): cabecera con qué a la izquierda y `▸ modo · n/m` a la derecha, filas con `▏`, `✓` y `▸`, id en estructura, recorte al ancho real.
+- **Un núcleo puro compartido** en `claude-plugin/hooks/` (como marca y recibos): el plugin de Claude corre sin Node, así que lectura de tareas, regla, filas y modos no importan nada.
+- **La cabecera enseña la fase** (modo de la última herramienta mientras trabaja); el spinner, lo que hace en ese instante. En Claude, mientras el modelo escribe la llamada de una herramienta el spinner dice `preparing`: su nombre solo llega por el stream del paso, que no se engancha en esta entrega.
 
 ## Límites
 
-- Sin actualizar nada sin pulsar `u`; sin avisos fuera del launcher; sin Renovate ni Dependabot.
-- Sin turnos con modelos reales en CI ni credenciales de suscripción en GitHub.
-- El vigía solo publica en preview.
+- Sin plegado propio en Pi ni panel lateral en Claude.
+- Sin cambiar la gramática de casillas de `WORK.md` ni `/todo`.
+- Sin hook del stream de pasos de Claude.
 
 ## Criterios
 
-- «comprobara si la actualización rompe algo» → `scripts/runtimes/`, `.github/workflows/runtimes.yml`, `candidate.yml` → tests de la selección con registro falso (cuarentena, peer, stable, bloqueos, sin bajadas); el vigía ejecuta la matriz completa sobre la rama del bump y solo publica si pasa; si falla, prueba por grupos y abre un issue.
-- «apareciera para actualizar en el launcher» → `go/cmd/n-ein/update.go`, `ui.go`, `state.go` → test: con una release nueva, la portada ofrece `u` y dice qué runtimes trae; Sistema muestra la versión nueva por runtime.
-- «lo hiciera desde ahí» → `fetch`/`setup` del instalador → test: una actualización cuyo doctor falla restaura sola la anterior; doctor arranca Pi con las extensiones de n_ein y un proveedor de prueba; Sistema ofrece volver a la versión anterior con confirmación y aviso de sesiones.
-- Guarda → `release.yml` → test: bajar Pi respecto al tag anterior falla con mensaje claro.
-- Limpieza → setup → test: tras actualizar se conservan los runtimes de la instalación actual y de su backup más reciente; los backups se recortan a 3.
-- Primera subida → `runtime.json`, lockfiles → `check.sh` verde con las versiones que elige la propia regla (cuarentena incluida).
+- «se queda en T5» → `todo-core.ts`, `work-doc.ts`, `todo.ts`, `bin/n-ein-todo`, `banner.ts`, `go/cmd/n-ein/state.go` → con el fixture de Miolo la actual es T39 con T5 abierta antes, en TS y en Go; con el `WORK.md` de n_ein del 21 de noviembre, T7.
+- «ni colores, ni el resumen o acortacion» → `todo.ts` → a 80 y 120 columnas ninguna línea pasa del ancho, hay color salvo con `NO_COLOR`, el título se corta en « — » y el widget cambia al marcar una casilla a mitad de turno.
+- «algo mas completa» en Claude → `register.tsx`, `todo-view.ts`, `bin/n-ein-todo` → test del plugin: la franja dibuja el bloque tras la marca, cede ante una encuesta y se refresca tras una edición de `WORK.md`; la barra cabe en la reserva del pie.
+- «orchesting… coding… testing» → `activity-core.ts`, `activity.ts`, `register.tsx` → tabla herramienta → modo (Edit de código, de docs y de `WORK.md`, tests, git, Agent y equipo, web, preguntas); el spinner de Claude y el mensaje de trabajo de Pi la usan; lo desconocido dice `working`.
+- «marque la rama» → `git-branch.ts`, `branch.ts`, `bin/n-ein-todo` → repositorio en rama, sin rama y sin Git.
+- Lo que ya funcionaba: `/todo done N`, `/todo add`, títulos en inglés, `N_EIN_WORK_DOC`, el medidor del pie y los recibos.
 
 ## Tareas
 
-- [x] T1 · Selección y aplicación de versiones — `scripts/runtimes/` con plan, apply, guard y revisión del puente; tests con registro falso. Blocked by: none.
-- [x] T2 · Primera subida — Pi 1.5.2, puente 0.12.0, Claude Code 2.1.311 y CodeGraph 1.6.2 con T1 (0.13.0 y 1.6.3 seguían en cuarentena); arreglar lo que rompa Pi 1.5. Blocked by: T1.
-- [x] T3 · Vigía — workflow diario, candidato sobre otra rama, publicación reutilizable, guarda en release, grupos, issues y PR a main. Blocked by: T1.
-- [x] T4 · Launcher — qué trae la versión, doctor con Pi real y restore automático, volver a la anterior. Blocked by: none.
-- [x] T5 · Limpieza — runtimes sin uso y backups. Blocked by: T4.
-- [x] T6 · Documentación, PR, release y prueba del vigía. Blocked by: T1-T5.
-- [x] T7 · Primera vuelta real del vigía — la ejecución programada del 20 de noviembre probó el puente 0.13.0, publicó `v0.7.0-alpha.2` y abrió la PR a main; la vuelta de CodeGraph 1.6.3 y la integración de esa PR pasan a [pendientes](docs/08-pendientes.md). Blocked by: cuarentena.
+- [x] T1 · Tarea actual compartida — `todo-core.ts` con lectura, id y título y la regla nueva; Pi, barra de Claude, banner y launcher la usan. Blocked by: none.
+- [ ] T2 · TODO de Pi con el estilo de Ein — bloque con cabecera y filas, color, ancho real y refresco tras cada herramienta. Blocked by: T1.
+- [ ] T3 · TODO en Claude — el bloque en la franja sobre el prompt, barra compacta y reserva del pie compartida. Blocked by: T2.
+- [ ] T4 · Modo de actividad — `activity-core.ts`, spinner de Claude, mensaje de trabajo de Pi y cabecera del TODO. Blocked by: T2, T3.
+- [ ] T5 · Rama — barra de Claude y estado de Pi. Blocked by: T3.
+- [ ] T6 · Decisión, revisión y suite completa. Blocked by: T1-T5.
 
 ## Evidencia
 
-- Investigación (19 nov): npm `dist-tags` de Pi, Claude Code y puente; release de CodeGraph v1.6.3 con `digest` por asset; changelog de Pi 1.0.2→1.5.2 con cambios incompatibles en 1.2.0 y 1.5.0.
-- T1: `bun run tests/runtimes.ts` OK (selección, cuarentena, peer, stable, bloqueos, issues, red nueva, apply, tags y guarda); `scripts/typecheck-agents.ts` OK con `scripts/runtimes/`. `plan` contra los registros reales: Pi 1.5.2, puente 0.12.0, Claude Code 2.1.311, CodeGraph 1.6.2; 0.13.0 y 1.6.3 siguen en cuarentena. Revisión manual del puente 0.9.3→0.12.0: sin red nueva, como el escáner.
-- T2: `cli.ts apply` sobre el repo; `n-ein-install runtime` en un hogar aislado instala Pi 1.5.2, Claude 2.1.311, puente 0.12.0 y CodeGraph 1.6.2 con lockfile congelado (20 s). `check.sh` completo con ese hogar y el Claude fijado en PATH: `checks locales: OK` (incluye plugin de Claude y tipos contra Pi 1.5.2). Pi 1.5 no rompió nada de n_ein; sí rompían los tests con `runtimes/pi/1.0.2` escrito a mano: ahora leen `runtime.json` (`tests/pi-runtime.ts`), igual que `installer-e2e.sh` con CodeGraph. README, NOTICE y START_HERE dejan de citar versiones que el vigía cambiará.
-- T3: `runtimes.yml` (plan → candidato sobre `hotfix/runtimes-<v>` → guarda y tag → `publish.yml` → PR a main; si falla, ramas por grupo, issue de bloqueo y relanzamiento), `publish.yml` reutilizable desde `release.yml`, guarda en `release.yml`, `candidate.yml` con `ref` y prefijo de artefacto. Tests del CLI con las invocaciones del workflow: OK. Los seis workflows se leen como YAML; `actionlint` no se pudo ejecutar (el permiso de la sesión no deja descargar y ejecutar la herramienta). La prueba real es la release de T6 y un disparo manual del vigía.
-- T4: el aviso lee el `runtime.json` de la versión publicada (raw de GitHub, en caché con la versión) y dice qué trae en la portada y en Sistema, fila a fila; Sistema enseña el puente y ofrece «versión anterior» con confirmación fuera de la TUI y aviso de sesiones. `doctor --runtime` arranca el Pi instalado con las extensiones de n_ein y `pi-package/doctor-provider.ts`, en hogares temporales y sin red: contra Pi 1.5.2 real responde en <1 s con `codegraph_explore` y el puente cargado. `setup` restaura la instalación anterior si la nueva no pasa doctor; el test falla sin esa restauración. `go test ./...` y `go vet` OK.
-- T5: paso «limpieza» de `setup` tras doctor: conserva los runtimes de cada instalación y de su backup más reciente, borra solo carpetas con marcador de n_ein y deja 3 backups y 1 recovery; sin instalaciones no borra nada y un fallo no invalida la instalación. `prune_test.go` y `go test ./...` OK. En el hogar de Samu, la próxima actualización quitará Pi 0.87.1 y 13 de sus 16 backups.
-- Documentación (commit `a62ed9c`): decisión del 19 de noviembre, despliegue, distribución, guía, diseño, README y pruebas. `check.sh` completo sobre el código final, con el hogar aislado y Claude 2.1.311: `checks locales: OK`.
-- Revisión (desde `49cc45b`): faltaba «pendiente de adaptar en Sistema» (ahora el launcher lee los issues abiertos del vigía en la misma caché y los enseña sin ofrecer `u`); el arranque de Pi en doctor leía el `models.json`, el idioma y las preferencias reales, así que un ajuste inválido revertía una actualización sana (ahora usa archivos temporales, con test rojo → verde); una rama del vigía de una vuelta cancelada bloqueaba el push del día siguiente (ahora se retira antes, ya que esa versión no tiene tag). Menor, sin cambiar: la lectura de versiones de `runtime.json` se repite en launcher, instalador y `layout`.
-- Candidato local `build-release.sh 0.7.0-alpha.1`: su smoke y `doctor --runtime` del paquete instalado pasan, con `// 005 EXTENSIONES · Pi carga n_ein y responde sin red` sobre Pi 1.5.2 y el puente 0.12.0.
-- PR #25: matriz verde (macOS y Linux nativos, Arch y Ubuntu limpios, comparación de adjuntos), integrada en main como `18bebae`. Ajuste del repositorio: Actions puede abrir PR, permisos por defecto en lectura.
-- Release `v0.7.0-alpha.1` (run `44533429850`): `version` con `[RUNTIME] ++ GUARD_OK :: previous: v0.6.0-alpha.1`, candidato, `publish.yml` y Pages en verde; prerelease con los nueve adjuntos, `gh attestation verify` correcto y Pages sirve `bootstrap_tag="v0.7.0-alpha.1"`.
-- Vigía a mano (run `44535607350`): etiqueta `runtimes`, issues, base `v0.7.0-alpha.1` y plan en verde; `UP_TO_DATE` y el resto de jobs omitidos. El recorrido con rama, candidato con `ref`, tag y PR queda para T7: si fallara por el propio workflow, el issue de bloqueo sería falso y basta con cerrarlo.
-- T7 (21 nov): vigía programado del 20 (run `44752507481`): plan, candidato en las cinco plataformas, tag, `publish.yml` y Pages en verde; sin sondas por grupo porque la matriz pasó y sin issue de revisión del puente. Prerelease `v0.7.0-alpha.2` publicada y PR #26 (`hotfix/runtimes-0.7.0-alpha.2`) abierta a main, sin checks: GitHub no lanza workflows en una PR abierta con `GITHUB_TOKEN`. Queda integrarla y la vuelta de CodeGraph 1.6.3 del 21.
-
+- T1: `tests/todo-core.ts` (rojo: el módulo no existía) y `TestWorkStateFollowsTheLastDoneTask` en Go (rojo: señalaba «T5 · Puesta en servicio… Blocked by: T4.») pasan con `tests/fixtures/work-focus.md`: T9 actual, T5 atrás, 6/10; la barra de Claude con ese documento dice T9. Sobre los documentos reales: Miolo → T41 con T5 atrás (38/41, ha avanzado desde la mañana); el `WORK.md` de n_ein del 21 de noviembre → T7. `tests/work-doc.ts`, `tests/banner.ts`, `go test ./cmd/n-ein/` y `go vet` OK.
 ## Siguiente paso
 
-Encargo cerrado. Lo restante del vigía vive en [pendientes](docs/08-pendientes.md).
+T2.

@@ -15,6 +15,7 @@ import { VERSION } from "@earendil-works/pi-coding-agent";
 import { truncateToWidth } from "@earendil-works/pi-tui";
 import { painter } from "./brand.ts";
 import { bannerSeconds, renderBanner, type BannerData } from "./banner-view.ts";
+import { focusOf, taskLabel } from "../claude-plugin/hooks/todo-core.ts";
 import { readWorkDoc, resolveWorkDoc } from "./work-doc.ts";
 import { loadModels } from "../models.ts";
 
@@ -58,7 +59,8 @@ function initialData(cwd: string): BannerData {
   if (workDoc) {
     try {
       const { tasks } = readWorkDoc(workDoc);
-      if (tasks.length) todo = { current: tasks.find((task) => !task.done)?.text, done: tasks.filter((task) => task.done).length, total: tasks.length };
+      const { current, done, total } = focusOf(tasks);
+      if (total) todo = { current: current && taskLabel(current.text), done, total };
     } catch { /* el widget de TODO ya avisa de un WORK.md ilegible */ }
   }
   const home = homedir();

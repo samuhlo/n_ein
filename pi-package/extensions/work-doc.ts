@@ -6,7 +6,9 @@
 import { existsSync, readFileSync, statSync, writeFileSync } from "node:fs";
 import { dirname, isAbsolute, join, resolve } from "node:path";
 
-export type WorkTask = { index: number; line: number; done: boolean; text: string };
+import { parseTasks, TASKS_HEADING, type WorkTask } from "../claude-plugin/hooks/todo-core.ts";
+
+export type { WorkTask };
 export type WorkDoc = { path: string; tasks: WorkTask[] };
 
 function projectRoot(cwd: string): string {
@@ -26,30 +28,13 @@ export function resolveWorkDoc(cwd: string, configured = process.env.N_EIN_WORK_
   return existsSync(path) && statSync(path).isFile() ? path : null;
 }
 
-// WORK.md sigue el idioma de los artefactos: la sección de tareas vale en castellano o en inglés.
-const TASKS_HEADING = /^##\s+(Tareas|Tasks|Checklist)\s*$/i;
-
-function taskLines(content: string): WorkTask[] {
-  const lines = content.split(/\r?\n/);
-  const tasks: WorkTask[] = [];
-  let inChecklist = false;
-  for (let line = 0; line < lines.length; line++) {
-    if (TASKS_HEADING.test(lines[line])) { inChecklist = true; continue; }
-    if (/^#{1,2}\s+/.test(lines[line])) inChecklist = false;
-    if (!inChecklist) continue;
-    const match = /^(\s*[-*]\s+\[)([ xX])(\]\s+)(.+)$/.exec(lines[line]);
-    if (match) tasks.push({ index: tasks.length + 1, line, done: match[2].toLowerCase() === "x", text: match[4] });
-  }
-  return tasks;
-}
-
 export function readWorkDoc(path: string): WorkDoc {
-  return { path, tasks: taskLines(readFileSync(path, "utf8")) };
+  return { path, tasks: parseTasks(readFileSync(path, "utf8")) };
 }
 
 export function markWorkTask(path: string, index: number): WorkDoc {
   const content = readFileSync(path, "utf8");
-  const task = taskLines(content).find((item) => item.index === index);
+  const task = parseTasks(content).find((item) => item.index === index);
   if (!task) throw new Error(`No existe la tarea ${index}.`);
   if (task.done) return readWorkDoc(path);
   const newline = content.includes("\r\n") ? "\r\n" : "\n";

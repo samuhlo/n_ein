@@ -1,4 +1,5 @@
 import type { ExtensionAPI, ExtensionContext } from "@earendil-works/pi-coding-agent";
+import { focusOf, taskLabel } from "../claude-plugin/hooks/todo-core.ts";
 import { addWorkTask, markWorkTask, readWorkDoc, resolveWorkDoc } from "./work-doc";
 
 const WIDGET = "n-ein-todo";
@@ -11,9 +12,8 @@ function refresh(ctx: ExtensionContext): void {
   try {
     const { tasks } = readWorkDoc(path);
     if (tasks.length === 0) { ctx.ui.setWidget(WIDGET, undefined); return; }
-    const done = tasks.filter((task) => task.done).length;
-    const current = tasks.find((task) => !task.done);
-    const line = current ? `▸ ${current.text}  ·  ${done}/${tasks.length}` : `✓ ${done}/${tasks.length} tareas`;
+    const { current, done, total } = focusOf(tasks);
+    const line = current ? `▸ ${taskLabel(current.text)}  ·  ${done}/${total}` : `✓ ${done}/${total} tareas`;
     ctx.ui.setWidget(WIDGET, [line], { placement: "belowEditor" });
   } catch (error) {
     ctx.ui.setWidget(WIDGET, undefined);

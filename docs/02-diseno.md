@@ -204,6 +204,8 @@ La vista local del encargo cruza WORK.md con comandos ejecutados y sus identidad
 
 Conserva el aspecto del de Ein: debajo del editor, la fila actual con `▸`, sin fondo propio. Cambia su fuente: proyecta el checklist del documento de trabajo activo en lugar del `tasks.md` de OpenSpec.
 
+La tarea actual es la primera abierta tras la última hecha; si no queda ninguna después, la primera abierta. Así una tarea del propietario que sigue abierta arriba (una puesta en servicio, una prueba de dos semanas) no detiene el TODO: se señala aparte. Cada tarea se nombra por su id y su título; el detalle tras « — » y lo bloqueado quedan en el documento. Pi, Claude, el banner y el launcher usan la misma regla.
+
 Es una **vista, no una fuente de verdad**: marcar o añadir una tarea escribe en el documento. Sin documento de trabajo no hay TODO; el trabajo pequeño no crea uno para llenar el widget. Si hay varios documentos activos, un comando de foco elige cuál se muestra, como `/ein:focus`. El launcher muestra el mismo checklist en su vista Estado, y Claude, Codex u OpenCode lo leen como casillas markdown sin nada especial.
 
 ## Voz y estilo

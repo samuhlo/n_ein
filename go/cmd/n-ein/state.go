@@ -8,6 +8,7 @@ import (
 	"os"
 	"os/exec"
 	"path/filepath"
+	"regexp"
 	"sort"
 	"strings"
 	"time"
@@ -127,6 +128,57 @@ func firstSection(content string, titles ...string) string {
 	return ""
 }
 
+type workTask struct {
+	done bool
+	text string
+}
+
+var (
+	taskLine  = regexp.MustCompile(`^\s*[-*]\s+\[([ xX])\]\s+(.+)$`)
+	taskID    = regexp.MustCompile(`(?i)^(T\d+[a-z]?)\s*·\s*(.*)$`)
+	taskBlock = regexp.MustCompile(`(?i)\s*Blocked by:.*$`)
+)
+
+// [CORE] currentTask repite focusOf de claude-plugin/hooks/todo-core.ts: la primera abierta tras la
+// última hecha y, si no queda ninguna después, la primera abierta. tests/fixtures/work-focus.md
+// obliga a que los dos señalen la misma.
+func currentTask(list []workTask) (workTask, bool) {
+	lastDone := -1
+	for i, task := range list {
+		if task.done {
+			lastDone = i
+		}
+	}
+	for _, task := range list[lastDone+1:] {
+		if !task.done {
+			return task, true
+		}
+	}
+	for _, task := range list {
+		if !task.done {
+			return task, true
+		}
+	}
+	return workTask{}, false
+}
+
+// taskLabel deja id y título: el detalle tras « — » y lo bloqueado no caben en una fila.
+func taskLabel(text string) string {
+	clean := strings.Join(strings.Fields(strings.NewReplacer("**", "", "__", "", "`", "").Replace(text)), " ")
+	key, rest := "", clean
+	if match := taskID.FindStringSubmatch(clean); match != nil {
+		key, rest = match[1], match[2]
+	}
+	title := strings.TrimSuffix(strings.TrimSpace(taskBlock.ReplaceAllString(strings.Split(rest, " — ")[0], "")), ".")
+	if title == "" {
+		title = rest
+	}
+	if key == "" {
+		return title
+	}
+	return key + " · " + title
+}
+
 func workState(project string) (objective, tasks, current, evidence string) {
 	path := filepath.Join(project, "WORK.md")
 	data, err := os.ReadFile(path)
@@ -137,18 +189,20 @@ func workState(project string) (objective, tasks, current, evidence string) {
 	objectiveText := firstSection(content, "Objetivo", "Goal", "Acuerdo confirmado")
 	objective = known(strings.Split(objectiveText, "\n")[0])
 	taskSection := firstSection(content, "Tareas", "Tasks", "Checklist")
-	total, done := 0, 0
+	var list []workTask
 	for _, line := range strings.Split(taskSection, "\n") {
-		trimmed := strings.TrimSpace(line)
-		if strings.HasPrefix(trimmed, "- [x] ") || strings.HasPrefix(trimmed, "- [X] ") {
-			total++
-			done++
-		} else if strings.HasPrefix(trimmed, "- [ ] ") {
-			total++
-			if current == "" {
-				current = strings.TrimPrefix(trimmed, "- [ ] ")
-			}
+		if match := taskLine.FindStringSubmatch(line); match != nil {
+			list = append(list, workTask{done: match[1] != " ", text: match[2]})
 		}
+	}
+	total, done := len(list), 0
+	for _, task := range list {
+		if task.done {
+			done++
+		}
+	}
+	if next, ok := currentTask(list); ok {
+		current = taskLabel(next.text)
 	}
 	if total == 0 {
 		tasks, current = "sin tareas", "sin tareas"
