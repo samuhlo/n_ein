@@ -4,7 +4,7 @@
 // orchestrating… Lo comparten el spinner de Claude, el mensaje de trabajo de
 // Pi y la cabecera del TODO en los dos.
 //
-// POR QUÉ EN INGLÉS -> Samu pidió estos nombres tal cual; el resto de la
+// POR QUÉ EN INGLÉS -> se pidieron estos nombres tal cual; el resto de la
 // interfaz sigue en castellano. Un modo equivocado solo se ve, nunca decide
 // nada, así que lo que no se reconoce dice `working` en vez de adivinar.
 // =============================================================================

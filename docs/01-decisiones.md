@@ -159,6 +159,15 @@ Samu vio que Pi y Claude Code se quedaban atrás (Pi 1.0.2 frente a 1.5.2, Claud
 
 La primera subida siguió la propia regla: Pi 1.5.2, puente 0.12.0, Claude Code 2.1.311 y CodeGraph 1.6.2; el puente 0.13.0 y CodeGraph 1.6.3 seguían en cuarentena. Detalle en [despliegue](05-despliegue.md#runtimes-al-día).
 
+### TODO legible, modo de actividad y rama (21 de noviembre)
+
+Samu vio que el TODO de Pi salía sin color ni recorte, que en Claude solo había una línea y que en Miolo se quedaba en T5 mientras el trabajo iba treinta tareas más abajo. Pidió además un modo que diga si el agente está «orchestrating», «coding» o «testing» y otro que marque la rama, «todo con el estilo nein», para «saber por donde va y que esta haciendo». Aprobó el plan con «hazlo», sin contestar a sus tres preguntas; valen las recomendaciones:
+
+- **Tarea actual = la primera abierta tras la última hecha** (si no queda ninguna después, la primera abierta); las abiertas anteriores se señalan aparte. Sin marca nueva en el markdown: GitHub no la pintaría y obligaría al agente a escribirla. La misma regla en Pi, Claude, banner y launcher, este último en Go contra el fixture común.
+- **Vuelve el bloque del TODO de Ein**: cabecera con el encargo y su avance, filas con `▏ ✓ ▸` e id, al ancho real. En Claude va en la franja sobre el prompt, plegable y cediendo ante las encuestas, porque debajo del prompt solo cabe la barra de estado y el panel lateral no se coloca solo en un portátil.
+- **Modos en inglés y en minúscula**, también las palabras del spinner de Claude, que antes estaban en castellano: mezclar «pensando» con «coding» quedaba peor. El resto de la interfaz sigue en castellano. Un modo equivocado solo se ve; lo que no se reconoce dice `working`.
+- **Un núcleo puro compartido** (`todo-core.ts`, `activity-core.ts`) en el plugin de Claude, que corre sin Node, como ya ocurría con la marca y los recibos.
+
 ## Recomendaciones de diseño, revisables
 
 El 7 de octubre Samu autorizó implementar y evaluar el reparto temprano y la investigación acotada con el mismo mecanismo de equipo, tras la [auditoría del piloto](../evals/results/2026-10-07-auditoria-paralelismo.md). La lectura puede delegarse sin preparar un encargo de escritura. Se mide por separado el ahorro de contexto y el avance paralelo, conservando checks e integración. Esto amplía el experimento; no demuestra ahorro ni activa por sí solo la preview personal. El estado de implementación y evaluación vive en WORK.md.

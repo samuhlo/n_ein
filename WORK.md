@@ -48,7 +48,7 @@ Pedidos:
 - [x] T3 · TODO en Claude — el bloque en la franja sobre el prompt, barra compacta y reserva del pie compartida. Blocked by: T2.
 - [x] T4 · Modo de actividad — `activity-core.ts`, spinner de Claude, mensaje de trabajo de Pi y cabecera del TODO. Blocked by: T2, T3.
 - [x] T5 · Rama — barra de Claude y estado de Pi. Blocked by: T3.
-- [ ] T6 · Decisión, revisión y suite completa. Blocked by: T1-T5.
+- [x] T6 · Decisión, revisión y suite completa. Blocked by: T1-T5.
 
 ## Evidencia
 

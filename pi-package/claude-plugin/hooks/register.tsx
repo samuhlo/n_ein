@@ -114,7 +114,7 @@ export const register: Register = (on) => {
     await update($, session, () => NO_TOKENS);
     await adopt($);
     await remember($, windowsOf((await $.session.usage()).rateLimits));
-    await startTodo($);
+    await startTodo($).catch(() => {});
     metering?.cancel();
     metering = $.clock.every(METER_TICK_MS, () => {
       // Una lectura fallida deja en pantalla la que había.

@@ -71,7 +71,8 @@ export default function (pi: ExtensionAPI) {
   pi.on("agent_end", (_event, ctx) => refresh(ctx));
   pi.events.on(ACTIVITY_EVENT, (data) => {
     phase = typeof data === "string" ? data : undefined;
-    if (context) paint(context);
+    // Un contexto de una sesión ya sustituida rechaza la UI; la próxima lectura repinta con el nuevo.
+    try { if (context) paint(context); } catch { painted = ""; }
   });
 
   pi.registerCommand("todo", {
