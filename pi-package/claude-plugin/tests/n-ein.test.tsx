@@ -182,3 +182,62 @@ test("la paleta busca sin iniciar un turno y prepara la acción elegida", async 
   expect(fills[0]).toContain("Otro encargo:");
   expect(fills[0]).toContain("borrador previo");
 });
+
+// --- TODO en la franja sobre el prompt ----------------------------------------------------------
+const WORK = "# Encargo de prueba\n\n## Tareas\n- [x] T1 · Uno — detalle\n- [ ] T2 · Dos — detalle. Blocked by: T1.\n- [ ] T3 · Tres\n";
+const BAND = { hasSurvey: false, isWorking: false, maxRows: 20, bodyColumns: 80, scroll: { offset: 0, bodyRows: 20 }, view: {} };
+
+/** Un repositorio en /repo con los archivos dados; las ediciones de la prueba los cambian de verdad. */
+function workspace(on: On, files: Record<string, string>) {
+  on("fs.exists", ($, e) => ({ value: e.path === "/repo/.git" || e.path in files }));
+  on("fs.read", ($, e) => {
+    if (!(e.path in files)) throw new Error(`ENOENT: ${e.path}`);
+    return { value: files[e.path] };
+  });
+  on("prompt.submit", ($, e) => ({ text: e.text }));
+  on("tool.call", ($, e) => {
+    if (e.tool === "Edit" && e.file_path in files) files[e.file_path] = files[e.file_path].replace(e.old_string, e.new_string);
+    return { result: { ok: true } as never };
+  });
+}
+const band = ($: Engine, props: Partial<typeof BAND> = {}) =>
+  $.ui.mount({ plugin: "n-ein", surface: "terminal", component: "AbovePrompt", props: { ...BAND, ...props }, viewport });
+const submit = ($: Engine) => $.prompt.submit({ text: "hola" });
+
+test("tras la primera petición la franja enseña el bloque del TODO", async ($, on) => {
+  world(on);
+  workspace(on, { "/repo/WORK.md": WORK });
+  await start($);
+  expect(JSON.stringify(await (await band($)).drawn())).not.toContain("Encargo de prueba");
+  await submit($);
+  const drawn = JSON.stringify(await (await band($)).drawn());
+  for (const part of ["Encargo de prueba", "1/3", "✓", "Uno", "▸", "T2", "Dos", "Tres"]) expect(drawn).toContain(part);
+  expect(drawn).not.toContain("detalle");
+});
+
+test("la franja cede ante una encuesta y sin WORK.md no aparece", async ($, on) => {
+  world(on);
+  workspace(on, { "/repo/WORK.md": WORK });
+  await start($);
+  await submit($);
+  expect(JSON.stringify(await (await band($, { hasSurvey: true })).drawn())).not.toContain("Encargo de prueba");
+});
+
+test("sin WORK.md la franja queda para el motor", async ($, on) => {
+  world(on);
+  workspace(on, {});
+  await start($);
+  await submit($);
+  expect(JSON.stringify(await (await band($)).drawn())).not.toContain("▸");
+});
+
+test("una edición de WORK.md mueve la franja", async ($, on) => {
+  world(on);
+  workspace(on, { "/repo/WORK.md": WORK });
+  await start($);
+  await submit($);
+  await $.tool.call({ tool: "Edit", file_path: "/repo/WORK.md", old_string: "- [ ] T2", new_string: "- [x] T2" });
+  const drawn = JSON.stringify(await (await band($)).drawn());
+  expect(drawn).toContain("2/3");
+  expect(drawn).toContain("Tres");
+});

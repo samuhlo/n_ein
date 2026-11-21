@@ -3,7 +3,7 @@ import { spawnSync } from "node:child_process";
 import { mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join, resolve } from "node:path";
-import { docTitle, focusOf, parseTasks, taskLabel, taskParts, todoCompact, todoRows, type TodoSegment } from "../pi-package/claude-plugin/hooks/todo-core.ts";
+import { docTitle, fitSegments, focusOf, parseTasks, STATUS_COLUMNS, taskLabel, taskParts, todoCompact, todoRows, type TodoSegment } from "../pi-package/claude-plugin/hooks/todo-core.ts";
 
 const root = resolve(import.meta.dir, "..");
 const fixture = readFileSync(join(root, "tests/fixtures/work-focus.md"), "utf8");
@@ -81,6 +81,8 @@ assert.equal(docTitle("Sin título\n\n## Tareas\n"), "WORK.md");
 assert.equal(docTitle("# **Miolo** · volver\n"), "Miolo · volver");
 
 assert.deepEqual(lines([todoCompact(view)]), ["▸ T9 · 6/10"]);
+assert.deepEqual(lines([fitSegments([{ tone: "text", text: "abc" }, { tone: "muted", text: "defgh" }], 6)]), ["abcde…"]);
+assert.deepEqual(lines([fitSegments([{ tone: "text", text: "abc" }], 3)]), ["abc"]);
 assert.deepEqual(lines([todoCompact({ title: "E", tasks: parseTasks(checklist("- [ ] Reproducir el defecto con calma y con datos")) }, 20)]), ["▸ Reproducir el defec… · 0/1"]);
 
 // [FLOW] La barra de estado de Claude lee la misma regla.
@@ -88,14 +90,21 @@ const project = mkdtempSync(join(tmpdir(), "n-ein-todo-core-"));
 try {
   mkdirSync(join(project, ".git"));
   writeFileSync(join(project, "WORK.md"), fixture);
-  const bar = spawnSync("bun", [join(root, "bin/n-ein-todo"), "--statusline"], {
-    input: JSON.stringify({ workspace: { current_dir: project } }),
-    env: { ...process.env, NO_COLOR: "1", N_EIN_WORK_DOC: "" },
-    encoding: "utf8",
-  });
-  assert.equal(bar.status, 0, bar.stderr);
-  assert.match(bar.stdout, /T9/, "la barra avanza con la regla compartida");
-  assert.doesNotMatch(bar.stdout, /T5|Puesta en servicio/);
+  const bar = (input: object, env: Record<string, string> = {}): string => {
+    const run = spawnSync("bun", [join(root, "bin/n-ein-todo"), "--statusline"], {
+      input: JSON.stringify(input),
+      env: { ...process.env, NO_COLOR: "1", N_EIN_WORK_DOC: "", N_EIN_CLAUDE_EFFORT: "", ...env },
+      encoding: "utf8",
+    });
+    assert.equal(run.status, 0, run.stderr);
+    return run.stdout.trimEnd();
+  };
+  assert.equal(bar({ workspace: { current_dir: project } }), "n_ein   ▸ T9 · 6/10", "la barra avanza con la regla compartida y queda compacta");
+  assert.equal(bar({ workspace: { current_dir: project }, model: { display_name: "Opus 5.5" } }, { N_EIN_CLAUDE_EFFORT: "xhigh" }), "n_ein   Opus 5.5 · xhigh   ▸ T9 · 6/10");
+  const long = bar({ workspace: { current_dir: project }, model: { display_name: "M".repeat(120) } });
+  assert.equal([...long].length, STATUS_COLUMNS, "nunca más ancha que lo que reserva el pie");
+  assert.ok(long.endsWith("…"));
+  assert.equal(bar({ workspace: { current_dir: tmpdir() } }), "n_ein", "sin WORK.md, solo la marca");
 } finally {
   rmSync(project, { recursive: true, force: true });
 }

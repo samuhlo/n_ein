@@ -4,7 +4,8 @@
 //   · cada herramienta, un recibo de una línea (la gramática de Pi),
 //   · el grupo plegado, una línea con sus verbos,
 //   · el spinner y el cierre de turno, en castellano y sin adornos,
-//   · la marca 004 Panel sobre el prompt hasta la primera petición,
+//   · la marca 004 Panel sobre el prompt hasta la primera petición, y
+//     después, en ese mismo sitio, el TODO de WORK.md,
 //   · el consumo de la suscripción y los tokens, en el pie.
 //
 // POR QUÉ -> el modelo sigue leyendo cada resultado completo; aquí solo se
@@ -14,6 +15,7 @@
 
 import { registerWorkspace, publishClaude } from "./workspace-hooks.ts";
 import { registerActions } from "./actions-view.tsx";
+import { registerTodo, reloadTodo, startTodo, todoBand } from "./todo-view.tsx";
 import { atom, read, update } from "claude-code";
 import type { EngineInterface, Register, RenderInput } from "claude-code";
 
@@ -21,6 +23,7 @@ import { INTRO_SECONDS, smallRuns, type BrandTone, type TileTone } from "./brand
 import { groupSummary, NATIVE_TOOLS, outcomeFor, receiptFor, type Place } from "./claude-receipts.ts";
 import { addTokens, limitsFrom, meterSegments, NO_TOKENS, tokenTail, tokensOf, windowsOf, type Limit, type MeterTone, type Tokens } from "./meter-core.ts";
 import { GLYPH, receiptSegments, type Segment, type Tone } from "./receipt-core.ts";
+import { STATUS_COLUMNS } from "./todo-core.ts";
 
 const detail = atom({ plugin: "n-ein", key: "detail" } as const, false);
 const intro = atom({ plugin: "n-ein", key: "intro" } as const, null);
@@ -51,10 +54,10 @@ const FRAME_MS = 80;
 const FALLBACK_COLUMNS = 100;
 // Cada 30 s se repinta la cuenta atrás y se adopta la lectura que haya dejado otra sesión.
 const METER_TICK_MS = 30_000;
-// El medidor comparte fila con la línea de estado de n_ein (bin/n-ein-todo): marca, modelo y la
-// tarea recortada a 60 caracteres, unas 90 columnas como mucho. El plugin no la ve, así que se
-// reservan enteras, más dos de margen a cada lado: el medidor cede antes que partir el pie en dos.
-const FOOTER_RESERVED = 90 + 4;
+// El medidor comparte fila con la línea de estado de n_ein (bin/n-ein-todo), que nunca pasa de
+// STATUS_COLUMNS. El plugin no la ve, así que se reservan enteras, más dos de margen a cada lado:
+// el medidor cede antes que partir el pie en dos.
+const FOOTER_RESERVED = STATUS_COLUMNS + 4;
 
 export function duration(ms: number): string {
   const seconds = Math.max(0, Math.round(ms / 1000));
@@ -98,6 +101,7 @@ async function adopt($: EngineInterface): Promise<void> {
 export const register: Register = (on) => {
   registerActions(on);
   registerWorkspace(on);
+  registerTodo(on);
   let place: Place = { cwd: "", home: "" };
   let opening: { cancel: () => void } | undefined;
   let metering: { cancel: () => void } | undefined;
@@ -118,6 +122,7 @@ export const register: Register = (on) => {
     await update($, session, () => NO_TOKENS);
     await adopt($);
     await remember($, windowsOf((await $.session.usage()).rateLimits));
+    await startTodo($);
     metering?.cancel();
     metering = $.clock.every(METER_TICK_MS, () => {
       // Una lectura fallida deja en pantalla la que había.
@@ -148,7 +153,9 @@ export const register: Register = (on) => {
   });
 
   // Solo el bucle principal: los subagentes cuentan dentro del turno que los lanzó, o no cuentan.
+  // Al cerrarlo se relee WORK.md, que pudo cambiar por un subagente o un comando.
   on("turn.complete", async ($, e, next) => {
+    if (e.agentId === undefined) await reloadTodo($).catch(() => {});
     if (e.usage && e.agentId === undefined) {
       const last = tokensOf(e.usage);
       await update($, turn, () => last);
@@ -199,10 +206,10 @@ export const register: Register = (on) => {
     row($, e, [{ tone: "dim", text: `${GLYPH.done} ${duration(e.props.durationMs)}` }]));
 
   // La marca pequeña del instalador abre la sesión encima del prompt: sus palas giran y se asientan,
-  // y se retira con el primer mensaje.
+  // y se retira con el primer mensaje. Desde entonces la franja es del TODO, salvo que llegue una encuesta.
   on("ui.render", { component: "AbovePrompt" }, async ($, e, next) => {
     const t = await read($, intro);
-    if (t === null) return next(e);
+    if (t === null) return (await todoBand($, e)) ?? next(e);
     const { Box, Text } = $.ui.resolve(e);
     return (
       <Box flexDirection="column" paddingLeft={1}>

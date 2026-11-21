@@ -15,6 +15,8 @@ declare module 'claude-code' {
       turn: { input: number; output: number } | null;
       /** Tokens sumados desde que empezó la sesión. */
       session: { input: number; output: number };
+      /** El título y las casillas de WORK.md; null sin documento o sin tareas. */
+      todo: { title: string; tasks: readonly { index: number; line: number; done: boolean; text: string }[] } | null;
     };
   }
 }

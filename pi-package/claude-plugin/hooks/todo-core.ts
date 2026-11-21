@@ -25,6 +25,12 @@ export type TodoOptions = {
   phase?: string;
 };
 
+/**
+ * Ancho máximo de la barra de estado de Claude (bin/n-ein-todo): marca, modelo, rama y la línea
+ * compacta. register.tsx reserva estas columnas en el pie para que el medidor no la parta.
+ */
+export const STATUS_COLUMNS = 90;
+
 // WORK.md sigue el idioma de los artefactos: la sección de tareas vale en castellano o en inglés.
 export const TASKS_HEADING = /^##\s+(Tareas|Tasks|Checklist)\s*$/i;
 
@@ -96,6 +102,19 @@ const MORE_BEHIND = 3;
 const span = (tone: TodoTone, text: string): TodoSegment => ({ tone, text });
 const cells = (parts: readonly TodoSegment[]): number => parts.reduce((sum, part) => sum + [...part.text].length, 0);
 const keyOf = (task: WorkTask): string => taskParts(task.text).key;
+
+/** Recorta una fila de trozos a un ancho, con `…` en el trozo que lo cruza. */
+export function fitSegments(parts: readonly TodoSegment[], room: number): TodoSegment[] {
+  const out: TodoSegment[] = [];
+  let left = room;
+  for (const part of parts) {
+    const size = [...part.text].length;
+    if (size <= left) { out.push(part); left -= size; continue; }
+    if (left > 0) out.push(span(part.tone, clip(part.text, left)));
+    break;
+  }
+  return out;
+}
 
 /** Una línea para la barra de estado: la actual por su id (o su título recortado) y el avance. */
 export function todoCompact(view: TodoView, room = 24): TodoSegment[] {
