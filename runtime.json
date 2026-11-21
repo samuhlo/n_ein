@@ -6,10 +6,10 @@
     "thinking": "medium"
   },
   "codegraph": {
-    "version": "1.6.2",
+    "version": "1.6.3",
     "sha256": {
-      "darwin-arm64": "d74d1bfb4060db63ec3c2b72c4e17f76c31978af3bad6ace4370d1501ac0662e",
-      "linux-amd64": "ef0af416092128fb1ccc723786000b7edf4a6971fe604acd08bf966e4f37b828"
+      "darwin-arm64": "d40bc304d1de3d374d70b46b0e4095dd124a0c6b81010acd2f49b7b4fbde9483",
+      "linux-amd64": "abf6e7b411c6cef1dd55dd41b1f3412fa9601300793e867870f85c226eec6587"
     }
   },
   "routing": {
@@ -65,7 +65,7 @@
     }
   },
   "claude": {
-    "version": "2.1.311"
+    "version": "2.1.323"
   },
   "claudeBridge": {
     "version": "0.13.0"
