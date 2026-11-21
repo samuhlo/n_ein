@@ -20,6 +20,7 @@ Intent y ejecución por conversación, nuevo encargo, memoria selectiva, recuper
 - Canal estable, distribución remota y actualización automática: decisiones y verificación de entrega propias.
 - Licencia propia del proyecto: pendiente de decisión antes de ampliar su distribución.
 - Modelo local: descartado por Samu el 5 de octubre.
+- Vigía de runtimes: integrar en main la PR #26 (`v0.7.0-alpha.2`, puente 0.13.0), que llega sin checks porque la abre Actions con `GITHUB_TOKEN`, y comprobar la vuelta de CodeGraph 1.6.3 que salía de cuarentena el 21 de noviembre.
 
 ## Riesgos a vigilar
 

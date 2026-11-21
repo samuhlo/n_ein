@@ -48,7 +48,7 @@ Pedidos:
 - [x] T4 · Launcher — qué trae la versión, doctor con Pi real y restore automático, volver a la anterior. Blocked by: none.
 - [x] T5 · Limpieza — runtimes sin uso y backups. Blocked by: T4.
 - [x] T6 · Documentación, PR, release y prueba del vigía. Blocked by: T1-T5.
-- [ ] T7 · Primera vuelta real del vigía — la ejecución programada del 20 de noviembre (05:37 UTC) debe probar el puente 0.13.0 (fuera de cuarentena desde el 19 a las 21:01 UTC): revisión de red, matriz sobre `hotfix/runtimes-0.7.0-alpha.2`, publicación y PR a main; el 21, CodeGraph 1.6.3. Blocked by: cuarentena.
+- [x] T7 · Primera vuelta real del vigía — la ejecución programada del 20 de noviembre probó el puente 0.13.0, publicó `v0.7.0-alpha.2` y abrió la PR a main; la vuelta de CodeGraph 1.6.3 y la integración de esa PR pasan a [pendientes](docs/08-pendientes.md). Blocked by: cuarentena.
 
 ## Evidencia
 
@@ -64,7 +64,8 @@ Pedidos:
 - PR #25: matriz verde (macOS y Linux nativos, Arch y Ubuntu limpios, comparación de adjuntos), integrada en main como `18bebae`. Ajuste del repositorio: Actions puede abrir PR, permisos por defecto en lectura.
 - Release `v0.7.0-alpha.1` (run `44533429850`): `version` con `[RUNTIME] ++ GUARD_OK :: previous: v0.6.0-alpha.1`, candidato, `publish.yml` y Pages en verde; prerelease con los nueve adjuntos, `gh attestation verify` correcto y Pages sirve `bootstrap_tag="v0.7.0-alpha.1"`.
 - Vigía a mano (run `44535607350`): etiqueta `runtimes`, issues, base `v0.7.0-alpha.1` y plan en verde; `UP_TO_DATE` y el resto de jobs omitidos. El recorrido con rama, candidato con `ref`, tag y PR queda para T7: si fallara por el propio workflow, el issue de bloqueo sería falso y basta con cerrarlo.
+- T7 (21 nov): vigía programado del 20 (run `44752507481`): plan, candidato en las cinco plataformas, tag, `publish.yml` y Pages en verde; sin sondas por grupo porque la matriz pasó y sin issue de revisión del puente. Prerelease `v0.7.0-alpha.2` publicada y PR #26 (`hotfix/runtimes-0.7.0-alpha.2`) abierta a main, sin checks: GitHub no lanza workflows en una PR abierta con `GITHUB_TOKEN`. Queda integrarla y la vuelta de CodeGraph 1.6.3 del 21.
 
 ## Siguiente paso
 
-T7: revisar la ejecución del vigía del 20 de noviembre. La instalación personal sigue en 0.6.0-alpha.1 hasta que Samu pulse `u`.
+Encargo cerrado. Lo restante del vigía vive en [pendientes](docs/08-pendientes.md).
