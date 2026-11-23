@@ -15,6 +15,9 @@ import {
   type SessionPatch,
 } from "../workspace/state.ts";
 const root = resolve(dirname(fileURLToPath(import.meta.url)), "../..");
+// La gramática del TODO: hecho, abierta, en espera de alguien y descartada.
+const TASK_MARK = { done: "✓", open: "·", waiting: "◦", dropped: "×" } as const;
+
 export default function (pi: ExtensionAPI) {
   const publish = (ctx: ExtensionContext, patch: SessionPatch = {}) => {
     const id = ctx.sessionManager.getSessionId();
@@ -85,7 +88,7 @@ export default function (pi: ExtensionAPI) {
           "// 004 ENCARGO",
           link,
           w.objective || "Sin documento activo",
-          ...w.tasks.map((t) => `${t.done ? "✓" : "·"} ${t.text}`),
+          ...w.tasks.map((t) => `${TASK_MARK[t.state]} ${t.text}`),
           w.next,
         ].join("\n"),
         "info",

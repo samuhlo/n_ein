@@ -11,7 +11,8 @@
 import { atom, read, update } from "claude-code";
 import type { EngineInterface, RenderInput } from "claude-code";
 
-import { docTitle, parseTasks, todoRows, type TodoTone, type TodoView } from "./todo-core.ts";
+import { todoRows, type TodoTone, type TodoView } from "./todo-core.ts";
+import { docTitle, parseTasks } from "./work-core.ts";
 
 const NO_TODO: TodoView | null = null;
 const todo = atom({ plugin: "n-ein", key: "todo" } as const, NO_TODO);

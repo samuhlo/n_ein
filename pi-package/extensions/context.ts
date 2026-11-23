@@ -130,7 +130,8 @@ export function retirements(entries: readonly Entry[], currentTurn: ReadonlySet<
 
 function tasksPending(cwd: string): boolean {
   const path = resolveWorkDoc(cwd);
-  try { return path ? readWorkDoc(path).tasks.some((task) => !task.done) : false; } catch { return false; }
+  // Lo que espera a alguien o se descartó no es trabajo pendiente del agente.
+  try { return path ? readWorkDoc(path).tasks.some((task) => task.state === "open") : false; } catch { return false; }
 }
 
 // Fuera de Git no hay HEAD. Nunca lanza: un fallo en `tool_call` bloquearía la herramienta.

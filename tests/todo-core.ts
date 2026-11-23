@@ -3,7 +3,8 @@ import { spawnSync } from "node:child_process";
 import { mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join, resolve } from "node:path";
-import { docTitle, fitSegments, focusOf, parseTasks, STATUS_COLUMNS, taskLabel, taskParts, todoCompact, todoRows, type TodoSegment } from "../pi-package/claude-plugin/hooks/todo-core.ts";
+import { fitSegments, STATUS_COLUMNS, todoCompact, todoRows, type TodoSegment } from "../pi-package/claude-plugin/hooks/todo-core.ts";
+import { docTitle, focusOf, parseTasks, taskLabel, taskParts } from "../pi-package/claude-plugin/hooks/work-core.ts";
 
 const root = resolve(import.meta.dir, "..");
 const fixture = readFileSync(join(root, "tests/fixtures/work-focus.md"), "utf8");
@@ -84,6 +85,17 @@ assert.deepEqual(lines([todoCompact(view)]), ["▸ T9 · 6/10"]);
 assert.deepEqual(lines([fitSegments([{ tone: "text", text: "abc" }, { tone: "muted", text: "defgh" }], 6)]), ["abcde…"]);
 assert.deepEqual(lines([fitSegments([{ tone: "text", text: "abc" }], 3)]), ["abc"]);
 assert.deepEqual(lines([todoCompact({ title: "E", tasks: parseTasks(checklist("- [ ] Reproducir el defecto con calma y con datos")) }, 20)]), ["▸ Reproducir el defec… · 0/1"]);
+
+// [UI] Lo que espera a alguien se ve aparte, sin ser la actual ni contar como hecho.
+const waitingView = { title: "Encargo", tasks: parseTasks(checklist("- [x] T1 · Uno", "- [ ] T2 · Puesta en servicio — espera: el propietario", "- [ ] T3 · Tres", "- [ ] T4 · Vieja — descartada: sobra")) };
+const waitingRows = lines(todoRows(waitingView, { width: 60 }));
+assert.match(waitingRows[0]!, /1\/3$/, "la descartada no cuenta");
+assert.match(waitingRows[1]!, /✓ {2}T1 {2}Uno$/, "lo último hecho, aunque en medio quede algo en espera");
+assert.match(waitingRows[2]!, /▸ {2}T3 {2}Tres$/);
+assert.equal(waitingRows.at(-1)?.trim(), "▏     en espera: T2");
+const onlyWaiting = { title: "Encargo", tasks: parseTasks(checklist("- [x] T1 · Uno", "- [ ] T2 · Puesta en servicio — espera: el propietario")) };
+assert.deepEqual(lines(todoRows(onlyWaiting, { width: 60 })), [`  Encargo${" ".repeat(48)}1/2`, "  ▏     en espera: T2"], "sin trabajo propio no hay ✓: falta lo que espera");
+assert.deepEqual(lines([todoCompact(onlyWaiting)]), ["en espera T2 · 1/2"]);
 
 // [FLOW] La barra de estado de Claude lee la misma regla.
 const project = mkdtempSync(join(tmpdir(), "n-ein-todo-core-"));

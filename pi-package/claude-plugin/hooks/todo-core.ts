@@ -1,18 +1,16 @@
 // =============================================================================
-// [CORE] NÚCLEO DEL TODO
-// Las casillas de WORK.md como tareas, cuál toca ahora y cómo se nombra cada
-// una. Lo comparten el widget de Pi, la barra y la franja de Claude y el banner;
-// el launcher en Go repite la misma regla contra tests/fixtures/work-focus.md.
+// [UI] NÚCLEO DEL TODO
+// Cómo se ve el documento de trabajo: el bloque bajo el editor de Pi y sobre el
+// prompt de Claude, y la línea compacta de la barra de estado. Qué tareas hay
+// y cuál toca ahora lo dice work-core.ts.
 //
-// POR QUÉ -> el plugin de Claude corre sin Node: este módulo solo importa otro
-// núcleo puro, recibe el texto del documento y devuelve datos y trozos con tono.
+// POR QUÉ -> el plugin de Claude corre sin Node: este módulo solo importa otros
+// núcleos puros, recibe datos y devuelve trozos con tono.
 // =============================================================================
 
 import { clip } from "./receipt-core.ts";
+import { focusOf, taskParts, type Focus, type WorkTask } from "./work-core.ts";
 
-export type WorkTask = { index: number; line: number; done: boolean; text: string };
-export type TaskParts = { key: string; title: string };
-export type Focus = { current?: WorkTask; behind: WorkTask[]; done: number; total: number };
 export type TodoView = { title: string; tasks: readonly WorkTask[] };
 /** La escala de STYLE: acento, primario, secundario, apagado y estructura. */
 export type TodoTone = "accent" | "text" | "muted" | "faint" | "structure";
@@ -30,61 +28,6 @@ export type TodoOptions = {
  * compacta. register.tsx reserva estas columnas en el pie para que el medidor no la parta.
  */
 export const STATUS_COLUMNS = 90;
-
-// WORK.md sigue el idioma de los artefactos: la sección de tareas vale en castellano o en inglés.
-export const TASKS_HEADING = /^##\s+(Tareas|Tasks|Checklist)\s*$/i;
-
-export function parseTasks(content: string): WorkTask[] {
-  const lines = content.split(/\r?\n/);
-  const tasks: WorkTask[] = [];
-  let inChecklist = false;
-  for (const [line, text] of lines.entries()) {
-    if (TASKS_HEADING.test(text)) { inChecklist = true; continue; }
-    if (/^#{1,2}\s+/.test(text)) inChecklist = false;
-    if (!inChecklist) continue;
-    const match = /^\s*[-*]\s+\[([ xX])\]\s+(.+)$/.exec(text);
-    if (match?.[1] && match[2]) tasks.push({ index: tasks.length + 1, line, done: match[1] !== " ", text: match[2] });
-  }
-  return tasks;
-}
-
-/**
- * La tarea actual es la primera abierta tras la última hecha; si no queda
- * ninguna después, la primera abierta. Las abiertas anteriores van aparte.
- *
- * POR QUÉ -> «la primera sin marcar» dejaba el TODO clavado en una tarea del
- * propietario (puesta en servicio, prueba de dos semanas) mientras el trabajo
- * iba treinta tareas más abajo.
- */
-export function focusOf(tasks: readonly WorkTask[]): Focus {
-  const done = tasks.filter((task) => task.done).length;
-  let lastDone = -1;
-  tasks.forEach((task, position) => { if (task.done) lastDone = position; });
-  const current = tasks.slice(lastDone + 1).find((task) => !task.done) ?? tasks.find((task) => !task.done);
-  const behind = current ? tasks.filter((task) => !task.done && task.index < current.index) : [];
-  return { current, behind, done, total: tasks.length };
-}
-
-/** `T39 · Título — detalle. Blocked by: …` → `{ key: "T39", title: "Título" }`. */
-export function taskParts(text: string): TaskParts {
-  const clean = text.replace(/\*\*|__|`/g, "").replace(/\s+/g, " ").trim();
-  const id = /^(T\d+[a-z]?)\s*·\s*(.*)$/i.exec(clean);
-  const rest = id?.[2] ?? clean;
-  const title = (rest.split(" — ")[0] ?? "").replace(/\s*Blocked by:.*$/i, "").replace(/\.$/, "").trim();
-  return { key: id?.[1] ?? "", title: title || rest };
-}
-
-/** El nombre corto de una tarea: id y título, sin el detalle. */
-export function taskLabel(text: string): string {
-  const { key, title } = taskParts(text);
-  return key ? `${key} · ${title}` : title;
-}
-
-/** El título del documento, sin marcas: lo que dice de qué va el encargo. */
-export function docTitle(content: string): string {
-  const heading = /^#\s+(.+)$/m.exec(content)?.[1];
-  return heading ? heading.replace(/\*\*|__|`/g, "").trim() : "WORK.md";
-}
 
 // -----------------------------------------------------------------------------
 // [UI] EL BLOQUE DE EIN
@@ -118,7 +61,8 @@ export function fitSegments(parts: readonly TodoSegment[], room: number): TodoSe
 
 /** Una línea para la barra de estado: la actual por su id (o su título recortado) y el avance. */
 export function todoCompact(view: TodoView, room = 24): TodoSegment[] {
-  const { current, done, total } = focusOf(view.tasks);
+  const { current, waiting, done, total } = focusOf(view.tasks);
+  if (!current && waiting.length > 0) return [span("muted", "en espera "), span("text", namesOf(waiting)), span("muted", " · "), span("structure", `${done}/${total}`)];
   if (!current) return [span("structure", "✓ "), span("muted", `${done}/${total} tareas`)];
   const label = keyOf(current) || clip(taskParts(current.text).title, room);
   return [span("accent", "▸ "), span("text", label), span("muted", " · "), span("structure", `${done}/${total}`)];
@@ -126,7 +70,7 @@ export function todoCompact(view: TodoView, room = 24): TodoSegment[] {
 
 function header(view: TodoView, focus: Focus, width: number, phase?: string): TodoSegment[] {
   const progress = `${focus.done}/${focus.total}`;
-  const right = !focus.current
+  const right = !focus.current && focus.waiting.length === 0
     ? [span("structure", "✓ "), span("muted", progress)]
     : [...(phase ? [span("accent", `▸ ${phase}`), span("text", "   ")] : []), span("muted", progress)];
   const room = width - INDENT.length - cells(right) - 2;
@@ -157,12 +101,18 @@ function noteRow(text: string, width: number): TodoSegment[] {
   return [...prefix, span("faint", clip(text, width - cells(prefix)))];
 }
 
-/** Las abiertas que quedaron atrás, por su id: una tarea del dueño no debe perderse de vista. */
-function behindText(behind: readonly WorkTask[]): string {
-  if (behind.length === 0) return "";
-  const names = behind.slice(0, MORE_BEHIND).map((task) => keyOf(task) || clip(taskParts(task.text).title, 20));
-  const more = behind.length > MORE_BEHIND ? ", …" : "";
-  return `${behind.length === 1 ? "abierta antes" : "abiertas antes"}: ${names.join(", ")}${more}`;
+/** Las tareas por su id (o su título corto), las tres primeras. */
+function namesOf(tasks: readonly WorkTask[]): string {
+  const names = tasks.slice(0, MORE_BEHIND).map((task) => keyOf(task) || clip(taskParts(task.text).title, 20));
+  return `${names.join(", ")}${tasks.length > MORE_BEHIND ? ", …" : ""}`;
+}
+
+/** Lo que no es la actual pero no debe perderse de vista: abiertas que quedaron atrás y tareas en espera. */
+function asideText(focus: Focus): string {
+  return [
+    focus.behind.length ? `${focus.behind.length === 1 ? "abierta antes" : "abiertas antes"}: ${namesOf(focus.behind)}` : "",
+    focus.waiting.length ? `en espera: ${namesOf(focus.waiting)}` : "",
+  ].filter(Boolean).join(" · ");
 }
 
 /**
@@ -180,28 +130,30 @@ export function todoRows(view: TodoView, options: TodoOptions): TodoSegment[][] 
   const focus = focusOf(view.tasks);
   const top = header(view, focus, width, phase);
   const { current } = focus;
-  if (!current) return [top];
+  const aside = asideText(focus);
+  if (!current) return aside && (options.maxLines ?? DEFAULT_LINES) > 1 ? [top, noteRow(aside, width)] : [top];
 
   const available = Math.max(1, (options.maxLines ?? DEFAULT_LINES) - 1);
-  const previous = view.tasks[current.index - 2];
-  const next = view.tasks.slice(current.index).filter((task) => !task.done);
+  // Lo último hecho antes de la actual, aunque entre ellas quede algo en espera.
+  const previous = view.tasks.slice(0, current.index - 1).reverse().find((task) => task.state === "done");
+  const next = view.tasks.slice(current.index).filter((task) => task.state === "open");
   const layout = (withPrevious: boolean, withNote: boolean) => {
     const fixed = (withPrevious ? 1 : 0) + 1;
-    const wantsNote = withNote && (focus.behind.length > 0 || next.length > available - fixed);
+    const wantsNote = withNote && (aside !== "" || next.length > available - fixed);
     const shown = next.slice(0, Math.max(0, available - fixed - (wantsNote ? 1 : 0)));
     const hidden = next.length - shown.length;
-    const note = wantsNote ? [hidden ? `${hidden} más` : "", behindText(focus.behind)].filter(Boolean).join(" · ") : "";
+    const note = wantsNote ? [hidden ? `${hidden} más` : "", aside].filter(Boolean).join(" · ") : "";
     return { withPrevious, shown, note, lines: fixed + shown.length + (note ? 1 : 0) };
   };
   const fits = (plan: ReturnType<typeof layout>) => plan.lines <= available;
   // Lo primero que cede es lo último hecho; después, la nota. La actual siempre se queda.
-  const plan = [layout(Boolean(previous?.done), true), layout(false, true)].find(fits) ?? layout(false, false);
+  const plan = [layout(previous !== undefined, true), layout(false, true)].find(fits) ?? layout(false, false);
 
   const visible = [...(plan.withPrevious && previous ? [previous] : []), current, ...plan.shown];
   const keyWidth = visible.some((task) => keyOf(task)) ? Math.max(...visible.map((task) => keyOf(task).length)) + 2 : 0;
   return [
     top,
-    ...visible.map((task) => taskRow(task, task === current ? "current" : task.done ? "done" : "pending", keyWidth, width)),
+    ...visible.map((task) => taskRow(task, task === current ? "current" : task.state === "done" ? "done" : "pending", keyWidth, width)),
     ...(plan.note ? [noteRow(plan.note, width)] : []),
   ];
 }

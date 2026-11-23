@@ -6,8 +6,7 @@ import type {
   ExtensionContext,
   ExtensionCommandContext,
 } from "@earendil-works/pi-coding-agent";
-import { readFileSync } from "node:fs";
-import { workState, section } from "../workspace/state.ts";
+import { workState } from "../workspace/state.ts";
 import { stopSessionJobs } from "./jobs-core.ts";
 import { stopTeam } from "../agents/runtime.ts";
 export function contextLevel(
@@ -37,8 +36,7 @@ export function continuationNote(cwd: string): string {
     throw new Error(
       "Para renovar contexto, guarda primero el objetivo y siguiente paso en WORK.md.",
     );
-  const content = readFileSync(w.path, "utf8"),
-    authorization = section(content, "Autorización", "Authorization");
+  const authorization = w.authorization;
   if (!authorization)
     throw new Error(
       "Falta la autorización vigente en el documento; no se renueva a ciegas.",

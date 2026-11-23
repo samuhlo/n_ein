@@ -15,7 +15,7 @@ import { VERSION } from "@earendil-works/pi-coding-agent";
 import { truncateToWidth } from "@earendil-works/pi-tui";
 import { painter } from "./brand.ts";
 import { bannerSeconds, renderBanner, type BannerData } from "./banner-view.ts";
-import { focusOf, taskLabel } from "../claude-plugin/hooks/todo-core.ts";
+import { focusOf, taskLabel } from "../claude-plugin/hooks/work-core.ts";
 import { readWorkDoc, resolveWorkDoc } from "./work-doc.ts";
 import { loadModels } from "../models.ts";
 

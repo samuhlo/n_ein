@@ -1,15 +1,25 @@
 // =============================================================================
 // [DATA] DOCUMENTO DE TRABAJO
 // Las casillas markdown son la fuente de verdad del TODO, dentro y fuera de Pi.
+// Cada encargo tiene su documento en docs/work/; el activo se elige por la rama
+// (work-core.ts), y el WORK.md de la raíz sigue valiendo en proyectos anteriores.
 // =============================================================================
 
-import { existsSync, readFileSync, statSync, writeFileSync } from "node:fs";
+import { closeSync, existsSync, openSync, readdirSync, readFileSync, readSync, statSync, writeFileSync } from "node:fs";
 import { dirname, isAbsolute, join, resolve } from "node:path";
 
-import { docTitle, parseTasks, TASKS_HEADING, type TodoView, type WorkTask } from "../claude-plugin/hooks/todo-core.ts";
+import type { TodoView } from "../claude-plugin/hooks/todo-core.ts";
+import { branchFromHead, chooseWorkDoc, docTitle, parseHeader, parseTasks, TASKS_HEADING, WORK_DIR, type WorkCandidate, type WorkTask } from "../claude-plugin/hooks/work-core.ts";
 
 export type { WorkTask };
 export type WorkDoc = { path: string; tasks: WorkTask[] };
+
+// La cabecera vive en las primeras líneas: no hace falta leer el registro entero de cada encargo.
+const HEADER_BYTES = 4096;
+
+function isFile(path: string): boolean {
+  return existsSync(path) && statSync(path).isFile();
+}
 
 function projectRoot(cwd: string): string {
   let dir = resolve(cwd);
@@ -21,11 +31,50 @@ function projectRoot(cwd: string): string {
   }
 }
 
+function readStart(path: string): string {
+  const fd = openSync(path, "r");
+  try {
+    const buffer = Buffer.alloc(HEADER_BYTES);
+    return buffer.toString("utf8", 0, readSync(fd, buffer, 0, HEADER_BYTES, 0));
+  } finally {
+    closeSync(fd);
+  }
+}
+
+/**
+ * La rama de .git/HEAD, sin lanzar Git: esto corre tras cada herramienta.
+ * En un worktree, .git es un archivo que apunta a su propio HEAD.
+ */
+function currentBranch(root: string): string | null {
+  try {
+    const dotgit = join(root, ".git");
+    const gitdir = isFile(dotgit) ? resolve(root, /^gitdir:\s*(.+)$/m.exec(readFileSync(dotgit, "utf8"))?.[1]?.trim() ?? "") : dotgit;
+    return branchFromHead(readFileSync(join(gitdir, "HEAD"), "utf8"));
+  } catch {
+    return null;
+  }
+}
+
+function workCandidates(root: string): WorkCandidate[] {
+  const dir = join(root, WORK_DIR);
+  if (!existsSync(dir)) return [];
+  return readdirSync(dir, { withFileTypes: true })
+    .filter((entry) => entry.isFile() && entry.name.endsWith(".md"))
+    .map((entry) => {
+      const path = join(dir, entry.name);
+      const { status, branch } = parseHeader(readStart(path));
+      return { path, status, branch };
+    });
+}
+
 export function resolveWorkDoc(cwd: string, configured = process.env.N_EIN_WORK_DOC): string | null {
-  const path = configured
-    ? isAbsolute(configured) ? configured : resolve(cwd, configured)
-    : join(projectRoot(cwd), "WORK.md");
-  return existsSync(path) && statSync(path).isFile() ? path : null;
+  if (configured) {
+    const path = isAbsolute(configured) ? configured : resolve(cwd, configured);
+    return isFile(path) ? path : null;
+  }
+  const root = projectRoot(cwd);
+  const legacy = join(root, "WORK.md");
+  return chooseWorkDoc(workCandidates(root), currentBranch(root), isFile(legacy) ? legacy : null);
 }
 
 export function readWorkDoc(path: string): WorkDoc {
