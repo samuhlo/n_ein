@@ -1,0 +1,36 @@
+# Un documento por encargo
+
+Estado: activo · Rama: feat/documento-por-encargo · Tests: `./scripts/check.sh`
+Autorización: «Venga, vamos con B»: implementar en esta rama, un commit por tarea; sin integrar en main, publicar ni tocar Miolo.
+Objetivo: el documento de trabajo deja de crecer sin fin y de leerse entero: uno por encargo, lo estable arriba, el registro al final y un cierre que lo resume.
+Siguiente: T1.
+
+## Pedidos
+
+- P1. «igual es mejor uno por encargo… llevar un registro igual es mejor que no, y dejar solo el git» → `docs/work/<fecha>-<nombre>.md`, cerrados en `docs/work/closed/` → con dos encargos abiertos en ramas distintas, el TODO de cada rama enseña el suyo.
+- P2. «se llena de cosas, aunq esten completadas, y esto lo pasa entero a la IA una y otra vez» → formato con `## Registro` al final, lectura hasta el registro, cierre resumido, aviso de tamaño → `nein_work status` no devuelve el registro; el TODO avisa por encima de 25 KB; Pi conserva una sola lectura del documento.
+- P3. La prueba de «retomable desde el diff» (sí, 23 nov) → `flow.md` → solo hay documento cuando el trabajo no se puede retomar con la petición y `git diff`.
+- P4. Los estados de gentle-shell → núcleo del TODO y launcher → una tarea en espera no es la actual ni cuenta como abierta atrás; una descartada no cuenta.
+- P5. Lo que ya funcionaba sigue: `WORK.md` en la raíz (Miolo y proyectos anteriores), `N_EIN_WORK_DOC`, `/todo done|add`, relevo, vista de estado, barra y franja de Claude, launcher.
+
+## Decisiones
+
+- Uno por encargo en `docs/work/`, que queda en el repositorio como registro del producto; al cerrar se resume y pasa a `docs/work/closed/`. El detalle sigue en Git. Elegido el 23 de noviembre frente a «un `WORK.md` y solo Git», por el trabajo en paralelo y el registro de una app que se venderá.
+- El activo se elige por la rama de su cabecera; si ninguno coincide, el `WORK.md` de la raíz; si no, el único abierto que no esté en espera. `N_EIN_WORK_DOC` manda sobre todo.
+- La rama se lee de `.git/HEAD` sin lanzar Git: la resolución es síncrona y corre tras cada herramienta.
+- Formato: cabecera (Estado, Rama, Autorización, Objetivo, Siguiente), `## Pedidos`, `## Decisiones`, `## Tareas` y `## Registro` al final; títulos equivalentes en inglés.
+- Sin Engram, sin lista `todo` mantenida por el modelo y sin CLI de creación: el agente escribe el documento con la plantilla del flujo.
+- Miolo no se toca: otro agente trabaja allí y su `WORK.md` sigue leyéndose.
+
+## Tareas
+
+- [ ] T1 · Núcleo del documento — cabecera, estados y elección del activo en `todo-core.ts`; resolución en `work-doc.ts` para Pi, barra, banner, relevo y contexto. Blocked by: none.
+- [ ] T2 · Claude y launcher — la misma elección en el plugin y en Go, contra un fixture común. Blocked by: T1.
+- [ ] T3 · Leer menos — `nein_work status` y `bin/n-ein-work` sin el registro; aviso de tamaño en el TODO; Pi conserva solo la última lectura del documento. Blocked by: T1.
+- [ ] T4 · Flujo y skills — prueba de reanudación, plantilla, estados, cierre y lectura hasta el registro en `flow.md`, `pi-only.md` y las skills que escriben el documento. Blocked by: T1.
+- [ ] T5 · Migración y documentación — el `WORK.md` de n_ein a `docs/work/`, diseño, guía, pruebas y decisión. Blocked by: T1-T4.
+- [ ] T6 · Revisión y suite completa. Blocked by: T1-T5.
+
+## Registro
+
+- R1 (23 nov) Petición: «Venga, vamos con B. Vamos dejar nein como un pepinazo de herramienta!», tras comparar gentle-shell 5.0.0 y elegir uno por encargo.
