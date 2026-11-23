@@ -24,11 +24,11 @@ El experimento de equipo se conserva desactivado: `N_EIN_TEAM=1` lo habilita exp
 
 ## Trabajo del 21 al 23 de noviembre
 
-El TODO legible con el modo de actividad y la rama, y un documento por encargo: cada encargo se siguió en su documento, ya cerrado en [docs/work/closed](work/closed/); la publicación de 0.8.0-alpha.1, en el suyo de [docs/work](work/). Los runtimes al día y 0.7.0-alpha.1 se siguieron en el `WORK.md` de entonces (en Git); «Opus piensa, GPT ejecuta» y 0.6.0-alpha.1 están en [su encargo archivado](archive/work/2026-11-03-opus-gentle.md), y los anteriores en [archive/work](archive/work/).
+El TODO legible con el modo de actividad y la rama, y un documento por encargo: cada encargo y la publicación de 0.8.0-alpha.1 se siguieron en su documento, ya cerrado en [docs/work/closed](work/closed/). Los runtimes al día y 0.7.0-alpha.1 se siguieron en el `WORK.md` de entonces (en Git); «Opus piensa, GPT ejecuta» y 0.6.0-alpha.1 están en [su encargo archivado](archive/work/2026-11-03-opus-gentle.md), y los anteriores en [archive/work](archive/work/).
 
 ## Entrega actual
 
-`0.8.0-alpha.1` deja ver por dónde va y qué hace el agente: el TODO con el aspecto de Ein en Pi y sobre el prompt de Claude, la tarea actual que sigue a lo último hecho, el modo de actividad (coding, testing, orchestrating…) y la rama. Cada encargo que no se retoma desde el diff tiene su documento en `docs/work/`, con el registro al final, estados de espera y descarte, lectura hasta el registro y un cierre que lo resume. Trae los runtimes que publicó el vigía en 0.7.0-alpha.2 y alpha.3: puente 0.13.0, Claude Code 2.1.323 y CodeGraph 1.6.3. Estado de publicación y evidencia en su documento de `docs/work/`.
+`0.8.0-alpha.1` deja ver por dónde va y qué hace el agente: el TODO con el aspecto de Ein en Pi y sobre el prompt de Claude, la tarea actual que sigue a lo último hecho, el modo de actividad (coding, testing, orchestrating…) y la rama. Cada encargo que no se retoma desde el diff tiene su documento en `docs/work/`, con el registro al final, estados de espera y descarte, lectura hasta el registro y un cierre que lo resume. Trae los runtimes que publicó el vigía en 0.7.0-alpha.2 y alpha.3: puente 0.13.0, Claude Code 2.1.323 y CodeGraph 1.6.3. Publicación verificada (adjuntos, attestation y Pages) en su documento de `docs/work/closed/`.
 
 ## Ruta de lectura
 
