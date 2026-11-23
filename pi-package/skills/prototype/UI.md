@@ -30,7 +30,7 @@ Right shape when: "what should this page look like?", "show me a few options for
 
 4. **Build the floating bar**, a small fixed pill at the bottom centre: ← previous, the variant key and name (`B (sidebar layout)`), → next, both wrapping around. Arrows update the URL param through the framework's router so the variant survives reloads and can be shared; the ← and → keys work too, except while an input, textarea or contenteditable has focus. It looks clearly apart from the design, lives in one shared component, and is hidden in production builds.
 5. **Hand it over** with the URL and the variant keys. The useful answer is usually "B's header with C's sidebar".
-6. **Keep the answer**: record the winner and why in `WORK.md`, fold it properly into the real code (prototype code was written without tests or error handling), and move the losing variants and the switcher to the throwaway branch, out of the main one.
+6. **Keep the answer**: record the winner and why in the work document, fold it properly into the real code (prototype code was written without tests or error handling), and move the losing variants and the switcher to the throwaway branch, out of the main one.
 
 ## Anti-patterns
 

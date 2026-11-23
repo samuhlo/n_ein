@@ -31,7 +31,7 @@ Use `design show --slug <slug>` to read its manifest and comments. Before applyi
 "$N_EIN_ROOT/bin/n-ein-work" design resolve --slug settings --file 01-simple.html --data '{"id":"comment-id"}'
 ```
 
-After the user authorizes implementation, keep WORK.md's existing scope and record progress with `design implement --slug ... --file ... --data '{"status":"in_progress","note":"..."}'`. On completion use `status: "implemented"` and the application's real loopback `preview` URL. The view compares the selected HTML and the application; an external application that refuses framing can be opened in a separate tab.
+After the user authorizes implementation, keep the work document's existing scope and record progress with `design implement --slug ... --file ... --data '{"status":"in_progress","note":"..."}'`. On completion use `status: "implemented"` and the application's real loopback `preview` URL. The view compares the selected HTML and the application; an external application that refuses framing can be opened in a separate tab.
 
 Visual acceptance is separate. Exercise the requested sizes and states (normal, empty, loading, error and recovery when applicable), using browser evidence or the user's actual observation. Record only what was observed with `design accept --slug ... --file ... --data '{"note":"states actually exercised"}'`. Optional `screenshot` is `{ "type":"image/png", "data":"base64" }` (PNG/JPEG, below 2 MB). Never mark acceptance merely because code compiled or the agent says implementation is done. If browser access is unavailable, leave visual acceptance pending and explain the exact gap.
 

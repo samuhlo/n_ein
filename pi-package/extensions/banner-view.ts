@@ -47,7 +47,7 @@ function statusRows(p: Painter, data: BannerData, room: number, compact = false)
     const counter = p.fg(COLORS.structure, `${data.todo.done}/${data.todo.total}`);
     rows.push(data.todo.current
       ? `${p.fg(COLORS.yellow, "▸")} ${p.fg(COLORS.concrete, clip(data.todo.current, room - 10))}  ${counter}`
-      : `${p.fg(COLORS.structure, "✓")} ${p.fg(COLORS.muted, "tareas de WORK.md hechas")}  ${counter}`);
+      : `${p.fg(COLORS.structure, "✓")} ${p.fg(COLORS.muted, "tareas del encargo hechas")}  ${counter}`);
   }
   rows.push(...gap, heading(p, data.todo ? 3 : 2, "MODELOS"), ...gap);
   rows.push(field("principal", data.models.principal));

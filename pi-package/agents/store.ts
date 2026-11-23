@@ -209,7 +209,7 @@ export class TeamStore {
     const workDoc = resolveWorkDoc(this.origin) ?? undefined;
     if (!reading && !workDoc)
       throw new Error(
-        "Record the authorized tasks in WORK.md before delegating.",
+        "Record the authorized tasks in the job's work document before delegating.",
       );
     const records = this.list();
     if (records.some((t) => t.taskId === input.taskId && taskPending(t)))

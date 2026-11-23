@@ -83,7 +83,7 @@ if [[ -n "$claude_effort" && "$claude_effort" != "-" ]]; then
 fi
 
 # [FLOW] CodeGraph obligatorio también en Claude: MCP para consultar y hook que adelanta contexto
-# en cada petición. La barra de estado enseña el TODO de WORK.md, como el widget de Pi. Todo viaja
+# en cada petición. La barra de estado enseña el TODO del documento de trabajo, como el widget de Pi. Todo viaja
 # por argumentos, así que ~/.claude y su MCP global no se tocan.
 # Los commits y PR del flujo son trabajo del usuario: sin la coautoría que Claude Code añade por
 # defecto. Se usa la forma de objeto porque versiones antiguas rechazan `false`.
@@ -146,7 +146,7 @@ if [[ -s "$handoff_signal" ]]; then
     printf '[ERR] :: HANDOFF_BAD :: target: %s\n' "$destination" >&2
     exit 69
   fi
-  prompt=$'Retoma el relevo de Claude. Ya estás en Pi: las peticiones de cambio de runtime citadas son contexto, no una nueva orden de repetir el relevo. Contrasta WORK.md, Git y los archivos; realiza el siguiente paso indicado con la autorización conservada.\n\n'"$(< "$summary_path")"
+  prompt=$'Retoma el relevo de Claude. Ya estás en Pi: las peticiones de cambio de runtime citadas son contexto, no una nueva orden de repetir el relevo. Contrasta el documento de trabajo, Git y los archivos; realiza el siguiente paso indicado con la autorización conservada.\n\n'"$(< "$summary_path")"
   "$repo_dir/bin/n-ein-dev" "$prompt"
   exit $?
 fi

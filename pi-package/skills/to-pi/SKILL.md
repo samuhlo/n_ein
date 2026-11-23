@@ -8,7 +8,7 @@ description: Hand the current job from Claude to Pi only when the user explicitl
 The user's explicit request to continue with Pi activates this skill. Load it yourself when that request is made in ordinary language; do not ask the user to invoke another command or confirm the same choice again. Never choose to transfer on your own. Only use this in Claude, not in Pi itself.
 
 1. Finish or stop any tool or background agent that could keep writing.
-2. When document writes are authorized, bring `WORK.md` up to date: what is done, decisions, pending work and checks with their freshness. For a read-only request, leave project files unchanged and put any new observations in the handoff note instead. It stays the one board.
+2. When document writes are authorized, bring the work document up to date: what is done, decisions, pending work and checks with their freshness. For a read-only request, leave project files unchanged and put any new observations in the handoff note instead. It stays the one board.
 3. Preserve each pending team worktree and branch in the note. Check Git and write a short note for Pi: the real outcome, the decisions it must not reopen, and the next step.
 4. Run `"$N_EIN_ROOT/bin/n-ein-prepare-pi" "<note>"` from the project. It adds the commit, the diff and the paths, so the handoff does not rest on your account alone. If it fails, explain the error; the handoff is not ready.
 5. When it confirms the path, explain the single host action: "The handoff is ready. Enter `/exit` to close Claude; Pi will open automatically." Do not ask for other setup commands. In a non-interactive session, finish the response and the process exits normally. The launcher waits for Claude to exit and then opens Pi with the summary.

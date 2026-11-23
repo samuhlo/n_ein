@@ -33,9 +33,9 @@ else
   status="desconocido"
   diff_stat="desconocido"
 fi
-work_doc="${N_EIN_WORK_DOC:-$git_root/WORK.md}"
-case "$work_doc" in /*) ;; *) work_doc="$git_root/$work_doc" ;; esac
-[[ -f "$work_doc" ]] || work_doc="ninguno"
+# El documento de trabajo lo elige el mismo resolvedor que el TODO: el de la rama en docs/work/.
+work_doc="$(cd "$project_dir" && bun "$repo_dir/bin/n-ein-todo" --path)" || exit 69
+[[ -n "$work_doc" ]] || work_doc="ninguno"
 
 {
   printf '# Relevo n_ein → Pi\n\n'

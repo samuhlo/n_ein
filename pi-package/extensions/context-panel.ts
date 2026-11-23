@@ -34,7 +34,7 @@ export function continuationNote(cwd: string): string {
   const w = workState(cwd);
   if (!w.path || !w.objective || !w.next)
     throw new Error(
-      "Para renovar contexto, guarda primero el objetivo y siguiente paso en WORK.md.",
+      "Para renovar contexto, guarda primero el objetivo y el siguiente paso en el documento de trabajo.",
     );
   const authorization = w.authorization;
   if (!authorization)

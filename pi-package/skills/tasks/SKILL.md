@@ -1,6 +1,6 @@
 ---
 name: tasks
-description: Slice an agreed, authorized job with several deliveries into tracer-bullet tasks in WORK.md, or plan tasks when the user asks. Choose the technical split yourself within the agreed scope.
+description: Slice an agreed, authorized job with several deliveries into tracer-bullet tasks in its work document, or plan tasks when the user asks. Choose the technical split yourself within the agreed scope.
 ---
 
 # Tasks
@@ -9,7 +9,7 @@ Slice the work into **tracer-bullet** tasks: vertical slices, each naming the ta
 
 ## 1. Gather
 
-Start from the conversation and `WORK.md`; read in full any spec or reference the user passes. Look at the code if you have not (CodeGraph first), and use the glossary's language. Look for prefactoring that makes the rest easier: make the change easy, then make the easy change.
+Start from the conversation and the job's work document; read in full any spec or reference the user passes. Look at the code if you have not (CodeGraph first), and use the glossary's language. Look for prefactoring that makes the rest easier: make the change easy, then make the easy change.
 
 ## 2. Draft vertical slices
 
@@ -26,20 +26,18 @@ Give each task its **blockers**: the tasks that must finish before it starts. No
 
 Check that each slice delivers something observable and that its blockers are real. Within an agreed scope, choose the granularity and dependencies yourself and briefly state the plan. Ask only if the split requires a product trade-off or changes scope; no routine approval of task sizes. A planning-only request remains planning-only.
 
-## 4. Write them into WORK.md
+## 4. Write them into the work document
 
-Add the tasks under the tasks section in dependency order, blockers first, with stable IDs, in the artifact language:
+Add the tasks under the tasks section in dependency order, blockers first, with stable IDs, in the artifact language, one line each:
 
 ```markdown
-## Tasks
+## Tareas
 
-- [ ] T1 · <title> — <what it delivers, end to end, from the user's point of view>. Blocked by: none.
-  - Criterion: <observable behaviour>
-- [ ] T2 · <title> — <what it delivers>. Blocked by: T1.
-  - Criterion: <observable behaviour>
+- [ ] T1 · <title> — <what it delivers, end to end, from the user's point of view>. Pedidos: P1. Blocked by: none.
+- [ ] T2 · <title> — <what it delivers>. Pedidos: P1, P2. Blocked by: T1.
 ```
 
-Criteria are plain sub-bullets so the TODO counts only tasks. No file paths or snippets in tasks (they go stale), except a prototype snippet that pins a decision, trimmed and marked. The work then follows the **frontier**: any task whose blockers are done.
+Each task names the asks it serves; their observable criteria live once in `## Pedidos`, so nothing is repeated and the TODO counts only tasks. A task that waits on someone outside the list ends `— espera: <who or what>`. No file paths or snippets in tasks (they go stale), except a prototype snippet that pins a decision, trimmed and marked. The work then follows the **frontier**: any task whose blockers are done.
 
 ## Execute the ready tasks
 

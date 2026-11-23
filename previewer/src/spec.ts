@@ -1,13 +1,15 @@
 // =============================================================================
 // [DATA] ESPECIFICACIÓN DEL ENCARGO
-// El revisor juzga el cambio contra lo que se pidió. Un WORK.md versionado ya
-// está en la copia; uno ignorado no llega a ella, y el motor lo toma del árbol
-// de trabajo del autor solo si ese árbol está en lo que se revisa. Va al agente
-// como dato fechado dentro del prompt: nunca se escribe en la copia.
+// El revisor juzga el cambio contra lo que se pidió. Cada encargo tiene su
+// documento en docs/work/, y los commits revisados lo tocan: ese es el suyo,
+// ya en la copia. Sin él vale el WORK.md de antes: versionado, en la copia;
+// ignorado, el motor lo toma del árbol de trabajo del autor solo si ese árbol
+// está en lo que se revisa, como dato fechado dentro del prompt.
 // =============================================================================
 
 import { lstatSync, readFileSync } from "node:fs";
-import { join } from "node:path";
+import { basename, join } from "node:path";
+import { parseHeader, WORK_DIR } from "../../pi-package/claude-plugin/hooks/work-core.ts";
 import { fileAt, tryGit, type Range } from "./git.ts";
 
 export const SPEC_FILE = "WORK.md";
@@ -27,7 +29,21 @@ export function stamp(date: Date): string {
   return `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())} ${pad(date.getHours())}:${pad(date.getMinutes())} ${sign}${pad(Math.floor(Math.abs(offset) / 60))}:${pad(Math.abs(offset) % 60)}`;
 }
 
+/**
+ * El documento del encargo revisado: de los de docs/work/ (también closed/) que
+ * cambian en el rango, el que nombra la rama revisada; si ninguno, el más reciente.
+ */
+function jobDoc(range: Range): string | null {
+  const changed = tryGit(range.repo, "diff", "--name-only", `${range.baseSha}..${range.headSha}`, "--", WORK_DIR) ?? "";
+  const docs = changed.split("\n").filter((path) => path.endsWith(".md") && fileAt(range.repo, range.headSha, path) !== null);
+  const mine = docs.filter((path) => !!range.branch && parseHeader(fileAt(range.repo, range.headSha, path) ?? "").branch === range.branch);
+  const pool = (mine.length ? mine : docs).sort((a, b) => basename(a).localeCompare(basename(b)));
+  return pool[pool.length - 1] ?? null;
+}
+
 export function readSpec(range: Range): TaskSpec {
+  const job = jobDoc(range);
+  if (job) return { source: "head", path: job, modified: null, note: "versionado en el head revisado", text: null };
   const none = (note: string): TaskSpec => ({ source: "none", path: SPEC_FILE, modified: null, note, text: null });
   if (fileAt(range.repo, range.headSha, SPEC_FILE) !== null)
     return { source: "head", path: SPEC_FILE, modified: null, note: "versionado en el head revisado", text: null };

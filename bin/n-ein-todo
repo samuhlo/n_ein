@@ -2,7 +2,8 @@
 // =============================================================================
 // [UI] TODO FUERA DE PI
 // La barra de estado de Claude: marca, modelo, rama y la línea compacta del TODO
-// de WORK.md (`▸ T9 · 6/10`). El bloque completo lo dibuja el plugin en la franja
+// del documento de trabajo (`▸ T9 · 6/10`). Con --path, solo la ruta del documento
+// activo, para los lanzadores en shell. El bloque completo lo dibuja el plugin en la franja
 // sobre el prompt. Las casillas siguen siendo la fuente de verdad; Claude las
 // marca editando el archivo, como Pi.
 // =============================================================================
@@ -28,7 +29,7 @@ function todoParts(cwd: string): TodoSegment[] {
     const view = readTodoView(path);
     return view.tasks.length ? todoCompact(view) : [];
   } catch {
-    return [{ tone: "muted", text: "WORK.md ilegible" }];
+    return [{ tone: "muted", text: "documento ilegible" }];
   }
 }
 
@@ -48,10 +49,12 @@ if (process.argv[2] === "--statusline") {
   // GUARD -> nunca más ancha que STATUS_COLUMNS: el pie del plugin reserva justo eso.
   const line = fitSegments(groups.flatMap((group, index) => (index ? [GAP, ...group] : group)), STATUS_COLUMNS);
   console.log(line.map(paint).join(""));
+} else if (process.argv[2] === "--path") {
+  console.log(resolveWorkDoc(process.cwd()) ?? "");
 } else {
   const path = resolveWorkDoc(process.cwd());
   if (!path) {
-    console.log("Sin WORK.md activo.");
+    console.log("Sin documento de trabajo activo.");
   } else {
     for (const task of readWorkDoc(path).tasks) console.log(`${task.index}. [${task.done ? "x" : " "}] ${task.text}`);
   }

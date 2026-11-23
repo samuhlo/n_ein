@@ -76,11 +76,11 @@ export default function (pi: ExtensionAPI) {
   });
 
   pi.registerCommand("todo", {
-    description: "Muestra o actualiza las casillas de WORK.md: /todo, /todo done N, /todo add texto",
+    description: "Muestra o actualiza las casillas del documento de trabajo: /todo, /todo done N, /todo add texto",
     handler: async (args, ctx) => {
       if (ctx.mode !== "tui") return;
       const path = resolveWorkDoc(ctx.cwd);
-      if (!path) { ctx.ui.notify("No hay WORK.md activo; el TODO no aparece para trabajos pequeños.", "info"); return; }
+      if (!path) { ctx.ui.notify("No hay documento de trabajo activo en esta rama; el TODO no aparece para trabajos pequeños.", "info"); return; }
 
       const input = args.trim();
       try {
@@ -96,7 +96,7 @@ export default function (pi: ExtensionAPI) {
           throw new Error("Usa /todo, /todo done N, /todo add texto o /todo refresh.");
         } else {
           const { tasks } = readWorkDoc(path);
-          ctx.ui.notify(tasks.length ? tasks.map((task) => `${task.index}. [${task.done ? "x" : " "}] ${task.text}`).join("\n") : "WORK.md no tiene tareas.", "info");
+          ctx.ui.notify(tasks.length ? tasks.map((task) => `${task.index}. [${task.done ? "x" : " "}] ${task.text}`).join("\n") : "El documento de trabajo no tiene tareas.", "info");
         }
       } catch (error) {
         ctx.ui.notify(error instanceof Error ? error.message : String(error), "error");

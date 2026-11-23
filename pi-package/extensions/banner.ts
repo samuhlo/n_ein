@@ -61,7 +61,7 @@ function initialData(cwd: string): BannerData {
       const { tasks } = readWorkDoc(workDoc);
       const { current, done, total } = focusOf(tasks);
       if (total) todo = { current: current && taskLabel(current.text), done, total };
-    } catch { /* el widget de TODO ya avisa de un WORK.md ilegible */ }
+    } catch { /* el widget de TODO ya avisa de un documento ilegible */ }
   }
   const home = homedir();
   return {

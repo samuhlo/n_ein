@@ -125,7 +125,7 @@ function criterionFor(cwd: string, query: string): string {
       c === query || c.startsWith(`${query} ·`) || c.startsWith(`${query} `),
   );
   if (!query.trim() || matches.length !== 1)
-    throw new Error("Indica un criterio o id de tarea inequívoco de WORK.md.");
+    throw new Error("Indica un criterio o id de tarea inequívoco del documento de trabajo.");
   return matches[0];
 }
 export async function checkWork(

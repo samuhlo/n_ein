@@ -4,7 +4,7 @@ description: "Commit the loose changes in the working tree as Conventional Commi
 disable-model-invocation: true
 ---
 
-Commit the changes the user has in the working tree, usually edits made outside a job. Inside an active `WORK.md` job, its work-unit commits apply instead: tick the task and commit as the flow says.
+Commit the changes the user has in the working tree, usually edits made outside a job. Inside a job with an open work document, its work-unit commits apply instead: tick the task and commit as the flow says.
 
 1. **Read the state** in one go: branch, `git status --porcelain=v1 -uall`, `git diff HEAD` (the staged diff in a repository with no commits), the default branch (`git symbolic-ref --short refs/remotes/origin/HEAD`, else `main` or `master`) and `git log --oneline -15`. With nothing to commit, say so and stop.
 2. **Group** the changes by logical change: one feature, one fix, one refactor, the docs or tests that go with them. A group holds whole files; when one file mixes two changes, keep it in the group it serves most and say so.

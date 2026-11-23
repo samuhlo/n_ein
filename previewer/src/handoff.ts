@@ -64,7 +64,7 @@ export function handoffBrief(session: Session, selection: StoredFinding[], headN
     `The user selected ${selection.length} finding${selection.length === 1 ? "" : "s"} in p_reviewer and asked you to apply the review. Latest reviewed head: ${short(session.headSha ?? "?")}.${moved}`,
     "",
     "Work them as one ordinary job:",
-    "1. Add one task per finding below to `WORK.md`, in this order and with these titles. Add no other tasks: findings that are not listed here are not part of this job.",
+    "1. Add one task per finding below to the job's work document (`docs/work/`, or `WORK.md` in older projects), in this order and with these titles. Add no other tasks: findings that are not listed here are not part of this job.",
     "2. For each task, reproduce the defect first. Check that the probe exercises the claimed condition; an execution error or an inapplicable scenario is not a red test. Preserve its explicit result protocol and make it a project regression test when it fits. Then fix it, run the checks and commit the task.",
     "3. If a finding does not reproduce or turns out to be wrong, change no code for it. Report it back with your evidence; that is a valid outcome.",
     "4. When the job is closed, offer in one line to open the reviewer again for a second review.",

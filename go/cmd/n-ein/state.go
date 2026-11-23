@@ -118,7 +118,7 @@ func workSection(content, title string) string {
 	return strings.TrimSpace(strings.Join(body, "\n"))
 }
 
-// firstSection admite los títulos de WORK.md en castellano y en inglés: sigue el idioma de los artefactos.
+// firstSection admite los títulos del documento de trabajo en castellano y en inglés: sigue el idioma de los artefactos.
 func firstSection(content string, titles ...string) string {
 	for _, title := range titles {
 		if body := workSection(content, title); body != "" {
@@ -568,6 +568,13 @@ func loadState(root, project string) appState {
 		gitState, changes = fmt.Sprintf("%d rutas con cambios", count), fmt.Sprintf("%d sin confirmar", count)
 	}
 	objective, tasks, current, evidence := workState(project)
+	// La fuente de las filas del encargo es el documento que se leyó, no un nombre fijo.
+	workSource := "documento de trabajo"
+	if doc := activeWorkDoc(project); doc != "" {
+		if rel, err := filepath.Rel(project, doc); err == nil {
+			workSource = filepath.ToSlash(rel)
+		}
+	}
 	piBin, piSource := os.Getenv("N_EIN_PI_BIN"), "N_EIN_PI_BIN"
 	if piBin == "" {
 		if managed, err := layout.PiBinary(config.Pi.Version); err == nil {
@@ -711,8 +718,8 @@ func loadState(root, project string) appState {
 		{0, "INICIO", homeRows},
 		{1, "ESTADO", []row{
 			{"proyecto", project, "cwd", ""}, {"rama", branch, "Git", ""}, {"cambios", gitState, "Git", ""},
-			{"objetivo", objective, "WORK.md", ""}, {"tareas", tasks, "WORK.md", ""}, {"siguiente", current, "WORK.md", ""},
-			{"comprobación", evidence, "WORK.md", ""}, {"índice", index, "CodeGraph", ""},
+			{"objetivo", objective, workSource, ""}, {"tareas", tasks, workSource, ""}, {"siguiente", current, workSource, ""},
+			{"comprobación", evidence, workSource, ""}, {"índice", index, "CodeGraph", ""},
 		}},
 		{2, "CONFIGURACIÓN", append(append([]row{
 			roleRow("principal", "principal", principal),

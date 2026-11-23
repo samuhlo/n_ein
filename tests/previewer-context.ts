@@ -111,6 +111,20 @@ const page = (outcome: Awaited<ReturnType<typeof review>>): string => text(rende
   assert.match(page(outcome), /especificación: WORK\.md del head/);
 }
 
+// --- Un documento por encargo: el de docs/work/ que tocan los commits revisados, aunque esté cerrado --
+{
+  mkdirSync(join(repo, "docs/work/closed"), { recursive: true });
+  writeFileSync(join(repo, "docs/work/2026-11-20-otro.md"), "# Otro encargo\n\nEstado: activo · Rama: feat/otro\n");
+  git("add", "docs/work/2026-11-20-otro.md");
+  git("commit", "-qm", "docs: otro encargo");
+  writeFileSync(join(repo, "docs/work/closed/2026-11-23-titulos.md"), "# Títulos\n\nEstado: cerrado · Rama: fix/titles\n\n## Pedidos\n\n- P1. «Los títulos no deben llevar espacios.»\n");
+  git("add", "docs/work/closed/2026-11-23-titulos.md");
+  git("commit", "-qm", "docs: cerrar el encargo de títulos");
+  const { outcome, request } = await reviewWith();
+  assert.deepEqual([outcome.run.spec?.source, outcome.run.spec?.path], ["head", "docs/work/closed/2026-11-23-titulos.md"], "el documento de la rama revisada, no el de otro encargo");
+  assert.match(request.prompt, /`docs\/work\/closed\/2026-11-23-titulos\.md` is committed at this head/);
+}
+
 // --- Pendiente real frente a omisiones esperadas de la suite --------------------------------
 {
   const unchecked = "No probé en un navegador los cambios de app.css: el e2e documentado necesita Zen y no está instalado.";

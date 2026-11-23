@@ -109,7 +109,7 @@ function summary(cwd: string, branch: Array<any>): string {
     "",
     "## Frentes del equipo pendientes",
     teamSummary(cwd),
-    "El destino puede continuar secuencialmente en estos árboles; conserva sus cambios y comprueba la integración antes de cerrar WORK.md.",
+    "El destino puede continuar secuencialmente en estos árboles; conserva sus cambios y comprueba la integración antes de cerrar el documento de trabajo.",
     "",
     "## Comprobaciones",
     recentLog(work.log) || "No constan comprobaciones en el documento.",
