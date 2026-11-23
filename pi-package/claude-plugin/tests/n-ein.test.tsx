@@ -189,7 +189,17 @@ const BAND = { hasSurvey: false, isWorking: false, maxRows: 20, bodyColumns: 80,
 
 /** Un repositorio en /repo con los archivos dados; las ediciones de la prueba los cambian de verdad. */
 function workspace(on: On, files: Record<string, string>) {
-  on("fs.exists", ($, e) => ({ value: e.path === "/repo/.git" || e.path in files }));
+  // /repo/.git es una carpeta; cualquier prefijo de un archivo, también.
+  const isDir = (path: string) => path === "/repo/.git" || Object.keys(files).some((file) => file.startsWith(`${path}/`));
+  on("fs.exists", ($, e) => ({ value: e.path in files || isDir(e.path) }));
+  on("fs.stat", ($, e) => {
+    if (!(e.path in files) && !isDir(e.path)) throw new Error(`ENOENT: ${e.path}`);
+    return { value: { kind: e.path in files ? "file" : "dir", size: 0, mtimeMs: 0, isLink: false } };
+  });
+  on("fs.list", ($, e) => {
+    const names = new Set(Object.keys(files).filter((file) => file.startsWith(`${e.path}/`)).map((file) => file.slice(e.path.length + 1).split("/")[0] ?? ""));
+    return { value: [...names].map((name) => ({ name, kind: `${e.path}/${name}` in files ? "file" as const : "dir" as const, size: 0, mtimeMs: 0, isLink: false })) };
+  });
   on("fs.read", ($, e) => {
     const text = files[e.path];
     if (text === undefined) throw new Error(`ENOENT: ${e.path}`);
@@ -278,4 +288,25 @@ test("mientras trabaja, la franja lleva la fase junto al avance", async ($, on) 
   await $.tool.call({ tool: "Edit", file_path: "/repo/src/a.ts", old_string: "a", new_string: "b" });
   expect(JSON.stringify(await (await band($, { isWorking: true })).drawn())).toContain("▸ coding");
   expect(JSON.stringify(await (await band($, { isWorking: false })).drawn())).not.toContain("coding");
+});
+
+test("con un documento por encargo, la franja enseña el de la rama", async ($, on) => {
+  world(on);
+  const doc = (name: string, branch: string) => `# Encargo ${name}\n\nEstado: activo · Rama: ${branch}\n\n## Tareas\n- [ ] T1 · Tarea de ${name}\n\n## Registro\n- R1\n`;
+  const files: Record<string, string> = {
+    "/repo/.git/HEAD": "ref: refs/heads/feat/b\n",
+    "/repo/docs/work/2026-11-20-a.md": doc("A", "feat/a"),
+    "/repo/docs/work/2026-11-21-b.md": doc("B", "feat/b"),
+    "/repo/docs/work/closed/2026-11-01-viejo.md": doc("viejo", "feat/b").replace("activo", "cerrado"),
+  };
+  workspace(on, files);
+  await start($);
+  await submit($);
+  const drawn = JSON.stringify(await (await band($)).drawn());
+  expect(drawn).toContain("Encargo B");
+  expect(drawn).not.toContain("Encargo A");
+  // Cambiar de rama cambia de documento en la siguiente lectura.
+  files["/repo/.git/HEAD"] = "ref: refs/heads/feat/a\n";
+  await turnEnd($, USAGE);
+  expect(JSON.stringify(await (await band($)).drawn())).toContain("Encargo A");
 });

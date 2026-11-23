@@ -1,0 +1,6 @@
+{
+  "feat/a": { "doc": "docs/work/2026-11-20-a.md", "current": "T2 · Claude", "done": 1, "total": 3, "waiting": ["T3"] },
+  "feat/b": { "doc": "docs/work/2026-11-21-b.md", "current": "", "done": 2, "total": 2, "waiting": [] },
+  "feat/c": { "doc": "docs/work/2026-11-22-c.md", "current": "", "done": 0, "total": 1, "waiting": ["T1"] },
+  "main": { "doc": null }
+}

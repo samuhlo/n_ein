@@ -4,15 +4,15 @@
 // cuando la marca de apertura se retira. Debajo del prompt Claude solo deja la
 // barra de estado, que se queda con la línea compacta (bin/n-ein-todo).
 //
-// POR QUÉ -> el plugin no tiene Node: lee WORK.md con $.fs y lo interpreta con
-// todo-core.ts, el mismo núcleo que usa Pi.
+// POR QUÉ -> el plugin no tiene Node: lee el documento con $.fs y lo interpreta
+// con work-core.ts y todo-core.ts, los mismos núcleos que usa Pi.
 // =============================================================================
 
 import { atom, read, update } from "claude-code";
 import type { EngineInterface, RenderInput } from "claude-code";
 
 import { todoRows, type TodoTone, type TodoView } from "./todo-core.ts";
-import { docTitle, parseTasks } from "./work-core.ts";
+import { branchFromHead, chooseWorkDoc, docTitle, parseHeader, parseTasks, WORK_DIR, type WorkCandidate } from "./work-core.ts";
 
 const NO_TODO: TodoView | null = null;
 const todo = atom({ plugin: "n-ein", key: "todo" } as const, NO_TODO);
@@ -26,27 +26,56 @@ const TONE: Record<TodoTone, string> = { accent: "#FFCA40", text: "text", muted:
 
 const parent = (dir: string): string => dir.replace(/\/[^/]+\/?$/, "") || "/";
 
-/** Como resolveWorkDoc de work-doc.ts: N_EIN_WORK_DOC, o el WORK.md de la raíz del repositorio. */
-async function workDocPath($: EngineInterface): Promise<string> {
+/** La rama de .git/HEAD; en un worktree, .git es un archivo que apunta a su HEAD propio. */
+async function headBranch($: EngineInterface, root: string): Promise<string | null> {
+  try {
+    const dotgit = `${root}/.git`;
+    let gitdir = dotgit;
+    if ((await $.fs.stat(dotgit)).kind === "file") {
+      const target = /^gitdir:\s*(.+)$/m.exec(await $.fs.read(dotgit))?.[1]?.trim() ?? "";
+      gitdir = target.startsWith("/") ? target : `${root}/${target}`;
+    }
+    return branchFromHead(await $.fs.read(`${gitdir}/HEAD`));
+  } catch {
+    return null;
+  }
+}
+
+async function workCandidates($: EngineInterface, root: string): Promise<WorkCandidate[]> {
+  const dir = `${root}/${WORK_DIR}`;
+  if (!(await $.fs.exists(dir))) return [];
+  const entries = (await $.fs.list(dir)).filter((entry) => entry.kind === "file" && entry.name.endsWith(".md"));
+  return Promise.all(entries.map(async (entry) => {
+    const path = `${dir}/${entry.name}`;
+    const { status, branch } = parseHeader(await $.fs.read(path));
+    return { path, status, branch };
+  }));
+}
+
+/** Como resolveWorkDoc de work-doc.ts: N_EIN_WORK_DOC, o el documento de docs/work/ que elige la rama. */
+async function workDocPath($: EngineInterface): Promise<string | null> {
   const cwd = await $.session.cwd();
   const configured = await $.env.get("N_EIN_WORK_DOC");
   if (configured) return configured.startsWith("/") ? configured : `${cwd}/${configured}`;
+  let root = cwd;
   for (let dir = cwd; ; dir = parent(dir)) {
-    if (await $.fs.exists(`${dir}/.git`)) return `${dir}/WORK.md`;
-    if (dir === "/") return `${cwd}/WORK.md`;
+    if (await $.fs.exists(`${dir}/.git`)) { root = dir; break; }
+    if (dir === "/") break;
   }
+  const legacy = `${root}/WORK.md`;
+  return chooseWorkDoc(await workCandidates($, root), await headBranch($, root), (await $.fs.exists(legacy)) ? legacy : null);
 }
 
 export async function reloadTodo($: EngineInterface): Promise<void> {
   let next: TodoView | null = null;
   try {
     const path = await workDocPath($);
-    if (await $.fs.exists(path)) {
+    if (path && (await $.fs.exists(path))) {
       const content = await $.fs.read(path);
       const tasks = parseTasks(content);
       if (tasks.length) next = { title: docTitle(content), tasks };
     }
-  } catch { /* Un WORK.md ilegible deja la franja al motor; el trabajo sigue. */ }
+  } catch { /* Un documento ilegible deja la franja al motor; el trabajo sigue. */ }
   // Solo un cambio real redibuja la franja.
   await update($, todo, (current) => (JSON.stringify(current) === JSON.stringify(next) ? current : next));
 }

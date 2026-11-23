@@ -1,9 +1,9 @@
 import { strict as assert } from "node:assert";
 import { execFileSync } from "node:child_process";
-import { mkdirSync, mkdtempSync, rmSync, writeFileSync } from "node:fs";
+import { cpSync, mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
-import { join } from "node:path";
-import { branchFromHead, chooseWorkDoc, focusOf, parseWork, taskParts } from "../pi-package/claude-plugin/hooks/work-core.ts";
+import { join, relative } from "node:path";
+import { branchFromHead, chooseWorkDoc, focusOf, parseWork, taskLabel, taskParts } from "../pi-package/claude-plugin/hooks/work-core.ts";
 import { resolveWorkDoc } from "../pi-package/extensions/work-doc.ts";
 
 const DOC = [
@@ -139,6 +139,29 @@ try {
   if (previous === undefined) delete process.env.N_EIN_WORK_DOC;
   else process.env.N_EIN_WORK_DOC = previous;
   rmSync(repo, { recursive: true, force: true });
+}
+
+// [FLOW] El repositorio de ejemplo común: el launcher en Go comprueba lo mismo contra expected.json.
+type Expected = Record<string, { doc: string | null; current?: string; done?: number; total?: number; waiting?: string[] }>;
+const sample = mkdtempSync(join(tmpdir(), "n-ein-work-repo-"));
+try {
+  cpSync(join(import.meta.dir, "fixtures/work-repo"), sample, { recursive: true });
+  mkdirSync(join(sample, ".git"));
+  const expected = JSON.parse(readFileSync(join(sample, "expected.json"), "utf8")) as Expected;
+  for (const [branch, want] of Object.entries(expected)) {
+    writeFileSync(join(sample, ".git/HEAD"), `ref: refs/heads/${branch}\n`);
+    const path = resolveWorkDoc(sample);
+    assert.equal(path && relative(sample, path), want.doc, `documento de ${branch}`);
+    if (!path) continue;
+    const seen = focusOf(parseWork(readFileSync(path, "utf8")).tasks);
+    assert.deepEqual(
+      { current: seen.current ? taskLabel(seen.current.text) : "", done: seen.done, total: seen.total, waiting: seen.waiting.map((task) => taskParts(task.text).key) },
+      { current: want.current, done: want.done, total: want.total, waiting: want.waiting },
+      `foco de ${branch}`,
+    );
+  }
+} finally {
+  rmSync(sample, { recursive: true, force: true });
 }
 
 console.log("work core: un documento por encargo, con cabecera, estados, registro al final y el activo por rama");

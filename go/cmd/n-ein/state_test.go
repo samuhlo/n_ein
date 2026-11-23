@@ -1,6 +1,8 @@
 package main
 
 import (
+	"encoding/json"
+	"fmt"
 	"os"
 	"os/exec"
 	"path/filepath"
@@ -105,6 +107,64 @@ func TestWorkStateFollowsTheLastDoneTask(t *testing.T) {
 	write(t, filepath.Join(project, "WORK.md"), "# E\n\n## Tareas\n- [x] T1 · Uno\n- [ ] T2 · Del dueño\n- [x] T3 · Tres\n")
 	if _, _, current, _ := workState(project); current != "T2 · Del dueño" {
 		t.Fatalf("sin nada tras lo hecho vuelve a la abierta: %q", current)
+	}
+}
+
+// Mismo repositorio de ejemplo que tests/work-core.ts: cada rama ve su documento de docs/work/.
+func TestWorkDocFollowsTheBranch(t *testing.T) {
+	fixture := filepath.Join("..", "..", "..", "tests", "fixtures", "work-repo")
+	project := t.TempDir()
+	err := filepath.WalkDir(fixture, func(path string, entry os.DirEntry, err error) error {
+		if err != nil || entry.IsDir() {
+			return err
+		}
+		rel, _ := filepath.Rel(fixture, path)
+		data, err := os.ReadFile(path)
+		if err == nil {
+			write(t, filepath.Join(project, rel), string(data))
+		}
+		return err
+	})
+	if err != nil {
+		t.Fatal(err)
+	}
+	data, err := os.ReadFile(filepath.Join(fixture, "expected.json"))
+	if err != nil {
+		t.Fatal(err)
+	}
+	var expected map[string]struct {
+		Doc     *string  `json:"doc"`
+		Current string   `json:"current"`
+		Done    int      `json:"done"`
+		Total   int      `json:"total"`
+		Waiting []string `json:"waiting"`
+	}
+	if err := json.Unmarshal(data, &expected); err != nil {
+		t.Fatal(err)
+	}
+	t.Setenv("N_EIN_WORK_DOC", "")
+	for branch, want := range expected {
+		write(t, filepath.Join(project, ".git", "HEAD"), "ref: refs/heads/"+branch+"\n")
+		doc := activeWorkDoc(project)
+		if want.Doc == nil {
+			if doc != "" {
+				t.Fatalf("%s: sin documento propio y con dos abiertos no se adivina: %s", branch, doc)
+			}
+			continue
+		}
+		if rel, _ := filepath.Rel(project, doc); rel != filepath.FromSlash(*want.Doc) {
+			t.Fatalf("%s: documento %q, se esperaba %q", branch, rel, *want.Doc)
+		}
+		current := want.Current
+		if current == "" && len(want.Waiting) > 0 {
+			current = "en espera: " + strings.Join(want.Waiting, ", ")
+		} else if current == "" {
+			current = "todo completado"
+		}
+		_, tasks, next, _ := workState(project)
+		if tasks != fmt.Sprintf("%d/%d hechas", want.Done, want.Total) || next != current {
+			t.Fatalf("%s: tareas %q y siguiente %q", branch, tasks, next)
+		}
 	}
 }
 

@@ -3,7 +3,7 @@
 Estado: activo · Rama: feat/documento-por-encargo · Tests: `./scripts/check.sh`
 Autorización: «Venga, vamos con B»: implementar en esta rama, un commit por tarea; sin integrar en main, publicar ni tocar Miolo.
 Objetivo: el documento de trabajo deja de crecer sin fin y de leerse entero: uno por encargo, lo estable arriba, el registro al final y un cierre que lo resume.
-Siguiente: T2.
+Siguiente: T3.
 
 ## Pedidos
 
@@ -25,7 +25,7 @@ Siguiente: T2.
 ## Tareas
 
 - [x] T1 · Núcleo del documento — `work-core.ts` (cabecera, estados, elección) y resolución por rama en `work-doc.ts` · `tests/work-core.ts` rojo → verde.
-- [ ] T2 · Claude y launcher — la misma elección en el plugin y en Go, contra un fixture común. Blocked by: T1.
+- [x] T2 · Claude y launcher — la misma elección en el plugin y en Go contra `tests/fixtures/work-repo/expected.json` · Go y `claude plugin test` rojo → verde.
 - [ ] T3 · Leer menos — `nein_work status` y `bin/n-ein-work` sin el registro; aviso de tamaño en el TODO; Pi conserva solo la última lectura del documento. Blocked by: T1.
 - [ ] T4 · Flujo y skills — prueba de reanudación, plantilla, estados, cierre y lectura hasta el registro en `flow.md`, `pi-only.md` y las skills que escriben el documento. Blocked by: T1.
 - [ ] T5 · Migración y documentación — el `WORK.md` de n_ein a `docs/work/`, diseño, guía, pruebas y decisión. Blocked by: T1-T4.
@@ -35,3 +35,4 @@ Siguiente: T2.
 
 - R1 (23 nov) Petición: «Venga, vamos con B. Vamos dejar nein como un pepinazo de herramienta!», tras comparar gentle-shell 5.0.0 y elegir uno por encargo.
 - R2 (23 nov) T1: el modelo pasa a `work-core.ts` y `todo-core.ts` queda para el dibujo. Relevo, vista de estado, continuación y contexto leen el modelo; el relevo lleva las 3 últimas entradas del registro (con 100, su test falla). La fila de contexto del TODO es la última tarea hecha aunque en medio quede una en espera. En este repositorio, la rama elige `docs/work/2026-11-23-documento-por-encargo.md` y no el `WORK.md` de la raíz.
+- R3 (23 nov) T2: `expected.json` fija, por rama, documento, tarea actual, cuenta (sin descartadas) y lo que espera; lo cumplen `tests/work-core.ts` y `TestWorkDocFollowsTheBranch`. El launcher dice «en espera: T1» cuando solo queda eso. En Claude, cambiar de rama cambia la franja al cerrar el turno. El contrato de estado del plugin gana `state`.

@@ -128,34 +128,48 @@ func firstSection(content string, titles ...string) string {
 	return ""
 }
 
+// Estados de una tarea, como state en claude-plugin/hooks/work-core.ts.
+const (
+	taskOpen = iota
+	taskDone
+	taskWaiting
+	taskDropped
+)
+
 type workTask struct {
-	done bool
-	text string
+	state int
+	text  string
 }
 
 var (
-	taskLine  = regexp.MustCompile(`^\s*[-*]\s+\[([ xX])\]\s+(.+)$`)
-	taskID    = regexp.MustCompile(`(?i)^(T\d+[a-z]?)\s*·\s*(.*)$`)
-	taskBlock = regexp.MustCompile(`(?i)\s*Blocked by:.*$`)
+	taskLine    = regexp.MustCompile(`^\s*[-*]\s+\[([ xX])\]\s+(.+)$`)
+	taskID      = regexp.MustCompile(`(?i)^(T\d+[a-z]?)\s*·\s*(.*)$`)
+	taskBlock   = regexp.MustCompile(`(?i)\s*Blocked by:.*$`)
+	taskWait    = regexp.MustCompile(`(?i)\s—\s*(en espera|espera|waiting)\s*:`)
+	taskDrop    = regexp.MustCompile(`(?i)\s—\s*(descartada|dropped)\s*:`)
+	headerList  = regexp.MustCompile(`(?i)^(Estado|Status|Rama|Branch|Tests?)\s*:`)
+	headerField = regexp.MustCompile(`(?i)^(Estado|Status|Rama|Branch|Objetivo|Objective|Goal)\s*:\s*(.*)$`)
+	headRef     = regexp.MustCompile(`(?m)^ref:\s*refs/heads/(.+)$`)
+	gitdirLine  = regexp.MustCompile(`(?m)^gitdir:\s*(.+)$`)
 )
 
-// [CORE] currentTask repite focusOf de claude-plugin/hooks/todo-core.ts: la primera abierta tras la
-// última hecha y, si no queda ninguna después, la primera abierta. tests/fixtures/work-focus.md
-// obliga a que los dos señalen la misma.
+// [CORE] currentTask repite focusOf de claude-plugin/hooks/work-core.ts: la primera abierta tras la
+// última hecha y, si no queda ninguna después, la primera abierta; lo que espera a alguien o se
+// descartó nunca es la actual. tests/fixtures/work-focus.md y work-repo/ obligan a que coincidan.
 func currentTask(list []workTask) (workTask, bool) {
 	lastDone := -1
 	for i, task := range list {
-		if task.done {
+		if task.state == taskDone {
 			lastDone = i
 		}
 	}
 	for _, task := range list[lastDone+1:] {
-		if !task.done {
+		if task.state == taskOpen {
 			return task, true
 		}
 	}
 	for _, task := range list {
-		if !task.done {
+		if task.state == taskOpen {
 			return task, true
 		}
 	}
@@ -164,40 +178,183 @@ func currentTask(list []workTask) (workTask, bool) {
 
 // taskLabel deja id y título: el detalle tras « — » y lo bloqueado no caben en una fila.
 func taskLabel(text string) string {
-	clean := strings.Join(strings.Fields(strings.NewReplacer("**", "", "__", "", "`", "").Replace(text)), " ")
-	key, rest := "", clean
-	if match := taskID.FindStringSubmatch(clean); match != nil {
-		key, rest = match[1], match[2]
-	}
-	title := strings.TrimSuffix(strings.TrimSpace(taskBlock.ReplaceAllString(strings.Split(rest, " — ")[0], "")), ".")
-	if title == "" {
-		title = rest
-	}
+	key, title := taskParts(text)
 	if key == "" {
 		return title
 	}
 	return key + " · " + title
 }
 
+func taskParts(text string) (key, title string) {
+	clean := strings.Join(strings.Fields(strings.NewReplacer("**", "", "__", "", "`", "").Replace(text)), " ")
+	rest := clean
+	if match := taskID.FindStringSubmatch(clean); match != nil {
+		key, rest = match[1], match[2]
+	}
+	title = strings.TrimSuffix(strings.TrimSpace(taskBlock.ReplaceAllString(strings.Split(rest, " — ")[0], "")), ".")
+	if title == "" {
+		title = rest
+	}
+	return key, title
+}
+
+// workHeader lee la cabecera de un documento de docs/work/: estado, rama y objetivo.
+type workHeader struct {
+	status, branch, objective string
+}
+
+func parseWorkHeader(content string) workHeader {
+	var header workHeader
+	for _, line := range strings.Split(content, "\n") {
+		if strings.HasPrefix(line, "## ") {
+			break
+		}
+		text := strings.TrimSpace(line)
+		fields := []string{text}
+		// Solo las claves cortas comparten línea con « · »; el objetivo es texto libre.
+		if headerList.MatchString(text) {
+			fields = strings.Split(text, " · ")
+		}
+		for _, field := range fields {
+			match := headerField.FindStringSubmatch(strings.TrimSpace(field))
+			if match == nil {
+				continue
+			}
+			value := strings.TrimSpace(match[2])
+			switch strings.ToLower(match[1]) {
+			case "estado", "status":
+				header.status = workStatus(value)
+			case "rama", "branch":
+				header.branch = strings.ReplaceAll(value, "`", "")
+			default:
+				header.objective = value
+			}
+		}
+	}
+	return header
+}
+
+func workStatus(value string) string {
+	text := strings.ToLower(value)
+	switch {
+	case strings.Contains(text, "cerrad") || strings.Contains(text, "closed") || strings.Contains(text, "hecho") || strings.Contains(text, "done"):
+		return "closed"
+	case strings.Contains(text, "espera") || strings.Contains(text, "waiting") || strings.Contains(text, "hold"):
+		return "waiting"
+	case text == "":
+		return ""
+	}
+	return "active"
+}
+
+// currentBranch lee .git/HEAD sin lanzar Git; en un worktree, .git apunta a su HEAD propio.
+func currentBranch(project string) string {
+	gitdir := filepath.Join(project, ".git")
+	if info, err := os.Stat(gitdir); err == nil && !info.IsDir() {
+		data, err := os.ReadFile(gitdir)
+		match := gitdirLine.FindStringSubmatch(string(data))
+		if err != nil || match == nil {
+			return ""
+		}
+		gitdir = strings.TrimSpace(match[1])
+		if !filepath.IsAbs(gitdir) {
+			gitdir = filepath.Join(project, gitdir)
+		}
+	}
+	data, err := os.ReadFile(filepath.Join(gitdir, "HEAD"))
+	if match := headRef.FindStringSubmatch(string(data)); err == nil && match != nil {
+		return strings.TrimSpace(match[1])
+	}
+	return ""
+}
+
+// [CORE] activeWorkDoc repite chooseWorkDoc de work-core.ts: el abierto de docs/work/ cuya cabecera
+// nombra la rama actual (el más reciente si hay varios); si no, el WORK.md de la raíz; si no, el
+// único abierto que no esté en espera. Con varios y ninguno de la rama no se adivina.
+func activeWorkDoc(project string) string {
+	if configured := os.Getenv("N_EIN_WORK_DOC"); configured != "" {
+		if !filepath.IsAbs(configured) {
+			configured = filepath.Join(project, configured)
+		}
+		if info, err := os.Stat(configured); err == nil && !info.IsDir() {
+			return configured
+		}
+		return ""
+	}
+	branch := currentBranch(project)
+	paths, _ := filepath.Glob(filepath.Join(project, "docs", "work", "*.md"))
+	sort.Strings(paths)
+	mine, active := "", []string{}
+	for _, path := range paths {
+		data, err := os.ReadFile(path)
+		if err != nil {
+			continue
+		}
+		header := parseWorkHeader(string(data))
+		if header.status == "closed" {
+			continue
+		}
+		if branch != "" && header.branch == branch {
+			mine = path
+		}
+		if header.status != "waiting" {
+			active = append(active, path)
+		}
+	}
+	if mine != "" {
+		return mine
+	}
+	if legacy := filepath.Join(project, "WORK.md"); fileExists(legacy) {
+		return legacy
+	}
+	if len(active) == 1 {
+		return active[0]
+	}
+	return ""
+}
+
+func fileExists(path string) bool {
+	info, err := os.Stat(path)
+	return err == nil && !info.IsDir()
+}
+
 func workState(project string) (objective, tasks, current, evidence string) {
-	path := filepath.Join(project, "WORK.md")
+	path := activeWorkDoc(project)
 	data, err := os.ReadFile(path)
-	if err != nil {
+	if path == "" || err != nil {
 		return "sin documento", "sin documento", "sin documento", "desconocida"
 	}
 	content := string(data)
-	objectiveText := firstSection(content, "Objetivo", "Goal", "Acuerdo confirmado")
+	objectiveText := parseWorkHeader(content).objective
+	if objectiveText == "" {
+		objectiveText = firstSection(content, "Objetivo", "Goal", "Acuerdo confirmado")
+	}
 	objective = known(strings.Split(objectiveText, "\n")[0])
 	taskSection := firstSection(content, "Tareas", "Tasks", "Checklist")
-	var list []workTask
+	var list, waiting []workTask
 	for _, line := range strings.Split(taskSection, "\n") {
-		if match := taskLine.FindStringSubmatch(line); match != nil {
-			list = append(list, workTask{done: match[1] != " ", text: match[2]})
+		match := taskLine.FindStringSubmatch(line)
+		if match == nil {
+			continue
 		}
+		task := workTask{state: taskOpen, text: match[2]}
+		switch {
+		case taskDrop.MatchString(task.text):
+			task.state = taskDropped
+		case match[1] != " ":
+			task.state = taskDone
+		case taskWait.MatchString(task.text):
+			task.state = taskWaiting
+			waiting = append(waiting, task)
+		}
+		list = append(list, task)
 	}
-	total, done := len(list), 0
+	total, done := 0, 0
 	for _, task := range list {
-		if task.done {
+		if task.state != taskDropped {
+			total++
+		}
+		if task.state == taskDone {
 			done++
 		}
 	}
@@ -208,11 +365,21 @@ func workState(project string) (objective, tasks, current, evidence string) {
 		tasks, current = "sin tareas", "sin tareas"
 	} else {
 		tasks = fmt.Sprintf("%d/%d hechas", done, total)
-		if current == "" {
+		if current == "" && len(waiting) > 0 {
+			keys := make([]string, 0, len(waiting))
+			for _, task := range waiting {
+				key, title := taskParts(task.text)
+				if key == "" {
+					key = title
+				}
+				keys = append(keys, key)
+			}
+			current = "en espera: " + strings.Join(keys, ", ")
+		} else if current == "" {
 			current = "todo completado"
 		}
 	}
-	if firstSection(content, "Evidencia", "Evidence") == "" {
+	if firstSection(content, "Registro", "Log", "Evidencia", "Evidence") == "" {
 		evidence = "sin comprobaciones"
 	} else {
 		evidence = "consignada · vigencia desconocida"
