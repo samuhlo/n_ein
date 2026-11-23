@@ -1,15 +1,15 @@
 {
   "schema": 1,
   "pi": {
-    "version": "1.5.2",
+    "version": "1.6.0",
     "model": "nein/auto",
     "thinking": "medium"
   },
   "codegraph": {
-    "version": "1.6.3",
+    "version": "1.6.4",
     "sha256": {
-      "darwin-arm64": "d40bc304d1de3d374d70b46b0e4095dd124a0c6b81010acd2f49b7b4fbde9483",
-      "linux-amd64": "abf6e7b411c6cef1dd55dd41b1f3412fa9601300793e867870f85c226eec6587"
+      "darwin-arm64": "daa9142732eefed5b6d187aa82a2ca9c4f3ebce10d394fb79cf6c45b367618cc",
+      "linux-amd64": "8477f3841cba6ac8c45847d42eb5254f1f2d7fbc3045baf333e1cbe92267022d"
     }
   },
   "routing": {
