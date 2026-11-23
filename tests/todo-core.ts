@@ -97,6 +97,11 @@ const onlyWaiting = { title: "Encargo", tasks: parseTasks(checklist("- [x] T1 ·
 assert.deepEqual(lines(todoRows(onlyWaiting, { width: 60 })), [`  Encargo${" ".repeat(48)}1/2`, "  ▏     en espera: T2"], "sin trabajo propio no hay ✓: falta lo que espera");
 assert.deepEqual(lines([todoCompact(onlyWaiting)]), ["en espera T2 · 1/2"]);
 
+// [UI] Un documento que pasa del presupuesto lo dice en la nota: toca compactar.
+const heavy = lines(todoRows({ ...view, bytes: 40 * 1024 }, { width: 80 }));
+assert.match(heavy.at(-1)!, /abierta antes: T5 · 40 KB: toca compactar$/);
+assert.ok(!lines(todoRows({ ...view, bytes: 20 * 1024 }, { width: 80 })).join("\n").includes("KB"), "dentro del presupuesto no se menciona");
+
 // [FLOW] La barra de estado de Claude lee la misma regla.
 const project = mkdtempSync(join(tmpdir(), "n-ein-todo-core-"));
 try {

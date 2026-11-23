@@ -12,7 +12,7 @@ import { atom, read, update } from "claude-code";
 import type { EngineInterface, RenderInput } from "claude-code";
 
 import { todoRows, type TodoTone, type TodoView } from "./todo-core.ts";
-import { branchFromHead, chooseWorkDoc, docTitle, parseHeader, parseTasks, WORK_DIR, type WorkCandidate } from "./work-core.ts";
+import { branchFromHead, byteLength, chooseWorkDoc, docTitle, parseHeader, parseTasks, WORK_DIR, type WorkCandidate } from "./work-core.ts";
 
 const NO_TODO: TodoView | null = null;
 const todo = atom({ plugin: "n-ein", key: "todo" } as const, NO_TODO);
@@ -73,7 +73,7 @@ export async function reloadTodo($: EngineInterface): Promise<void> {
     if (path && (await $.fs.exists(path))) {
       const content = await $.fs.read(path);
       const tasks = parseTasks(content);
-      if (tasks.length) next = { title: docTitle(content), tasks };
+      if (tasks.length) next = { title: docTitle(content), tasks, bytes: byteLength(content) };
     }
   } catch { /* Un documento ilegible deja la franja al motor; el trabajo sigue. */ }
   // Solo un cambio real redibuja la franja.

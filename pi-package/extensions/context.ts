@@ -5,15 +5,18 @@
 // En dos fronteras, esos resultados se sustituyen por una nota de una línea con
 // `context_edit` de Pi; el historial, la interfaz y la contabilidad no cambian.
 //   · primera escritura   -> CodeGraph y búsquedas: ya sirvieron para decidir.
-//   · commit entre tareas -> lecturas recuperables: Git, WORK.md y los archivos
-//                            guardan el estado vigente. Tras el último commit
-//                            queda poco por hacer y romper la caché no compensa.
+//   · commit entre tareas -> lecturas recuperables: Git, el documento de trabajo
+//                            y los archivos guardan el estado vigente. Del
+//                            documento queda solo su última lectura. Tras el
+//                            último commit queda poco por hacer y romper la
+//                            caché no compensa.
 // El commit se reconoce porque HEAD se mueve durante el turno, no por el texto
 // del comando: así valen `type(scope): …`, heredocs, redirecciones y scripts.
 // Las instrucciones, los errores y las comprobaciones no se retiran.
 // =============================================================================
 
 import { execFileSync } from "node:child_process";
+import { resolve } from "node:path";
 import type { ExtensionAPI } from "@earendil-works/pi-coding-agent";
 import { readWorkDoc, resolveWorkDoc } from "./work-doc";
 
@@ -103,7 +106,16 @@ function target(call?: Call): string {
 }
 
 function note(item: Item, boundary: string): string {
-  return `${RETIRED_MARK} at ${boundary}: ${item.call?.name ?? "tool"} ${target(item.call)} returned ${item.text.length} chars. Git, WORK.md and the files hold the current state; run it again if you need it.]`;
+  return `${RETIRED_MARK} at ${boundary}: ${item.call?.name ?? "tool"} ${target(item.call)} returned ${item.text.length} chars. Git, the work document and the files hold the current state; run it again if you need it.]`;
+}
+
+/** Una lectura del documento de trabajo: con `read` o con un comando de solo lectura que lo nombra. */
+function readsWorkDoc(item: Item, isWorkDoc: (path: string) => boolean): boolean {
+  const call = item.call;
+  if (call?.name === "read") return isWorkDoc(String(call.arguments?.path ?? ""));
+  if (call?.name !== "bash") return false;
+  const commands = shellCommands(command(call));
+  return commands.length > 0 && commands.every((words) => READ_ONLY_BASH.test(words.join(" "))) && commands.some((words) => words.slice(1).some(isWorkDoc));
 }
 
 /**
@@ -113,11 +125,18 @@ function note(item: Item, boundary: string): string {
  * sola vez por frontera. `commit` es el HEAD nuevo cuando este turno commiteó
  * y aún quedan tareas.
  */
-export function retirements(entries: readonly Entry[], currentTurn: ReadonlySet<string>, commit?: string): Retirement[] {
+export function retirements(entries: readonly Entry[], currentTurn: ReadonlySet<string>, commit?: string, isWorkDoc?: (path: string) => boolean): Retirement[] {
   const all = items(entries);
   const firstWrite = all.find(wrote)?.turn ?? 0;
   const out: Retirement[] = [];
+  // El documento se edita en cada tarea: sus lecturas anteriores ya no dicen lo vigente, la última sí.
+  const docReads = isWorkDoc ? all.filter((item) => !item.isError && !item.text.startsWith(RETIRED_MARK) && readsWorkDoc(item, isWorkDoc)) : [];
+  const superseded = new Set(docReads.slice(0, -1).map((item) => item.id));
   for (const item of all) {
+    if (commit && superseded.has(item.id) && !currentTurn.has(item.id) && item.text.length >= MIN_CHARS) {
+      out.push({ targetId: item.id, text: `${RETIRED_MARK} at commit ${commit.slice(0, 7)}: superseded by a later read of the work document ${target(item.call)}; the latest one stays in context.]` });
+      continue;
+    }
     if (currentTurn.has(item.id) || item.isError || item.text.length < MIN_CHARS || item.text.startsWith(RETIRED_MARK) || isInstruction(item)) continue;
     // Los checks y las mutaciones no son lecturas: un commit no demuestra que su evidencia se haya guardado.
     const recoverable = item.call?.name === "read" || isExploration(item);
@@ -155,7 +174,9 @@ export default function (pi: ExtensionAPI) {
     if (!event.toolResultEntryIds.length) return;
     const now = before ? head(ctx.cwd) : undefined;
     const commit = now && now !== before && tasksPending(ctx.cwd) ? now : undefined;
-    const retire = retirements(event.context.contextEntries, new Set(event.toolResultEntryIds), commit);
+    const workDoc = commit ? resolveWorkDoc(ctx.cwd) : null;
+    const isWorkDoc = workDoc ? (path: string) => resolve(ctx.cwd, path) === workDoc : undefined;
+    const retire = retirements(event.context.contextEntries, new Set(event.toolResultEntryIds), commit, isWorkDoc);
     if (!retire.length) return;
     return {
       entries: retire.map(({ targetId, text }) => ({ type: "context_edit" as const, targetId, replacement: { content: [{ type: "text" as const, text }] } })),

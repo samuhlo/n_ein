@@ -84,7 +84,7 @@ export function readWorkDoc(path: string): WorkDoc {
 /** Lo que dibuja el TODO: el título del encargo y sus casillas. */
 export function readTodoView(path: string): TodoView {
   const content = readFileSync(path, "utf8");
-  return { title: docTitle(content), tasks: parseTasks(content) };
+  return { title: docTitle(content), tasks: parseTasks(content), bytes: Buffer.byteLength(content) };
 }
 
 export function markWorkTask(path: string, index: number): WorkDoc {

@@ -9,9 +9,9 @@
 // =============================================================================
 
 import { clip } from "./receipt-core.ts";
-import { focusOf, taskParts, type Focus, type WorkTask } from "./work-core.ts";
+import { focusOf, taskParts, WORK_BUDGET_BYTES, type Focus, type WorkTask } from "./work-core.ts";
 
-export type TodoView = { title: string; tasks: readonly WorkTask[] };
+export type TodoView = { title: string; tasks: readonly WorkTask[]; bytes?: number };
 /** La escala de STYLE: acento, primario, secundario, apagado y estructura. */
 export type TodoTone = "accent" | "text" | "muted" | "faint" | "structure";
 export type TodoSegment = { tone: TodoTone; text: string };
@@ -107,11 +107,12 @@ function namesOf(tasks: readonly WorkTask[]): string {
   return `${names.join(", ")}${tasks.length > MORE_BEHIND ? ", …" : ""}`;
 }
 
-/** Lo que no es la actual pero no debe perderse de vista: abiertas que quedaron atrás y tareas en espera. */
-function asideText(focus: Focus): string {
+/** Lo que no es la actual pero no debe perderse de vista: abiertas que quedaron atrás, tareas en espera y un documento que pesa. */
+function asideText(focus: Focus, bytes = 0): string {
   return [
     focus.behind.length ? `${focus.behind.length === 1 ? "abierta antes" : "abiertas antes"}: ${namesOf(focus.behind)}` : "",
     focus.waiting.length ? `en espera: ${namesOf(focus.waiting)}` : "",
+    bytes > WORK_BUDGET_BYTES ? `${Math.round(bytes / 1024)} KB: toca compactar` : "",
   ].filter(Boolean).join(" · ");
 }
 
@@ -130,7 +131,7 @@ export function todoRows(view: TodoView, options: TodoOptions): TodoSegment[][] 
   const focus = focusOf(view.tasks);
   const top = header(view, focus, width, phase);
   const { current } = focus;
-  const aside = asideText(focus);
+  const aside = asideText(focus, view.bytes);
   if (!current) return aside && (options.maxLines ?? DEFAULT_LINES) > 1 ? [top, noteRow(aside, width)] : [top];
 
   const available = Math.max(1, (options.maxLines ?? DEFAULT_LINES) - 1);

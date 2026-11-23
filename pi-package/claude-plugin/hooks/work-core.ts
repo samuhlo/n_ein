@@ -29,6 +29,12 @@ export type Work = WorkHeader & {
 export type Focus = { current?: WorkTask; behind: WorkTask[]; waiting: WorkTask[]; done: number; total: number };
 export type WorkCandidate = { path: string; status: WorkStatus; branch: string };
 
+/**
+ * Por encima de esto el documento ya pesa en cada lectura: el TODO avisa y el
+ * agente lo compacta al cerrar la tarea (Miolo llegó a 120 KB).
+ */
+export const WORK_BUDGET_BYTES = 25 * 1024;
+
 /** Abiertos aquí, uno por encargo; al cerrarse pasan a closed/ y ya no se eligen. */
 export const WORK_DIR = "docs/work";
 export const CLOSED_DIR = "docs/work/closed";
@@ -182,6 +188,16 @@ export function waitingFor(text: string): string {
 export function taskLabel(text: string): string {
   const { key, title } = taskParts(text);
   return key ? `${key} · ${title}` : title;
+}
+
+/** Bytes en UTF-8, sin depender de Buffer ni TextEncoder: el plugin no tiene Node. */
+export function byteLength(text: string): number {
+  let bytes = 0;
+  for (const char of text) {
+    const code = char.codePointAt(0) ?? 0;
+    bytes += code < 0x80 ? 1 : code < 0x800 ? 2 : code < 0x10000 ? 3 : 4;
+  }
+  return bytes;
 }
 
 /** La rama de un `.git/HEAD`; con HEAD suelto, ninguna. */
