@@ -45,8 +45,10 @@ const LOG_TITLES = ["Registro", "Log"];
 const LEGACY_LOG_TITLES = ["Evidencia", "Evidence"];
 const LIST_KEYS = /^(Estado|Status|Rama|Branch|Tests?)\s*:/i;
 const LINE_KEYS = /^(Autorizaci[oó]n|Authorization|Objetivo|Objective|Goal|Siguiente|Next)\s*:\s*(.*)$/i;
-const WAITING = /\s—\s*(en espera|espera|waiting)\s*:/i;
-const DROPPED = /\s—\s*(descartada|dropped)\s*:/i;
+// La plantilla usa la raya; escrito a mano, el guion o la semirraya valen igual.
+const WAITING = /\s[—–-]\s*(?:en espera|espera|waiting)\s*:\s*(.*)$/i;
+const DROPPED = /\s[—–-]\s*(?:descartada|dropped)\s*:/i;
+const STATE_MARK = /\s[—–-]\s*(?:en espera|espera|waiting|descartada|dropped)\s*:.*$/i;
 
 export function parseTasks(content: string): WorkTask[] {
   const tasks: WorkTask[] = [];
@@ -175,13 +177,13 @@ export function taskParts(text: string): TaskParts {
   const clean = text.replace(/\*\*|__|`/g, "").replace(/\s+/g, " ").trim();
   const id = /^(T\d+[a-z]?)\s*·\s*(.*)$/i.exec(clean);
   const rest = id?.[2] ?? clean;
-  const title = (rest.split(" — ")[0] ?? "").replace(/\s*Blocked by:.*$/i, "").replace(/\.$/, "").trim();
+  const title = (rest.replace(STATE_MARK, "").split(" — ")[0] ?? "").replace(/\s*Blocked by:.*$/i, "").replace(/\.$/, "").trim();
   return { key: id?.[1] ?? "", title: title || rest };
 }
 
 /** A qué espera una tarea en espera: lo que sigue a `— espera:`. */
 export function waitingFor(text: string): string {
-  return text.split(/\s—\s*(?:en espera|espera|waiting)\s*:/i)[1]?.trim() ?? "";
+  return WAITING.exec(text)?.[1]?.trim() ?? "";
 }
 
 /** El nombre corto de una tarea: id y título, sin el detalle. */
@@ -198,6 +200,13 @@ export function byteLength(text: string): number {
     bytes += code < 0x80 ? 1 : code < 0x800 ? 2 : code < 0x10000 ? 3 : 4;
   }
   return bytes;
+}
+
+/** Dónde está el directorio de Git cuando `.git` es un archivo (un worktree): `gitdir: <ruta>`. */
+export function gitdirFrom(dotgit: string, root: string): string | null {
+  const target = /^gitdir:\s*(.+)$/m.exec(dotgit)?.[1]?.trim();
+  if (!target) return null;
+  return target.startsWith("/") ? target : `${root}/${target}`;
 }
 
 /** La rama de un `.git/HEAD`; con HEAD suelto, ninguna. */

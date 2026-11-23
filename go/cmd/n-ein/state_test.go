@@ -104,6 +104,10 @@ func TestWorkStateFollowsTheLastDoneTask(t *testing.T) {
 	if tasks != "6/10 hechas" || current != "T9 · Autoría y emojis en la revisión" {
 		t.Fatalf("tarea actual: %q, %q", tasks, current)
 	}
+	write(t, filepath.Join(project, "WORK.md"), "# E\n\n## Tareas\n- [x] T1 · Uno\n- [ ] T2 · Del dueño - espera: el dueño\n- [ ] T4 · Vieja – descartada: sobra\n- [ ] T5 · Cinco\n")
+	if _, tasks, current, _ := workState(project); tasks != "1/3 hechas" || current != "T5 · Cinco" {
+		t.Fatalf("escrito a mano con guion o semirraya, también espera o se descarta: %q, %q", tasks, current)
+	}
 	write(t, filepath.Join(project, "WORK.md"), "# E\n\n## Tareas\n- [x] T1 · Uno\n- [ ] T2 · Del dueño\n- [x] T3 · Tres\n")
 	if _, _, current, _ := workState(project); current != "T2 · Del dueño" {
 		t.Fatalf("sin nada tras lo hecho vuelve a la abierta: %q", current)

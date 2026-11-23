@@ -12,7 +12,7 @@ import { atom, read, update } from "claude-code";
 import type { EngineInterface, RenderInput } from "claude-code";
 
 import { todoRows, type TodoTone, type TodoView } from "./todo-core.ts";
-import { branchFromHead, byteLength, chooseWorkDoc, docTitle, parseHeader, parseTasks, WORK_DIR, type WorkCandidate } from "./work-core.ts";
+import { branchFromHead, byteLength, chooseWorkDoc, docTitle, gitdirFrom, parseHeader, parseTasks, WORK_DIR, type WorkCandidate } from "./work-core.ts";
 
 const NO_TODO: TodoView | null = null;
 const todo = atom({ plugin: "n-ein", key: "todo" } as const, NO_TODO);
@@ -30,12 +30,8 @@ const parent = (dir: string): string => dir.replace(/\/[^/]+\/?$/, "") || "/";
 async function headBranch($: EngineInterface, root: string): Promise<string | null> {
   try {
     const dotgit = `${root}/.git`;
-    let gitdir = dotgit;
-    if ((await $.fs.stat(dotgit)).kind === "file") {
-      const target = /^gitdir:\s*(.+)$/m.exec(await $.fs.read(dotgit))?.[1]?.trim() ?? "";
-      gitdir = target.startsWith("/") ? target : `${root}/${target}`;
-    }
-    return branchFromHead(await $.fs.read(`${gitdir}/HEAD`));
+    const gitdir = (await $.fs.stat(dotgit)).kind === "file" ? gitdirFrom(await $.fs.read(dotgit), root) : dotgit;
+    return gitdir ? branchFromHead(await $.fs.read(`${gitdir}/HEAD`)) : null;
   } catch {
     return null;
   }

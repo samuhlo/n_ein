@@ -145,8 +145,9 @@ var (
 	taskLine    = regexp.MustCompile(`^\s*[-*]\s+\[([ xX])\]\s+(.+)$`)
 	taskID      = regexp.MustCompile(`(?i)^(T\d+[a-z]?)\s*·\s*(.*)$`)
 	taskBlock   = regexp.MustCompile(`(?i)\s*Blocked by:.*$`)
-	taskWait    = regexp.MustCompile(`(?i)\s—\s*(en espera|espera|waiting)\s*:`)
-	taskDrop    = regexp.MustCompile(`(?i)\s—\s*(descartada|dropped)\s*:`)
+	taskWait    = regexp.MustCompile(`(?i)\s[—–-]\s*(en espera|espera|waiting)\s*:`)
+	taskDrop    = regexp.MustCompile(`(?i)\s[—–-]\s*(descartada|dropped)\s*:`)
+	taskMark    = regexp.MustCompile(`(?i)\s[—–-]\s*(en espera|espera|waiting|descartada|dropped)\s*:.*$`)
 	headerList  = regexp.MustCompile(`(?i)^(Estado|Status|Rama|Branch|Tests?)\s*:`)
 	headerField = regexp.MustCompile(`(?i)^(Estado|Status|Rama|Branch|Objetivo|Objective|Goal)\s*:\s*(.*)$`)
 	headRef     = regexp.MustCompile(`(?m)^ref:\s*refs/heads/(.+)$`)
@@ -191,7 +192,7 @@ func taskParts(text string) (key, title string) {
 	if match := taskID.FindStringSubmatch(clean); match != nil {
 		key, rest = match[1], match[2]
 	}
-	title = strings.TrimSuffix(strings.TrimSpace(taskBlock.ReplaceAllString(strings.Split(rest, " — ")[0], "")), ".")
+	title = strings.TrimSuffix(strings.TrimSpace(taskBlock.ReplaceAllString(strings.Split(taskMark.ReplaceAllString(rest, ""), " — ")[0], "")), ".")
 	if title == "" {
 		title = rest
 	}

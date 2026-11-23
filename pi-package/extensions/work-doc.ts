@@ -9,7 +9,7 @@ import { closeSync, existsSync, openSync, readdirSync, readFileSync, readSync, s
 import { dirname, isAbsolute, join, resolve } from "node:path";
 
 import type { TodoView } from "../claude-plugin/hooks/todo-core.ts";
-import { branchFromHead, chooseWorkDoc, docTitle, parseHeader, parseTasks, TASKS_HEADING, WORK_DIR, type WorkCandidate, type WorkTask } from "../claude-plugin/hooks/work-core.ts";
+import { branchFromHead, chooseWorkDoc, docTitle, gitdirFrom, parseHeader, parseTasks, TASKS_HEADING, WORK_DIR, type WorkCandidate, type WorkTask } from "../claude-plugin/hooks/work-core.ts";
 
 export type { WorkTask };
 export type WorkDoc = { path: string; tasks: WorkTask[] };
@@ -48,7 +48,8 @@ function readStart(path: string): string {
 function currentBranch(root: string): string | null {
   try {
     const dotgit = join(root, ".git");
-    const gitdir = isFile(dotgit) ? resolve(root, /^gitdir:\s*(.+)$/m.exec(readFileSync(dotgit, "utf8"))?.[1]?.trim() ?? "") : dotgit;
+    const gitdir = isFile(dotgit) ? gitdirFrom(readFileSync(dotgit, "utf8"), root) : dotgit;
+    if (!gitdir) return null;
     return branchFromHead(readFileSync(join(gitdir, "HEAD"), "utf8"));
   } catch {
     return null;

@@ -3,7 +3,7 @@ import { execFileSync } from "node:child_process";
 import { cpSync, mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join, relative } from "node:path";
-import { branchFromHead, chooseWorkDoc, focusOf, parseWork, taskLabel, taskParts } from "../pi-package/claude-plugin/hooks/work-core.ts";
+import { branchFromHead, chooseWorkDoc, focusOf, parseWork, taskLabel, taskParts, waitingFor } from "../pi-package/claude-plugin/hooks/work-core.ts";
 import { resolveWorkDoc } from "../pi-package/extensions/work-doc.ts";
 
 const DOC = [
@@ -66,6 +66,10 @@ assert.equal(owner.waiting.length, 1);
 const dropped = parseWork("# E\n\n## Tareas\n- [x] T1 · Uno — descartada: ya no hace falta\n- [ ] T2 · Dos — dropped: superseded\n").tasks;
 assert.deepEqual(dropped.map((task) => task.state), ["dropped", "dropped"], "descartada manda sobre la casilla; también en inglés");
 assert.equal(parseWork("# E\n\n## Tareas\n- [ ] T1 · Uno — algo. Blocked by: T0.\n").tasks[0]?.state, "open", "Blocked by es orden, no espera");
+// Escrito a mano, el guion o la semirraya valen como la raya de la plantilla.
+const typed = parseWork("# E\n\n## Tareas\n- [ ] T1 · Del dueño - espera: el dueño\n- [ ] T2 · Otra – descartada: sobra\n").tasks;
+assert.deepEqual(typed.map((task) => [task.state, taskParts(task.text).title]), [["waiting", "Del dueño"], ["dropped", "Otra"]]);
+assert.equal(waitingFor(typed[0]!.text), "el dueño");
 
 // [CORE] El formato anterior sigue leyéndose: objetivo, siguiente paso, criterios y evidencia por sección.
 const legacy = parseWork([
