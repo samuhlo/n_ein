@@ -52,7 +52,13 @@ Pedidos:
 
 ## Evidencia
 
-- T1: `tests/todo-core.ts` (rojo: el módulo no existía) y `TestWorkStateFollowsTheLastDoneTask` en Go (rojo: señalaba «T5 · Puesta en servicio… Blocked by: T4.») pasan con `tests/fixtures/work-focus.md`: T9 actual, T5 atrás, 6/10; la barra de Claude con ese documento dice T9. Sobre los documentos reales: Miolo → T41 con T5 atrás (38/41, ha avanzado desde la mañana); el `WORK.md` de n_ein del 21 de noviembre → T7. `tests/work-doc.ts`, `tests/banner.ts`, `go test ./cmd/n-ein/` y `go vet` OK.
+- T1 `5c09237`: `tests/todo-core.ts` y `TestWorkStateFollowsTheLastDoneTask` (Go), rojo → verde con `tests/fixtures/work-focus.md` (T9, T5 atrás). Miolo real → T41 con T5 atrás.
+- T2 `f3ab059`: `tests/todo-core.ts` y `tests/work-doc.ts`, rojo → verde (anchos, color, `NO_COLOR`, refresco a mitad de turno). Pi 1.5.2 real en tmux: bloque bajo el editor, con color.
+- T3 `b4fc745`: `claude plugin test`, rojo → verde (franja, encuesta, sin `WORK.md`, edición); barra exacta y ≤ 90 columnas.
+- T4 `e01e32b`: `tests/activity.ts` y `claude plugin test` (21), rojo → verde; quitar la guarda de subagente hace fallar su caso.
+- T5 `2307cdf`: `tests/branch.ts`, rojo → verde. Pi real: `committing…`, `▸ committing 6/10`, luego `7/10` y `rama fix/probe`.
+- T6 `f826d46`: Claude real: barra con rama y franja con el bloque. `scripts/check.sh`: `checks locales: OK`.
+
 ## Siguiente paso
 
-T2.
+Encargo terminado en `feat/todo-actividad-rama`; queda revisarlo e integrarlo.
