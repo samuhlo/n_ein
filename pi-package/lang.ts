@@ -30,8 +30,8 @@ const NAME = { es: "Spanish", en: "English" } as const;
 /** Instrucción que los lanzadores añaden al prompt. Está en inglés, como todo lo que lee el agente; solo cambia el idioma que nombra. */
 export function langDirective(lang: Lang): string {
   const artifacts = lang.artifacts === "proyecto"
-    ? `Write code, comments, identifiers, commit messages, PRs, WORK.md and repository docs in the language the project already uses; in a project with no convention yet, use ${NAME[lang.chat]}.`
-    : `Write code comments, commit messages, PRs, WORK.md and repository docs in ${NAME[lang.artifacts]}, whatever the conversation language.`;
+    ? `Write code, comments, identifiers, commit messages, PRs, the work document and repository docs in the language the project already uses; in a project with no convention yet, use ${NAME[lang.chat]}.`
+    : `Write code comments, commit messages, PRs, the work document and repository docs in ${NAME[lang.artifacts]}, whatever the conversation language.`;
   return `Language: talk with the user in ${NAME[lang.chat]}. ${artifacts}`;
 }
 

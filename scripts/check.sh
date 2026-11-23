@@ -35,6 +35,10 @@ tests/handoff-launcher.sh
 tests/reverse-launcher.sh
 bash -n install.sh scripts/build-release.sh scripts/installer-e2e.sh
 bun run tests/work-doc.ts
+bun run tests/todo-core.ts
+bun run tests/work-core.ts
+bun run tests/activity.ts
+bun run tests/branch.ts
 bun run tests/actions.ts
 bun run tests/jobs.ts
 bun run tests/jobs-pi.ts

@@ -21,4 +21,4 @@ The two produce very different artifacts, so getting this wrong wastes the proto
 3. **No persistence by default.** State lives in memory; persistence is what a prototype may be checking, not something it depends on. If the question is about a database, use a scratch one named "PROTOTYPE, wipe me".
 4. **No polish.** No tests, no error handling beyond what makes it run, no abstractions. The point is to learn fast.
 5. **Show the state.** After every action (logic) or every variant switch (UI), render the full relevant state so the user sees what changed.
-6. **Keep the answer.** Fold the validated decision into the real code; commit the prototype itself to a throwaway branch, off the main one, and leave a pointer to that branch and the verdict (the question and its answer) in `WORK.md`. The main branch keeps only the decision.
+6. **Keep the answer.** Fold the validated decision into the real code; commit the prototype itself to a throwaway branch, off the main one, and leave a pointer to that branch and the verdict (the question and its answer) in the work document. The main branch keeps only the decision.

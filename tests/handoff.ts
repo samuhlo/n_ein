@@ -80,6 +80,23 @@ try {
   for (const text of ["Keep the full request.", "Design only; implementation is not authorized.", "Preserve the public interface.", "Do not publish.", "FINAL_CRITERION", "Tests passed before the last edit.", "Check the client.", "- Client"]) {
     assert.ok(english.includes(text), `el relevo conserva ${text}`);
   }
+  // Formato nuevo: el documento de la rama gana al WORK.md de la raíz y el relevo lleva solo lo último del registro.
+  mkdirSync(join(dir, "docs/work"), { recursive: true });
+  writeFileSync(join(dir, "docs/work/2026-11-23-nuevo.md"), [
+    "# Nuevo", "", "Estado: activo · Rama: main", "Autorización: AUTORIZACION_NUEVA", "Objetivo: OBJETIVO_NUEVO", "Siguiente: SIGUIENTE_NUEVO", "",
+    "## Pedidos", "", "- P1. PEDIDO_P1", "", "## Decisiones", "", "- DECISION_NUEVA", "",
+    "## Tareas", "", "- [x] T1 · Hecha — `abc1234`", "- [ ] T2 · Del dueño — espera: EL_DUENO", "- [ ] T3 · Vieja — descartada: TAREA_DESCARTADA", "- [ ] T4 · Siguiente", "",
+    "## Registro", "", "- R1_PRIMERO", "- R2", "- R3", "- R4", "- R5_ULTIMO", "",
+  ].join("\n"));
+  await command.handler("claude", ctx);
+  const [, newFile] = readFileSync(signal, "utf8").trim().split("\n");
+  const fresh = readFileSync(newFile, "utf8");
+  for (const text of ["docs/work/2026-11-23-nuevo.md", "OBJETIVO_NUEVO", "AUTORIZACION_NUEVA", "SIGUIENTE_NUEVO", "PEDIDO_P1", "DECISION_NUEVA", "- T1 · Hecha", "- T2 · Del dueño (en espera: EL_DUENO)", "- T4 · Siguiente", "R5_ULTIMO"]) {
+    assert.ok(fresh.includes(text), `el relevo del formato nuevo lleva ${text}`);
+  }
+  assert.ok(!fresh.includes("R1_PRIMERO"), "el registro antiguo se queda en el documento");
+  assert.ok(!fresh.includes("TAREA_DESCARTADA"), "lo descartado no se traspasa");
+  rmSync(join(dir, "docs"), { recursive: true });
   rmSync(join(dir, "WORK.md"));
   const request = "Fix the boundary. " + "Keep this constraint. ".repeat(100) + "UNIQUE_FINAL_LIMIT";
   ctx.sessionManager.getBranch = () => [{ type: "message", message: { role: "user", content: [{ type: "text", text: request }] } }];

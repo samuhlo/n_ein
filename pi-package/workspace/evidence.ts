@@ -25,6 +25,7 @@ import {
   workState,
   digest,
 } from "./state.ts";
+import { byteLength, parseWork, taskLabel } from "../claude-plugin/hooks/work-core.ts";
 export type Evidence = {
   schema: 1;
   id: string;
@@ -124,7 +125,7 @@ function criterionFor(cwd: string, query: string): string {
       c === query || c.startsWith(`${query} ·`) || c.startsWith(`${query} `),
   );
   if (!query.trim() || matches.length !== 1)
-    throw new Error("Indica un criterio o id de tarea inequívoco de WORK.md.");
+    throw new Error("Indica un criterio o id de tarea inequívoco del documento de trabajo.");
   return matches[0];
 }
 export async function checkWork(
@@ -262,4 +263,38 @@ export function inspectWork(root: string, cwd: string) {
     omitted: Math.max(0, records.length - 100),
     codeKnown: current !== null,
   };
+}
+
+const size = (bytes: number) => (bytes < 1024 ? `${bytes} B` : `${Math.round(bytes / 1024)} KB`);
+
+/**
+ * Lo que el agente necesita para retomar: lo vivo del documento, lo hecho por
+ * su nombre y cuántas comprobaciones siguen vigentes.
+ *
+ * POR QUÉ -> el estado completo (tareas repetidas como criterios y hasta cien
+ * registros) pasaba de 15 KB con un documento grande, y se pedía en cada
+ * retomada. El registro se queda en el archivo: se lee solo si hace falta.
+ */
+export function workBrief(root: string, cwd: string): string {
+  const work = inspectWork(root, cwd);
+  if (!work.path) return "Sin documento de trabajo activo.";
+  const content = readFileSync(work.path, "utf8");
+  const parsed = parseWork(content);
+  const done = new Set(parsed.tasks.filter((task) => task.state === "done").map((task) => task.text));
+  const live = parsed.live
+    .split(/\r?\n/)
+    .map((line) => {
+      const task = /^(\s*[-*]\s+)\[[xX]\]\s+(.+)$/.exec(line);
+      return task?.[1] && task[2] && done.has(task[2]) ? `${task[1]}[x] ${taskLabel(task[2])}` : line;
+    })
+    .join("\n");
+  const count = (state: string) => work.evidence.filter((e) => e.state === state).length;
+  const log = byteLength(parsed.log);
+  return [
+    `// 004 ENCARGO · ${relative(projectRoot(cwd), work.path)} · ${size(byteLength(content))}${log ? ` · registro de ${size(log)} fuera: léelo solo si lo necesitas` : ""}`,
+    "",
+    live,
+    "",
+    `comprobaciones: ${count("verified")} verificadas · ${count("stale")} obsoletas · ${count("failed")} fallidas${count("unknown") ? ` · ${count("unknown")} sin vigencia conocida` : ""}`,
+  ].join("\n");
 }

@@ -29,6 +29,18 @@ assert.match(readFileSync(join(root, "pi-package/flow.md"), "utf8"), /suggest th
 const sharedCode = /shares the code you change \(options, parsers, helpers, validation\)/;
 assert.match(readFileSync(join(root, "pi-package/flow.md"), "utf8"), sharedCode, "flow.md debe pedir sonda para lo que comparte el código tocado");
 assert.match(readFileSync(join(skillsDir, "tdd", "SKILL.md"), "utf8"), sharedCode, "tdd debe pedir test para lo que comparte el código tocado");
+// Un documento por encargo, solo cuando el trabajo no se retoma desde el diff, con el registro al final y un cierre que lo resume.
+const flow = readFileSync(join(root, "pi-package/flow.md"), "utf8");
+for (const [rule, why] of [
+  [/cannot be resumed from the original request and `git diff` alone/, "la prueba de reanudación decide si hay documento"],
+  [/`docs\/work\/<YYYY-MM-DD>-<short-name>\.md`/, "uno por encargo en docs/work"],
+  [/Stable content first and the growing log last/, "el registro va al final"],
+  [/`— espera: <who or what>`/, "las tareas en espera se marcan"],
+  [/`— descartada: <reason>`/, "las descartadas se marcan y no cuentan"],
+  [/move the file to `docs\/work\/closed\/`/, "el cierre lo resume y lo archiva"],
+  [/read the active work document up to its log/, "al retomar se lee hasta el registro"],
+] as const) assert.match(flow, rule, `flow.md: ${why}`);
+assert.doesNotMatch(flow, /read `WORK\.md` in full/, "flow.md ya no pide leer el documento entero");
 const sketch = readFileSync(join(visionDir, "SKETCH.md"), "utf8");
 for (const [file, text] of [["SKILL.md", vision], ["SKETCH.md", sketch]]) {
   for (const [, link] of text.matchAll(/\]\(([^)#]+)\)/g)) {

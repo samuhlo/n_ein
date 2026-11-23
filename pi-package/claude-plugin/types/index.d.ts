@@ -15,6 +15,10 @@ declare module 'claude-code' {
       turn: { input: number; output: number } | null;
       /** Tokens sumados desde que empezó la sesión. */
       session: { input: number; output: number };
+      /** Modo de la última herramienta del bucle principal (coding, testing…); null fuera de turno. */
+      activity: "exploring" | "coding" | "documenting" | "planning" | "testing" | "building" | "committing" | "researching" | "orchestrating" | "reviewing" | "asking" | "running" | "working" | null;
+      /** El documento de trabajo activo: título, casillas y tamaño; null sin documento o sin tareas. */
+      todo: { title: string; tasks: readonly { index: number; line: number; done: boolean; state: "open" | "done" | "waiting" | "dropped"; text: string }[]; bytes?: number } | null;
     };
   }
 }

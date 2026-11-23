@@ -9,7 +9,7 @@ import {
   readComments,
   changeDesign,
 } from "./design.ts";
-import { inspectWork, checkWork } from "./evidence.ts";
+import { inspectWork, checkWork, workBrief } from "./evidence.ts";
 import { openWork } from "./open.ts";
 import { serveWork } from "./server.ts";
 import { listSessions, publishSession, workState } from "./state.ts";
@@ -95,22 +95,8 @@ try {
   if (v.json || ["publish", "serve", "check", "design"].includes(p[0]))
     console.log(JSON.stringify(result));
   else if (p[0] === "open") console.log((result as { link: string }).link);
-  else if (p[0] === "status") {
-    const w = result as ReturnType<typeof inspectWork>;
-    console.log(
-      [
-        "// 004 ENCARGO",
-        w.objective || "Sin documento activo",
-        ...w.tasks.map((t) => `${t.done ? "✓" : "·"} ${t.text}`),
-        ...w.evidence.map(
-          (e) => `${e.state} · ${e.criterion} · ${e.command.join(" ")}`,
-        ),
-        "",
-        "Siguiente paso",
-        w.next || "Sin publicar",
-      ].join("\n"),
-    );
-  } else {
+  else if (p[0] === "status") console.log(workBrief(root, cwd));
+  else {
     const rows = result as ReturnType<typeof listSessions>;
     console.log(
       [

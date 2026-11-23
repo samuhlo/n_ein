@@ -68,7 +68,7 @@ export default function (pi: ExtensionAPI) {
       return {
         block: true,
         reason:
-          "Return the proposed shared change to the coordinator; write only inside your worktree and do not edit WORK.md.",
+          "Return the proposed shared change to the coordinator; write only inside your worktree and do not edit the work document.",
       };
   });
 }

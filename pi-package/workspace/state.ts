@@ -17,7 +17,8 @@ import {
 } from "node:fs";
 import { join, resolve } from "node:path";
 import { channelDir } from "../models.ts";
-import { readWorkDoc, resolveWorkDoc } from "../extensions/work-doc.ts";
+import { parseWork } from "../claude-plugin/hooks/work-core.ts";
+import { resolveWorkDoc } from "../extensions/work-doc.ts";
 export const digest = (text: string) =>
   createHash("sha256").update(text).digest("hex");
 export function projectRoot(cwd: string): string {
@@ -50,30 +51,17 @@ export function smallJSON(file: string, limit = 64 * 1024): unknown {
     throw new Error("Registro demasiado grande");
   return JSON.parse(readFileSync(file, "utf8"));
 }
-export function section(content: string, ...titles: string[]): string {
-  const lines = content.split(/\r?\n/),
-    start = lines.findIndex((l) =>
-      titles.some((t) => l.trim().toLowerCase() === `## ${t.toLowerCase()}`),
-    );
-  if (start < 0) return "";
-  let end = start + 1;
-  while (end < lines.length && !/^#{1,2} /.test(lines[end])) end++;
-  return lines
-    .slice(start + 1, end)
-    .join("\n")
-    .trim();
-}
 export function workState(cwd: string) {
   const path = resolveWorkDoc(cwd),
-    content = path ? readFileSync(path, "utf8") : "";
-  const tasks = path ? readWorkDoc(path).tasks : [];
+    work = parseWork(path ? readFileSync(path, "utf8") : "");
   return {
     path,
-    objective: section(content, "Objetivo", "Goal"),
-    decisions: section(content, "Decisiones", "Decisions"),
-    criteria: section(content, "Criterios", "Criteria"),
-    next: section(content, "Siguiente paso", "Next step"),
-    tasks,
+    objective: work.objective,
+    authorization: work.authorization,
+    decisions: work.decisions,
+    criteria: work.asks,
+    next: work.next,
+    tasks: work.tasks,
   };
 }
 export type SessionNote = {

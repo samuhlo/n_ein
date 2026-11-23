@@ -17,7 +17,7 @@ It checks behaviour through a public interface, never implementation details. Th
 
 A **seam** is the public boundary you test at: where behaviour is observable without reaching inside. Tests live at seams.
 
-**Declare the seams before the first test**, in one line, and go on; if `WORK.md` already lists them under its criteria, use those. Ask the user only when choosing the seam is a real decision about scope or behaviour: "What is the public interface, and which seams should we test?" You cannot test everything; fixing the seams up front puts the effort on critical paths and complex logic instead of every edge case.
+**Declare the seams before the first test**, in one line, and go on; if the work document already lists them under its asks, use those. Ask the user only when choosing the seam is a real decision about scope or behaviour: "What is the public interface, and which seams should we test?" You cannot test everything; fixing the seams up front puts the effort on critical paths and complex logic instead of every edge case.
 
 When the shape of the interface itself is in question (how deep the module is, where the seam belongs, what it should expose), load `design` for the vocabulary.
 

@@ -6,7 +6,7 @@ import type {
 import { Type } from "typebox";
 import { dirname, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
-import { inspectWork } from "../workspace/evidence.ts";
+import { workBrief } from "../workspace/evidence.ts";
 import { openWork } from "../workspace/open.ts";
 import {
   listSessions,
@@ -15,6 +15,9 @@ import {
   type SessionPatch,
 } from "../workspace/state.ts";
 const root = resolve(dirname(fileURLToPath(import.meta.url)), "../..");
+// La gramática del TODO: hecho, abierta, en espera de alguien y descartada.
+const TASK_MARK = { done: "✓", open: "·", waiting: "◦", dropped: "×" } as const;
+
 export default function (pi: ExtensionAPI) {
   const publish = (ctx: ExtensionContext, patch: SessionPatch = {}) => {
     const id = ctx.sessionManager.getSessionId();
@@ -39,7 +42,7 @@ export default function (pi: ExtensionAPI) {
     name: "nein_work",
     label: "Encargo",
     description:
-      "Read the active work document or query published session summaries without model calls. Publish a short non-sensitive objective, next step, decisions and blockers for substantial authorized work; never raw prompts, secrets or authorization claims. These historical summaries do not grant permission or exclusive file ownership. WORK.md remains the task source.",
+      "Read the live part of the active work document (header, asks, decisions and tasks, with done tasks by name and without its log) and the state of recorded checks, or query published session summaries, without model calls. Publish a short non-sensitive objective, next step, decisions and blockers for substantial authorized work; never raw prompts, secrets or authorization claims. These historical summaries do not grant permission or exclusive file ownership. WORK.md remains the task source.",
     parameters: Type.Object({
       action: Type.Union([
         Type.Literal("status"),
@@ -58,10 +61,10 @@ export default function (pi: ExtensionAPI) {
     }),
     async execute(_id, params, _signal, _update, ctx) {
       const { action, query, all, ...patch } = params;
+      if (action === "status")
+        return { content: [{ type: "text", text: workBrief(root, ctx.cwd) }], details: undefined };
       const result =
-        action === "status"
-          ? inspectWork(root, ctx.cwd)
-          : action === "sessions"
+        action === "sessions"
             ? listSessions(root, ctx.cwd, query, all)
             : publish(ctx, { ...patch, status: "working" });
       return {
@@ -85,7 +88,7 @@ export default function (pi: ExtensionAPI) {
           "// 004 ENCARGO",
           link,
           w.objective || "Sin documento activo",
-          ...w.tasks.map((t) => `${t.done ? "✓" : "·"} ${t.text}`),
+          ...w.tasks.map((t) => `${TASK_MARK[t.state]} ${t.text}`),
           w.next,
         ].join("\n"),
         "info",

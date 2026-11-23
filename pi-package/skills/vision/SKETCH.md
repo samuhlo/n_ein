@@ -28,4 +28,4 @@ When the open decision is between layouts, show two or three as sibling sheets (
 
 Structure, hierarchy, flow and data only. No brand colours, fonts, icons, polished copy or animation. Those are later decisions for the real page or a `prototype`. A sketch that looks finished invites feedback on the wrong things.
 
-For variants, pinned element comments, screenshots or comparison with implementation, use the `canvas` skill. Register one self-contained HTML file per direction under `docs/design/<slug>/`; the brief and WORK.md link it. Choosing a direction still does not authorize implementation.
+For variants, pinned element comments, screenshots or comparison with implementation, use the `canvas` skill. Register one self-contained HTML file per direction under `docs/design/<slug>/`; the brief and the work document link it. Choosing a direction still does not authorize implementation.

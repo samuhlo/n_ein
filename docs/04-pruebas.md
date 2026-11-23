@@ -23,7 +23,7 @@ El producto funciona cuando termina trabajo autorizado con calidad y menos fricc
 | A13 | Endpoint/modelo no disponible | Modelo realmente usado identificable; ningún fallback silencioso. |
 | A14 | Archivos nuevos y cambios por shell | El diff de entrega los incluye aunque el visor de eventos no los atribuya. |
 | A15 | Relevo entre runtimes (Pi↔Claude primero) | Pendiente y decisiones se conservan; la evidencia de código cambiado se marca obsoleta. Origen e hijos dejan de escribir antes de habilitar escrituras en destino. Cada integración prueba aislamiento de configuración/datos y explicita las herencias deliberadas. |
-| A16 | TODO con documento de trabajo | El widget refleja el checklist del documento; marcar una tarea escribe en el documento; sin documento no aparece TODO. |
+| A16 | TODO con documento de trabajo | El widget refleja el checklist del documento de la rama actual; marcar una tarea escribe en el documento; las tareas en espera o descartadas no son la actual; sin documento no aparece TODO. |
 | A17 | Rutina que Samu domina | Crear una rama o una PR se informa con resultado e identificador, sin explicar cómo se hace. Un mecanismo nuevo sí se explica en lenguaje humano. |
 | A18 | Launcher sin datos o sin TTY | «Desconocido» se distingue de vacío en cada vista; con `--once` o sin terminal interactiva pinta una vez y sale con 0. |
 | A19 | Instalador | `--dry-run` no cambia nada; el canal se guarda solo tras un update correcto; `uninstall` conserva auth, secrets y sesiones; las instalaciones normales de los runtimes no se tocan. |

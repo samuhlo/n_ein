@@ -2,7 +2,7 @@ import { strict as assert } from "node:assert";
 import { execFileSync } from "node:child_process";
 import { mkdtempSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
-import { join } from "node:path";
+import { join, resolve } from "node:path";
 import registerContext, { RETIRED_MARK, retirements, type Entry, type Retirement } from "../pi-package/extensions/context";
 
 // Una sesión mínima con la forma de la proyección de Pi: un mensaje por entrada.
@@ -161,5 +161,21 @@ try {
   else process.env.N_EIN_WORK_DOC = previous;
   rmSync(project, { recursive: true, force: true });
 }
+
+// El documento de trabajo se relee entero al retomar y en cada tarea: en el commit queda solo la última lectura.
+entries.length = 0; seq = 0;
+const [docFirst] = turn([{ name: "read", arguments: { path: "docs/work/x.md" }, result: big("# Encargo v1") }]);
+turn([{ name: "edit", arguments: { path: "docs/work/x.md" }, result: "ok" }]);
+const [docSecond] = turn([{ name: "read", arguments: { path: "/repo/docs/work/x.md" }, result: big("# Encargo v2") }]);
+const [agentsDoc] = turn([{ name: "read", arguments: { path: "AGENTS.md" }, result: big("Project instructions") }]);
+const [docLast] = turn([{ name: "bash", arguments: { command: "sed -n 1,80p docs/work/x.md" }, result: big("# Encargo v3") }]);
+const [docCommit] = turn([{ name: "bash", arguments: { command: "git commit -qm T2" }, result: "" }]);
+const isDoc = (path: string) => resolve("/repo", path) === "/repo/docs/work/x.md";
+const atDoc = retirements(entries, new Set([docCommit!]), HEAD, isDoc);
+assert.deepEqual(ids(atDoc), [docFirst!, docSecond!].sort(), "las lecturas anteriores del documento se retiran; la última se queda");
+assert.ok(atDoc.every((r) => r.text.includes("later read of the work document")));
+assert.ok(!ids(atDoc).includes(agentsDoc!), "las instrucciones siguen sin retirarse");
+assert.deepEqual(retirements(entries, new Set([docCommit!]), undefined, isDoc), [], "sin commit entre tareas no se rompe la caché por el documento");
+assert.deepEqual(ids(retirements(entries, new Set([docCommit!]), HEAD)), [], "sin documento activo, un Markdown sigue siendo instrucción");
 
 console.log("context: retira lo explorado en la primera escritura y lo leído en cada commit entre tareas, sin tocar el turno en curso ni las instrucciones");

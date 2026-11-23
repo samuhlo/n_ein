@@ -3,7 +3,7 @@ import { execFileSync } from "node:child_process";
 import { mkdtempSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
-import { checkWork, inspectWork } from "../pi-package/workspace/evidence.ts";
+import { checkWork, inspectWork, workBrief } from "../pi-package/workspace/evidence.ts";
 const area = mkdtempSync(join(tmpdir(), "nein-evidence-"));
 process.env.N_EIN_HOME = join(area, "home");
 process.env.N_EIN_CHANNEL = "dev";
@@ -52,6 +52,39 @@ assert.equal(
   "stale",
   "a check modifying its code does not verify the final tree",
 );
+// El resumen para el agente: lo vivo del documento, lo hecho por su nombre, sin el registro.
+writeFileSync(
+  join(area, "WORK.md"),
+  [
+    "# Encargo",
+    "",
+    "Estado: activo · Rama: main",
+    "Objetivo: validar comportamiento.",
+    "Siguiente: T2.",
+    "",
+    "## Pedidos",
+    "",
+    "- P1. acepta Unicode",
+    "",
+    "## Tareas",
+    "",
+    "- [x] T1 · Codificar — DETALLE_DE_LO_HECHO · `abc1234`",
+    "- [ ] T2 · Probar — DETALLE_PENDIENTE",
+    "",
+    "## Registro",
+    "",
+    "- R1 REGISTRO_LARGO",
+    "",
+  ].join("\n"),
+);
+const brief = workBrief(area, area);
+assert.match(brief, /WORK\.md · \d+ (?:B|KB) · registro de \d+ (?:B|KB) fuera/);
+for (const text of ["Objetivo: validar comportamiento.", "Siguiente: T2.", "- P1. acepta Unicode", "- [x] T1 · Codificar", "- [ ] T2 · Probar — DETALLE_PENDIENTE"])
+  assert.ok(brief.includes(text), `el resumen lleva ${text}`);
+for (const text of ["REGISTRO_LARGO", "DETALLE_DE_LO_HECHO"])
+  assert.ok(!brief.includes(text), `el resumen deja fuera ${text}`);
+assert.match(brief, /comprobaciones: \d+ verificadas · \d+ obsoletas · \d+ fallidas/);
+assert.ok(brief.length < 1200, "un resumen, no el documento");
 console.log(
   "work evidence: executed command, exit, criterion, changed and new files",
 );

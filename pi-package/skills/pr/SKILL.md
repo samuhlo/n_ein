@@ -26,7 +26,7 @@ Write the body in the artifact language with this shape (translate the headings 
 <optional: what could break>
 ```
 
-No preamble, brief prose, and the domain language of `GLOSSARY.md`. Pull the goal and decisions from `WORK.md` and the evidence from its evidence section and the task commits.
+No preamble, brief prose, and the domain language of `GLOSSARY.md`. Pull the goal and decisions from the work document and the evidence from its task lines and commits.
 
 ## Summary
 

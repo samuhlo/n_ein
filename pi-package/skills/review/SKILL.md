@@ -7,11 +7,11 @@ Review the diff between `HEAD` and a fixed point yourself, in two passes kept ap
 
 ## 1. Pin the fixed point
 
-Use what the user says (a SHA, a branch, a tag, `main`, `HEAD~5`). Without one, use the start of the current task according to `WORK.md`; failing that, ask. Fix the diff once: `git diff <point>...HEAD` plus `git log <point>..HEAD --oneline`, and check the diff is not empty.
+Use what the user says (a SHA, a branch, a tag, `main`, `HEAD~5`). Without one, use the start of the current task according to the work document; failing that, ask. Fix the diff once: `git diff <point>...HEAD` plus `git log <point>..HEAD --oneline`, and check the diff is not empty.
 
 ## 2. Spec: probe what was asked
 
-Find the asks: the user's request, quoted; `WORK.md` (goal, decisions, limits, criteria, the task under review); a path the user gave; a spec under `docs/` or `specs/` matching the branch. Without any, say "no spec" and review Standards only.
+Find the asks: the user's request, quoted; the work document (goal, asks, decisions, the task under review); a path the user gave; a spec under `docs/` or `specs/` matching the branch. Without any, say "no spec" and review Standards only.
 
 For **each ask**, derive one probe a careless change would fail, and run it here without editing source files: a focused test, a CLI call, a request against a test double, or a test you write in a scratch file and delete afterwards. Read the code paths the probe exercises; do not trust names, comments or the commit message. Cover:
 

@@ -9,7 +9,8 @@ import { existsSync, mkdirSync, readFileSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 import type { ExtensionAPI, ExtensionContext } from "@earendil-works/pi-coding-agent";
 import { Type } from "typebox";
-import { readWorkDoc, resolveWorkDoc } from "./work-doc";
+import { parseWork, section, taskLabel, waitingFor } from "../claude-plugin/hooks/work-core.ts";
+import { resolveWorkDoc } from "./work-doc";
 import { stopTeam } from "../agents/runtime.ts";
 import { stopSessionJobs } from "./jobs-core.ts";
 import { teamSummary } from "../agents/summary.ts";
@@ -45,13 +46,13 @@ function lastText(branch: Array<any>, role: "user" | "assistant"): string {
   return "desconocido";
 }
 
-function section(content: string, ...titles: string[]): string {
-  const lines = content.split(/\r?\n/);
-  const start = lines.findIndex((line) => titles.some((title) => line.trim().toLowerCase() === `## ${title.toLowerCase()}`));
-  if (start < 0) return "";
-  let end = start + 1;
-  while (end < lines.length && !/^#{1,2}\s+/.test(lines[end])) end++;
-  return lines.slice(start + 1, end).join("\n").trim();
+// El relevo lleva lo último del registro: lo anterior está en el documento y en Git.
+const RECENT_LOG = 3;
+
+/** Las últimas entradas del registro, cada una un punto de lista con sus líneas de continuación. */
+function recentLog(log: string): string {
+  const entries = log.split(/\r?\n(?=[-*]\s)/).map((entry) => entry.trim()).filter(Boolean);
+  return entries.slice(-RECENT_LOG).join("\n");
 }
 
 function summary(cwd: string, branch: Array<any>): string {
@@ -59,11 +60,13 @@ function summary(cwd: string, branch: Array<any>): string {
   const workDoc = resolveWorkDoc(cwd);
   const document = workDoc && existsSync(workDoc) ? workDoc : "ninguno";
   const content = workDoc ? readFileSync(workDoc, "utf8") : "";
-  const tasks = workDoc ? readWorkDoc(workDoc).tasks : [];
-  const done = tasks.filter((task) => task.done).map((task) => `- ${task.text}`);
-  const pending = tasks.filter((task) => !task.done).map((task) => `- ${task.text}`);
+  const work = parseWork(content);
+  const done = work.tasks.filter((task) => task.state === "done").map((task) => `- ${task.text}`);
+  // Lo descartado no se traspasa; lo que espera a alguien sí, marcado.
+  const pending = work.tasks.filter((task) => task.state === "open" || task.state === "waiting")
+    .map((task) => (task.state === "waiting" ? `- ${taskLabel(task.text)} (en espera: ${waitingFor(task.text) || "sin motivo"})` : `- ${task.text}`));
   const request = lastText(branch, "user");
-  const goal = section(content, "Objetivo", "Goal", "Acuerdo confirmado", "Confirmed agreement") || request;
+  const goal = work.objective || request;
   return [
     "# Relevo n_ein → Claude",
     "",
@@ -75,22 +78,22 @@ function summary(cwd: string, branch: Array<any>): string {
     goal,
     "",
     "## Autorización",
-    section(content, "Autorización", "Authorization") || "Contrasta la petición original citada y la conversación: el acuerdo de diseño por sí solo no autoriza construir. Una autorización ya dada sigue vigente dentro de su alcance.",
+    work.authorization || "Contrasta la petición original citada y la conversación: el acuerdo de diseño por sí solo no autoriza construir. Una autorización ya dada sigue vigente dentro de su alcance.",
     "",
     "## Decisiones y límites",
-    section(content, "Decisiones", "Decisions", "Acuerdo confirmado", "Confirmed agreement") || "No constan decisiones en el documento; revisa la conversación y el proyecto.",
-    section(content, "Límites", "Limits"),
+    work.decisions || section(content, "Acuerdo confirmado", "Confirmed agreement") || "No constan decisiones en el documento; revisa la conversación y el proyecto.",
+    work.limits,
     "",
     "## Hecho",
     done.length ? done.join("\n") : "No hay tareas marcadas como terminadas.",
     `Última respuesta del agente: ${lastText(branch, "assistant")}`,
     "",
     "## Pendiente y siguiente paso",
-    section(content, "Siguiente paso", "Next step", "Pendiente", "Pending") || "Contrastar estado y acordar siguiente paso.",
+    work.next || "Contrastar estado y acordar siguiente paso.",
     pending.join("\n"),
     "",
     "## Criterios de aceptación",
-    section(content, "Criterios", "Criteria", "Criterios observables", "Acceptance criteria") || "No constan en el documento; comprueba el encargo original.",
+    work.asks || "No constan en el documento; comprueba el encargo original.",
     "",
     "## Última petición del usuario",
     request === goal ? "Coincide con el objetivo anterior; se conserva allí íntegra." : request,
@@ -106,10 +109,10 @@ function summary(cwd: string, branch: Array<any>): string {
     "",
     "## Frentes del equipo pendientes",
     teamSummary(cwd),
-    "El destino puede continuar secuencialmente en estos árboles; conserva sus cambios y comprueba la integración antes de cerrar WORK.md.",
+    "El destino puede continuar secuencialmente en estos árboles; conserva sus cambios y comprueba la integración antes de cerrar el documento de trabajo.",
     "",
     "## Comprobaciones",
-    section(content, "Evidencia", "Evidence") || "No constan comprobaciones en el documento.",
+    recentLog(work.log) || "No constan comprobaciones en el documento.",
     "Vigencia: desconocida hasta contrastar con el diff y el código actual. Los archivos nuevos también figuran en el estado Git. Conserva lo terminado; verifica solo lo que falte o haya quedado invalidado.",
     document === "ninguno" ? "No hay documento de trabajo; usa la petición reciente como punto de partida." : `Lee ${document} para el detalle vigente; este resumen es una instantánea.`,
     "",

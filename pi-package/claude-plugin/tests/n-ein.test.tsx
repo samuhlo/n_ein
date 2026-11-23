@@ -51,7 +51,7 @@ test("el spinner dice lo que hace el turno", async ($, on) => {
     return <Text>{e.props.word}</Text>;
   });
   const ui = await $.ui.mount({ plugin: "n-ein", surface: "terminal", component: "Spinner", props: { word: "Sauteing", message: null, suffix: "…", mode: "thinking" } });
-  expect(await ui.find({ text: "pensando" })).toBeDefined();
+  expect(await ui.find({ text: "thinking" })).toBeDefined();
 });
 
 test("el cierre de turno es la duración con ✓", async ($) => {
@@ -181,4 +181,132 @@ test("la paleta busca sin iniciar un turno y prepara la acción elegida", async 
   await ui.press({ key: "action-new" });
   expect(fills[0]).toContain("Otro encargo:");
   expect(fills[0]).toContain("borrador previo");
+});
+
+// --- TODO en la franja sobre el prompt ----------------------------------------------------------
+const WORK = "# Encargo de prueba\n\n## Tareas\n- [x] T1 · Uno — detalle\n- [ ] T2 · Dos — detalle. Blocked by: T1.\n- [ ] T3 · Tres\n";
+const BAND = { hasSurvey: false, isWorking: false, maxRows: 20, bodyColumns: 80, scroll: { offset: 0, bodyRows: 20 }, view: {} };
+
+/** Un repositorio en /repo con los archivos dados; las ediciones de la prueba los cambian de verdad. */
+function workspace(on: On, files: Record<string, string>) {
+  // /repo/.git es una carpeta; cualquier prefijo de un archivo, también.
+  const isDir = (path: string) => path === "/repo/.git" || Object.keys(files).some((file) => file.startsWith(`${path}/`));
+  on("fs.exists", ($, e) => ({ value: e.path in files || isDir(e.path) }));
+  on("fs.stat", ($, e) => {
+    if (!(e.path in files) && !isDir(e.path)) throw new Error(`ENOENT: ${e.path}`);
+    return { value: { kind: e.path in files ? "file" : "dir", size: 0, mtimeMs: 0, isLink: false } };
+  });
+  on("fs.list", ($, e) => {
+    const names = new Set(Object.keys(files).filter((file) => file.startsWith(`${e.path}/`)).map((file) => file.slice(e.path.length + 1).split("/")[0] ?? ""));
+    return { value: [...names].map((name) => ({ name, kind: `${e.path}/${name}` in files ? "file" as const : "dir" as const, size: 0, mtimeMs: 0, isLink: false })) };
+  });
+  on("fs.read", ($, e) => {
+    const text = files[e.path];
+    if (text === undefined) throw new Error(`ENOENT: ${e.path}`);
+    return { value: text };
+  });
+  on("prompt.submit", ($, e) => ({ text: e.text }));
+  on("tool.call", ($, e) => {
+    const text = e.tool === "Edit" ? files[e.file_path] : undefined;
+    if (e.tool === "Edit" && text !== undefined) files[e.file_path] = text.replace(e.old_string, e.new_string);
+    return { result: { ok: true } as never };
+  });
+}
+const band = ($: Engine, props: Partial<typeof BAND> = {}) =>
+  $.ui.mount({ plugin: "n-ein", surface: "terminal", component: "AbovePrompt", props: { ...BAND, ...props }, viewport });
+const submit = ($: Engine) => $.prompt.submit({ text: "hola", wait: false, origin: { kind: "composer" } });
+
+test("tras la primera petición la franja enseña el bloque del TODO", async ($, on) => {
+  world(on);
+  workspace(on, { "/repo/WORK.md": WORK });
+  await start($);
+  expect(JSON.stringify(await (await band($)).drawn())).not.toContain("Encargo de prueba");
+  await submit($);
+  const drawn = JSON.stringify(await (await band($)).drawn());
+  for (const part of ["Encargo de prueba", "1/3", "✓", "Uno", "▸", "T2", "Dos", "Tres"]) expect(drawn).toContain(part);
+  expect(drawn).not.toContain("detalle");
+});
+
+test("la franja cede ante una encuesta y sin WORK.md no aparece", async ($, on) => {
+  world(on);
+  workspace(on, { "/repo/WORK.md": WORK });
+  await start($);
+  await submit($);
+  expect(JSON.stringify(await (await band($, { hasSurvey: true })).drawn())).not.toContain("Encargo de prueba");
+});
+
+test("sin WORK.md la franja queda para el motor", async ($, on) => {
+  world(on);
+  workspace(on, {});
+  await start($);
+  await submit($);
+  expect(JSON.stringify(await (await band($)).drawn())).not.toContain("▸");
+});
+
+test("una edición de WORK.md mueve la franja", async ($, on) => {
+  world(on);
+  workspace(on, { "/repo/WORK.md": WORK });
+  await start($);
+  await submit($);
+  await $.tool.call({ tool: "Edit", file_path: "/repo/WORK.md", old_string: "- [ ] T2", new_string: "- [x] T2" });
+  const drawn = JSON.stringify(await (await band($)).drawn());
+  expect(drawn).toContain("2/3");
+  expect(drawn).toContain("Tres");
+});
+
+// --- Modo de actividad ---------------------------------------------------------------------------
+const spinner = ($: Engine, mode: "requesting" | "responding" | "thinking" | "tool-input" | "tool-use") =>
+  $.ui.mount({ plugin: "n-ein", surface: "terminal", component: "Spinner", props: { word: "Sauteing", message: null, suffix: "…", mode } });
+const word = (on: On) => on("ui.render", { component: "Spinner" }, ($, e) => {
+  const { Text } = $.ui.resolve(e);
+  return <Text>{e.props.word}</Text>;
+});
+
+test("el spinner dice el modo de la herramienta en curso", async ($, on) => {
+  // Antes que world: su hook genérico contesta cualquier dibujo sin pasar al siguiente.
+  word(on);
+  world(on);
+  workspace(on, { "/repo/WORK.md": WORK });
+  await start($);
+  const says = async (mode: Parameters<typeof spinner>[1]) => JSON.stringify(await (await spinner($, mode)).drawn());
+  expect(await says("tool-use")).toContain("working");
+  await $.tool.call({ tool: "Bash", command: "bun test --bail" });
+  expect(await says("tool-use")).toContain("testing");
+  expect(await says("responding")).toContain("writing");
+  // Las herramientas de un subagente no cambian lo que hace el bucle principal.
+  await $.tool.call({ tool: "Edit", file_path: "/repo/a.ts", old_string: "a", new_string: "b", agentId: "a1" });
+  expect(await says("tool-use")).toContain("testing");
+  await turnEnd($, USAGE);
+  expect(await says("tool-use")).toContain("working");
+});
+
+test("mientras trabaja, la franja lleva la fase junto al avance", async ($, on) => {
+  world(on);
+  workspace(on, { "/repo/WORK.md": WORK });
+  await start($);
+  await submit($);
+  await $.tool.call({ tool: "Edit", file_path: "/repo/src/a.ts", old_string: "a", new_string: "b" });
+  expect(JSON.stringify(await (await band($, { isWorking: true })).drawn())).toContain("▸ coding");
+  expect(JSON.stringify(await (await band($, { isWorking: false })).drawn())).not.toContain("coding");
+});
+
+test("con un documento por encargo, la franja enseña el de la rama", async ($, on) => {
+  world(on);
+  const doc = (name: string, branch: string) => `# Encargo ${name}\n\nEstado: activo · Rama: ${branch}\n\n## Tareas\n- [ ] T1 · Tarea de ${name}\n\n## Registro\n- R1\n`;
+  const files: Record<string, string> = {
+    "/repo/.git/HEAD": "ref: refs/heads/feat/b\n",
+    "/repo/docs/work/2026-11-20-a.md": doc("A", "feat/a"),
+    "/repo/docs/work/2026-11-21-b.md": doc("B", "feat/b"),
+    "/repo/docs/work/closed/2026-11-01-viejo.md": doc("viejo", "feat/b").replace("activo", "cerrado"),
+  };
+  workspace(on, files);
+  await start($);
+  await submit($);
+  const drawn = JSON.stringify(await (await band($)).drawn());
+  expect(drawn).toContain("Encargo B");
+  expect(drawn).not.toContain("Encargo A");
+  // Cambiar de rama cambia de documento en la siguiente lectura.
+  files["/repo/.git/HEAD"] = "ref: refs/heads/feat/a\n";
+  await turnEnd($, USAGE);
+  expect(JSON.stringify(await (await band($)).drawn())).toContain("Encargo A");
 });

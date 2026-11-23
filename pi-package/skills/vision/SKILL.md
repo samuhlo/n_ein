@@ -47,4 +47,4 @@ The session is ready to close when v1 has a goal, a horizon, its material decisi
 
 Remove sheets the user rejected so the sketch file shows only what was agreed. Summarize the brief in a few lines and ask once for confirmation.
 
-Confirming the brief is not permission to build. When the user asks to build ("go ahead / hazlo"), the ordinary workflow takes over: `WORK.md` links the brief and the sketches instead of copying them, and `spec` and `tasks` start from the brief without repeating the interview. If the user drops the session before confirming, say which draft files exist and leave them for the user to keep or delete.
+Confirming the brief is not permission to build. When the user asks to build ("go ahead / hazlo"), the ordinary workflow takes over: the work document links the brief and the sketches instead of copying them, and `spec` and `tasks` start from the brief without repeating the interview. If the user drops the session before confirming, say which draft files exist and leave them for the user to keep or delete.

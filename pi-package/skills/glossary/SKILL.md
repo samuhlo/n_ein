@@ -17,7 +17,7 @@ Most repos have one context: `GLOSSARY.md` at the root and decisions in `docs/ad
 - **Sharpen fuzzy words.** Propose one precise term for a vague or overloaded one: "By *account*, do you mean the Customer or the User? They are different things."
 - **Test relations with scenarios.** Invent concrete cases that probe the edges between concepts and force precision.
 - **Check against the code.** When the user says how something works, check whether the code agrees and surface contradictions: "The code cancels whole orders, but you just said partial cancellation exists. Which is right?"
-- **Write each term as it settles**, one at a time, in `GLOSSARY.md`. It holds language only: term definitions, no implementation details. Specs and decisions live in `WORK.md` and the ADRs.
+- **Write each term as it settles**, one at a time, in `GLOSSARY.md`. It holds language only: term definitions, no implementation details. Specs and decisions live in the work document and the ADRs.
 
 Respect the current permission to write documents. During an `intent` interview awaiting confirmation, keep proposed terms and ADRs in the conversation until the agreement is confirmed, unless the user explicitly asked you to save a draft.
 
