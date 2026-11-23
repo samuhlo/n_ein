@@ -14,11 +14,11 @@ El experimento de equipo se conserva desactivado: `N_EIN_TEAM=1` lo habilita exp
 
 ## Estado y continuidad
 
-- Rama del proyecto: consultar Git y WORK.md; la conversación actual prevalece sobre propuestas anteriores.
+- Rama del proyecto: consultar Git y el documento de trabajo de la rama en `docs/work/`; la conversación actual prevalece sobre propuestas anteriores.
 - Versión del checkout: consultar `VERSION`. Entrega actual: `0.7.0-alpha.1`, canal preview. [Notas de versión](releases/0.7.0-alpha.1.md). La versión personal instalada se comprueba en su `install.json`; publicar no la actualiza por sí solo.
 - Pi, Claude Code, el puente de Claude y CodeGraph se fijan en `runtime.json`, con sus lockfiles; el vigía de runtimes los sube cuando la matriz pasa. No asumir que los binarios globales coinciden.
 - Preferencias y ajustes personales viven fuera del paquete, en `~/.n_ein`. Mantener credenciales en su hogar nativo; no copiarlas desde el banco.
-- `WORK.md` es la única guía del encargo; decisiones duraderas, glosario e instrucciones del proyecto aportan memoria selectiva.
+- Cada encargo que no se puede retomar desde el diff tiene su documento en `docs/work/`, única guía de ese encargo; al cerrarse pasa a `docs/work/closed/`. Decisiones duraderas, glosario e instrucciones del proyecto aportan memoria selectiva.
 - El relevo ordinario Pi→Claude→Pi y la recuperación en una sesión nueva están probados. El ensayo con equipo y Claude real quedó pendiente por cuota y ahora está aplazado con el experimento.
 - Modelo local descartado el 5 de octubre. No descargar modelos ni preparar servidores.
 
@@ -32,7 +32,7 @@ Runtimes al día: el vigía de CI prueba y publica las subidas de Pi, el puente,
 
 ## Ruta de lectura
 
-Lee [decisiones](01-decisiones.md) y `WORK.md`. Para implementar, [plan](03-plan.md) y solo las secciones pertinentes de [pruebas](04-pruebas.md), [diseño](02-diseno.md) y [despliegue](05-despliegue.md). Los comentarios y logs siguen el contrato de diseño. `./scripts/check.sh` reúne comprobaciones locales sin inferencia pagada.
+Lee [decisiones](01-decisiones.md) y el documento de trabajo de la rama (hasta su registro). Para implementar, [plan](03-plan.md) y solo las secciones pertinentes de [pruebas](04-pruebas.md), [diseño](02-diseno.md) y [despliegue](05-despliegue.md). Los comentarios y logs siguen el contrato de diseño. `./scripts/check.sh` reúne comprobaciones locales sin inferencia pagada.
 
 Referencias de evidencia:
 

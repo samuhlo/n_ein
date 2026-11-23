@@ -92,7 +92,7 @@ Un prefijo (`[luna]`, `[sol high]`) o `/nein:modo` lo fija a mano; `/nein:models
 | **Launcher** | `nein` | `~/.n_ein/installations/<canal>` | — |
 | **Principal · Pi** | `nein` → `p` | `~/.n_ein/<canal>/pi-agent` | `pi` → `~/.pi/agent` |
 
-El paquete de Pi lleva el catálogo de skills, la voz y el TODO de `WORK.md`. CodeGraph indexa cada proyecto al abrirlo y el agente lo consulta antes de leer archivos.
+El paquete de Pi lleva el catálogo de skills, la voz y el TODO del documento de trabajo de cada encargo (`docs/work/`). CodeGraph indexa cada proyecto al abrirlo y el agente lo consulta antes de leer archivos.
 
 ---
 
@@ -126,7 +126,7 @@ Dentro de Pi:
 | `/nein:contexto` · `/nein:continuar` | Medir contexto y continuar con guía y modelo conservados |
 | `/nein:models` | Tabla de modelos y esfuerzo |
 | `/nein:modo <clase>` · `/nein:nuevo` | Fijar la clase o empezar otro encargo |
-| `/todo done N` · `/todo add …` | Marcar o añadir tareas de `WORK.md` |
+| `/todo done N` · `/todo add …` | Marcar o añadir tareas del documento de trabajo |
 | `Ctrl+O` | Detalle completo de las herramientas |
 
 ---

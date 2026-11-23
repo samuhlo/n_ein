@@ -1,6 +1,6 @@
 # Pendientes y límites vigentes
 
-Actualizado tras decidir el 7 de octubre consolidar un agente y un modelo por encargo. WORK.md mantiene las tareas activas; esta página no es otro checklist.
+Actualizado tras decidir el 7 de octubre consolidar un agente y un modelo por encargo. El documento de trabajo de cada encargo (`docs/work/`) mantiene sus tareas; esta página no es otro checklist.
 
 ## Prioridades
 

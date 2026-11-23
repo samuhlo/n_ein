@@ -3,7 +3,7 @@
 Estado: activo · Rama: feat/documento-por-encargo · Tests: `./scripts/check.sh`
 Autorización: «Venga, vamos con B»: implementar en esta rama, un commit por tarea; sin integrar en main, publicar ni tocar Miolo.
 Objetivo: el documento de trabajo deja de crecer sin fin y de leerse entero: uno por encargo, lo estable arriba, el registro al final y un cierre que lo resume.
-Siguiente: T5.
+Siguiente: T6.
 
 ## Pedidos
 
@@ -28,7 +28,7 @@ Siguiente: T5.
 - [x] T2 · Claude y launcher — la misma elección en el plugin y en Go contra `tests/fixtures/work-repo/expected.json` · Go y `claude plugin test` rojo → verde.
 - [x] T3 · Leer menos — `workBrief` para `nein_work status` y `n-ein-work status`, aviso de 25 KB en el TODO y última lectura del documento en Pi · `tests/work-evidence.ts`, `todo-core.ts` y `context.ts` rojo → verde.
 - [x] T4 · Flujo y skills — prueba de reanudación, plantilla, estados, cierre y lectura hasta el registro; p_reviewer, relevo de Claude a Pi y launcher encuentran el documento · `tests/skills.ts` y `tests/previewer-context.ts` rojo → verde.
-- [ ] T5 · Migración y documentación — el `WORK.md` de n_ein a `docs/work/`, diseño, guía, pruebas y decisión. Blocked by: T1-T4.
+- [x] T5 · Migración y documentación — el `WORK.md` de n_ein, cerrado y resumido en `docs/work/closed/`; README, START_HERE, guía, diseño, pendientes, A16 y decisión · sin enlaces rotos a `WORK.md`.
 - [ ] T6 · Revisión y suite completa. Blocked by: T1-T5.
 
 ## Registro
@@ -38,3 +38,4 @@ Siguiente: T5.
 - R3 (23 nov) T2: `expected.json` fija, por rama, documento, tarea actual, cuenta (sin descartadas) y lo que espera; lo cumplen `tests/work-core.ts` y `TestWorkDocFollowsTheBranch`. El launcher dice «en espera: T1» cuando solo queda eso. En Claude, cambiar de rama cambia la franja al cerrar el turno. El contrato de estado del plugin gana `state`.
 - R4 (23 nov) T3: con el `WORK.md` de 120 KB de Miolo (`907fe8d`, leído del historial), el estado pasa de 70 KB de JSON a 54 KB de resumen; en el formato anterior lo que queda son criterios, decisiones y objetivo de tareas ya hechas, y eso lo arregla el cierre con compactación de T4. Este documento: 4 KB, con el registro fuera.
 - R5 (23 nov) T4: aparecieron tres consumidores por nombre fijo que el plan no listaba: p_reviewer (`previewer/src/spec.ts`) ahora toma el documento de `docs/work/` que cambian los commits revisados, también si ya está en `closed/`; el relevo de Claude a Pi (`bin/n-ein-prepare-pi`) usa `n-ein-todo --path`; la vista Estado del launcher muestra la ruta real. El flujo crece de 12,1 KB a 13,8 KB: la plantilla sustituye a la antigua y suma estados y cierre.
+- R6 (23 nov) T5: los planes y registros fechados (`03-plan`, `09-rumbo`, `10-paralelismo`, `13-experiencia`, entradas antiguas de decisiones) conservan `WORK.md` como historia. El documento cerrado del TODO baja de 5,5 KB a 2,2 KB.

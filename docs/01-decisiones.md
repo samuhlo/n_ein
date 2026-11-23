@@ -168,6 +168,18 @@ Samu vio que el TODO de Pi salía sin color ni recorte, que en Claude solo habí
 - **Modos en inglés y en minúscula**, también las palabras del spinner de Claude, que antes estaban en castellano: mezclar «pensando» con «coding» quedaba peor. El resto de la interfaz sigue en castellano. Un modo equivocado solo se ve; lo que no se reconoce dice `working`.
 - **Un núcleo puro compartido** (`todo-core.ts`, `activity-core.ts`) en el plugin de Claude, que corre sin Node, como ya ocurría con la marca y los recibos.
 
+### Un documento por encargo (23 de noviembre)
+
+Samu vio que `WORK.md` «se llena de cosas, aunq esten completadas, y esto lo pasa entero a la IA una y otra vez». Medido en Miolo: 120 KB, unos 30 000 tokens, la mitad evidencia, y entre el 7 y el 29 % de lo que devolvían las herramientas en sus sesiones. Tras compararlo con gentle-shell 5.0.0 y con «un `WORK.md` y solo Git», eligió un documento por encargo: «Venga, vamos con B». Decisiones:
+
+- **Solo hay documento si el trabajo no se retoma con la petición y `git diff`** (la prueba de gentle-shell, aceptada el mismo día). Sustituye a «dos entregas o más» del [rumbo](09-rumbo.md).
+- **Uno por encargo en `docs/work/`, que queda como registro;** al cerrar se resume y pasa a `docs/work/closed/`. Elegido frente a solo Git por el trabajo en paralelo (dos ramas no chocan en el mismo archivo) y por llevar el registro de una app que se venderá.
+- **Orden fijo con el registro al final, estados `espera` y `descartada`, tope de 25 KB y lectura hasta el registro.**
+- **El activo se elige por la rama de su cabecera,** igual en Pi, Claude, el launcher, el relevo y p_reviewer; el `WORK.md` de la raíz de proyectos anteriores sigue valiendo.
+- **Sin Engram, sin lista `todo` mantenida por el modelo y sin CLI de creación.**
+
+Detalle en [diseño](02-diseno.md#documento-de-trabajo).
+
 ## Recomendaciones de diseño, revisables
 
 El 7 de octubre Samu autorizó implementar y evaluar el reparto temprano y la investigación acotada con el mismo mecanismo de equipo, tras la [auditoría del piloto](../evals/results/2026-10-07-auditoria-paralelismo.md). La lectura puede delegarse sin preparar un encargo de escritura. Se mide por separado el ahorro de contexto y el avance paralelo, conservando checks e integración. Esto amplía el experimento; no demuestra ahorro ni activa por sí solo la preview personal. El estado de implementación y evaluación vive en WORK.md.

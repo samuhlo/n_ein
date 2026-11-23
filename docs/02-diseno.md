@@ -2,7 +2,7 @@
 
 ## Recorrido ordinario
 
-El flujo de n_ein vive en `pi-package/flow.md` y lo reciben Pi y Claude. Pasos: permiso de construir → recuperar decisiones y mirar el código → resolver incertidumbres → conservar petición, consumidores y aceptación → registrar `WORK.md` si hay varias entregas → construir y comprobar tarea a tarea → revisar el riesgo → cerrar contra la petición original. Cada tarea lleva comportamiento, tests, documentación y marca de avance en el mismo commit de una rama de trabajo. El mismo archivo define la forma de `WORK.md`, con títulos en castellano o en inglés según el idioma de los artefactos. Se inspira en el ODD de Gentle Shell, pero es propio: sin memoria Engram, sin límite de 400 líneas por entrega y sin cadenas de PR. Son comportamientos, no fases que generen cada una un archivo o agente.
+El flujo de n_ein vive en `pi-package/flow.md` y lo reciben Pi y Claude. Pasos: permiso de construir → recuperar decisiones y mirar el código → resolver incertidumbres → conservar petición, consumidores y aceptación → registrar un documento de trabajo si el encargo no se puede retomar desde el diff → construir y comprobar tarea a tarea → revisar el riesgo → cerrar contra la petición original. Cada tarea lleva comportamiento, tests, documentación y marca de avance en el mismo commit de una rama de trabajo. El mismo archivo define la forma del documento de trabajo, con títulos en castellano o en inglés según el idioma de los artefactos. Se inspira en el ODD de Gentle Shell, pero es propio: sin memoria Engram, sin límite de 400 líneas por entrega y sin cadenas de PR. Son comportamientos, no fases que generen cada una un archivo o agente.
 
 **Un modelo por encargo.** Desde el 6 de octubre no hay roles delegados (`nein_scout`, `nein_worker`, `nein_reviewer`): el banco mostró que eran entre el 45 y el 63 % del coste sin mejorar el resultado. El principal es `nein/auto`, que elige un modelo para todo el encargo según su clase (mecánico, ordinario, riesgo, abierto) y lo mantiene; [rumbo](09-rumbo.md) y [resultados](../evals/results/2026-10-05-rumbo-resultados.md).
 
@@ -199,7 +199,17 @@ La paleta usa un catálogo compartido y filtra por comandos disponibles en cada 
 
 Los procesos de Pi se ejecutan con su backend de bash, con log y plazo explícitos, resultado único y parada antes del relevo. Claude conserva sus tareas nativas. Los resúmenes por sesión viven fuera del paquete y no acreditan permisos, propiedad de archivos ni actividad actual. El Panel muestra hasta cien sesiones del proyecto.
 
-La vista local del encargo cruza WORK.md con comandos ejecutados y sus identidades antes/después. Las casillas acreditan implementación declarada, no verificación automática. El lienzo conserva alternativas y comentarios del proyecto, separando elección, implementación y aceptación visual. Contratos, límites y entradas en [guía](guia.md#encargo-y-evidencia).
+La vista local del encargo cruza el documento de trabajo con comandos ejecutados y sus identidades antes/después. Las casillas acreditan implementación declarada, no verificación automática. El lienzo conserva alternativas y comentarios del proyecto, separando elección, implementación y aceptación visual. Contratos, límites y entradas en [guía](guia.md#encargo-y-evidencia).
+
+### Documento de trabajo
+
+Uno por encargo, solo cuando el trabajo no se puede retomar con la petición y `git diff` (varias sesiones, esperas externas, entregas que el usuario quiere aparte, requisitos que una compactación perdería); el número de archivos o tareas no lo decide. Vive en `docs/work/<fecha>-<nombre>.md` y queda en el repositorio como registro: al cerrarse se resume (resultado, comprobación final, pendiente y commit de cada tarea) y pasa a `docs/work/closed/`. Comparado con gentle-shell 5.0.0 el 23 de noviembre: se toma su orden y sus estados, sin Engram ni lista mantenida por el modelo, y se añade lo que a ellos les falta, el tope y el cierre resumido.
+
+- **Orden fijo, lo estable arriba:** cabecera (`Estado`, `Rama`, `Autorización`, `Objetivo`, `Siguiente`), `## Pedidos` con las palabras del usuario y su sonda, `## Decisiones` vigentes, `## Tareas` en una línea cada una con la comprobación que la cerró, y `## Registro` al final con la petición literal, las correcciones fechadas y solo lo que los commits no dicen.
+- **Estados:** `— espera: <qué>` para lo que depende de alguien fuera de la lista y `— descartada: <motivo>` para lo que el plan abandonó; ninguno es la tarea actual, y lo descartado no cuenta.
+- **Elección del activo** (`work-core.ts`, repetida en Go contra `tests/fixtures/work-repo/`): el abierto cuya `Rama` es la actual, leída de `.git/HEAD` sin lanzar Git; si no, el `WORK.md` de la raíz de proyectos anteriores; si no, el único abierto que no espera. `N_EIN_WORK_DOC` manda sobre todo.
+- **Leer menos:** el agente retoma leyendo hasta el registro; `nein_work status` y `n-ein-work status` dan esa parte con lo hecho reducido a su nombre y las comprobaciones en recuentos. En Pi, en cada commit entre tareas solo queda la última lectura del documento. El relevo lleva las tres últimas entradas del registro. Por encima de 25 KB el TODO pide compactar.
+- **Quién más lo lee:** p_reviewer toma como especificación el documento de `docs/work/` que cambian los commits revisados, también si ya está cerrado; el relevo de Claude a Pi y la vista Estado del launcher usan la misma elección.
 
 ### TODO
 
@@ -207,7 +217,7 @@ Conserva el aspecto del de Ein, sin fondo propio: debajo del editor, una cabecer
 
 La tarea actual es la primera abierta tras la última hecha; si no queda ninguna después, la primera abierta. Así una tarea del propietario que sigue abierta arriba (una puesta en servicio, una prueba de dos semanas) no detiene el TODO: se señala aparte. Cada tarea se nombra por su id y su título; el detalle tras « — » y lo bloqueado quedan en el documento. Pi, Claude, el banner y el launcher usan la misma regla.
 
-Es una **vista, no una fuente de verdad**: marcar o añadir una tarea escribe en el documento. Sin documento de trabajo no hay TODO; el trabajo pequeño no crea uno para llenar el widget. Si hay varios documentos activos, un comando de foco elige cuál se muestra, como `/ein:focus`. En Claude, el bloque va en la franja sobre el prompt y la barra de estado lleva la línea compacta. El launcher muestra el mismo checklist en su vista Estado, y Claude, Codex u OpenCode lo leen como casillas markdown sin nada especial.
+Es una **vista, no una fuente de verdad**: marcar o añadir una tarea escribe en el documento. Sin documento de trabajo no hay TODO; el trabajo pequeño no crea uno para llenar el widget. Con varios documentos abiertos se muestra el de la rama actual; lo que espera a alguien sale en la nota final («en espera: T5»). En Claude, el bloque va en la franja sobre el prompt y la barra de estado lleva la línea compacta. El launcher muestra el mismo checklist en su vista Estado, y Claude, Codex u OpenCode lo leen como casillas markdown sin nada especial.
 
 ## Voz y estilo
 
