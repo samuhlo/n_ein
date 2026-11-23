@@ -2,9 +2,19 @@ import { strict as assert } from "node:assert";
 import { mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
+import { mock } from "bun:test";
 import { ACTIVITY_EVENT } from "../pi-package/claude-plugin/hooks/activity-core";
-import registerTodo from "../pi-package/extensions/todo";
 import { addWorkTask, readWorkDoc, resolveWorkDoc } from "../pi-package/extensions/work-doc";
+
+// pi-tui llega con el runtime de Pi, no con las dependencias del repositorio: como en team-extension.
+mock.module("@earendil-works/pi-tui", () => ({
+  truncateToWidth: (text: string, width: number) => {
+    const chars = [...text];
+    while (Bun.stringWidth(chars.join("")) > width) chars.pop();
+    return chars.join("");
+  },
+}));
+const { default: registerTodo } = await import("../pi-package/extensions/todo");
 
 const dir = mkdtempSync(join(tmpdir(), "n-ein-work-doc-"));
 const previous = process.env.N_EIN_WORK_DOC;
