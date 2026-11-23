@@ -15,20 +15,20 @@ El experimento de equipo se conserva desactivado: `N_EIN_TEAM=1` lo habilita exp
 ## Estado y continuidad
 
 - Rama del proyecto: consultar Git y el documento de trabajo de la rama en `docs/work/`; la conversación actual prevalece sobre propuestas anteriores.
-- Versión del checkout: consultar `VERSION`. Entrega actual: `0.7.0-alpha.1`, canal preview. [Notas de versión](releases/0.7.0-alpha.1.md). La versión personal instalada se comprueba en su `install.json`; publicar no la actualiza por sí solo.
+- Versión del checkout: consultar `VERSION`. Entrega actual: `0.8.0-alpha.1`, canal preview. [Notas de versión](releases/0.8.0-alpha.1.md). La versión personal instalada se comprueba en su `install.json`; publicar no la actualiza por sí solo.
 - Pi, Claude Code, el puente de Claude y CodeGraph se fijan en `runtime.json`, con sus lockfiles; el vigía de runtimes los sube cuando la matriz pasa. No asumir que los binarios globales coinciden.
 - Preferencias y ajustes personales viven fuera del paquete, en `~/.n_ein`. Mantener credenciales en su hogar nativo; no copiarlas desde el banco.
 - Cada encargo que no se puede retomar desde el diff tiene su documento en `docs/work/`, única guía de ese encargo; al cerrarse pasa a `docs/work/closed/`. Decisiones duraderas, glosario e instrucciones del proyecto aportan memoria selectiva.
 - El relevo ordinario Pi→Claude→Pi y la recuperación en una sesión nueva están probados. El ensayo con equipo y Claude real quedó pendiente por cuota y ahora está aplazado con el experimento.
 - Modelo local descartado el 5 de octubre. No descargar modelos ni preparar servidores.
 
-## Trabajo del 19 de noviembre
+## Trabajo del 21 al 23 de noviembre
 
-Runtimes al día: el vigía de CI prueba y publica las subidas de Pi, el puente, Claude Code y CodeGraph, y el launcher las ofrece con `u`. Se sigue en `WORK.md`, con la publicación de 0.7.0-alpha.1. «Opus piensa, GPT ejecuta» y 0.6.0-alpha.1 están en [su encargo archivado](archive/work/2026-11-03-opus-gentle.md); los anteriores, en [archive/work](archive/work/).
+El TODO legible con el modo de actividad y la rama, y un documento por encargo: cada encargo se siguió en su documento, ya cerrado en [docs/work/closed](work/closed/); la publicación de 0.8.0-alpha.1, en el suyo de [docs/work](work/). Los runtimes al día y 0.7.0-alpha.1 se siguieron en el `WORK.md` de entonces (en Git); «Opus piensa, GPT ejecuta» y 0.6.0-alpha.1 están en [su encargo archivado](archive/work/2026-11-03-opus-gentle.md), y los anteriores en [archive/work](archive/work/).
 
 ## Entrega actual
 
-`0.7.0-alpha.1` sube Pi a 1.5.2, el puente a 0.12.0, Claude Code a 2.1.311 y CodeGraph a 1.6.2, y deja en marcha el vigía de runtimes: cada versión nueva que pasa la matriz completa se publica como preview de mantenimiento. El launcher dice qué runtimes trae cada versión y lo que el vigía no publicó; `doctor` arranca Pi con las extensiones, una actualización rota se revierte, Sistema ofrece volver a la versión anterior y la limpieza recorta runtimes y backups. Estado de publicación y evidencia en `WORK.md`.
+`0.8.0-alpha.1` deja ver por dónde va y qué hace el agente: el TODO con el aspecto de Ein en Pi y sobre el prompt de Claude, la tarea actual que sigue a lo último hecho, el modo de actividad (coding, testing, orchestrating…) y la rama. Cada encargo que no se retoma desde el diff tiene su documento en `docs/work/`, con el registro al final, estados de espera y descarte, lectura hasta el registro y un cierre que lo resume. Trae los runtimes que publicó el vigía en 0.7.0-alpha.2 y alpha.3: puente 0.13.0, Claude Code 2.1.323 y CodeGraph 1.6.3. Estado de publicación y evidencia en su documento de `docs/work/`.
 
 ## Ruta de lectura
 
