@@ -173,6 +173,8 @@ const output = execFileSync(
       N_EIN_CODEGRAPH_BIN: index,
       N_EIN_TEAM: "1",
       PI_SKIP_VERSION_CHECK: "1",
+      N_EIN_PI_EXTENSIONS_FILE: join(area, "pi-extensions"),
+      N_EIN_SYSTEM_TMPDIR: area,
     },
     stdio: ["ignore", "pipe", "pipe"],
   },

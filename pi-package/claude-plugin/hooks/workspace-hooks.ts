@@ -53,6 +53,10 @@ export function registerWorkspace(on: On): void {
   });
   on("session.end", async ($, e, next) => {
     await publishClaude($, "closed");
+    // El lanzador imprime al salir cómo volver con n_ein. Tras /clear cierra también la sesión
+    // nueva, así que gana su id.
+    const record = await $.env.get("N_EIN_RESUME_FILE");
+    if (record) await $.fs.write(record, `${e.resume.id}\n`).catch(() => {});
     return next(e);
   });
 }

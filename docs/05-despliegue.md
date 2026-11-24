@@ -42,7 +42,7 @@ La primera prueba real siguió esta ruta: `hotfix/model-selector` partió de `v0
 
 Pi vanilla, Ein legado, desarrollo n_ein y estable n_ein deben tener identidades claras. Proponer hogares separados; confirmar y comprobar resolución de rutas antes de escribir. No copiar credenciales en paquetes ni migrar sign-ins automáticamente por conveniencia.
 
-La primera instalación es local y acotada: un lanzador de shell que exporta `PI_CODING_AGENT_DIR` hacia el hogar de n_ein y carga el paquete local. Ein ya usa lanzadores con configuración propia para Pi y Claude ([ejemplo Pi archivado](archive/ein-workspace/ein-pi/launchers/ein-pi.fish)). En otras integraciones, comprobar las ubicaciones y la precedencia reales: `CLAUDE_CONFIG_DIR`, `CODEX_HOME` y `OPENCODE_CONFIG_DIR` no son contratos intercambiables. En particular, `OPENCODE_CONFIG_DIR` añade configuración a fuentes globales/de proyecto; no basta para afirmar aislamiento completo ([documentación oficial](https://opencode.ai/docs/config/#custom-directory)). Probar también instrucciones/skills, sesiones y credenciales antes de declarar una integración aislada.
+La primera instalación es local y acotada: un lanzador de shell que exporta `PI_CODING_AGENT_DIR` hacia el hogar de n_ein y carga el paquete local. De fuera solo añade el puente de Claude y las extensiones que el usuario nombra en `~/.n_ein/<canal>/pi-extensions` (Herdr, Moshi), desde su ruta original; `doctor --runtime` apunta esa lista a su temporal, para que una extensión personal rota no tumbe ni revierta una instalación sana. Ein ya usa lanzadores con configuración propia para Pi y Claude ([ejemplo Pi archivado](archive/ein-workspace/ein-pi/launchers/ein-pi.fish)). En otras integraciones, comprobar las ubicaciones y la precedencia reales: `CLAUDE_CONFIG_DIR`, `CODEX_HOME` y `OPENCODE_CONFIG_DIR` no son contratos intercambiables. En particular, `OPENCODE_CONFIG_DIR` añade configuración a fuentes globales/de proyecto; no basta para afirmar aislamiento completo ([documentación oficial](https://opencode.ai/docs/config/#custom-directory)). Probar también instrucciones/skills, sesiones y credenciales antes de declarar una integración aislada.
 
 El instalador es un binario Go separado del launcher, con `package`, `install`, `update`, `doctor`, `restore` y `uninstall` comprobados en destinos temporales ([evidencia](../evals/results/2026-09-29-installer.md)). `doctor` valida el paquete; `doctor --runtime` añade presencia de Bun, versión de Pi y un arranque de Pi con las extensiones de n_ein y un proveedor local, en hogares temporales y sin red; no confirma autenticación ni acceso al modelo. Se reescribió a partir de los comportamientos útiles de Ein, sin portar sus migraciones SDD. La primera distribución usa `.tar.gz` por plataforma con SHA-256; script o brew siguen pendientes.
 
@@ -57,7 +57,7 @@ El instalador es un binario Go separado del launcher, con `package`, `install`, 
   runtimes/claude-bridge/<versión>/  puente de Claude para Pi (extensión, sin peers ni ejecutable)
   runtimes/codegraph/<versión>/  CodeGraph fijado: release oficial verificada por SHA-256
   cache/bun/                  caché de esas instalaciones
-  <canal>/                    pi-agent, claude, models.json: datos del usuario
+  <canal>/                    pi-agent, claude, models.json, pi-extensions: datos del usuario
 ~/.local/bin/nein             → ~/.n_ein/bin/nein
 ```
 

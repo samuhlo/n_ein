@@ -30,7 +30,7 @@ cp "$area/package.json" "$area/package-before.json"
 original_path="$PATH"
 # No se dejan Node ni Bun globales disponibles para esconder dependencias ausentes.
 mkdir "$area/path"
-for tool in bash curl uname mktemp rm chmod shasum sha256sum env dirname readlink git rg mkdir cat tar gzip cp cmp sed grep head; do
+for tool in bash curl uname mktemp rm chmod ln shasum sha256sum env dirname readlink git rg mkdir cat tar gzip cp cmp sed grep head; do
   resolved="$(command -v "$tool" || true)"
   [[ -z "$resolved" || "$resolved" != /* ]] || ln -s "$resolved" "$area/path/$tool"
 done

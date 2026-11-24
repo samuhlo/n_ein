@@ -290,7 +290,9 @@ func checkPiExtensions(root string, output io.Writer) error {
 	cmd.Env = append(os.Environ(),
 		"N_EIN_AGENT_DIR="+filepath.Join(area, "agent"), "N_EIN_CLAUDE_DIR="+filepath.Join(area, "claude"),
 		"N_EIN_MODELS_FILE="+filepath.Join(area, "models.json"), "N_EIN_LANG_FILE="+filepath.Join(area, "lang.json"),
-		"N_EIN_PREFERENCES_FILE="+filepath.Join(area, "preferences.md"), "PI_OFFLINE=1")
+		"N_EIN_PREFERENCES_FILE="+filepath.Join(area, "preferences.md"),
+		"N_EIN_PI_EXTENSIONS_FILE="+filepath.Join(area, "pi-extensions"),
+		"N_EIN_SYSTEM_TMPDIR="+area, "PI_OFFLINE=1")
 	var stderr bytes.Buffer
 	cmd.Stderr = &stderr
 	data, err := cmd.Output()

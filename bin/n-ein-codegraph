@@ -39,6 +39,16 @@ case "$project" in
     [[ "${N_EIN_CODEGRAPH_ALLOW_TEMP:-0}" == 1 ]] || warn "no se indexan temporales: $project" ;;
 esac
 
+# BLINDAJE -> CodeGraph deja `.codegraph/.gitignore` sin seguimiento y se colaba en los commits del trabajo.
+# El exclude local lo oculta sin tocar archivos con seguimiento, y los worktrees enlazados lo comparten.
+if ! git -C "$project" check-ignore -q --no-index .codegraph/.gitignore 2>/dev/null; then
+  exclude="$(git -C "$project" rev-parse --path-format=absolute --git-path info/exclude 2>/dev/null)" &&
+    mkdir -p "$(dirname "$exclude")" &&
+    { [[ ! -s "$exclude" || -z "$(tail -c1 "$exclude")" ]] || printf '\n' >> "$exclude"; } &&
+    printf '.codegraph/\n' >> "$exclude" ||
+    printf '[WARN] :: EXCLUDE_SKIP :: path: %s\n' "${exclude:-info/exclude}" >&2
+fi
+
 status="$("$codegraph_bin" status --json "$project" 2>/dev/null)"
 # Un estado vacío o ilegible no autoriza init: podría pisar un índice que sí existe.
 # CodeGraph busca índices en los padres: «initialized» no implica que sea el de este repo.

@@ -86,6 +86,10 @@ export function receiptFor(tool: string, rawArgs: unknown, cwd = ""): Receipt {
       return { label: "encargo", target: str(args.clase) };
     case "nein_escalate":
       return { label: "escala", target: oneLine(str(args.reason)) };
+    case "nein_ask": {
+      const questions = Array.isArray(args.questions) ? args.questions.map((item) => oneLine(str(record(item).question))).filter(Boolean) : [];
+      return { label: "pregunta", target: questions.join(` ${GLYPH.sep} `) };
+    }
     case "nein_handoff":
       return { label: "relevo", target: `a ${str(args.destination) || "claude"}` };
     case "nein_team": {
@@ -157,6 +161,11 @@ export function outcomeFor(tool: string, rawArgs: unknown, result: ToolResultLik
     case "nein_escalate":
       if (bad) return { meta: /manual/i.test(text) ? "modelo manual: se mantiene" : "sin cambio", bad: !/manual/i.test(text) };
       return { meta: tool === "nein_escalate" ? "riesgo desde la próxima petición" : "desde la próxima petición", bad };
+    case "nein_ask": {
+      if (bad) return { meta: lastLine(text) || "falló", bad };
+      const answered = Number(details.answered) || 0;
+      return { meta: answered ? plural(answered, "respuesta", "respuestas") : "sin respuesta", bad };
+    }
     case "nein_handoff":
       return bad ? { meta: "no preparado", bad } : { meta: "al terminar esta respuesta", bad };
     case "nein_team":

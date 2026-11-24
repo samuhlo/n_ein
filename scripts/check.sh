@@ -29,10 +29,11 @@ export GOMODCACHE="$HOME/.n_ein/dev/go-cache/mod"
 export GOCACHE="$HOME/.n_ein/dev/go-cache/build"
 export GOPATH="$HOME/.n_ein/dev/go-cache/path"
 
-bash -n bin/nein bin/nein-setup bin/n-ein-codegraph bin/n-ein-dev bin/n-ein-claude-dev bin/n-ein-claude-bridge bin/n-ein-prepare-pi bin/n-ein-previewer scripts/check.sh scripts/smoke-package.sh scripts/build-preview.sh scripts/hotfix-preview.sh scripts/verify-hotfix-branch.sh
+bash -n bin/nein bin/nein-setup bin/n-ein-codegraph tests/codegraph-index.sh bin/n-ein-dev bin/n-ein-claude-dev bin/n-ein-claude-bridge bin/n-ein-prepare-pi bin/n-ein-previewer scripts/check.sh scripts/smoke-package.sh scripts/build-preview.sh scripts/hotfix-preview.sh scripts/verify-hotfix-branch.sh
 tests/launcher.sh
 tests/handoff-launcher.sh
 tests/reverse-launcher.sh
+tests/codegraph-index.sh
 bash -n install.sh scripts/build-release.sh scripts/installer-e2e.sh
 bun run tests/work-doc.ts
 bun run tests/todo-core.ts
@@ -53,6 +54,7 @@ bun run tests/design.ts
 bun run tests/models.ts
 bun run tests/runtimes.ts
 bun run tests/memory.ts
+bun run tests/connectors.ts
 bun run tests/codegraph.ts
 bun run tests/brand.ts
 bun run tests/banner.ts
@@ -88,6 +90,10 @@ bun run tests/previewer-bench.ts
 )
 
 bun run tests/ordinary-pi.ts
+bun run tests/resume.ts
+bun run tests/resume-pi.ts
+bun run tests/ask.ts
+bun run tests/ask-pi.ts
 bun run tests/handoff.ts
 bun run tests/agents-rpc.ts
 bun run tests/agents-pi.ts

@@ -310,3 +310,32 @@ test("con un documento por encargo, la franja enseña el de la rama", async ($, 
   await turnEnd($, USAGE);
   expect(JSON.stringify(await (await band($)).drawn())).toContain("Encargo A");
 });
+
+// [FLOW] El lanzador imprime al salir cómo volver con n_ein: cada cierre le deja su id, y tras /clear
+// gana el de la sesión nueva, que cierra después.
+function endings(on: On, env: Record<string, string>) {
+  const writes: { path: string; text: string }[] = [];
+  on("env.get", ($, e) => ({ value: env[e.name] }));
+  on("session.end", ($, e) => ({ sessionId: e.sessionId }));
+  on("fs.write", ($, e) => {
+    writes.push({ path: e.path, text: e.text });
+    return { value: undefined };
+  });
+  return writes;
+}
+
+test("cada cierre de sesión deja su id al lanzador", async ($, on) => {
+  const writes = endings(on, { N_EIN_RESUME_FILE: "/tmp/n-ein-resume.x" });
+  await $.session.end({ reason: "clear", sessionId: "vieja", resume: { id: "vieja" } });
+  await $.session.end({ reason: "prompt_input_exit", sessionId: "nueva", resume: { id: "nueva" } });
+  expect(writes).toEqual([
+    { path: "/tmp/n-ein-resume.x", text: "vieja\n" },
+    { path: "/tmp/n-ein-resume.x", text: "nueva\n" },
+  ]);
+});
+
+test("sin lanzador de n_ein no escribe", async ($, on) => {
+  const writes = endings(on, {});
+  await $.session.end({ reason: "prompt_input_exit", sessionId: "s", resume: { id: "s" } });
+  expect(writes).toEqual([]);
+});

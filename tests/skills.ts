@@ -29,6 +29,14 @@ assert.match(readFileSync(join(root, "pi-package/flow.md"), "utf8"), /suggest th
 const sharedCode = /shares the code you change \(options, parsers, helpers, validation\)/;
 assert.match(readFileSync(join(root, "pi-package/flow.md"), "utf8"), sharedCode, "flow.md debe pedir sonda para lo que comparte el código tocado");
 assert.match(readFileSync(join(skillsDir, "tdd", "SKILL.md"), "utf8"), sharedCode, "tdd debe pedir test para lo que comparte el código tocado");
+// Las regresiones de redacción en prompts escapan a tests y lectores: la revisión compara frase a frase.
+const review = readFileSync(join(skillsDir, "review", "SKILL.md"), "utf8");
+for (const [rule, why] of [
+  [/Set each removed or reworded sentence beside its base version/, "comparar cada frase quitada o reescrita"],
+  [/a dropped condition or exception, a quantifier/, "señalar el matiz perdido"],
+  [/a rule that became unconditional/, "señalar la regla que se vuelve absoluta"],
+  [/apply each new sentence word for word, as a model would/, "leer la regla nueva como un modelo literal"],
+] as const) assert.match(review, rule, `review: ${why}`);
 // Un documento por encargo, solo cuando el trabajo no se retoma desde el diff, con el registro al final y un cierre que lo resume.
 const flow = readFileSync(join(root, "pi-package/flow.md"), "utf8");
 for (const [rule, why] of [

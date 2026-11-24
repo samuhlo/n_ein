@@ -57,6 +57,8 @@ const env = {
   N_EIN_CODEGRAPH_BIN: index,
   N_EIN_TEAM: "1",
   N_EIN_TEST_RESUME: "1",
+  N_EIN_PI_EXTENSIONS_FILE: join(area, "pi-extensions"),
+  N_EIN_SYSTEM_TMPDIR: area,
   PI_SKIP_VERSION_CHECK: "1",
 };
 const child = spawn(

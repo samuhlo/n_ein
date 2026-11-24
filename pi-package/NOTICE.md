@@ -36,7 +36,13 @@ La skill `commit` toma la idea del comando `commit` del mismo repositorio (grupo
 
 ## Flujo de trabajo
 
-El flujo de n_ein (`flow.md`) se inspira en el Organic Driven Development de [Gentle Shell](https://github.com/Gentleman-Programming/gentle-shell) (licencia MIT); no reproduce su texto. Los nombres y logos de Gentle Shell no se usan.
+El flujo de n_ein (`flow.md`) se inspira en el Organic Driven Development de [Gentle Shell](https://github.com/Gentleman-Programming/gentle-shell) (licencia MIT); no reproduce su texto. La comparación frase a frase de `review` para los textos que obedece el agente se inspira en su verificación por tipo de cambio, también sin reproducir su texto. Los nombres y logos de Gentle Shell no se usan.
+
+## Calidad de vida en Pi
+
+La pista para volver a la sesión (`resume.ts`, `extensions/resume.ts`), la carpeta temporal de cada sesión de `bin/n-ein-dev`, las preguntas con opciones (`extensions/ask.ts`) y la carga de los avisos de Herdr desde una lista se inspiran en lo que ofrece [Gentle Shell](https://github.com/Gentleman-Programming/gentle-shell) (licencia MIT): su pista para retomar, su carpeta temporal, sus preguntas y su informador para Herdr. El código y el texto son propios.
+
+Las extensiones de Herdr y Moshi las instalan y actualizan esas herramientas en el hogar de Pi del usuario. n_ein no las copia, no las modifica ni las distribuye: solo las carga desde su ruta cuando el usuario las nombra en `~/.n_ein/<canal>/pi-extensions`.
 
 ## Guarda, medidores de Pi y puente de Claude
 

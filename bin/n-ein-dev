@@ -105,26 +105,78 @@ if [[ -n "${bridge_version:-}" && -f "$bridge_dir/package.json" ]]; then
     || printf '[WARN] :: BRIDGE_CONFIG_SKIP :: path: %s\n' "$agent_dir/claude-bridge.json" >&2
   bridge_args=(-e "$bridge_dir")
 fi
+# [FLOW] EXTENSIONES PROPIAS
+# Las que el usuario nombra en su lista (Herdr, Moshi…) se cargan desde su ruta original, para que
+# sus instaladores las sigan actualizando. Una ruta absoluta por línea; `#` comenta y `~/` se expande.
+extensions_file="${N_EIN_PI_EXTENSIONS_FILE:-$n_ein_home/$channel/pi-extensions}"
+user_extension_args=()
+if [[ -f "$extensions_file" ]]; then
+  while IFS= read -r extension || [[ -n "$extension" ]]; do
+    extension="${extension#"${extension%%[![:space:]]*}"}"
+    extension="${extension%"${extension##*[![:space:]]}"}"
+    case "$extension" in ""|"#"*) continue ;; "~/"*) extension="$HOME/${extension#"~/"}" ;; esac
+    if [[ "$extension" != /* ]]; then
+      printf '[WARN] :: PI_EXT_SKIP :: reason: ruta relativa | path: %s | list: %s\n' "$extension" "$extensions_file" >&2
+    elif [[ ! -e "$extension" ]]; then
+      printf '[WARN] :: PI_EXT_SKIP :: reason: no existe | path: %s | list: %s\n' "$extension" "$extensions_file" >&2
+    else
+      user_extension_args+=(-e "$extension")
+    fi
+  done < "$extensions_file"
+fi
 export PI_CODING_AGENT_SESSION_DIR="$agent_dir/sessions"
 handoff_signal="$(mktemp "${TMPDIR:-/tmp}/n-ein-handoff.XXXXXX")"
-trap 'rm -f "$handoff_signal"' EXIT
+resume_record="$(mktemp "${TMPDIR:-/tmp}/n-ein-resume.XXXXXX")"
+trap 'rm -f "$handoff_signal" "$resume_record"' EXIT
 export N_EIN_HANDOFF_SIGNAL="$handoff_signal"
+# La extensión resume.ts deja aquí la sesión vigente; solo la escribe el Pi hijo de este proceso.
+export N_EIN_RESUME_FILE="$resume_record" N_EIN_RESUME_OWNER="$$"
 
-# BLINDAJE -> Solo los recursos explícitos del paquete entran desde fuera del proyecto.
+# [FLOW] TEMPORAL DE LA SESIÓN
+# Pi no tiene carpeta temporal propia y sus pruebas acababan en /tmp o en el proyecto. Cada ejecución
+# del lanzador crea una en el temporal del sistema y se la da a Pi como TMPDIR; no se borra al salir,
+# para poder revisarla, y la limpia un arranque posterior cuando su dueño (.owner) ya no vive.
+system_tmp="${N_EIN_SYSTEM_TMPDIR:-${TMPDIR:-/tmp}}"
+system_tmp="${system_tmp%/}"
+for stale in "$system_tmp"/n-ein-pi.*; do
+  [[ -d "$stale" && ! -L "$stale" && -f "$stale/.owner" ]] || continue
+  owner=""
+  IFS= read -r owner < "$stale/.owner" || true
+  # BLINDAJE -> Sin un pid legible no se sabe de quién es: se deja.
+  [[ "$owner" =~ ^[0-9]+$ ]] || continue
+  kill -0 "$owner" 2>/dev/null || rm -rf -- "$stale"
+done
+session_tmp="$(mktemp -d "$system_tmp/n-ein-pi.XXXXXX")"
+printf '%s\n' "$$" > "$session_tmp/.owner"
+# BLINDAJE -> Pi guarda en TMPDIR lo que compila de sus extensiones (jiti) y Node su caché de código:
+# siguen en el temporal del sistema, o cada sesión arrancaría en frío (unos 0,4 s más).
+mkdir -p "$system_tmp/jiti"
+ln -s "$system_tmp/jiti" "$session_tmp/jiti"
+export NODE_COMPILE_CACHE="${NODE_COMPILE_CACHE:-$system_tmp/node-compile-cache}"
+export N_EIN_SYSTEM_TMPDIR="$system_tmp" TMPDIR="$session_tmp"
+scratch_directive="Scratch directory for this session: $session_tmp (also \$TMPDIR). Put temporary files, throwaway scripts and test output there instead of the project or /tmp. It stays after the session for review."
+
+# BLINDAJE -> Desde fuera del proyecto solo entran los recursos explícitos del paquete y de la lista.
 if "$pi_bin" \
   --no-extensions --no-skills --no-prompt-templates --no-themes \
   -e "$repo_dir/pi-package" \
   ${bridge_args[@]+"${bridge_args[@]}"} \
+  ${user_extension_args[@]+"${user_extension_args[@]}"} \
   --append-system-prompt "$repo_dir/pi-package/persona.md" \
   ${flow_args[@]+"${flow_args[@]}"} \
   --append-system-prompt "$lang_directive" \
   --append-system-prompt "$memory_directive" \
+  --append-system-prompt "$scratch_directive" \
   --use-theme ein \
   --model "$main_model" --thinking "$main_thinking" \
   "$@"; then
   pi_exit=0
 else
   pi_exit=$?
+fi
+# Pi no arranca si una extensión no carga, y su pista (`pi -ne`) no sirve dentro de n_ein.
+if [[ "$pi_exit" -ne 0 && ${#user_extension_args[@]} -gt 0 ]]; then
+  printf '[WARN] :: PI_EXT_CHECK :: list: %s | fix: si Pi no arrancó por una extensión, coméntala con #\n' "$extensions_file" >&2
 fi
 
 if [[ -s "$handoff_signal" ]]; then
@@ -134,8 +186,22 @@ if [[ -s "$handoff_signal" ]]; then
     printf '[ERR] :: HANDOFF_BAD :: target: %s\n' "$destination" >&2
     exit 69
   fi
-  "$repo_dir/bin/n-ein-claude-dev" --handoff "$summary_path"
+  # Claude tiene su propia carpeta temporal: recibe el temporal original.
+  TMPDIR="$system_tmp" "$repo_dir/bin/n-ein-claude-dev" --handoff "$summary_path"
   exit $?
 fi
 
+# [UI] La pista de Pi abre un Pi sin n_ein: debajo va la de n_ein, en una terminal y sin relevo.
+# Pi solo imprime la suya en la sesión interactiva; tras print, JSON o RPC tampoco va la de n_ein.
+interactive_run() {
+  local previous="" arg
+  for arg in "$@"; do
+    case "$arg" in -p|--print) return 1 ;; json|rpc) [[ "$previous" == "--mode" ]] && return 1 ;; esac
+    previous="$arg"
+  done
+  return 0
+}
+if [[ -t 1 && -s "$resume_record" ]] && interactive_run "$@"; then
+  bun "$repo_dir/pi-package/resume.ts" pi "$resume_record" "$PWD" "$repo_dir/bin/n-ein-dev" || true
+fi
 exit "$pi_exit"

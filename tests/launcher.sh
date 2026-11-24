@@ -6,12 +6,15 @@ test_dir="$(mktemp -d)"
 trap 'rm -rf "$test_dir"' EXIT
 # Hogar propio: lo instalado en el hogar real (como el puente de Claude) no cambia lo esperado.
 export N_EIN_HOME="$test_dir/n_ein"
-unset CLAUDE_CONFIG_DIR ANTHROPIC_API_KEY
+unset CLAUDE_CONFIG_DIR ANTHROPIC_API_KEY NODE_COMPILE_CACHE
 # La versión de Pi la marca runtime.json: el Pi falso la repite para no tocar los tests en cada subida.
 # El modelo principal por defecto también sale de runtime.json (desde el 5 de octubre, nein/auto).
 export N_EIN_TEST_PI_MODEL="$(bun -e 'console.log((await Bun.file(process.argv[1]).json()).pi.model)' "$repo_dir/runtime.json")"
 export N_EIN_TEST_PI_THINKING="$(bun -e 'console.log((await Bun.file(process.argv[1]).json()).pi.thinking)' "$repo_dir/runtime.json")"
 export N_EIN_TEST_PI_VERSION="$(bun -e 'console.log((await Bun.file(process.argv[1]).json()).pi.version)' "$repo_dir/runtime.json")"
+
+# `! rg` no para el script: set -e ignora los comandos negados. Esta comprobación sí falla.
+absent() { if rg -q "$@"; then printf 'No debía aparecer: %s\n' "$*" >&2; exit 1; fi; }
 
 cat > "$test_dir/pi" <<'FAKE_PI'
 #!/usr/bin/env bash
@@ -24,7 +27,13 @@ fi
   printf '%s\n' "$@"
 } > "$N_EIN_CAPTURE"
 printf '%s\n' "${N_EIN_CODEGRAPH_BIN:-}" > "$N_EIN_CAPTURE.codegraph"
+printf '%s\n' "${TMPDIR:-}" "$PPID" "${NODE_COMPILE_CACHE:-}" > "$N_EIN_CAPTURE.tmp"
 printf '%s\n' "${CLAUDE_CONFIG_DIR:-}" "${ANTHROPIC_API_KEY:-}" "${N_EIN_BRIDGE_CLAUDE_BIN:-}" > "$N_EIN_CAPTURE.env"
+# Como la extensión resume.ts: solo el Pi hijo del lanzador deja su sesión.
+if [[ "$PPID" == "${N_EIN_RESUME_OWNER:-}" && -n "${N_EIN_FAKE_SESSION:-}" ]]; then
+  printf '019a-test\n%s\n' "$N_EIN_FAKE_SESSION" > "$N_EIN_RESUME_FILE"
+fi
+exit "${N_EIN_FAKE_EXIT:-0}"
 FAKE_PI
 chmod +x "$test_dir/pi"
 
@@ -51,6 +60,9 @@ export N_EIN_LANG_FILE="$test_dir/lang.json"
 export N_EIN_PREFERENCES_FILE="$test_dir/preferences.md"
 printf 'Keep artifacts in the project language.\n' > "$N_EIN_PREFERENCES_FILE"
 export N_EIN_CAPTURE="$test_dir/captured"
+# El temporal «del sistema» de la prueba: la limpieza de carpetas huérfanas no toca el real.
+export N_EIN_SYSTEM_TMPDIR="$test_dir/tmp"
+mkdir -p "$N_EIN_SYSTEM_TMPDIR"
 mkdir -p "$test_dir/project"
 cd "$test_dir/project"
 "$repo_dir/bin/n-ein-dev" --print 'cambia este texto'
@@ -77,6 +89,8 @@ Language: talk with the user in Spanish. Write code, comments, identifiers, comm
 Shared user preferences: "$N_EIN_PREFERENCES_FILE". These are defaults, not authorization; the current request, selected language instruction and explicit project conventions take precedence.
 
 Keep artifacts in the project language.
+--append-system-prompt
+Scratch directory for this session: $(sed -n 1p "$N_EIN_CAPTURE.tmp") (also \$TMPDIR). Put temporary files, throwaway scripts and test output there instead of the project or /tmp. It stays after the session for review.
 --use-theme
 ein
 --model
@@ -87,11 +101,11 @@ $N_EIN_TEST_PI_THINKING
 cambia este texto
 EOF
 diff -u "$test_dir/expected" "$N_EIN_CAPTURE"
-! rg -q 'pi-package/agents/team.md' "$N_EIN_CAPTURE"
+absent 'pi-package/agents/team.md' "$N_EIN_CAPTURE"
 N_EIN_TEAM=1 "$repo_dir/bin/n-ein-dev" --print 'experimento explícito'
 rg -Fxq "$repo_dir/pi-package/agents/team.md" "$N_EIN_CAPTURE"
 N_EIN_TEAM=0 "$repo_dir/bin/n-ein-dev" --print 'trabajo directo'
-! rg -q 'pi-package/agents/team.md' "$N_EIN_CAPTURE"
+absent 'pi-package/agents/team.md' "$N_EIN_CAPTURE"
 
 cat > "$N_EIN_MODELS_FILE" <<'MODELS'
 {"schema":1,"agents":{"principal":{"model":"openai-codex/gpt-6-luna","thinking":"medium"}}}
@@ -120,6 +134,98 @@ if "$repo_dir/bin/n-ein-dev" --print 'no' 2> "$test_dir/err"; then printf 'Un la
 rg -q 'LANG_BAD' "$test_dir/err"
 test ! -e "$N_EIN_CAPTURE"
 rm -f "$N_EIN_LANG_FILE"
+
+# [FLOW] Las extensiones de la lista del usuario llegan como -e, en su orden y desde su ruta original.
+# Las rutas que no sirven avisan y Pi arranca igual; sin lista, los argumentos no cambian (arriba).
+mkdir -p "$N_EIN_HOME/dev" "$test_dir/ext dir" "$test_dir/home/.pi/agent/extensions"
+printf 'export default function () {}\n' > "$test_dir/ext dir/herdr.ts"
+printf 'export default function () {}\n' > "$test_dir/home/.pi/agent/extensions/moshi.ts"
+cat > "$N_EIN_HOME/dev/pi-extensions" <<EOF
+# Avisos de Herdr y Moshi
+$test_dir/ext dir/herdr.ts
+
+  ~/.pi/agent/extensions/moshi.ts
+$test_dir/no-existe.ts
+relativa/ext.ts
+$test_dir/ext dir
+EOF
+HOME="$test_dir/home" "$repo_dir/bin/n-ein-dev" --print 'extensiones' 2> "$test_dir/err"
+awk 'previous == "-e" { print } { previous = $0 }' "$N_EIN_CAPTURE" > "$test_dir/extensions"
+printf '%s\n' "$repo_dir/pi-package" "$test_dir/ext dir/herdr.ts" "$test_dir/home/.pi/agent/extensions/moshi.ts" "$test_dir/ext dir" \
+  | diff -u - "$test_dir/extensions"
+rg -Fq "PI_EXT_SKIP :: reason: no existe | path: $test_dir/no-existe.ts" "$test_dir/err"
+rg -Fq 'PI_EXT_SKIP :: reason: ruta relativa | path: relativa/ext.ts' "$test_dir/err"
+rg -Fxq 'extensiones' "$N_EIN_CAPTURE"
+absent 'PI_EXT_CHECK' "$test_dir/err"
+# Si Pi falla con extensiones propias, el aviso señala la lista: la pista de Pi (`pi -ne`) no aplica a n_ein.
+if HOME="$test_dir/home" N_EIN_FAKE_EXIT=1 "$repo_dir/bin/n-ein-dev" --print 'falla' 2> "$test_dir/err"; then exit 1; fi
+rg -Fq "PI_EXT_CHECK :: list: $N_EIN_HOME/dev/pi-extensions" "$test_dir/err"
+# doctor y los tests apuntan la lista a su temporal: lo personal no entra en sus arranques.
+N_EIN_PI_EXTENSIONS_FILE="$test_dir/sin-lista" "$repo_dir/bin/n-ein-dev" --print 'doctor'
+awk 'previous == "-e" { print } { previous = $0 }' "$N_EIN_CAPTURE" > "$test_dir/extensions"
+printf '%s\n' "$repo_dir/pi-package" | diff -u - "$test_dir/extensions"
+rm "$N_EIN_HOME/dev/pi-extensions"
+
+# [FLOW] Al salir en una terminal, debajo de la pista de Pi va la de n_ein; sin terminal o sin sesión
+# guardada, nada. `script` da la terminal (BSD en macOS, util-linux en la CI).
+in_tty() {
+  if script --version >/dev/null 2>&1; then script -qec "$(printf '%q ' "$@")" /dev/null < /dev/null
+  else script -q /dev/null "$@" < /dev/null; fi | tr -d '\r'
+}
+mkdir -p "$test_dir/sessions"
+printf '{}\n' > "$test_dir/sessions/019a-test.jsonl"
+export N_EIN_FAKE_SESSION="$test_dir/sessions/019a-test.jsonl"
+in_tty "$repo_dir/bin/n-ein-dev" > "$test_dir/tty"
+rg -Fq 'Para volver con n_ein (el comando de arriba abre Pi sin n_ein):' "$test_dir/tty"
+rg -Fxq "cd $test_dir/project && $repo_dir/bin/n-ein-dev --session 019a-test" "$test_dir/tty"
+"$repo_dir/bin/n-ein-dev" --print 'sin terminal' > "$test_dir/out"
+absent 'Para volver' "$test_dir/out"
+# En print, JSON o RPC Pi no imprime su pista: la de n_ein tampoco, y la salida queda limpia.
+in_tty "$repo_dir/bin/n-ein-dev" --print 'modo print' > "$test_dir/tty"
+absent 'Para volver' "$test_dir/tty"
+in_tty "$repo_dir/bin/n-ein-dev" --mode json 'modo json' > "$test_dir/tty"
+absent 'Para volver' "$test_dir/tty"
+export N_EIN_FAKE_SESSION="$test_dir/sessions/sin-guardar.jsonl"
+in_tty "$repo_dir/bin/n-ein-dev" > "$test_dir/tty"
+absent 'Para volver' "$test_dir/tty"
+unset N_EIN_FAKE_SESSION
+
+# [FLOW] Cada arranque da a Pi su carpeta temporal y limpia las de lanzadores que ya no viven; las
+# de uno vivo, las que no dicen su dueño y lo ajeno se quedan.
+sys_tmp="$N_EIN_SYSTEM_TMPDIR"
+mkdir -p "$sys_tmp/n-ein-pi.muerta" "$sys_tmp/n-ein-pi.viva" "$sys_tmp/n-ein-pi.sin-dueno" "$sys_tmp/otra"
+sh -c 'exit 0' &
+dead_pid=$!
+wait "$dead_pid" || true
+printf '%s\n' "$dead_pid" > "$sys_tmp/n-ein-pi.muerta/.owner"
+printf '%s\n' "$$" > "$sys_tmp/n-ein-pi.viva/.owner"
+"$repo_dir/bin/n-ein-dev" --print 'temporal propio'
+session_tmp="$(sed -n 1p "$N_EIN_CAPTURE.tmp")"
+case "$session_tmp" in "$sys_tmp"/n-ein-pi.*) ;; *) printf 'TMPDIR fuera del temporal del sistema: %s\n' "$session_tmp" >&2; exit 1 ;; esac
+test -d "$session_tmp"
+test "$(< "$session_tmp/.owner")" == "$(sed -n 2p "$N_EIN_CAPTURE.tmp")"
+test ! -e "$sys_tmp/n-ein-pi.muerta"
+test -d "$sys_tmp/n-ein-pi.viva"
+test -d "$sys_tmp/n-ein-pi.sin-dueno"
+test -d "$sys_tmp/otra"
+rg -Fq "Scratch directory for this session: $session_tmp " "$N_EIN_CAPTURE"
+# Las cachés de compilación de Pi (jiti y Node) siguen en el temporal del sistema: una carpeta nueva
+# por sesión no debe hacer que cada arranque compile en frío.
+test "$(readlink "$session_tmp/jiti")" == "$sys_tmp/jiti"
+test -d "$sys_tmp/jiti"
+test "$(sed -n 3p "$N_EIN_CAPTURE.tmp")" == "$sys_tmp/node-compile-cache"
+
+# [FLOW] doctor --runtime arranca el lanzador instalado con el PATH mínimo del e2e del instalador:
+# una herramienta nueva del lanzador que falte en esa lista solo fallaba en CI.
+minimal_path="$test_dir/minimal-path"
+mkdir -p "$minimal_path/bun"
+for tool in $(sed -n 's/^for tool in \(.*\); do$/\1/p' "$repo_dir/scripts/installer-e2e.sh"); do
+  resolved="$(command -v "$tool" || true)"
+  [[ -z "$resolved" || "$resolved" != /* ]] || ln -s "$resolved" "$minimal_path/$tool"
+done
+ln -s "$(command -v bun)" "$minimal_path/bun/bun"
+PATH="$minimal_path:$minimal_path/bun" "$repo_dir/bin/n-ein-dev" --print 'path mínimo'
+rg -Fxq 'path mínimo' "$N_EIN_CAPTURE"
 
 export N_EIN_FAKE_VERSION=0.88.0
 if "$repo_dir/bin/n-ein-dev" > "$test_dir/out" 2> "$test_dir/err"; then
@@ -168,7 +274,7 @@ cd "$test_dir/project"
 IFS=$'\t' read -r bridge_version claude_version < <(bun -e 'const c = await Bun.file(process.argv[1]).json(); console.log(c.claudeBridge.version + "\t" + c.claude.version)' "$repo_dir/runtime.json")
 bridge_dir="$N_EIN_HOME/runtimes/claude-bridge/$bridge_version/global/node_modules/pi-claude-bridge"
 "$repo_dir/bin/n-ein-dev" --print 'sin puente'
-! rg -q 'pi-claude-bridge' "$N_EIN_CAPTURE"
+absent 'pi-claude-bridge' "$N_EIN_CAPTURE"
 test -z "$(sed -n 1p "$N_EIN_CAPTURE.env")"
 mkdir -p "$bridge_dir"
 printf '{"name":"pi-claude-bridge","version":"%s"}\n' "$bridge_version" > "$bridge_dir/package.json"

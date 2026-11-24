@@ -47,6 +47,7 @@ const cases: Array<[string, Record<string, unknown>, string]> = [
   ["WebFetch", { url: "https://example.com" }, "researching"],
   ["mcp__claude_ai_Context7__query-docs", { query: "x" }, "researching"],
   ["AskUserQuestion", { questions: [] }, "asking"],
+  ["nein_ask", { questions: [] }, "asking"],
   ["Skill", { skill: "review" }, "reviewing"],
   ["Skill", { skill: "intent" }, "planning"],
   ["Skill", { skill: "comments" }, "working"],

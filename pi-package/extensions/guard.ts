@@ -9,9 +9,10 @@ import { homedir, tmpdir } from "node:os";
 import type { ExtensionAPI } from "@earendil-works/pi-coding-agent";
 import { dangerous } from "./guard-core.ts";
 
-// Pi trabaja con rutas reales: en macOS el temporal `/var/…` es `/private/var/…`.
+// Pi trabaja con rutas reales: en macOS el temporal `/var/…` es `/private/var/…`. El lanzador da a
+// Pi una carpeta propia como TMPDIR; el temporal del sistema llega en N_EIN_SYSTEM_TMPDIR.
 function scratchDirs(): string[] {
-  const dirs = [tmpdir(), process.env.TMPDIR, "/tmp"].filter((dir): dir is string => Boolean(dir));
+  const dirs = [tmpdir(), process.env.TMPDIR, process.env.N_EIN_SYSTEM_TMPDIR, "/tmp"].filter((dir): dir is string => Boolean(dir));
   return [...new Set(dirs.flatMap((dir) => {
     try {
       return [dir, realpathSync(dir)];

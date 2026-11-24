@@ -7,11 +7,15 @@ trap 'rm -rf "$test_dir"' EXIT
 # La versión de Pi la marca runtime.json: el Pi falso la repite para no tocar los tests en cada subida.
 export N_EIN_TEST_PI_VERSION="$(bun -e 'console.log((await Bun.file(process.argv[1]).json()).pi.version)' "$repo_dir/runtime.json")"
 
+# `! rg` no para el script: set -e ignora los comandos negados. Esta comprobación sí falla.
+absent() { if rg -q "$@"; then printf 'No debía aparecer: %s\n' "$*" >&2; exit 1; fi; }
+
 cat > "$test_dir/claude" <<'FAKE_CLAUDE'
 #!/usr/bin/env bash
 if [[ "${1:-}" == "--version" ]]; then printf '%s (Claude Code)\n' "${N_EIN_TEST_CLAUDE_VERSION:-2.1.294}"; exit 0; fi
 "$N_EIN_ROOT/bin/n-ein-prepare-pi" "Claude confirmó por lectura que parsePort acepta 0; decidir el contrato con Samu."
 printf 'claude finished\n' > "$N_EIN_TEST_DONE"
+printf '4f1c-test\n' > "$N_EIN_RESUME_FILE"
 FAKE_CLAUDE
 cat > "$test_dir/pi" <<'FAKE_PI'
 #!/usr/bin/env bash
@@ -21,6 +25,11 @@ printf '%s\n' "$PI_CODING_AGENT_DIR" > "$N_EIN_TEST_ENV"
 printf '%s\n' "$@" > "$N_EIN_TEST_ARGS"
 FAKE_PI
 chmod +x "$test_dir/claude" "$test_dir/pi"
+# `script` da al lanzador una terminal, donde imprime la pista para volver (BSD en macOS, util-linux en la CI).
+in_tty() {
+  if script --version >/dev/null 2>&1; then script -qec "$(printf '%q ' "$@")" /dev/null < /dev/null
+  else script -q /dev/null "$@" < /dev/null; fi | tr -d '\r'
+}
 
 git -C "$test_dir" init -b main >/dev/null
 git -C "$test_dir" config user.name 'n_ein test'
@@ -32,6 +41,8 @@ git -C "$test_dir" commit -m 'test: base' >/dev/null
 export N_EIN_CLAUDE_DIR="$test_dir/claude-home"
 export N_EIN_CLAUDE_BIN="$test_dir/claude"
 export N_EIN_AGENT_DIR="$test_dir/pi-home"
+export N_EIN_PI_EXTENSIONS_FILE="$test_dir/sin-lista"
+export N_EIN_SYSTEM_TMPDIR="$test_dir"
 export N_EIN_PI_BIN="$test_dir/pi"
 export N_EIN_LANG_FILE="$test_dir/lang.json"
 export N_EIN_PREFERENCES_FILE="$test_dir/preferences.md"
@@ -43,7 +54,11 @@ export N_EIN_TEST_DONE="$test_dir/claude-done"
 export N_EIN_TEST_ENV="$test_dir/pi-env"
 export N_EIN_TEST_ARGS="$test_dir/pi-args"
 
-(cd "$test_dir" && "$repo_dir/bin/n-ein-claude-dev") > "$test_dir/output"
+mkdir -p "$N_EIN_CLAUDE_DIR/projects/-trabajo"
+printf '{}\n' > "$N_EIN_CLAUDE_DIR/projects/-trabajo/4f1c-test.jsonl"
+(cd "$test_dir" && in_tty "$repo_dir/bin/n-ein-claude-dev") > "$test_dir/output"
+# Tras el relevo a Pi, Claude no imprime su pista: el trabajo sigue en Pi.
+absent 'Para volver' "$test_dir/output"
 test "$(cat "$N_EIN_TEST_ENV")" = "$N_EIN_AGENT_DIR"
 rg -q 'Claude confirmó por lectura' "$N_EIN_TEST_ARGS"
 rg -q 'WORK.md' "$N_EIN_TEST_ARGS"

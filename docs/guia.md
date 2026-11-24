@@ -51,11 +51,11 @@ La línea de estado de Pi enseña la cuota de cada suscripción tras su primera 
 
 ### Diseñar juntos y comprobaciones
 
-Puedes decir «ayúdame a pensar esta idea» o «diseñémoslo juntos»: el agente usa `intent`, investiga los hechos y plantea pocas decisiones con recomendación. En peticiones claras trabaja directamente. «Vale, hazlo» ejecuta el acuerdo dentro del alcance autorizado; el agente prepara la guía y las tareas necesarias. `/skill:intent` y las demás skills siguen disponibles como atajos. Si todavía no sabes bien qué quieres crear ni hasta dónde, lanza `/skill:vision`: da forma a la idea de un proyecto nuevo o una feature con rondas de preguntas y wireframes en HTML, y deja un brief en `docs/design/` antes de desarrollar. Las consultas no requieren tests; los cambios de documentación reciben comprobaciones de contenido y los cambios de código conservan aceptación, suite y tipos, reutilizando resultados vigentes.
+Puedes decir «ayúdame a pensar esta idea» o «diseñémoslo juntos»: el agente usa `intent`, investiga los hechos y plantea pocas decisiones con recomendación. En peticiones claras trabaja directamente. «Vale, hazlo» ejecuta el acuerdo dentro del alcance autorizado; el agente prepara la guía y las tareas necesarias. `/skill:intent` y las demás skills siguen disponibles como atajos. Si todavía no sabes bien qué quieres crear ni hasta dónde, lanza `/skill:vision`: da forma a la idea de un proyecto nuevo o una feature con rondas de preguntas y wireframes en HTML, y deja un brief en `docs/design/` antes de desarrollar. Cuando el agente de Pi necesita una decisión tuya con opciones cerradas, te la plantea como una lista (`nein_ask`), con su recomendación marcada: eliges con las flechas, «Otra respuesta» te deja escribir la tuya y Esc la deja sin contestar. Las preguntas abiertas y sus explicaciones siguen en texto. Las consultas no requieren tests; los cambios de documentación reciben comprobaciones de contenido y los cambios de código conservan aceptación, suite y tipos, reutilizando resultados vigentes.
 
 El [ensayo de cierre de intent](../evals/results/2026-09-29-intent.md) comprobó varias rondas sin escrituras, síntesis confirmada y un único `WORK.md` posterior sin implementar código.
 
-El contexto de origen y el plan están en [docs/START_HERE.md](START_HERE.md). Las fuentes de `docs/archive/` y `docs/sources/` son referencias históricas; el lanzador solo carga `pi-package/`.
+El contexto de origen y el plan están en [docs/START_HERE.md](START_HERE.md). Las fuentes de `docs/archive/` y `docs/sources/` son referencias históricas; el lanzador solo carga `pi-package/` y las [extensiones que tú listes](#extensiones-propias-de-pi).
 
 ### Checks locales y evaluaciones
 
@@ -83,6 +83,8 @@ Para reducir la relectura del contexto, Pi sustituye búsquedas recuperables por
 ### Varias sesiones en el mismo proyecto
 
 Puedes abrir varias conversaciones de Pi o Claude con `nein` en el mismo proyecto, desde terminales distintas. También puedes abrirlas directamente: `nein --project <proyecto> --runtime pi -- <argumentos de Pi>` (o `--runtime claude`). Cada relevo espera a que termine su propia sesión de origen; las otras conversaciones pueden seguir abiertas. Las sesiones comparten los archivos del proyecto: coordina los cambios que se solapen o usa worktrees para trabajos independientes.
+
+Al salir, Pi y Claude imprimen su propio comando para retomar la sesión (`pi --session …`, `claude --resume …`), que abre el runtime sin n_ein. Debajo, n_ein imprime el suyo, con el proyecto incluido para copiarlo desde cualquier carpeta: `nein --project <proyecto> --runtime pi -- --session <id>` (o `--runtime claude -- --resume <id>`); desde un checkout de desarrollo, `cd <proyecto> && <checkout>/bin/n-ein-dev --session <id>`. Apunta a la sesión vigente: tras `/new` en Pi o `/clear` en Claude, a la nueva. Solo aparece al salir de una sesión interactiva en una terminal (no tras `-p`), cuando la sesión quedó guardada y si no saliste con un relevo.
 
 `Ctrl+Z` suspende un proceso; no lo cierra. `fg` permite recuperarlo desde la terminal que lo suspendió, pero no desde otra. Esa suspensión no impide abrir una conversación nueva. Para continuar la conversación suspendida, vuelve a su terminal y recupérala, o termina ese proceso antes de retomar su historial en otra sesión.
 
@@ -125,7 +127,35 @@ El agente principal sigue el flujo de n_ein (`pi-package/flow.md`): pide permiso
 
 ### CodeGraph en cada proyecto
 
-Al abrir Pi o Claude desde n_ein en un repositorio git, el índice de CodeGraph se crea si falta y se sincroniza si ya existe. Pi lo consulta con `codegraph_explore` y Claude con su MCP y el hook de prompt, configurados solo en su hogar aislado. Estado muestra si el proyecto tiene índice y Sistema la versión. Un fallo avisa con `CODEGRAPH_SKIP` y no impide trabajar. [Detalle](02-diseno.md#codegraph-obligatorio).
+Al abrir Pi o Claude desde n_ein en un repositorio git, el índice de CodeGraph se crea si falta y se sincroniza si ya existe. Pi lo consulta con `codegraph_explore` y Claude con su MCP y el hook de prompt, configurados solo en su hogar aislado. Estado muestra si el proyecto tiene índice y Sistema la versión. Un fallo avisa con `CODEGRAPH_SKIP` y no impide trabajar. El índice queda fuera de Git: si el proyecto no ignora ya `.codegraph/`, n_ein lo añade a su exclude local, sin tocar `.gitignore`. [Detalle](02-diseno.md#codegraph-obligatorio).
+
+### Conectores de claude.ai
+
+Claude Code carga en cada sesión los conectores de tu cuenta de claude.ai (Gmail, Drive, Figma, Neon, Vercel…), y cada uno declara sus herramientas en todos los turnos aunque no se usen. En `nein claude`, n_ein deja Context7 para consultar documentación y apaga el resto. Para usar uno en un proyecto, escribe su nombre, uno por línea, en `.n_ein/connectors` en la raíz del repositorio y abre una sesión nueva:
+
+```text
+# Base de datos y despliegue de este proyecto
+Neon
+Vercel
+```
+
+El agente sabe cuáles están apagados y te lo dice si le pides algo que necesite uno. Tu cuenta de claude.ai y el resto de tus hogares de Claude no cambian; Pi no los carga.
+
+### Extensiones propias de Pi
+
+Pi arranca en n_ein con su propio hogar y sin las extensiones de `~/.pi/agent`. Para cargar alguna, como los avisos de Herdr y Moshi, escribe su ruta en `~/.n_ein/<canal>/pi-extensions`, una por línea, y abre una sesión nueva:
+
+```text
+# Avisos de Herdr y Moshi
+~/.pi/agent/extensions/herdr-agent-state.ts
+~/.pi/agent/extensions/moshi-hooks.ts
+```
+
+Las rutas son absolutas o empiezan por `~/`, y se cargan desde donde están: cuando Herdr o Moshi actualizan su archivo, n_ein usa la versión nueva. Una ruta que no existe avisa con `PI_EXT_SKIP` y Pi arranca igual. Si una extensión no carga, Pi no arranca y dice cuál; coméntala con `#` en la lista (la pista `pi -ne` que da Pi no sirve aquí). `doctor`, los tests y los trabajadores del equipo experimental no leen la lista, y Claude no la usa. `N_EIN_PI_EXTENSIONS_FILE` apunta a otra lista.
+
+### Carpeta temporal de cada sesión de Pi
+
+Cada vez que abres Pi, n_ein le da una carpeta propia en el temporal del sistema (`n-ein-pi.XXXXXX`) como `TMPDIR`, y el agente sabe que sus pruebas y scripts desechables van ahí y no al proyecto ni a `/tmp`, como hace Claude con la suya. Al cerrar Pi la carpeta se queda para que puedas revisarla; la borra un arranque posterior de Pi cuando la sesión que la creó ya no vive. La guarda de comandos sigue tratando todo el temporal del sistema como temporal, y un relevo a Claude le devuelve el temporal original.
 
 ### Hotfix local de preview
 

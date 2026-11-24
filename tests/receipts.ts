@@ -10,6 +10,10 @@ assert.deepEqual(receiptFor("read", { path: "/pkg/skills/tdd/SKILL.md" }, cwd), 
 assert.deepEqual(receiptFor("bash", { command: "git status\n  --short" }, cwd), { label: "ejecuta", target: "git status --short" });
 assert.equal(receiptFor("nein_team", { action: "start", tasks: [{ label: "API" }, { label: "UI" }] }).target, "arranca API · UI");
 assert.equal(receiptFor("mcp__docs__search_pages", { query: "x" }).label.length <= 8, true);
+// nein_ask: qué se pregunta y cuántas contestó el usuario.
+assert.deepEqual(receiptFor("nein_ask", { questions: [{ question: "¿Qué base?" }, { question: "¿Dónde?" }] }), { label: "pregunta", target: "¿Qué base? · ¿Dónde?" });
+assert.equal(outcomeFor("nein_ask", {}, { details: { answered: 2 } }).meta, "2 respuestas");
+assert.equal(outcomeFor("nein_ask", {}, { details: { answered: 0 } }).meta, "sin respuesta");
 
 // Lo que salió: recuentos con unidad y fallos en castellano.
 assert.equal(outcomeFor("bash", {}, { content: [{ type: "text", text: "a\nb\n" }] }).meta, "2 líneas");
