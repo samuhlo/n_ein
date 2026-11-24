@@ -6,7 +6,7 @@ test_dir="$(mktemp -d)"
 trap 'rm -rf "$test_dir"' EXIT
 # Hogar propio: lo instalado en el hogar real (como el puente de Claude) no cambia lo esperado.
 export N_EIN_HOME="$test_dir/n_ein"
-unset CLAUDE_CONFIG_DIR ANTHROPIC_API_KEY
+unset CLAUDE_CONFIG_DIR ANTHROPIC_API_KEY NODE_COMPILE_CACHE
 # La versión de Pi la marca runtime.json: el Pi falso la repite para no tocar los tests en cada subida.
 # El modelo principal por defecto también sale de runtime.json (desde el 5 de octubre, nein/auto).
 export N_EIN_TEST_PI_MODEL="$(bun -e 'console.log((await Bun.file(process.argv[1]).json()).pi.model)' "$repo_dir/runtime.json")"
@@ -27,7 +27,7 @@ fi
   printf '%s\n' "$@"
 } > "$N_EIN_CAPTURE"
 printf '%s\n' "${N_EIN_CODEGRAPH_BIN:-}" > "$N_EIN_CAPTURE.codegraph"
-printf '%s\n' "${TMPDIR:-}" "$PPID" > "$N_EIN_CAPTURE.tmp"
+printf '%s\n' "${TMPDIR:-}" "$PPID" "${NODE_COMPILE_CACHE:-}" > "$N_EIN_CAPTURE.tmp"
 printf '%s\n' "${CLAUDE_CONFIG_DIR:-}" "${ANTHROPIC_API_KEY:-}" "${N_EIN_BRIDGE_CLAUDE_BIN:-}" > "$N_EIN_CAPTURE.env"
 # Como la extensión resume.ts: solo el Pi hijo del lanzador deja su sesión.
 if [[ "$PPID" == "${N_EIN_RESUME_OWNER:-}" && -n "${N_EIN_FAKE_SESSION:-}" ]]; then
@@ -180,6 +180,11 @@ rg -Fq 'Para volver con n_ein (el comando de arriba abre Pi sin n_ein):' "$test_
 rg -Fxq "cd $test_dir/project && $repo_dir/bin/n-ein-dev --session 019a-test" "$test_dir/tty"
 "$repo_dir/bin/n-ein-dev" --print 'sin terminal' > "$test_dir/out"
 absent 'Para volver' "$test_dir/out"
+# En print, JSON o RPC Pi no imprime su pista: la de n_ein tampoco, y la salida queda limpia.
+in_tty "$repo_dir/bin/n-ein-dev" --print 'modo print' > "$test_dir/tty"
+absent 'Para volver' "$test_dir/tty"
+in_tty "$repo_dir/bin/n-ein-dev" --mode json 'modo json' > "$test_dir/tty"
+absent 'Para volver' "$test_dir/tty"
 export N_EIN_FAKE_SESSION="$test_dir/sessions/sin-guardar.jsonl"
 in_tty "$repo_dir/bin/n-ein-dev" > "$test_dir/tty"
 absent 'Para volver' "$test_dir/tty"
@@ -204,6 +209,11 @@ test -d "$sys_tmp/n-ein-pi.viva"
 test -d "$sys_tmp/n-ein-pi.sin-dueno"
 test -d "$sys_tmp/otra"
 rg -Fq "Scratch directory for this session: $session_tmp " "$N_EIN_CAPTURE"
+# Las cachés de compilación de Pi (jiti y Node) siguen en el temporal del sistema: una carpeta nueva
+# por sesión no debe hacer que cada arranque compile en frío.
+test "$(readlink "$session_tmp/jiti")" == "$sys_tmp/jiti"
+test -d "$sys_tmp/jiti"
+test "$(sed -n 3p "$N_EIN_CAPTURE.tmp")" == "$sys_tmp/node-compile-cache"
 
 export N_EIN_FAKE_VERSION=0.88.0
 if "$repo_dir/bin/n-ein-dev" > "$test_dir/out" 2> "$test_dir/err"; then

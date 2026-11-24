@@ -1,9 +1,9 @@
 # Calidad de vida en Pi
 
-Estado: activo · Rama: feat/pi-calidad-de-vida · Tests: `./scripts/check.sh`
+Estado: en espera · Rama: feat/pi-calidad-de-vida · Tests: `./scripts/check.sh`
 Autorización: «Venga, haz un plan para integrar las 4, luego hago clear y empezamos»: implementar las cuatro mejoras en esta rama tras el clear, un commit por tarea. Sin integrar en main, publicar ni tocar la instalación preview; las pruebas reales usan el canal dev.
 Objetivo: Pi, el producto principal de n_ein, recupera los avisos de Moshi y Herdr, dice cómo volver a una sesión con n_ein, pregunta con opciones y tiene una carpeta temporal por sesión.
-Siguiente: T5 · Revisión y cierre.
+Siguiente: Samu confirma el aviso de Moshi de la prueba de T1; después, T6 · Cierre del documento.
 
 ## Pedidos
 
@@ -41,7 +41,8 @@ Siguiente: T5 · Revisión y cierre.
 - [x] T2 · Pista para volver con n_ein — `tests/resume.ts`, `tests/resume-pi.ts` (Pi real, `/new` y dueño ajeno), plugin de Claude y lanzadores con `script` (rojo y verde; mutaciones de TTY, relevo y dueño detectadas); real en dev: Pi tras `/new` y Claude tras `/clear` reabren su sesión desde `/` con el comando impreso.
 - [x] T3 · Herramienta `nein_ask` — `tests/ask.ts` (780 de 1.200 bytes) y `tests/ask-pi.ts` con Pi real en RPC y `-p` (rojo y verde), modo `asking` y recibo; real en la TUI de dev: lista con la recomendada y «Otra respuesta», recibo `1 respuesta` y el modelo recibe la opción.
 - [x] T4 · Carpeta temporal por sesión — `tests/launcher.sh` (TMPDIR, instrucción, limpieza de huérfanas), `tests/handoff-launcher.sh` (Claude recibe el temporal original), `tests/guard-pi.ts` y `TestDirectoryLeaseUsesSystemTemp` (rojo y verde); real en dev: borra la huérfana al arrancar, el agente usa su carpeta y esta queda al salir.
-- [ ] T5 · Revisión y cierre — `review` (T1 carga código de terceros y T4 cambia la guarda), `NOTICE.md`, `scripts/check.sh` completo y cierre del documento. Blocked by: T1, T2, T3, T4.
+- [x] T5 · Revisión — `review` desde `c50498f` con sondas propias; corregidos la pista tras `-p`, la caché en frío de Pi y dos menores (ver R6); `NOTICE.md`; `./scripts/check.sh` completo en verde sobre el código final.
+- [ ] T6 · Cierre del documento — resumir el registro y moverlo a `docs/work/closed/`. Blocked by: T5 — espera: Samu confirma que el aviso de Moshi de la prueba de T1 (hacia las 13:30) llegó al móvil.
 
 ## Registro
 
@@ -50,3 +51,4 @@ Siguiente: T5 · Revisión y cierre.
 - R3 (24 nov) T2. La extensión solo escribe si su padre es el lanzador (`N_EIN_RESUME_OWNER`): un Pi de un test con el paquete heredaría la variable y pisaría el id. Las líneas `! rg -q` de los tests de shell no fallaban nunca (`set -e` ignora los comandos negados); se cambiaron por `absent`, también las tres antiguas de `tests/launcher.sh`, que siguen pasando. El Claude del canal dev no tiene login: la prueba real de Claude comprobó id tras `/clear` y reapertura con mensajes sin respuesta del modelo. El instalador empaqueta por lista los archivos sueltos de `pi-package/`: sin añadir `resume.ts`, la pista fallaba en silencio en preview y estable; el smoke del paquete comprueba ahora las dos formas instaladas.
 - R4 (24 nov) T3. Consumidores por nombre: el modo de actividad compartido (`activity-core.ts`) y los recibos de Pi reconocen `nein_ask`. Mientras el diálogo espera, Herdr sigue mostrando `working`: la extensión de Herdr escucha `herdr:blocked` en el bus de Pi, y `nein_ask` no lo emite (fuera del encargo; propuesto a Samu).
 - R5 (24 nov) T4. Otro consumidor de TMPDIR: los bloqueos de carpeta de los trabajadores (`acquireDirectoryLease`, Go) usan `N_EIN_SYSTEM_TMPDIR` para que dos sesiones se vean. Los tests que arrancan `n-ein-dev` apuntan `N_EIN_SYSTEM_TMPDIR` a su temporal y no dejan carpetas en el real.
+- R6 (24 nov) T5, revisión desde `c50498f`. Corregido: tras `-p` (o `--mode json|rpc` en Pi) en una terminal la pista salía pegada a la salida y hablaba de un comando que el runtime no imprime; ahora solo tras una sesión interactiva. Con un `TMPDIR` nuevo por sesión Pi compilaba sus extensiones en frío en cada arranque (0,56 s frente a 0,20 s): la carpeta enlaza `jiti` y `NODE_COMPILE_CACHE` apunta al temporal del sistema. Menores: dos opciones con la misma línea visible se rechazan; `doctor --runtime` usa su propio temporal. Pendiente de Samu: confirmar que llegó el aviso de Moshi al móvil de la prueba de T1. Durante `check.sh` aparecieron dos carpetas `n-ein-pi.*` en el temporal real; ninguna parte de la suite lo reproduce por separado y la primera había cargado la lista real de dev, así que se atribuye a un arranque externo de `bin/n-ein-dev`.

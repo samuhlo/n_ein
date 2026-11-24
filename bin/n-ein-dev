@@ -148,6 +148,11 @@ for stale in "$system_tmp"/n-ein-pi.*; do
 done
 session_tmp="$(mktemp -d "$system_tmp/n-ein-pi.XXXXXX")"
 printf '%s\n' "$$" > "$session_tmp/.owner"
+# BLINDAJE -> Pi guarda en TMPDIR lo que compila de sus extensiones (jiti) y Node su caché de código:
+# siguen en el temporal del sistema, o cada sesión arrancaría en frío (unos 0,4 s más).
+mkdir -p "$system_tmp/jiti"
+ln -s "$system_tmp/jiti" "$session_tmp/jiti"
+export NODE_COMPILE_CACHE="${NODE_COMPILE_CACHE:-$system_tmp/node-compile-cache}"
 export N_EIN_SYSTEM_TMPDIR="$system_tmp" TMPDIR="$session_tmp"
 scratch_directive="Scratch directory for this session: $session_tmp (also \$TMPDIR). Put temporary files, throwaway scripts and test output there instead of the project or /tmp. It stays after the session for review."
 
@@ -187,7 +192,16 @@ if [[ -s "$handoff_signal" ]]; then
 fi
 
 # [UI] La pista de Pi abre un Pi sin n_ein: debajo va la de n_ein, en una terminal y sin relevo.
-if [[ -t 1 && -s "$resume_record" ]]; then
+# Pi solo imprime la suya en la sesión interactiva; tras print, JSON o RPC tampoco va la de n_ein.
+interactive_run() {
+  local previous="" arg
+  for arg in "$@"; do
+    case "$arg" in -p|--print) return 1 ;; json|rpc) [[ "$previous" == "--mode" ]] && return 1 ;; esac
+    previous="$arg"
+  done
+  return 0
+}
+if [[ -t 1 && -s "$resume_record" ]] && interactive_run "$@"; then
   bun "$repo_dir/pi-package/resume.ts" pi "$resume_record" "$PWD" "$repo_dir/bin/n-ein-dev" || true
 fi
 exit "$pi_exit"

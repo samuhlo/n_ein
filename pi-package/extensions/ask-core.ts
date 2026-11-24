@@ -27,6 +27,8 @@ export function askProblem(questions: readonly AskQuestion[]): string | undefine
     const { recommended } = question;
     if (recommended !== undefined && (!Number.isInteger(recommended) || recommended < 0 || recommended >= question.options.length))
       return `${at} recommended must be the index of one of its options.`;
+    // La lista mostrada es lo que el usuario elige: dos líneas iguales serían la misma respuesta.
+    if (new Set(choicesFor(question)).size !== question.options.length + 1) return `${at} options need distinct labels.`;
   }
   return undefined;
 }

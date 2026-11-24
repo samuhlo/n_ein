@@ -26,6 +26,7 @@ assert.match(askProblem([database, database, database, database, database])!, /1
 assert.match(askProblem([{ question: "¿Sí?", options: [{ label: "Sí" }] }])!, /2-4 options/);
 assert.match(askProblem([{ question: "¿Cuál?", options: [{ label: "A" }, { label: "a" }] }])!, /distinct/);
 assert.match(askProblem([{ question: "¿Cuál?", options: [{ label: "A" }, { label: OTHER }] }])!, /reserved/);
+assert.match(askProblem([{ question: "¿Cuál?", options: [{ label: "A" }, { label: "A (recomendada)" }], recommended: 0 }])!, /distinct/);
 assert.match(askProblem([{ question: "¿Cuál?", options: [{ label: "A" }, { label: "B" }], recommended: 2 }])!, /recommended/);
 assert.match(askProblem([{ question: " ", options: [{ label: "A" }, { label: "B" }] }])!, /empty/);
 

@@ -73,7 +73,8 @@ handoff_signal="$(mktemp "${TMPDIR:-/tmp}/n-ein-claude-handoff.XXXXXX")"
 resume_record="$(mktemp "${TMPDIR:-/tmp}/n-ein-resume.XXXXXX")"
 trap 'rm -f "$handoff_signal" "$resume_record"' EXIT
 export N_EIN_HANDOFF_SIGNAL="$handoff_signal"
-# El hook session.end del plugin deja aquí el id de la sesión vigente.
+# El hook session.end del plugin deja aquí el id de la sesión vigente. El dueño impide que un Pi
+# abierto desde las herramientas de Claude escriba en este archivo.
 export N_EIN_RESUME_FILE="$resume_record" N_EIN_RESUME_OWNER="$$"
 export N_EIN_ROOT="$repo_dir"
 # [FLOW] Claude usa el modelo de Claude Code; de n_ein solo toma el esfuerzo, si el usuario lo fijó en /nein:models.
@@ -162,7 +163,15 @@ if [[ -s "$handoff_signal" ]]; then
 fi
 
 # [UI] La pista de Claude abre Claude sin n_ein: debajo va la de n_ein, en una terminal y sin relevo.
-if [[ -t 1 && -s "$resume_record" ]]; then
+# Con -p Claude no imprime la suya, y la de n_ein tampoco va.
+interactive_run() {
+  local arg
+  for arg in "$@"; do
+    case "$arg" in -p|--print) return 1 ;; esac
+  done
+  return 0
+}
+if [[ -t 1 && -s "$resume_record" ]] && interactive_run "$@"; then
   bun "$repo_dir/pi-package/resume.ts" claude "$resume_record" "$PWD" "$repo_dir/bin/n-ein-claude-dev" "$claude_dir" || true
 fi
 exit "$claude_exit"

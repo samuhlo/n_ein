@@ -128,5 +128,8 @@ rg -Fq 'Para volver con n_ein (el comando de arriba abre Claude sin n_ein):' "$t
 rg -Fxq "cd $project && $repo_dir/bin/n-ein-claude-dev --resume 4f1c-test" "$test_dir/claude-tty"
 (cd "$project" && N_EIN_FAKE_CLAUDE_SESSION=9e9e-test in_tty "$repo_dir/bin/n-ein-claude-dev") > "$test_dir/claude-tty"
 absent 'Para volver' "$test_dir/claude-tty"
+# Con -p Claude no imprime su pista: la de n_ein tampoco.
+(cd "$project" && N_EIN_FAKE_CLAUDE_SESSION=4f1c-test in_tty "$repo_dir/bin/n-ein-claude-dev" -p hola) > "$test_dir/claude-tty"
+absent 'Para volver' "$test_dir/claude-tty"
 
 printf 'handoff launcher: OK\n'
