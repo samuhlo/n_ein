@@ -46,7 +46,7 @@ if ! git -C "$project" check-ignore -q --no-index .codegraph/.gitignore 2>/dev/n
     mkdir -p "$(dirname "$exclude")" &&
     { [[ ! -s "$exclude" || -z "$(tail -c1 "$exclude")" ]] || printf '\n' >> "$exclude"; } &&
     printf '.codegraph/\n' >> "$exclude" ||
-    printf '[WARN] :: CODEGRAPH_EXCLUDE :: path: %s\n' "${exclude:-info/exclude}" >&2
+    printf '[WARN] :: EXCLUDE_SKIP :: path: %s\n' "${exclude:-info/exclude}" >&2
 fi
 
 status="$("$codegraph_bin" status --json "$project" 2>/dev/null)"
