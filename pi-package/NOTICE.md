@@ -36,7 +36,7 @@ La skill `commit` toma la idea del comando `commit` del mismo repositorio (grupo
 
 ## Flujo de trabajo
 
-El flujo de n_ein (`flow.md`) se inspira en el Organic Driven Development de [Gentle Shell](https://github.com/Gentleman-Programming/gentle-shell) (licencia MIT); no reproduce su texto. Los nombres y logos de Gentle Shell no se usan.
+El flujo de n_ein (`flow.md`) se inspira en el Organic Driven Development de [Gentle Shell](https://github.com/Gentleman-Programming/gentle-shell) (licencia MIT); no reproduce su texto. La comparación frase a frase de `review` para los textos que obedece el agente se inspira en su verificación por tipo de cambio, también sin reproducir su texto. Los nombres y logos de Gentle Shell no se usan.
 
 ## Guarda, medidores de Pi y puente de Claude
 
