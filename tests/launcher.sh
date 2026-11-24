@@ -215,6 +215,18 @@ test "$(readlink "$session_tmp/jiti")" == "$sys_tmp/jiti"
 test -d "$sys_tmp/jiti"
 test "$(sed -n 3p "$N_EIN_CAPTURE.tmp")" == "$sys_tmp/node-compile-cache"
 
+# [FLOW] doctor --runtime arranca el lanzador instalado con el PATH mínimo del e2e del instalador:
+# una herramienta nueva del lanzador que falte en esa lista solo fallaba en CI.
+minimal_path="$test_dir/minimal-path"
+mkdir -p "$minimal_path/bun"
+for tool in $(sed -n 's/^for tool in \(.*\); do$/\1/p' "$repo_dir/scripts/installer-e2e.sh"); do
+  resolved="$(command -v "$tool" || true)"
+  [[ -z "$resolved" || "$resolved" != /* ]] || ln -s "$resolved" "$minimal_path/$tool"
+done
+ln -s "$(command -v bun)" "$minimal_path/bun/bun"
+PATH="$minimal_path:$minimal_path/bun" "$repo_dir/bin/n-ein-dev" --print 'path mínimo'
+rg -Fxq 'path mínimo' "$N_EIN_CAPTURE"
+
 export N_EIN_FAKE_VERSION=0.88.0
 if "$repo_dir/bin/n-ein-dev" > "$test_dir/out" 2> "$test_dir/err"; then
   printf 'Versiones incompatibles deben fallar.\n' >&2
