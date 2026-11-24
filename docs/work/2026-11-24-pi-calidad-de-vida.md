@@ -3,14 +3,14 @@
 Estado: activo · Rama: feat/pi-calidad-de-vida · Tests: `./scripts/check.sh`
 Autorización: «Venga, haz un plan para integrar las 4, luego hago clear y empezamos»: implementar las cuatro mejoras en esta rama tras el clear, un commit por tarea. Sin integrar en main, publicar ni tocar la instalación preview; las pruebas reales usan el canal dev.
 Objetivo: Pi, el producto principal de n_ein, recupera los avisos de Moshi y Herdr, dice cómo volver a una sesión con n_ein, pregunta con opciones y tiene una carpeta temporal por sesión.
-Siguiente: T1 · Extensiones propias en Pi.
+Siguiente: T2 · Pista para volver con n_ein.
 
 ## Pedidos
 
 - P1. Moshi y Herdr en Pi (propuesta 1). `~/.pi/agent/extensions` tiene `herdr-agent-state.ts` (Herdr, integración v8) y `moshi-hooks.ts` (moshi-hook 0.3.21), pero `bin/n-ein-dev` arranca Pi con `--no-extensions` y su propio hogar, así que ninguna se carga.
-  - **Dónde:** `bin/n-ein-dev` (también se llega por `runtime.go` y por el relevo de Claude a Pi) y un archivo nuevo `~/.n_ein/<canal>/pi-extensions`.
-  - **Prueba:** con el falso Pi de `tests/launcher.sh`, cada ruta de la lista llega como `-e`. Una ruta que no existe avisa con `[WARN]` y Pi arranca igual. Sin el archivo, los argumentos no cambian.
-  - **Prueba real** (canal dev, dentro de Herdr): el panel de Herdr pasa de trabajando a parado con el turno, y `moshi-hook logs` registra eventos de la sesión. Esta prueba manda un aviso a tu móvil.
+  - **Dónde:** `bin/n-ein-dev` (también se llega por `runtime.go` y por el relevo de Claude a Pi) y un archivo nuevo `~/.n_ein/<canal>/pi-extensions`. También arrancan `n-ein-dev` con el hogar real `doctor --runtime` (`go/cmd/n-ein-install/main.go`) y `tests/ordinary-pi.ts`: no deben leer la lista.
+  - **Prueba:** con el falso Pi de `tests/launcher.sh`, cada ruta de la lista llega como `-e`. Una ruta que no existe avisa con `[WARN]` y Pi arranca igual. Sin el archivo, los argumentos no cambian. doctor pasa con una lista personal rota (`installer_test.go`).
+  - **Prueba real** (canal dev, dentro de Herdr): el panel de Herdr pasa de trabajando a parado con el turno, y Moshi avisa en el móvil al acabar. Esta prueba manda un aviso a tu móvil.
 - P2. Volver a la sesión con n_ein (propuesta 2). Al salir, Pi imprime `To resume this session:` y `pi [--session-dir …] --session <id>` (función `formatResumeCommand`, solo con TTY y una sesión guardada). En tu shell, `pi` es la 0.87.1 con el hogar del Ein antiguo. Claude imprime `Resume this session with:` y su comando abre tu Claude personal.
   - **Dónde:** `bin/n-ein-dev`, `bin/n-ein-claude-dev`, una extensión de Pi que guarda el id de la sesión y el hook `session.end` del plugin de Claude (`workspace-hooks.ts`).
   - **Prueba:** al salir con TTY se imprime debajo un comando de n_ein. Copiado desde otra carpeta, reabre esa misma sesión, en n_ein y en el mismo canal. Tras `/new` en Pi o `/clear` en Claude, el comando apunta a la sesión nueva.
@@ -37,7 +37,7 @@ Siguiente: T1 · Extensiones propias en Pi.
 
 ## Tareas
 
-- [ ] T1 · Extensiones propias en Pi — lectura de `~/.n_ein/<canal>/pi-extensions` en `n-ein-dev`, test con el falso Pi, guía y diseño, y prueba real con Herdr y Moshi en dev. Blocked by: none.
+- [x] T1 · Extensiones propias en Pi — `tests/launcher.sh` y `TestDoctorRuntimeSeparatesPackageAndDependencies` (rojo y verde); real en dev: Herdr `idle → working → done` con `source: herdr:pi` y Pi arrancó con Moshi cargado; el aviso del móvil lo confirma Samu.
 - [ ] T2 · Pista para volver con n_ein — el id lo guardan Pi (extensión nueva) y Claude (`session.end`); el aviso lo imprimen los dos lanzadores solo con TTY y sin relevo. Tests de texto, de TTY (`script -q /dev/null`) y de id tras `/new`; guía. Blocked by: none.
 - [ ] T3 · Herramienta `nein_ask` — núcleo puro con validación y formato del resultado, extensión con `ui.select` e `input`, respuesta en texto sin interfaz, tope de 1.200 bytes, test RPC con Pi real, frase en `pi-only.md`, guía y diseño. Blocked by: none.
 - [ ] T4 · Carpeta temporal por sesión — `TMPDIR` propio, limpieza de las carpetas huérfanas, instrucción en el prompt, `N_EIN_SYSTEM_TMPDIR` en la guarda, relevo con el temporal original; tests del lanzador y de la guarda; guía. Blocked by: none.
@@ -46,3 +46,4 @@ Siguiente: T1 · Extensiones propias en Pi.
 ## Registro
 
 - R1 (24 nov) Petición: «Venga, haz un plan para integrar las 4, luego hago clear y empezamos». Viene de valorar, desde Pi como producto principal, lo que gentle-shell aporta en calidad de vida: «No, valoralo desde Pi, que no lo estoy usando por varios motivos personales, no porq no sea mi producto princiapl».
+- R2 (24 nov) T1. Pi 1.6 no arranca si una extensión no carga y sugiere `pi -ne`, que no sirve en n_ein: el lanzador señala la lista con `PI_EXT_CHECK` cuando Pi falla. `doctor --runtime` y `tests/ordinary-pi.ts` arrancan `n-ein-dev` con el hogar real; `N_EIN_PI_EXTENSIONS_FILE` les apunta la lista a su temporal, como `N_EIN_MODELS_FILE`. `moshi-hook logs` no registra los eventos de los hooks, así que la prueba de Moshi es el aviso del móvil. La lista de dev (`~/.n_ein/dev/pi-extensions`) queda con Herdr y Moshi.

@@ -53,6 +53,7 @@ function run(prompt: string, team?: string) {
     N_EIN_AGENT_DIR: join(area, "home"),
     N_EIN_PI_BIN: wrapper,
     N_EIN_MODELS_FILE: models,
+    N_EIN_PI_EXTENSIONS_FILE: join(area, "pi-extensions"),
     N_EIN_CODEGRAPH_BIN: index,
     PI_SKIP_VERSION_CHECK: "1",
   };

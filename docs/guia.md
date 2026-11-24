@@ -55,7 +55,7 @@ Puedes decir «ayúdame a pensar esta idea» o «diseñémoslo juntos»: el agen
 
 El [ensayo de cierre de intent](../evals/results/2026-09-29-intent.md) comprobó varias rondas sin escrituras, síntesis confirmada y un único `WORK.md` posterior sin implementar código.
 
-El contexto de origen y el plan están en [docs/START_HERE.md](START_HERE.md). Las fuentes de `docs/archive/` y `docs/sources/` son referencias históricas; el lanzador solo carga `pi-package/`.
+El contexto de origen y el plan están en [docs/START_HERE.md](START_HERE.md). Las fuentes de `docs/archive/` y `docs/sources/` son referencias históricas; el lanzador solo carga `pi-package/` y las [extensiones que tú listes](#extensiones-propias-de-pi).
 
 ### Checks locales y evaluaciones
 
@@ -138,6 +138,18 @@ Vercel
 ```
 
 El agente sabe cuáles están apagados y te lo dice si le pides algo que necesite uno. Tu cuenta de claude.ai y el resto de tus hogares de Claude no cambian; Pi no los carga.
+
+### Extensiones propias de Pi
+
+Pi arranca en n_ein con su propio hogar y sin las extensiones de `~/.pi/agent`. Para cargar alguna, como los avisos de Herdr y Moshi, escribe su ruta en `~/.n_ein/<canal>/pi-extensions`, una por línea, y abre una sesión nueva:
+
+```text
+# Avisos de Herdr y Moshi
+~/.pi/agent/extensions/herdr-agent-state.ts
+~/.pi/agent/extensions/moshi-hooks.ts
+```
+
+Las rutas son absolutas o empiezan por `~/`, y se cargan desde donde están: cuando Herdr o Moshi actualizan su archivo, n_ein usa la versión nueva. Una ruta que no existe avisa con `PI_EXT_SKIP` y Pi arranca igual. Si una extensión no carga, Pi no arranca y dice cuál; coméntala con `#` en la lista (la pista `pi -ne` que da Pi no sirve aquí). `doctor`, los tests y los trabajadores del equipo experimental no leen la lista, y Claude no la usa. `N_EIN_PI_EXTENSIONS_FILE` apunta a otra lista.
 
 ### Hotfix local de preview
 

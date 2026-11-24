@@ -105,16 +105,36 @@ if [[ -n "${bridge_version:-}" && -f "$bridge_dir/package.json" ]]; then
     || printf '[WARN] :: BRIDGE_CONFIG_SKIP :: path: %s\n' "$agent_dir/claude-bridge.json" >&2
   bridge_args=(-e "$bridge_dir")
 fi
+# [FLOW] EXTENSIONES PROPIAS
+# Las que el usuario nombra en su lista (Herdr, Moshi…) se cargan desde su ruta original, para que
+# sus instaladores las sigan actualizando. Una ruta absoluta por línea; `#` comenta y `~/` se expande.
+extensions_file="${N_EIN_PI_EXTENSIONS_FILE:-$n_ein_home/$channel/pi-extensions}"
+user_extension_args=()
+if [[ -f "$extensions_file" ]]; then
+  while IFS= read -r extension || [[ -n "$extension" ]]; do
+    extension="${extension#"${extension%%[![:space:]]*}"}"
+    extension="${extension%"${extension##*[![:space:]]}"}"
+    case "$extension" in ""|"#"*) continue ;; "~/"*) extension="$HOME/${extension#"~/"}" ;; esac
+    if [[ "$extension" != /* ]]; then
+      printf '[WARN] :: PI_EXT_SKIP :: reason: ruta relativa | path: %s | list: %s\n' "$extension" "$extensions_file" >&2
+    elif [[ ! -e "$extension" ]]; then
+      printf '[WARN] :: PI_EXT_SKIP :: reason: no existe | path: %s | list: %s\n' "$extension" "$extensions_file" >&2
+    else
+      user_extension_args+=(-e "$extension")
+    fi
+  done < "$extensions_file"
+fi
 export PI_CODING_AGENT_SESSION_DIR="$agent_dir/sessions"
 handoff_signal="$(mktemp "${TMPDIR:-/tmp}/n-ein-handoff.XXXXXX")"
 trap 'rm -f "$handoff_signal"' EXIT
 export N_EIN_HANDOFF_SIGNAL="$handoff_signal"
 
-# BLINDAJE -> Solo los recursos explícitos del paquete entran desde fuera del proyecto.
+# BLINDAJE -> Desde fuera del proyecto solo entran los recursos explícitos del paquete y de la lista.
 if "$pi_bin" \
   --no-extensions --no-skills --no-prompt-templates --no-themes \
   -e "$repo_dir/pi-package" \
   ${bridge_args[@]+"${bridge_args[@]}"} \
+  ${user_extension_args[@]+"${user_extension_args[@]}"} \
   --append-system-prompt "$repo_dir/pi-package/persona.md" \
   ${flow_args[@]+"${flow_args[@]}"} \
   --append-system-prompt "$lang_directive" \
@@ -125,6 +145,10 @@ if "$pi_bin" \
   pi_exit=0
 else
   pi_exit=$?
+fi
+# Pi no arranca si una extensión no carga, y su pista (`pi -ne`) no sirve dentro de n_ein.
+if [[ "$pi_exit" -ne 0 && ${#user_extension_args[@]} -gt 0 ]]; then
+  printf '[WARN] :: PI_EXT_CHECK :: list: %s | fix: si Pi no arrancó por una extensión, coméntala con #\n' "$extensions_file" >&2
 fi
 
 if [[ -s "$handoff_signal" ]]; then

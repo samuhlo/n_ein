@@ -25,6 +25,7 @@ fi
 } > "$N_EIN_CAPTURE"
 printf '%s\n' "${N_EIN_CODEGRAPH_BIN:-}" > "$N_EIN_CAPTURE.codegraph"
 printf '%s\n' "${CLAUDE_CONFIG_DIR:-}" "${ANTHROPIC_API_KEY:-}" "${N_EIN_BRIDGE_CLAUDE_BIN:-}" > "$N_EIN_CAPTURE.env"
+exit "${N_EIN_FAKE_EXIT:-0}"
 FAKE_PI
 chmod +x "$test_dir/pi"
 
@@ -120,6 +121,37 @@ if "$repo_dir/bin/n-ein-dev" --print 'no' 2> "$test_dir/err"; then printf 'Un la
 rg -q 'LANG_BAD' "$test_dir/err"
 test ! -e "$N_EIN_CAPTURE"
 rm -f "$N_EIN_LANG_FILE"
+
+# [FLOW] Las extensiones de la lista del usuario llegan como -e, en su orden y desde su ruta original.
+# Las rutas que no sirven avisan y Pi arranca igual; sin lista, los argumentos no cambian (arriba).
+mkdir -p "$N_EIN_HOME/dev" "$test_dir/ext dir" "$test_dir/home/.pi/agent/extensions"
+printf 'export default function () {}\n' > "$test_dir/ext dir/herdr.ts"
+printf 'export default function () {}\n' > "$test_dir/home/.pi/agent/extensions/moshi.ts"
+cat > "$N_EIN_HOME/dev/pi-extensions" <<EOF
+# Avisos de Herdr y Moshi
+$test_dir/ext dir/herdr.ts
+
+  ~/.pi/agent/extensions/moshi.ts
+$test_dir/no-existe.ts
+relativa/ext.ts
+$test_dir/ext dir
+EOF
+HOME="$test_dir/home" "$repo_dir/bin/n-ein-dev" --print 'extensiones' 2> "$test_dir/err"
+awk 'previous == "-e" { print } { previous = $0 }' "$N_EIN_CAPTURE" > "$test_dir/extensions"
+printf '%s\n' "$repo_dir/pi-package" "$test_dir/ext dir/herdr.ts" "$test_dir/home/.pi/agent/extensions/moshi.ts" "$test_dir/ext dir" \
+  | diff -u - "$test_dir/extensions"
+rg -Fq "PI_EXT_SKIP :: reason: no existe | path: $test_dir/no-existe.ts" "$test_dir/err"
+rg -Fq 'PI_EXT_SKIP :: reason: ruta relativa | path: relativa/ext.ts' "$test_dir/err"
+rg -Fxq 'extensiones' "$N_EIN_CAPTURE"
+! rg -q 'PI_EXT_CHECK' "$test_dir/err"
+# Si Pi falla con extensiones propias, el aviso señala la lista: la pista de Pi (`pi -ne`) no aplica a n_ein.
+if HOME="$test_dir/home" N_EIN_FAKE_EXIT=1 "$repo_dir/bin/n-ein-dev" --print 'falla' 2> "$test_dir/err"; then exit 1; fi
+rg -Fq "PI_EXT_CHECK :: list: $N_EIN_HOME/dev/pi-extensions" "$test_dir/err"
+# doctor y los tests apuntan la lista a su temporal: lo personal no entra en sus arranques.
+N_EIN_PI_EXTENSIONS_FILE="$test_dir/sin-lista" "$repo_dir/bin/n-ein-dev" --print 'doctor'
+awk 'previous == "-e" { print } { previous = $0 }' "$N_EIN_CAPTURE" > "$test_dir/extensions"
+printf '%s\n' "$repo_dir/pi-package" | diff -u - "$test_dir/extensions"
+rm "$N_EIN_HOME/dev/pi-extensions"
 
 export N_EIN_FAKE_VERSION=0.88.0
 if "$repo_dir/bin/n-ein-dev" > "$test_dir/out" 2> "$test_dir/err"; then
