@@ -24,11 +24,11 @@ El experimento de equipo se conserva desactivado: `N_EIN_TEAM=1` lo habilita exp
 
 ## Trabajo del 21 al 24 de noviembre
 
-El TODO legible con el modo de actividad y la rama, un documento por encargo, la calidad de vida en Pi y la publicación de 0.8.0-alpha.1 se siguieron cada uno en su documento, ya cerrado en [docs/work/closed](work/closed/); la publicación de 0.9.0-alpha.1, en el suyo de [docs/work](work/). Los runtimes al día y 0.7.0-alpha.1 se siguieron en el `WORK.md` de entonces (en Git); «Opus piensa, GPT ejecuta» y 0.6.0-alpha.1 están en [su encargo archivado](archive/work/2026-11-03-opus-gentle.md), y los anteriores en [archive/work](archive/work/).
+El TODO legible con el modo de actividad y la rama, un documento por encargo, la calidad de vida en Pi y las publicaciones de 0.8.0-alpha.1 y 0.9.0-alpha.1 se siguieron cada uno en su documento, ya cerrado en [docs/work/closed](work/closed/). Los runtimes al día y 0.7.0-alpha.1 se siguieron en el `WORK.md` de entonces (en Git); «Opus piensa, GPT ejecuta» y 0.6.0-alpha.1 están en [su encargo archivado](archive/work/2026-11-03-opus-gentle.md), y los anteriores en [archive/work](archive/work/).
 
 ## Entrega actual
 
-`0.9.0-alpha.1` trae a Pi las extensiones que lista el usuario (Herdr y Moshi), un comando para volver a la sesión con n_ein (también en Claude), la herramienta `nein_ask` para decisiones con opciones y una carpeta temporal por sesión. En Claude apaga los conectores de claude.ai salvo Context7 y los que encienda el proyecto. `review` compara frase a frase los textos que obedece el agente y `.codegraph/` queda fuera de Git con el exclude local. Trae Claude Code 2.1.325, que el vigía publicó en 0.8.0-alpha.3. Estado de publicación y evidencia en su documento de `docs/work/`.
+`0.9.0-alpha.1` trae a Pi las extensiones que lista el usuario (Herdr y Moshi), un comando para volver a la sesión con n_ein (también en Claude), la herramienta `nein_ask` para decisiones con opciones y una carpeta temporal por sesión. En Claude apaga los conectores de claude.ai salvo Context7 y los que encienda el proyecto. `review` compara frase a frase los textos que obedece el agente y `.codegraph/` queda fuera de Git con el exclude local. Trae Claude Code 2.1.325, que el vigía publicó en 0.8.0-alpha.3. Publicación verificada (adjuntos, attestation y Pages) en su documento de `docs/work/closed/`.
 
 ## Ruta de lectura
 
