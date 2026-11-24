@@ -70,8 +70,11 @@ lang_directive="$(bun "$repo_dir/pi-package/lang.ts" "$repo_dir" "$channel")" ||
 persona+=$'\n\n'"$(< "$repo_dir/pi-package/flow.md")"$'\n\n'"$lang_directive"
 persona+=$'\n\n'"$(bun "$repo_dir/pi-package/memory.ts")"
 handoff_signal="$(mktemp "${TMPDIR:-/tmp}/n-ein-claude-handoff.XXXXXX")"
-trap 'rm -f "$handoff_signal"' EXIT
+resume_record="$(mktemp "${TMPDIR:-/tmp}/n-ein-resume.XXXXXX")"
+trap 'rm -f "$handoff_signal" "$resume_record"' EXIT
 export N_EIN_HANDOFF_SIGNAL="$handoff_signal"
+# El hook session.end del plugin deja aquí el id de la sesión vigente.
+export N_EIN_RESUME_FILE="$resume_record" N_EIN_RESUME_OWNER="$$"
 export N_EIN_ROOT="$repo_dir"
 # [FLOW] Claude usa el modelo de Claude Code; de n_ein solo toma el esfuerzo, si el usuario lo fijó en /nein:models.
 runtime_values="$(bun "$repo_dir/pi-package/models.ts" "$repo_dir" "$channel")" || exit 64
@@ -158,4 +161,8 @@ if [[ -s "$handoff_signal" ]]; then
   exit $?
 fi
 
+# [UI] La pista de Claude abre Claude sin n_ein: debajo va la de n_ein, en una terminal y sin relevo.
+if [[ -t 1 && -s "$resume_record" ]]; then
+  bun "$repo_dir/pi-package/resume.ts" claude "$resume_record" "$PWD" "$repo_dir/bin/n-ein-claude-dev" "$claude_dir" || true
+fi
 exit "$claude_exit"

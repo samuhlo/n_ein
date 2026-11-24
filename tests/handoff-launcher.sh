@@ -7,10 +7,14 @@ trap 'rm -rf "$test_dir"' EXIT
 # La versión de Pi la marca runtime.json: el Pi falso la repite para no tocar los tests en cada subida.
 export N_EIN_TEST_PI_VERSION="$(bun -e 'console.log((await Bun.file(process.argv[1]).json()).pi.version)' "$repo_dir/runtime.json")"
 
+# `! rg` no para el script: set -e ignora los comandos negados. Esta comprobación sí falla.
+absent() { if rg -q "$@"; then printf 'No debía aparecer: %s\n' "$*" >&2; exit 1; fi; }
+
 cat > "$test_dir/pi" <<'FAKE_PI'
 #!/usr/bin/env bash
 if [[ "${1:-}" == "--version" ]]; then printf '%s\n' "$N_EIN_TEST_PI_VERSION"; exit 0; fi
 printf 'claude\n%s\n' "$N_EIN_TEST_SUMMARY" > "$N_EIN_HANDOFF_SIGNAL"
+printf '019a-test\n%s\n' "$N_EIN_TEST_SUMMARY" > "$N_EIN_RESUME_FILE"
 printf 'pi finished\n' > "$N_EIN_TEST_DONE"
 FAKE_PI
 cat > "$test_dir/claude" <<'FAKE_CLAUDE'
@@ -22,8 +26,14 @@ mkdir -p "$CLAUDE_CONFIG_DIR/skills/synced"
 printf 'generated\n' > "$CLAUDE_CONFIG_DIR/skills/synced/sentinel"
 printf '%s\n' "$CLAUDE_CONFIG_DIR" "${PI_CODING_AGENT_DIR:-unset}" > "$N_EIN_TEST_ENV"
 printf '%s\n' "$@" > "$N_EIN_TEST_ARGS"
+if [[ -n "${N_EIN_FAKE_CLAUDE_SESSION:-}" ]]; then printf '%s\n' "$N_EIN_FAKE_CLAUDE_SESSION" > "$N_EIN_RESUME_FILE"; fi
 FAKE_CLAUDE
 chmod +x "$test_dir/pi" "$test_dir/claude"
+# `script` da al lanzador una terminal, donde imprime la pista para volver (BSD en macOS, util-linux en la CI).
+in_tty() {
+  if script --version >/dev/null 2>&1; then script -qec "$(printf '%q ' "$@")" /dev/null < /dev/null
+  else script -q /dev/null "$@" < /dev/null; fi | tr -d '\r'
+}
 
 printf '# Relevo\n\nObjetivo: terminar el arreglo.\n' > "$test_dir/summary.md"
 export N_EIN_PREFERENCES_FILE="$test_dir/preferences.md"
@@ -47,7 +57,9 @@ ln -s "$repo_dir/pi-package/skills" "$N_EIN_CLAUDE_DIR/skills"
 # Los conectores de claude.ai que este hogar conectó alguna vez, como los registra Claude Code.
 printf '{"claudeAiMcpEverConnected":["claude.ai Gmail","claude.ai Context7","claude.ai Neon"]}\n' > "$N_EIN_CLAUDE_DIR/.claude.json"
 
-"$repo_dir/bin/n-ein-dev"
+# Tras un relevo, ni Pi ni Claude imprimen la pista: el trabajo sigue en el otro runtime.
+in_tty "$repo_dir/bin/n-ein-dev" > "$test_dir/handoff-tty"
+absent 'Para volver' "$test_dir/handoff-tty"
 # Una skill retirada deja un enlace roto: se quita el nuestro y se respeta el ajeno.
 ln -s "$repo_dir/pi-package/skills/comment-style" "$N_EIN_CLAUDE_DIR/skills/comment-style"
 ln -s "$test_dir/nada" "$N_EIN_CLAUDE_DIR/skills/ajena"
@@ -103,5 +115,14 @@ if rg -q 'n_ein_worker' "$N_EIN_TEST_ARGS"; then
   printf 'Claude no debe recibir instrucciones de herramientas exclusivas de Pi.\n' >&2
   exit 1
 fi
+
+# [FLOW] Al salir de Claude en una terminal, la pista de n_ein lleva su id si tiene transcripción.
+mkdir -p "$N_EIN_CLAUDE_DIR/projects/-proyecto"
+printf '{}\n' > "$N_EIN_CLAUDE_DIR/projects/-proyecto/4f1c-test.jsonl"
+(cd "$project" && N_EIN_FAKE_CLAUDE_SESSION=4f1c-test in_tty "$repo_dir/bin/n-ein-claude-dev") > "$test_dir/claude-tty"
+rg -Fq 'Para volver con n_ein (el comando de arriba abre Claude sin n_ein):' "$test_dir/claude-tty"
+rg -Fxq "cd $project && $repo_dir/bin/n-ein-claude-dev --resume 4f1c-test" "$test_dir/claude-tty"
+(cd "$project" && N_EIN_FAKE_CLAUDE_SESSION=9e9e-test in_tty "$repo_dir/bin/n-ein-claude-dev") > "$test_dir/claude-tty"
+absent 'Para volver' "$test_dir/claude-tty"
 
 printf 'handoff launcher: OK\n'

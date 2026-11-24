@@ -13,6 +13,9 @@ export N_EIN_TEST_PI_MODEL="$(bun -e 'console.log((await Bun.file(process.argv[1
 export N_EIN_TEST_PI_THINKING="$(bun -e 'console.log((await Bun.file(process.argv[1]).json()).pi.thinking)' "$repo_dir/runtime.json")"
 export N_EIN_TEST_PI_VERSION="$(bun -e 'console.log((await Bun.file(process.argv[1]).json()).pi.version)' "$repo_dir/runtime.json")"
 
+# `! rg` no para el script: set -e ignora los comandos negados. Esta comprobación sí falla.
+absent() { if rg -q "$@"; then printf 'No debía aparecer: %s\n' "$*" >&2; exit 1; fi; }
+
 cat > "$test_dir/pi" <<'FAKE_PI'
 #!/usr/bin/env bash
 if [[ "${1:-}" == "--version" ]]; then
@@ -25,6 +28,10 @@ fi
 } > "$N_EIN_CAPTURE"
 printf '%s\n' "${N_EIN_CODEGRAPH_BIN:-}" > "$N_EIN_CAPTURE.codegraph"
 printf '%s\n' "${CLAUDE_CONFIG_DIR:-}" "${ANTHROPIC_API_KEY:-}" "${N_EIN_BRIDGE_CLAUDE_BIN:-}" > "$N_EIN_CAPTURE.env"
+# Como la extensión resume.ts: solo el Pi hijo del lanzador deja su sesión.
+if [[ "$PPID" == "${N_EIN_RESUME_OWNER:-}" && -n "${N_EIN_FAKE_SESSION:-}" ]]; then
+  printf '019a-test\n%s\n' "$N_EIN_FAKE_SESSION" > "$N_EIN_RESUME_FILE"
+fi
 exit "${N_EIN_FAKE_EXIT:-0}"
 FAKE_PI
 chmod +x "$test_dir/pi"
@@ -88,11 +95,11 @@ $N_EIN_TEST_PI_THINKING
 cambia este texto
 EOF
 diff -u "$test_dir/expected" "$N_EIN_CAPTURE"
-! rg -q 'pi-package/agents/team.md' "$N_EIN_CAPTURE"
+absent 'pi-package/agents/team.md' "$N_EIN_CAPTURE"
 N_EIN_TEAM=1 "$repo_dir/bin/n-ein-dev" --print 'experimento explícito'
 rg -Fxq "$repo_dir/pi-package/agents/team.md" "$N_EIN_CAPTURE"
 N_EIN_TEAM=0 "$repo_dir/bin/n-ein-dev" --print 'trabajo directo'
-! rg -q 'pi-package/agents/team.md' "$N_EIN_CAPTURE"
+absent 'pi-package/agents/team.md' "$N_EIN_CAPTURE"
 
 cat > "$N_EIN_MODELS_FILE" <<'MODELS'
 {"schema":1,"agents":{"principal":{"model":"openai-codex/gpt-6-luna","thinking":"medium"}}}
@@ -143,7 +150,7 @@ printf '%s\n' "$repo_dir/pi-package" "$test_dir/ext dir/herdr.ts" "$test_dir/hom
 rg -Fq "PI_EXT_SKIP :: reason: no existe | path: $test_dir/no-existe.ts" "$test_dir/err"
 rg -Fq 'PI_EXT_SKIP :: reason: ruta relativa | path: relativa/ext.ts' "$test_dir/err"
 rg -Fxq 'extensiones' "$N_EIN_CAPTURE"
-! rg -q 'PI_EXT_CHECK' "$test_dir/err"
+absent 'PI_EXT_CHECK' "$test_dir/err"
 # Si Pi falla con extensiones propias, el aviso señala la lista: la pista de Pi (`pi -ne`) no aplica a n_ein.
 if HOME="$test_dir/home" N_EIN_FAKE_EXIT=1 "$repo_dir/bin/n-ein-dev" --print 'falla' 2> "$test_dir/err"; then exit 1; fi
 rg -Fq "PI_EXT_CHECK :: list: $N_EIN_HOME/dev/pi-extensions" "$test_dir/err"
@@ -152,6 +159,25 @@ N_EIN_PI_EXTENSIONS_FILE="$test_dir/sin-lista" "$repo_dir/bin/n-ein-dev" --print
 awk 'previous == "-e" { print } { previous = $0 }' "$N_EIN_CAPTURE" > "$test_dir/extensions"
 printf '%s\n' "$repo_dir/pi-package" | diff -u - "$test_dir/extensions"
 rm "$N_EIN_HOME/dev/pi-extensions"
+
+# [FLOW] Al salir en una terminal, debajo de la pista de Pi va la de n_ein; sin terminal o sin sesión
+# guardada, nada. `script` da la terminal (BSD en macOS, util-linux en la CI).
+in_tty() {
+  if script --version >/dev/null 2>&1; then script -qec "$(printf '%q ' "$@")" /dev/null < /dev/null
+  else script -q /dev/null "$@" < /dev/null; fi | tr -d '\r'
+}
+mkdir -p "$test_dir/sessions"
+printf '{}\n' > "$test_dir/sessions/019a-test.jsonl"
+export N_EIN_FAKE_SESSION="$test_dir/sessions/019a-test.jsonl"
+in_tty "$repo_dir/bin/n-ein-dev" > "$test_dir/tty"
+rg -Fq 'Para volver con n_ein (el comando de arriba abre Pi sin n_ein):' "$test_dir/tty"
+rg -Fxq "cd $test_dir/project && $repo_dir/bin/n-ein-dev --session 019a-test" "$test_dir/tty"
+"$repo_dir/bin/n-ein-dev" --print 'sin terminal' > "$test_dir/out"
+absent 'Para volver' "$test_dir/out"
+export N_EIN_FAKE_SESSION="$test_dir/sessions/sin-guardar.jsonl"
+in_tty "$repo_dir/bin/n-ein-dev" > "$test_dir/tty"
+absent 'Para volver' "$test_dir/tty"
+unset N_EIN_FAKE_SESSION
 
 export N_EIN_FAKE_VERSION=0.88.0
 if "$repo_dir/bin/n-ein-dev" > "$test_dir/out" 2> "$test_dir/err"; then
@@ -200,7 +226,7 @@ cd "$test_dir/project"
 IFS=$'\t' read -r bridge_version claude_version < <(bun -e 'const c = await Bun.file(process.argv[1]).json(); console.log(c.claudeBridge.version + "\t" + c.claude.version)' "$repo_dir/runtime.json")
 bridge_dir="$N_EIN_HOME/runtimes/claude-bridge/$bridge_version/global/node_modules/pi-claude-bridge"
 "$repo_dir/bin/n-ein-dev" --print 'sin puente'
-! rg -q 'pi-claude-bridge' "$N_EIN_CAPTURE"
+absent 'pi-claude-bridge' "$N_EIN_CAPTURE"
 test -z "$(sed -n 1p "$N_EIN_CAPTURE.env")"
 mkdir -p "$bridge_dir"
 printf '{"name":"pi-claude-bridge","version":"%s"}\n' "$bridge_version" > "$bridge_dir/package.json"

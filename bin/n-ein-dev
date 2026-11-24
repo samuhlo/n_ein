@@ -126,8 +126,11 @@ if [[ -f "$extensions_file" ]]; then
 fi
 export PI_CODING_AGENT_SESSION_DIR="$agent_dir/sessions"
 handoff_signal="$(mktemp "${TMPDIR:-/tmp}/n-ein-handoff.XXXXXX")"
-trap 'rm -f "$handoff_signal"' EXIT
+resume_record="$(mktemp "${TMPDIR:-/tmp}/n-ein-resume.XXXXXX")"
+trap 'rm -f "$handoff_signal" "$resume_record"' EXIT
 export N_EIN_HANDOFF_SIGNAL="$handoff_signal"
+# La extensión resume.ts deja aquí la sesión vigente; solo la escribe el Pi hijo de este proceso.
+export N_EIN_RESUME_FILE="$resume_record" N_EIN_RESUME_OWNER="$$"
 
 # BLINDAJE -> Desde fuera del proyecto solo entran los recursos explícitos del paquete y de la lista.
 if "$pi_bin" \
@@ -162,4 +165,8 @@ if [[ -s "$handoff_signal" ]]; then
   exit $?
 fi
 
+# [UI] La pista de Pi abre un Pi sin n_ein: debajo va la de n_ein, en una terminal y sin relevo.
+if [[ -t 1 && -s "$resume_record" ]]; then
+  bun "$repo_dir/pi-package/resume.ts" pi "$resume_record" "$PWD" "$repo_dir/bin/n-ein-dev" || true
+fi
 exit "$pi_exit"

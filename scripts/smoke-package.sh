@@ -90,6 +90,10 @@ if [[ "${1:-}" == "--version" ]]; then printf '%s\n' "$N_EIN_TEST_PI_VERSION"; e
   printf 'home=%s\n' "$PI_CODING_AGENT_DIR"
   printf 'arg=%s\n' "$@"
 } > "$N_EIN_CAPTURE"
+# Como la extensión resume.ts: el Pi hijo del lanzador deja su sesión.
+if [[ -n "${N_EIN_FAKE_SESSION:-}" && "$PPID" == "${N_EIN_RESUME_OWNER:-}" ]]; then
+  printf '019a-smoke\n%s\n' "$N_EIN_FAKE_SESSION" > "$N_EIN_RESUME_FILE"
+fi
 FAKE_PI
 chmod +x "$test_dir/pi"
 (
@@ -105,6 +109,22 @@ rg -Fxq "arg=$target/pi-package" "$test_dir/pi-capture"
 rg -Fxq 'arg=nein/auto' "$test_dir/pi-capture"
 rg -Fxq 'arg=medium' "$test_dir/pi-capture"
 rg -Fxq 'arg=consulta de prueba' "$test_dir/pi-capture"
+# [FLOW] La pista para volver de una instalación usa `nein` si el del PATH es ella, y si no su bin/nein.
+# `script` da la terminal donde se imprime (BSD en macOS, util-linux en la CI).
+in_tty() {
+  if script --version >/dev/null 2>&1; then script -qec "$(printf '%q ' "$@")" /dev/null < /dev/null
+  else script -q /dev/null "$@" < /dev/null; fi | tr -d '\r'
+}
+printf '{}\n' > "$test_dir/session.jsonl"
+(
+  cd "$project"
+  export N_EIN_PI_BIN="$test_dir/pi" N_EIN_AGENT_DIR="$test_dir/pi-home" N_EIN_CAPTURE="$test_dir/pi-capture"
+  export N_EIN_FAKE_SESSION="$test_dir/session.jsonl"
+  PATH="$test_dir/local-bin:$PATH" in_tty "$target/bin/n-ein-dev" > "$test_dir/resume-linked"
+  in_tty "$target/bin/n-ein-dev" > "$test_dir/resume-own"
+)
+rg -Fxq "nein --project $project --runtime pi -- --session 019a-smoke" "$test_dir/resume-linked"
+rg -Fxq "$target/bin/nein --project $project --runtime pi -- --session 019a-smoke" "$test_dir/resume-own"
 codegraph_version="$(bun -e 'console.log((await Bun.file(process.argv[1]).json()).codegraph.version)' "$target/runtime.json")"
 printf '#!/bin/sh\nprintf "%s\\n"\n' "$codegraph_version" > "$test_dir/codegraph"
 chmod +x "$test_dir/codegraph"
