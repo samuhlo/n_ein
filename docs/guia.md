@@ -125,7 +125,19 @@ El agente principal sigue el flujo de n_ein (`pi-package/flow.md`): pide permiso
 
 ### CodeGraph en cada proyecto
 
-Al abrir Pi o Claude desde n_ein en un repositorio git, el índice de CodeGraph se crea si falta y se sincroniza si ya existe. Pi lo consulta con `codegraph_explore` y Claude con su MCP y el hook de prompt, configurados solo en su hogar aislado. Estado muestra si el proyecto tiene índice y Sistema la versión. Un fallo avisa con `CODEGRAPH_SKIP` y no impide trabajar. [Detalle](02-diseno.md#codegraph-obligatorio).
+Al abrir Pi o Claude desde n_ein en un repositorio git, el índice de CodeGraph se crea si falta y se sincroniza si ya existe. Pi lo consulta con `codegraph_explore` y Claude con su MCP y el hook de prompt, configurados solo en su hogar aislado. Estado muestra si el proyecto tiene índice y Sistema la versión. Un fallo avisa con `CODEGRAPH_SKIP` y no impide trabajar. El índice queda fuera de Git: si el proyecto no ignora ya `.codegraph/`, n_ein lo añade a su exclude local, sin tocar `.gitignore`. [Detalle](02-diseno.md#codegraph-obligatorio).
+
+### Conectores de claude.ai
+
+Claude Code carga en cada sesión los conectores de tu cuenta de claude.ai (Gmail, Drive, Figma, Neon, Vercel…), y cada uno declara sus herramientas en todos los turnos aunque no se usen. En `nein claude`, n_ein deja Context7 para consultar documentación y apaga el resto. Para usar uno en un proyecto, escribe su nombre, uno por línea, en `.n_ein/connectors` en la raíz del repositorio y abre una sesión nueva:
+
+```text
+# Base de datos y despliegue de este proyecto
+Neon
+Vercel
+```
+
+El agente sabe cuáles están apagados y te lo dice si le pides algo que necesite uno. Tu cuenta de claude.ai y el resto de tus hogares de Claude no cambian; Pi no los carga.
 
 ### Hotfix local de preview
 

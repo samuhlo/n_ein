@@ -73,12 +73,12 @@ handoff_signal="$(mktemp "${TMPDIR:-/tmp}/n-ein-claude-handoff.XXXXXX")"
 trap 'rm -f "$handoff_signal"' EXIT
 export N_EIN_HANDOFF_SIGNAL="$handoff_signal"
 export N_EIN_ROOT="$repo_dir"
-claude_args=(--append-system-prompt "$persona")
 # [FLOW] Claude usa el modelo de Claude Code; de n_ein solo toma el esfuerzo, si el usuario lo fijó en /nein:models.
 runtime_values="$(bun "$repo_dir/pi-package/models.ts" "$repo_dir" "$channel")" || exit 64
 IFS=$'\t' read -r _pi_version _main_model _main_thinking claude_effort <<< "$runtime_values"
+effort_args=()
 if [[ -n "$claude_effort" && "$claude_effort" != "-" ]]; then
-  claude_args+=(--effort "$claude_effort")
+  effort_args=(--effort "$claude_effort")
   export N_EIN_CLAUDE_EFFORT="$claude_effort"
 fi
 
@@ -89,23 +89,30 @@ fi
 # defecto. Se usa la forma de objeto porque versiones antiguas rechazan `false`.
 # BLINDAJE -> Claude encuentra ~/.claude/CLAUDE.md al subir carpetas si el proyecto vive bajo ~, y en
 # ningún otro caso; Pi nunca. Las reglas del usuario llegan a los dos por preferences.md.
+# Los conectores de claude.ai, salvo Context7 y los que encienda el proyecto, se bloquean aquí
+# (pi-package/connectors.ts) y el agente recibe una línea con lo apagado y cómo encenderlo.
 "$repo_dir/bin/n-ein-codegraph"
 codegraph_bin="$("$repo_dir/bin/n-ein-codegraph" --bin 2>/dev/null)"
 export DO_NOT_TRACK=1
-{ IFS= read -r mcp_config && IFS= read -r claude_settings; } < <(bun -e '
-  const [todo, bin, home] = process.argv.slice(1);
+{ IFS= read -r mcp_config && IFS= read -r claude_settings && IFS= read -r connectors_note; } < <(bun -e '
+  const [todo, bin, home, claudeDir, project, connectors] = process.argv.slice(1);
+  const { connectorPolicy, connectorNote } = await import(connectors);
+  const policy = connectorPolicy(claudeDir, project);
   const settings = {
     statusLine: { type: "command", command: JSON.stringify(todo) + " --statusline", padding: 0 },
     attribution: { commit: "", pr: "" },
     claudeMdExcludes: [home + "/.claude/CLAUDE.md", home + "/.claude/rules/**"],
   };
+  if (policy.denied.length) settings.deniedMcpServers = policy.denied.map((serverName) => ({ serverName }));
   let mcp = "";
   if (bin) {
     mcp = JSON.stringify({ mcpServers: { codegraph: { type: "stdio", command: bin, args: ["serve", "--mcp"], env: { DO_NOT_TRACK: "1" } } } });
     settings.hooks = { UserPromptSubmit: [{ hooks: [{ type: "command", command: JSON.stringify(bin) + " prompt-hook" }] }] };
   }
-  console.log(mcp + "\n" + JSON.stringify(settings));
-' "$repo_dir/bin/n-ein-todo" "$codegraph_bin" "$HOME") || { printf '[ERR] :: CLAUDE_SETTINGS :: reason: bun\n' >&2; exit 69; }
+  console.log(mcp + "\n" + JSON.stringify(settings) + "\n" + connectorNote(policy));
+' "$repo_dir/bin/n-ein-todo" "$codegraph_bin" "$HOME" "$claude_dir" "$N_EIN_COORDINATOR_ROOT" "$repo_dir/pi-package/connectors.ts") || { printf '[ERR] :: CLAUDE_SETTINGS :: reason: bun\n' >&2; exit 69; }
+if [[ -n "$connectors_note" ]]; then persona+=$'\n\n'"$connectors_note"; fi
+claude_args=(--append-system-prompt "$persona" ${effort_args[@]+"${effort_args[@]}"})
 if [[ -n "$mcp_config" ]]; then claude_args+=(--mcp-config "$mcp_config"); fi
 claude_args+=(--settings "$claude_settings")
 

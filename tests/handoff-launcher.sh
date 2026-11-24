@@ -44,6 +44,8 @@ export N_EIN_MODELS_FILE="$test_dir/models.json"
 printf '{"schema":1,"agents":{},"claude":{"effort":"xhigh"}}\n' > "$N_EIN_MODELS_FILE"
 mkdir -p "$N_EIN_CLAUDE_DIR"
 ln -s "$repo_dir/pi-package/skills" "$N_EIN_CLAUDE_DIR/skills"
+# Los conectores de claude.ai que este hogar conectó alguna vez, como los registra Claude Code.
+printf '{"claudeAiMcpEverConnected":["claude.ai Gmail","claude.ai Context7","claude.ai Neon"]}\n' > "$N_EIN_CLAUDE_DIR/.claude.json"
 
 "$repo_dir/bin/n-ein-dev"
 # Una skill retirada deja un enlace roto: se quita el nuestro y se respeta el ajeno.
@@ -75,7 +77,22 @@ bun -e '
   if (mcp.command !== bin || mcp.args.join(" ") !== "serve --mcp" || mcp.env.DO_NOT_TRACK !== "1") throw new Error("MCP de CodeGraph mal declarado");
   if (hook !== JSON.stringify(bin) + " prompt-hook") throw new Error("hook de CodeGraph mal declarado: " + hook);
   if (args[args.indexOf("--plugin-dir") + 1] !== process.argv[3] + "/pi-package/claude-plugin") throw new Error("Claude sin el plugin de n_ein");
+  const denied = JSON.stringify(settings.deniedMcpServers);
+  if (denied !== JSON.stringify([{ serverName: "claude.ai Gmail" }, { serverName: "claude.ai Neon" }])) throw new Error("Conectores de claude.ai mal bloqueados: " + denied);
 ' "$N_EIN_TEST_ARGS" "$N_EIN_CODEGRAPH_BIN" "$repo_dir"
+# El agente sabe qué está apagado y dónde se enciende.
+rg -q -F 'claude.ai connectors turned off in this n_ein session: claude.ai Gmail, claude.ai Neon.' "$N_EIN_TEST_ARGS"
+# [FLOW] Un proyecto enciende los suyos en .n_ein/connectors; el resto sigue apagado.
+project="$test_dir/proyecto"
+git init -q -b main "$project"
+mkdir -p "$project/.n_ein"
+printf '# Base de datos de este proyecto\nNeon\n' > "$project/.n_ein/connectors"
+(cd "$project" && "$repo_dir/bin/n-ein-claude-dev")
+bun -e '
+  const args = (await Bun.file(process.argv[1]).text()).split("\n");
+  const denied = JSON.stringify(JSON.parse(args[args.indexOf("--settings") + 1]).deniedMcpServers);
+  if (denied !== JSON.stringify([{ serverName: "claude.ai Gmail" }])) throw new Error("El proyecto no encendió Neon: " + denied);
+' "$N_EIN_TEST_ARGS"
 # Un Claude anterior a los hooks de función se abre sin plugin: aspecto nativo, mismo trabajo.
 N_EIN_TEST_CLAUDE_VERSION=2.1.200 "$repo_dir/bin/n-ein-claude-dev"
 if rg -q -- '--plugin-dir' "$N_EIN_TEST_ARGS"; then

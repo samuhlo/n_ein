@@ -54,6 +54,7 @@ bun run tests/design.ts
 bun run tests/models.ts
 bun run tests/runtimes.ts
 bun run tests/memory.ts
+bun run tests/connectors.ts
 bun run tests/codegraph.ts
 bun run tests/brand.ts
 bun run tests/banner.ts
