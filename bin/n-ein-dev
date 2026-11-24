@@ -132,6 +132,25 @@ export N_EIN_HANDOFF_SIGNAL="$handoff_signal"
 # La extensión resume.ts deja aquí la sesión vigente; solo la escribe el Pi hijo de este proceso.
 export N_EIN_RESUME_FILE="$resume_record" N_EIN_RESUME_OWNER="$$"
 
+# [FLOW] TEMPORAL DE LA SESIÓN
+# Pi no tiene carpeta temporal propia y sus pruebas acababan en /tmp o en el proyecto. Cada ejecución
+# del lanzador crea una en el temporal del sistema y se la da a Pi como TMPDIR; no se borra al salir,
+# para poder revisarla, y la limpia un arranque posterior cuando su dueño (.owner) ya no vive.
+system_tmp="${N_EIN_SYSTEM_TMPDIR:-${TMPDIR:-/tmp}}"
+system_tmp="${system_tmp%/}"
+for stale in "$system_tmp"/n-ein-pi.*; do
+  [[ -d "$stale" && ! -L "$stale" && -f "$stale/.owner" ]] || continue
+  owner=""
+  IFS= read -r owner < "$stale/.owner" || true
+  # BLINDAJE -> Sin un pid legible no se sabe de quién es: se deja.
+  [[ "$owner" =~ ^[0-9]+$ ]] || continue
+  kill -0 "$owner" 2>/dev/null || rm -rf -- "$stale"
+done
+session_tmp="$(mktemp -d "$system_tmp/n-ein-pi.XXXXXX")"
+printf '%s\n' "$$" > "$session_tmp/.owner"
+export N_EIN_SYSTEM_TMPDIR="$system_tmp" TMPDIR="$session_tmp"
+scratch_directive="Scratch directory for this session: $session_tmp (also \$TMPDIR). Put temporary files, throwaway scripts and test output there instead of the project or /tmp. It stays after the session for review."
+
 # BLINDAJE -> Desde fuera del proyecto solo entran los recursos explícitos del paquete y de la lista.
 if "$pi_bin" \
   --no-extensions --no-skills --no-prompt-templates --no-themes \
@@ -142,6 +161,7 @@ if "$pi_bin" \
   ${flow_args[@]+"${flow_args[@]}"} \
   --append-system-prompt "$lang_directive" \
   --append-system-prompt "$memory_directive" \
+  --append-system-prompt "$scratch_directive" \
   --use-theme ein \
   --model "$main_model" --thinking "$main_thinking" \
   "$@"; then
@@ -161,7 +181,8 @@ if [[ -s "$handoff_signal" ]]; then
     printf '[ERR] :: HANDOFF_BAD :: target: %s\n' "$destination" >&2
     exit 69
   fi
-  "$repo_dir/bin/n-ein-claude-dev" --handoff "$summary_path"
+  # Claude tiene su propia carpeta temporal: recibe el temporal original.
+  TMPDIR="$system_tmp" "$repo_dir/bin/n-ein-claude-dev" --handoff "$summary_path"
   exit $?
 fi
 

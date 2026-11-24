@@ -3,7 +3,7 @@
 Estado: activo · Rama: feat/pi-calidad-de-vida · Tests: `./scripts/check.sh`
 Autorización: «Venga, haz un plan para integrar las 4, luego hago clear y empezamos»: implementar las cuatro mejoras en esta rama tras el clear, un commit por tarea. Sin integrar en main, publicar ni tocar la instalación preview; las pruebas reales usan el canal dev.
 Objetivo: Pi, el producto principal de n_ein, recupera los avisos de Moshi y Herdr, dice cómo volver a una sesión con n_ein, pregunta con opciones y tiene una carpeta temporal por sesión.
-Siguiente: T4 · Carpeta temporal por sesión.
+Siguiente: T5 · Revisión y cierre.
 
 ## Pedidos
 
@@ -40,7 +40,7 @@ Siguiente: T4 · Carpeta temporal por sesión.
 - [x] T1 · Extensiones propias en Pi — `tests/launcher.sh` y `TestDoctorRuntimeSeparatesPackageAndDependencies` (rojo y verde); real en dev: Herdr `idle → working → done` con `source: herdr:pi` y Pi arrancó con Moshi cargado; el aviso del móvil lo confirma Samu.
 - [x] T2 · Pista para volver con n_ein — `tests/resume.ts`, `tests/resume-pi.ts` (Pi real, `/new` y dueño ajeno), plugin de Claude y lanzadores con `script` (rojo y verde; mutaciones de TTY, relevo y dueño detectadas); real en dev: Pi tras `/new` y Claude tras `/clear` reabren su sesión desde `/` con el comando impreso.
 - [x] T3 · Herramienta `nein_ask` — `tests/ask.ts` (780 de 1.200 bytes) y `tests/ask-pi.ts` con Pi real en RPC y `-p` (rojo y verde), modo `asking` y recibo; real en la TUI de dev: lista con la recomendada y «Otra respuesta», recibo `1 respuesta` y el modelo recibe la opción.
-- [ ] T4 · Carpeta temporal por sesión — `TMPDIR` propio, limpieza de las carpetas huérfanas, instrucción en el prompt, `N_EIN_SYSTEM_TMPDIR` en la guarda, relevo con el temporal original; tests del lanzador y de la guarda; guía. Blocked by: none.
+- [x] T4 · Carpeta temporal por sesión — `tests/launcher.sh` (TMPDIR, instrucción, limpieza de huérfanas), `tests/handoff-launcher.sh` (Claude recibe el temporal original), `tests/guard-pi.ts` y `TestDirectoryLeaseUsesSystemTemp` (rojo y verde); real en dev: borra la huérfana al arrancar, el agente usa su carpeta y esta queda al salir.
 - [ ] T5 · Revisión y cierre — `review` (T1 carga código de terceros y T4 cambia la guarda), `NOTICE.md`, `scripts/check.sh` completo y cierre del documento. Blocked by: T1, T2, T3, T4.
 
 ## Registro
@@ -49,3 +49,4 @@ Siguiente: T4 · Carpeta temporal por sesión.
 - R2 (24 nov) T1. Pi 1.6 no arranca si una extensión no carga y sugiere `pi -ne`, que no sirve en n_ein: el lanzador señala la lista con `PI_EXT_CHECK` cuando Pi falla. `doctor --runtime` y `tests/ordinary-pi.ts` arrancan `n-ein-dev` con el hogar real; `N_EIN_PI_EXTENSIONS_FILE` les apunta la lista a su temporal, como `N_EIN_MODELS_FILE`. `moshi-hook logs` no registra los eventos de los hooks, así que la prueba de Moshi es el aviso del móvil. La lista de dev (`~/.n_ein/dev/pi-extensions`) queda con Herdr y Moshi.
 - R3 (24 nov) T2. La extensión solo escribe si su padre es el lanzador (`N_EIN_RESUME_OWNER`): un Pi de un test con el paquete heredaría la variable y pisaría el id. Las líneas `! rg -q` de los tests de shell no fallaban nunca (`set -e` ignora los comandos negados); se cambiaron por `absent`, también las tres antiguas de `tests/launcher.sh`, que siguen pasando. El Claude del canal dev no tiene login: la prueba real de Claude comprobó id tras `/clear` y reapertura con mensajes sin respuesta del modelo. El instalador empaqueta por lista los archivos sueltos de `pi-package/`: sin añadir `resume.ts`, la pista fallaba en silencio en preview y estable; el smoke del paquete comprueba ahora las dos formas instaladas.
 - R4 (24 nov) T3. Consumidores por nombre: el modo de actividad compartido (`activity-core.ts`) y los recibos de Pi reconocen `nein_ask`. Mientras el diálogo espera, Herdr sigue mostrando `working`: la extensión de Herdr escucha `herdr:blocked` en el bus de Pi, y `nein_ask` no lo emite (fuera del encargo; propuesto a Samu).
+- R5 (24 nov) T4. Otro consumidor de TMPDIR: los bloqueos de carpeta de los trabajadores (`acquireDirectoryLease`, Go) usan `N_EIN_SYSTEM_TMPDIR` para que dos sesiones se vean. Los tests que arrancan `n-ein-dev` apuntan `N_EIN_SYSTEM_TMPDIR` a su temporal y no dejan carpetas en el real.

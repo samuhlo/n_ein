@@ -24,7 +24,7 @@ test -f "$N_EIN_TEST_DONE" || exit 1
 test ! -L "$CLAUDE_CONFIG_DIR/skills" || exit 1
 mkdir -p "$CLAUDE_CONFIG_DIR/skills/synced"
 printf 'generated\n' > "$CLAUDE_CONFIG_DIR/skills/synced/sentinel"
-printf '%s\n' "$CLAUDE_CONFIG_DIR" "${PI_CODING_AGENT_DIR:-unset}" > "$N_EIN_TEST_ENV"
+printf '%s\n' "$CLAUDE_CONFIG_DIR" "${PI_CODING_AGENT_DIR:-unset}" "${TMPDIR:-unset}" > "$N_EIN_TEST_ENV"
 printf '%s\n' "$@" > "$N_EIN_TEST_ARGS"
 if [[ -n "${N_EIN_FAKE_CLAUDE_SESSION:-}" ]]; then printf '%s\n' "$N_EIN_FAKE_CLAUDE_SESSION" > "$N_EIN_RESUME_FILE"; fi
 FAKE_CLAUDE
@@ -42,6 +42,8 @@ export N_EIN_PI_BIN="$test_dir/pi"
 export N_EIN_LANG_FILE="$test_dir/lang.json"
 export N_EIN_CLAUDE_BIN="$test_dir/claude"
 export N_EIN_AGENT_DIR="$test_dir/pi-home"
+export N_EIN_SYSTEM_TMPDIR="$test_dir/tmp"
+mkdir -p "$N_EIN_SYSTEM_TMPDIR"
 export N_EIN_CLAUDE_DIR="$test_dir/claude-home"
 export N_EIN_TEST_SUMMARY="$test_dir/summary.md"
 export N_EIN_TEST_DONE="$test_dir/pi-done"
@@ -68,6 +70,8 @@ test ! -L "$N_EIN_CLAUDE_DIR/skills/comment-style"
 test -L "$N_EIN_CLAUDE_DIR/skills/ajena"
 test "$(sed -n '1p' "$N_EIN_TEST_ENV")" = "$N_EIN_CLAUDE_DIR"
 test "$(sed -n '2p' "$N_EIN_TEST_ENV")" = "unset"
+# Pi trabaja con su carpeta temporal; Claude, que tiene la suya, recibe el temporal original.
+test "$(sed -n '3p' "$N_EIN_TEST_ENV")" = "$N_EIN_SYSTEM_TMPDIR"
 test -d "$N_EIN_CLAUDE_DIR/skills"
 test "$(readlink "$N_EIN_CLAUDE_DIR/skills/intent")" = "$repo_dir/pi-package/skills/intent"
 test -f "$N_EIN_CLAUDE_DIR/skills/synced/sentinel"

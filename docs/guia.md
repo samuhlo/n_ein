@@ -153,6 +153,10 @@ Pi arranca en n_ein con su propio hogar y sin las extensiones de `~/.pi/agent`. 
 
 Las rutas son absolutas o empiezan por `~/`, y se cargan desde donde están: cuando Herdr o Moshi actualizan su archivo, n_ein usa la versión nueva. Una ruta que no existe avisa con `PI_EXT_SKIP` y Pi arranca igual. Si una extensión no carga, Pi no arranca y dice cuál; coméntala con `#` en la lista (la pista `pi -ne` que da Pi no sirve aquí). `doctor`, los tests y los trabajadores del equipo experimental no leen la lista, y Claude no la usa. `N_EIN_PI_EXTENSIONS_FILE` apunta a otra lista.
 
+### Carpeta temporal de cada sesión de Pi
+
+Cada vez que abres Pi, n_ein le da una carpeta propia en el temporal del sistema (`n-ein-pi.XXXXXX`) como `TMPDIR`, y el agente sabe que sus pruebas y scripts desechables van ahí y no al proyecto ni a `/tmp`, como hace Claude con la suya. Al cerrar Pi la carpeta se queda para que puedas revisarla; la borra un arranque posterior de Pi cuando la sesión que la creó ya no vive. La guarda de comandos sigue tratando todo el temporal del sistema como temporal, y un relevo a Claude le devuelve el temporal original.
+
 ### Hotfix local de preview
 
 Cada release publicada es una base inmutable. Para aplicar al canal preview un commit posterior comprobado sin publicar otra prerelease, desde un checkout limpio de n_ein:

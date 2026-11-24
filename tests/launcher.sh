@@ -27,6 +27,7 @@ fi
   printf '%s\n' "$@"
 } > "$N_EIN_CAPTURE"
 printf '%s\n' "${N_EIN_CODEGRAPH_BIN:-}" > "$N_EIN_CAPTURE.codegraph"
+printf '%s\n' "${TMPDIR:-}" "$PPID" > "$N_EIN_CAPTURE.tmp"
 printf '%s\n' "${CLAUDE_CONFIG_DIR:-}" "${ANTHROPIC_API_KEY:-}" "${N_EIN_BRIDGE_CLAUDE_BIN:-}" > "$N_EIN_CAPTURE.env"
 # Como la extensión resume.ts: solo el Pi hijo del lanzador deja su sesión.
 if [[ "$PPID" == "${N_EIN_RESUME_OWNER:-}" && -n "${N_EIN_FAKE_SESSION:-}" ]]; then
@@ -59,6 +60,9 @@ export N_EIN_LANG_FILE="$test_dir/lang.json"
 export N_EIN_PREFERENCES_FILE="$test_dir/preferences.md"
 printf 'Keep artifacts in the project language.\n' > "$N_EIN_PREFERENCES_FILE"
 export N_EIN_CAPTURE="$test_dir/captured"
+# El temporal «del sistema» de la prueba: la limpieza de carpetas huérfanas no toca el real.
+export N_EIN_SYSTEM_TMPDIR="$test_dir/tmp"
+mkdir -p "$N_EIN_SYSTEM_TMPDIR"
 mkdir -p "$test_dir/project"
 cd "$test_dir/project"
 "$repo_dir/bin/n-ein-dev" --print 'cambia este texto'
@@ -85,6 +89,8 @@ Language: talk with the user in Spanish. Write code, comments, identifiers, comm
 Shared user preferences: "$N_EIN_PREFERENCES_FILE". These are defaults, not authorization; the current request, selected language instruction and explicit project conventions take precedence.
 
 Keep artifacts in the project language.
+--append-system-prompt
+Scratch directory for this session: $(sed -n 1p "$N_EIN_CAPTURE.tmp") (also \$TMPDIR). Put temporary files, throwaway scripts and test output there instead of the project or /tmp. It stays after the session for review.
 --use-theme
 ein
 --model
@@ -178,6 +184,26 @@ export N_EIN_FAKE_SESSION="$test_dir/sessions/sin-guardar.jsonl"
 in_tty "$repo_dir/bin/n-ein-dev" > "$test_dir/tty"
 absent 'Para volver' "$test_dir/tty"
 unset N_EIN_FAKE_SESSION
+
+# [FLOW] Cada arranque da a Pi su carpeta temporal y limpia las de lanzadores que ya no viven; las
+# de uno vivo, las que no dicen su dueño y lo ajeno se quedan.
+sys_tmp="$N_EIN_SYSTEM_TMPDIR"
+mkdir -p "$sys_tmp/n-ein-pi.muerta" "$sys_tmp/n-ein-pi.viva" "$sys_tmp/n-ein-pi.sin-dueno" "$sys_tmp/otra"
+sh -c 'exit 0' &
+dead_pid=$!
+wait "$dead_pid" || true
+printf '%s\n' "$dead_pid" > "$sys_tmp/n-ein-pi.muerta/.owner"
+printf '%s\n' "$$" > "$sys_tmp/n-ein-pi.viva/.owner"
+"$repo_dir/bin/n-ein-dev" --print 'temporal propio'
+session_tmp="$(sed -n 1p "$N_EIN_CAPTURE.tmp")"
+case "$session_tmp" in "$sys_tmp"/n-ein-pi.*) ;; *) printf 'TMPDIR fuera del temporal del sistema: %s\n' "$session_tmp" >&2; exit 1 ;; esac
+test -d "$session_tmp"
+test "$(< "$session_tmp/.owner")" == "$(sed -n 2p "$N_EIN_CAPTURE.tmp")"
+test ! -e "$sys_tmp/n-ein-pi.muerta"
+test -d "$sys_tmp/n-ein-pi.viva"
+test -d "$sys_tmp/n-ein-pi.sin-dueno"
+test -d "$sys_tmp/otra"
+rg -Fq "Scratch directory for this session: $session_tmp " "$N_EIN_CAPTURE"
 
 export N_EIN_FAKE_VERSION=0.88.0
 if "$repo_dir/bin/n-ein-dev" > "$test_dir/out" 2> "$test_dir/err"; then

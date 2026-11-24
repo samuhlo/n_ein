@@ -31,7 +31,12 @@ func acquireDirectoryLease(directory string) (*os.File, error) {
 		return nil, err
 	}
 	key := sha256.Sum256([]byte(canonical))
-	return acquireLeaseAt(filepath.Join(os.TempDir(), "n-ein-runtime-locks", fmt.Sprintf("%x", key)), directory)
+	// Pi recibe su carpeta temporal como TMPDIR; el bloqueo vive donde lo ven todas las sesiones.
+	temp := os.Getenv("N_EIN_SYSTEM_TMPDIR")
+	if temp == "" {
+		temp = os.TempDir()
+	}
+	return acquireLeaseAt(filepath.Join(temp, "n-ein-runtime-locks", fmt.Sprintf("%x", key)), directory)
 }
 
 func acquireLeaseAt(dir, project string) (*os.File, error) {

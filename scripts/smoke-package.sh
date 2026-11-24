@@ -10,6 +10,7 @@ export N_EIN_HOME="$test_dir"
 export N_EIN_MODELS_FILE="$test_dir/models.json"
 export N_EIN_LANG_FILE="$test_dir/lang.json"
 export N_EIN_PREFERENCES_FILE="$test_dir/preferences.md"
+export N_EIN_SYSTEM_TMPDIR="$test_dir"
 
 candidate="$test_dir/candidate"
 target="$test_dir/installations/preview"

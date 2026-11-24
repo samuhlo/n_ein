@@ -149,3 +149,19 @@ func runtimeFixture(t *testing.T) (project, root string) {
 	}
 	return project, root
 }
+
+// Pi recibe su carpeta temporal como TMPDIR: los bloqueos de carpeta siguen en el temporal del
+// sistema para que dos sesiones se vean.
+func TestDirectoryLeaseUsesSystemTemp(t *testing.T) {
+	system, session, project := t.TempDir(), t.TempDir(), t.TempDir()
+	t.Setenv("TMPDIR", session)
+	t.Setenv("N_EIN_SYSTEM_TMPDIR", system)
+	lease, err := acquireDirectoryLease(project)
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer lease.Close()
+	if !strings.HasPrefix(lease.Name(), filepath.Join(system, "n-ein-runtime-locks")+string(filepath.Separator)) {
+		t.Fatalf("bloqueo fuera del temporal del sistema: %s", lease.Name())
+	}
+}
