@@ -41,6 +41,7 @@ git -C "$test_dir" commit -m 'test: base' >/dev/null
 export N_EIN_CLAUDE_DIR="$test_dir/claude-home"
 export N_EIN_CLAUDE_BIN="$test_dir/claude"
 export N_EIN_AGENT_DIR="$test_dir/pi-home"
+export N_EIN_PI_EXTENSIONS_FILE="$test_dir/sin-lista"
 export N_EIN_SYSTEM_TMPDIR="$test_dir"
 export N_EIN_PI_BIN="$test_dir/pi"
 export N_EIN_LANG_FILE="$test_dir/lang.json"
