@@ -16,6 +16,7 @@
       "./extensions/activity.ts",
       "./extensions/branch.ts",
       "./extensions/handoff.ts",
+      "./extensions/ask.ts",
       "./extensions/resume.ts",
       "./extensions/models.ts",
       "./extensions/codegraph.ts",

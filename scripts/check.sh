@@ -92,6 +92,8 @@ bun run tests/previewer-bench.ts
 bun run tests/ordinary-pi.ts
 bun run tests/resume.ts
 bun run tests/resume-pi.ts
+bun run tests/ask.ts
+bun run tests/ask-pi.ts
 bun run tests/handoff.ts
 bun run tests/agents-rpc.ts
 bun run tests/agents-pi.ts

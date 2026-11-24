@@ -88,7 +88,7 @@ export function activityOf(tool: string, input: Record<string, unknown>): Activi
   if (ORCHESTRATE.has(base)) return "orchestrating";
   if (PLAN.has(base)) return "planning";
   if (RESEARCH.has(base) || RESEARCH_SERVERS.test(server)) return "researching";
-  if (base === "askuserquestion") return "asking";
+  if (base === "askuserquestion" || base === "nein_ask") return "asking";
   if (base === "skill") return skillActivity(str(args.skill) || str(args.name));
   return "working";
 }
