@@ -28,7 +28,7 @@ El TODO legible con el modo de actividad y la rama, un documento por encargo, la
 
 ## Entrega actual
 
-`0.9.0-alpha.1` trae a Pi las extensiones que lista el usuario (Herdr y Moshi), un comando para volver a la sesión con n_ein (también en Claude), la herramienta `nein_ask` para decisiones con opciones y una carpeta temporal por sesión. En Claude apaga los conectores de claude.ai salvo Context7 y los que encienda el proyecto. `review` compara frase a frase los textos que obedece el agente y `.codegraph/` queda fuera de Git con el exclude local. Runtimes sin cambios respecto a 0.8.0-alpha.2. Estado de publicación y evidencia en su documento de `docs/work/`.
+`0.9.0-alpha.1` trae a Pi las extensiones que lista el usuario (Herdr y Moshi), un comando para volver a la sesión con n_ein (también en Claude), la herramienta `nein_ask` para decisiones con opciones y una carpeta temporal por sesión. En Claude apaga los conectores de claude.ai salvo Context7 y los que encienda el proyecto. `review` compara frase a frase los textos que obedece el agente y `.codegraph/` queda fuera de Git con el exclude local. Trae Claude Code 2.1.325, que el vigía publicó en 0.8.0-alpha.3. Estado de publicación y evidencia en su documento de `docs/work/`.
 
 ## Ruta de lectura
 
